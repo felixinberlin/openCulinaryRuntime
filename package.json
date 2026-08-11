@@ -11,6 +11,7 @@
     "demo:cut-potato": "tsx scripts/cut-potato.ts",
     "demo:reuse-potato-peel": "tsx scripts/reuse-potato-peel.ts",
     "demo:mix-potato-peel": "tsx scripts/mix-potato-peel.ts",
+    "demo:cook-potato-three-ways": "tsx scripts/cook-potato-three-ways.ts",
     "build": "tsc -p ."
   },
   "dependencies": {

@@ -99,6 +99,8 @@ export const CapabilitiesSchema = z
     isWashable: z.boolean(),
     isBlendable: z.boolean(),
     isFryingMedium: z.boolean(),
+    isBakeable: z.boolean(),
+    isBoilingMedium: z.boolean(),
   })
   .partial()
   .catchall(z.boolean());

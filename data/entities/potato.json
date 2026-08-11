@@ -16,8 +16,8 @@
       "carbohydrate_g": 17
     }
   },
-  "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "mashed"],
-  "allowedTransformations": ["wash", "peel", "cut"],
+  "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "baked", "mashed"],
+  "allowedTransformations": ["wash", "peel", "cut", "boil", "fry", "bake"],
   "statePrerequisites": {
     "cut": "peeled"
   },
@@ -27,6 +27,7 @@
     "isChoppable": true,
     "isBoilable": true,
     "isFryable": true,
+    "isBakeable": true,
     "isWashable": true
   },
   "thermophysical": {
@@ -43,6 +44,6 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). allowedTransformations only lists verbs that actually exist in data/actions/ so far (wash, peel, cut); boil/fry/mash capabilities are asserted as entity facts even though those verbs aren't defined yet. statePrerequisites.cut records that a recipe just saying 'cut the potato' implies peeling first."
+    "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). statePrerequisites.cut records that a recipe just saying 'cut the potato' implies peeling first. boil/fry/bake are three distinct verbs on purpose: cooked in water vs. oil vs. dry heat give different results, so they're not collapsed into one generic COOK verb. mash isn't wired up yet (no 'mash' action exists) even though 'mashed' remains a listed state."
   }
 }

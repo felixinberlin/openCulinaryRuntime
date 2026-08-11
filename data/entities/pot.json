@@ -1,0 +1,22 @@
+{
+  "id": "pot",
+  "kind": "tool",
+  "names": {
+    "en": "Pot",
+    "es": "Olla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added so boil.json's requiredTools reference resolves. Same minimal-tool precedent as knife.json/pan.json/mixer.json."
+  }
+}

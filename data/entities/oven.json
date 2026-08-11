@@ -1,0 +1,20 @@
+{
+  "id": "oven",
+  "kind": "tool",
+  "names": {
+    "en": "Oven",
+    "es": "Horno"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["off", "preheating", "hot"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {},
+  "metadata": {
+    "notes": "Minimal tool entity, added so bake.json's requiredTools reference resolves. No isWashable asserted — an oven isn't washed the way a knife/pan/pot is; left unasserted rather than forced false."
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "water",
+  "kind": "ingredient",
+  "names": {
+    "en": "Water",
+    "es": "Agua"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["cold", "boiling"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isBoilingMedium": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 1000,
+    "boilingPointC": 100
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["liquid"]
+  },
+  "cooklang": {
+    "canonicalToken": "agua",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "isBoilingMedium makes water satisfy BOIL's requiredIngredientCapabilities (data/actions/boil.json), the same pattern as oil.json/isFryingMedium for FRY."
+  }
+}

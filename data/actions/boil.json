@@ -1,0 +1,22 @@
+{
+  "id": "boil",
+  "verb": "BOIL",
+  "names": {
+    "en": "Boil",
+    "es": "Hervir"
+  },
+  "requiredTools": ["pot"],
+  "requiredTargetCapability": "isBoilable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isBoilingMedium"],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "boiled",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Cooked in water — same 'cooking' family as FRY/BAKE but a genuinely different verb: different tool (pot vs pan vs oven), different medium (water vs oil vs none), different resulting state (boiled vs fried vs baked)."
+  }
+}

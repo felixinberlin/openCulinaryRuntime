@@ -1,0 +1,22 @@
+{
+  "id": "bake",
+  "verb": "BAKE",
+  "names": {
+    "en": "Bake",
+    "es": "Hornear"
+  },
+  "requiredTools": ["oven"],
+  "requiredTargetCapability": "isBakeable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "baked",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Dry heat: unlike FRY/BOIL, no medium ingredient is required at all — requiredIngredientCapabilities is deliberately empty, not just satisfied by something ambient."
+  }
+}

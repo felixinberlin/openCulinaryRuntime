@@ -1,0 +1,23 @@
+{
+  "id": "salted_fried_potatoes",
+  "names": {
+    "en": "Salted Fried Potatoes",
+    "es": "Patatas Fritas Saladas"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["knife", "pan"],
+  "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "fry", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": ["oil-1"] },
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "First concrete RecipeScript in the repo, tying together everything built incrementally: wash/peel/cut/fry/salt verbs, potato/oil/salt entities. The potato-1 that gets peeled also spawns a potato_peel-N instance (from PEEL's spawnsTargetByproducts) that this recipe doesn't do anything further with — it just sits in the final inventory, same as real leftover peel would."
+  }
+}

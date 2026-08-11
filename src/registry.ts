@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { EntitySchema, type Entity } from "./ingredient.ts";
 import { ActionSchema, type Action } from "./action.ts";
+import { RecipeScriptSchema, type RecipeScript } from "./recipe.ts";
 
 /** Parses every *.json file in `dir` against `schema`, keyed by its `id`. Throws on the first invalid file. */
 function loadDir<T extends { id: string }>(
@@ -27,4 +28,8 @@ export function loadEntities(entitiesDir: string): Map<string, Entity> {
 
 export function loadActions(actionsDir: string): Map<string, Action> {
   return loadDir(actionsDir, ActionSchema);
+}
+
+export function loadRecipes(recipesDir: string): Map<string, RecipeScript> {
+  return loadDir(recipesDir, RecipeScriptSchema);
 }

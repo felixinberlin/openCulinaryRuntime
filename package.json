@@ -13,6 +13,7 @@
     "demo:mix-potato-peel": "tsx scripts/mix-potato-peel.ts",
     "demo:cook-potato-three-ways": "tsx scripts/cook-potato-three-ways.ts",
     "demo:salted-boiled-potato": "tsx scripts/salted-boiled-potato.ts",
+    "recipe": "tsx scripts/run-recipe.ts",
     "build": "tsc -p ."
   },
   "dependencies": {

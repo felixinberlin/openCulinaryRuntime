@@ -16,8 +16,8 @@
       "carbohydrate_g": 17
     }
   },
-  "possibleStates": ["raw", "peeled", "chopped", "boiled", "fried", "mashed"],
-  "allowedTransformations": ["peel"],
+  "possibleStates": ["raw", "washed", "peeled", "chopped", "boiled", "fried", "mashed"],
+  "allowedTransformations": ["wash", "peel"],
   "producedByproducts": ["potato_peel"],
   "capabilities": {
     "isPeelable": true,
@@ -40,6 +40,6 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). allowedTransformations only lists verbs that actually exist in data/actions/ so far (peel); chop/boil/fry/mash capabilities are asserted as entity facts even though those verbs aren't defined yet."
+    "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). allowedTransformations only lists verbs that actually exist in data/actions/ so far (wash, peel); chop/boil/fry/mash capabilities are asserted as entity facts even though those verbs aren't defined yet."
   }
 }

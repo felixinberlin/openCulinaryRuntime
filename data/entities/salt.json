@@ -1,0 +1,47 @@
+{
+  "id": "salt",
+  "kind": "ingredient",
+  "names": {
+    "en": "Salt",
+    "es": "Sal"
+  },
+  "aggregationState": "granular",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "chemicalFormula": "NaCl",
+    "nutrientsPer100g": {
+      "sodium_mg": 38758
+    }
+  },
+  "possibleStates": ["dry", "wet", "dissolved"],
+  "allowedTransformations": ["dissolve"],
+  "producedByproducts": [],
+  "capabilities": {
+    "isDissolvable": true,
+    "isSeasoning": true,
+    "isChoppable": false,
+    "isWashable": false
+  },
+  "thermophysical": {
+    "densityKgPerM3": 2170,
+    "meltingPointC": 801,
+    "boilingPointC": 1413
+  },
+  "sensory": {
+    "taste": ["salty"],
+    "texture": ["granular", "crystalline"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "sal",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "table salt",
+    "casNumber": "7647-14-5",
+    "notes": "spiceLock reflects CLAUDE_DEV_CTX.md's Cooklang interop rule: '='-prefixed quantities don't scale linearly with recipe size — salt is the canonical example."
+  }
+}

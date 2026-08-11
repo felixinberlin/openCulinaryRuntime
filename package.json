@@ -9,6 +9,7 @@
     "validate:entities": "tsx scripts/validate-entities.ts",
     "demo:wash-and-peel-potato": "tsx scripts/wash-and-peel-potato.ts",
     "demo:cut-potato": "tsx scripts/cut-potato.ts",
+    "demo:reuse-potato-peel": "tsx scripts/reuse-potato-peel.ts",
     "build": "tsc -p ."
   },
   "dependencies": {

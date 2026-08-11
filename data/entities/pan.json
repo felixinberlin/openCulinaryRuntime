@@ -1,0 +1,22 @@
+{
+  "id": "pan",
+  "kind": "tool",
+  "names": {
+    "en": "Pan",
+    "es": "Sartén"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty", "hot", "cold"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added only so data/actions/fry.json's requiredTools reference resolves. Not fully modeled (no thermophysical data yet), same as knife.json."
+  }
+}

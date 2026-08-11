@@ -1,0 +1,21 @@
+{
+  "id": "fry",
+  "verb": "FRY",
+  "names": {
+    "en": "Fry",
+    "es": "Freír"
+  },
+  "requiredTools": ["pan"],
+  "requiredTargetCapability": "isFryable",
+  "validTargetKinds": ["ingredient"],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "fried",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded."
+  }
+}

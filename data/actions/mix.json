@@ -1,0 +1,21 @@
+{
+  "id": "mix",
+  "verb": "MIX",
+  "names": {
+    "en": "Mix",
+    "es": "Mezclar"
+  },
+  "requiredTools": ["mixer"],
+  "requiredTargetCapability": "isBlendable",
+  "validTargetKinds": ["ingredient"],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "blended",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "One of CONCEPT.md §10's Event System verbs (PICK_UP, DROP, CUT, MOVE, HEAT, WAIT, MIX). potato_peel.json is the first entity to declare isBlendable — a second reuse path alongside FRY (data/actions/fry.json): peels can be fried into crisps or put in a mixer instead of being discarded."
+  }
+}

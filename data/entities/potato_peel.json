@@ -10,11 +10,12 @@
     "composite": false,
     "components": []
   },
-  "possibleStates": ["raw", "fried"],
-  "allowedTransformations": ["fry"],
+  "possibleStates": ["raw", "fried", "blended"],
+  "allowedTransformations": ["fry", "mix"],
   "producedByproducts": [],
   "capabilities": {
-    "isFryable": true
+    "isFryable": true,
+    "isBlendable": true
   },
   "sensory": {
     "texture": ["thin", "fibrous"],
@@ -24,6 +25,6 @@
     "isWaste": true,
     "reusable": true,
     "producedBy": ["peel"],
-    "notes": "isWaste and reusable both hold: a byproduct stream that can also be fried into crisps rather than only ever discarded. Byproduct entity spawned when 'peel' is applied to potato.json (see EntitySchema.producedByproducts on potato)."
+    "notes": "isWaste and reusable both hold: a byproduct stream with two reuse paths — fried into crisps, or blended in a mixer — rather than only ever discarded. Byproduct entity spawned when 'peel' is applied to potato.json (see EntitySchema.producedByproducts on potato)."
   }
 }

@@ -1,0 +1,22 @@
+{
+  "id": "mixer",
+  "kind": "tool",
+  "names": {
+    "en": "Mixer",
+    "es": "Batidora"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty", "on", "off"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added only so data/actions/mix.json's requiredTools reference resolves. Same minimal-tool precedent as knife.json/pan.json."
+  }
+}

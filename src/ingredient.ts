@@ -137,6 +137,15 @@ export const EntitySchema = z.object({
   possibleStates: z.array(z.string()).default([]),
   /** Action ids that may legally target this entity. */
   allowedTransformations: z.array(z.string()).default([]),
+  /**
+   * Per-action state preconditions: action id -> the state this entity must
+   * already be in before that action may run, e.g. { "cut": "peeled" } —
+   * "cutting a potato presupposes it's already peeled." Lives on the entity
+   * rather than on the generic CUT verb because the precondition is a fact
+   * about *this* ingredient, not about cutting in general (not everything
+   * CUT can target needs peeling first).
+   */
+  statePrerequisites: z.record(z.string(), z.string()).default({}),
   /** Entity ids this entity may spawn when consumed (CONCEPT.md §9). */
   producedByproducts: z.array(z.string()).default([]),
   capabilities: CapabilitiesSchema.default({}),

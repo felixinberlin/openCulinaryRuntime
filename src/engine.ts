@@ -5,13 +5,14 @@ import type { Action } from "./action.ts";
  * Minimal execution engine — applies one canonical Action to one instance.
  *
  * This is a stepping stone toward ROADMAP.md Phase 4's full
- * `OcrValidationEngine` (INVALID_TRANSITIONS, HACCP, an ordered recipe
- * sequence). It only checks the two things `ActionSchema` currently
- * expresses: the target entity's capability, and required tools being on
- * hand. It does NOT check the instance's current state against a
- * transition table — e.g. nothing here stops peeling an already-boiled
- * potato yet, since that needs the state-vs-state INVALID_TRANSITIONS map
- * this codebase doesn't have yet.
+ * `OcrValidationEngine` (a full INVALID_TRANSITIONS forbidden-transition
+ * matrix, HACCP, an ordered recipe sequence). It checks: the target
+ * entity's capability, required tools being on hand, and — new —
+ * `Entity.statePrerequisites`, a narrower per-action "must already be in
+ * this state first" precondition (e.g. potato.json: cut requires "peeled").
+ * It does NOT yet check arbitrary forbidden state transitions in general
+ * (e.g. nothing here stops peeling an already-boiled potato) — that needs
+ * the fuller transition table Phase 4 will add.
  */
 
 export interface Instance {
@@ -37,6 +38,13 @@ export function applyAction(
 
   if (!action.validTargetKinds.includes(target.kind)) {
     throw new Error(`${action.verb} cannot target entity kind "${target.kind}" ("${target.id}")`);
+  }
+
+  const requiredPriorState = target.statePrerequisites[action.id];
+  if (requiredPriorState && instance.state !== requiredPriorState) {
+    throw new Error(
+      `${action.verb} requires "${target.id}" to already be "${requiredPriorState}" (currently "${instance.state}").`
+    );
   }
 
   if (action.requiredTargetCapability) {

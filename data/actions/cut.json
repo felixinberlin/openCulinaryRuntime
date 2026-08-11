@@ -1,0 +1,20 @@
+{
+  "id": "cut",
+  "verb": "CUT",
+  "names": {
+    "en": "Cut",
+    "es": "Cortar"
+  },
+  "requiredTools": ["knife"],
+  "requiredTargetCapability": "isChoppable",
+  "validTargetKinds": ["ingredient"],
+  "outputs": {
+    "transformedState": "chopped",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "CUT itself carries no notion of peeling — it's generic across whatever's isChoppable. Whether a given ingredient must be peeled first is recorded on that entity's statePrerequisites (see potato.json)."
+  }
+}

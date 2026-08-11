@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Open Culinary Runtime — core schema and validation engine",
   "scripts": {
+    "validate": "tsx scripts/validate.ts",
     "validate:entities": "tsx scripts/validate-entities.ts",
     "build": "tsc -p ."
   },

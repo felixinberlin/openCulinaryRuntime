@@ -1,0 +1,22 @@
+{
+  "id": "knife",
+  "kind": "tool",
+  "names": {
+    "en": "Knife",
+    "es": "Cuchillo"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty", "dull", "sharp"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added only so data/actions/peel.json's requiredTools reference resolves. Not fully modeled (no thermophysical/sensory data — tools don't need them the way ingredients do)."
+  }
+}

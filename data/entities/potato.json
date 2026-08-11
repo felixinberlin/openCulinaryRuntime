@@ -1,0 +1,45 @@
+{
+  "id": "potato",
+  "kind": "ingredient",
+  "names": {
+    "en": "Potato",
+    "es": "Patata"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 79,
+      "carbohydrate_g": 17
+    }
+  },
+  "possibleStates": ["raw", "peeled", "chopped", "boiled", "fried", "mashed"],
+  "allowedTransformations": ["peel"],
+  "producedByproducts": ["potato_peel"],
+  "capabilities": {
+    "isPeelable": true,
+    "isChoppable": true,
+    "isBoilable": true,
+    "isFryable": true,
+    "isWashable": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 1080,
+    "thermalConductivityWPerMK": 0.5
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["firm", "starchy"],
+    "color": "brown"
+  },
+  "cooklang": {
+    "canonicalToken": "patata",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). allowedTransformations only lists verbs that actually exist in data/actions/ so far (peel); chop/boil/fry/mash capabilities are asserted as entity facts even though those verbs aren't defined yet."
+  }
+}

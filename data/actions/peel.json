@@ -1,0 +1,20 @@
+{
+  "id": "peel",
+  "verb": "PEEL",
+  "names": {
+    "en": "Peel",
+    "es": "Pelar"
+  },
+  "requiredTools": ["knife"],
+  "requiredTargetCapability": "isPeelable",
+  "validTargetKinds": ["ingredient"],
+  "outputs": {
+    "transformedState": "peeled",
+    "spawnsTargetByproducts": true
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "The worked example from CONCEPT.md §5 ('World Layer understands PEEL, requires: knife, creates: peeled potato, potato peel') and CLAUDE_DEV_CTX.md ('you cannot peel a potato that is already boiled'). Byproducts are read from the target entity's producedByproducts, not hardcoded here — see ActionOutputsSchema."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "potato_peel",
+  "kind": "ingredient",
+  "names": {
+    "en": "Potato peel",
+    "es": "Piel de patata"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["raw"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {},
+  "sensory": {
+    "texture": ["thin", "fibrous"],
+    "color": "brown"
+  },
+  "metadata": {
+    "isWaste": true,
+    "producedBy": ["peel"],
+    "notes": "Byproduct entity spawned when 'peel' is applied to potato.json (see EntitySchema.producedByproducts on potato). Capabilities left empty rather than asserted false: this entity hasn't been thought through beyond being a waste output yet."
+  }
+}

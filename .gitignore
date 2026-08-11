@@ -1,0 +1,33 @@
+# Node / TypeScript
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# React Native / Expo
+.expo/
+.expo-shared/
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+
+# Windows download marker (from files pulled in via browser/WSL)
+*:Zone.Identifier
+
+# Env / secrets
+.env
+.env.*
+!.env.example

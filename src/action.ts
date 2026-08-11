@@ -53,6 +53,14 @@ export const ActionOutputsSchema = z
      * with `transformedState`.
      */
     transformedStateFromParameter: z.string().optional(),
+    /**
+     * A tag id (see `EntitySchema.possibleTags`) added to the target
+     * alongside its existing state, e.g. SALT adds "salted" without
+     * touching whatever state the target is already in — a boiled potato
+     * stays "boiled" and becomes "boiled" + tag "salted", since seasoning
+     * is orthogonal to cooking method/form, unlike boiled vs. fried.
+     */
+    addsTag: z.string().optional(),
     /** If true, entities listed in the target's own `producedByproducts` are spawned. */
     spawnsTargetByproducts: z.boolean().default(false),
   })

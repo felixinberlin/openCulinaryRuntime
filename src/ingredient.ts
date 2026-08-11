@@ -101,6 +101,8 @@ export const CapabilitiesSchema = z
     isFryingMedium: z.boolean(),
     isBakeable: z.boolean(),
     isBoilingMedium: z.boolean(),
+    /** Can receive a seasoning (as opposed to isSeasoning: *is* a seasoning). */
+    isSeasonable: z.boolean(),
   })
   .partial()
   .catchall(z.boolean());
@@ -137,8 +139,17 @@ export const EntitySchema = z.object({
   aggregationState: AggregationStateSchema,
   structure: StructureSchema,
   composition: CompositionSchema.optional(),
-  /** State ids this entity can be found in (CONCEPT.md §8). */
+  /** State ids this entity can be found in (CONCEPT.md §8). Mutually
+   *  exclusive at any moment — an instance has exactly one. */
   possibleStates: z.array(z.string()).default([]),
+  /**
+   * Tag ids this entity can carry, orthogonal to `possibleStates` — an
+   * instance can have any number of these at once, alongside its one state.
+   * Needed because not every property is exclusive: a potato can be
+   * "boiled" (state) AND "salted" (tag) simultaneously, unlike "boiled" vs
+   * "fried" which really are exclusive. See ActionOutputsSchema.addsTag.
+   */
+  possibleTags: z.array(z.string()).default([]),
   /** Action ids that may legally target this entity. */
   allowedTransformations: z.array(z.string()).default([]),
   /**

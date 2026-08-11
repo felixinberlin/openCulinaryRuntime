@@ -13,7 +13,7 @@ interface Step {
 }
 
 function run(steps: Step[]): Instance {
-  let potato: Instance = { entityId: "potato", state: "raw" };
+  let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
   for (const step of steps) {
     const action = actions.get(step.id);
     if (!action) throw new Error(`Unknown action "${step.id}"`);

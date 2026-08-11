@@ -8,7 +8,7 @@ const actions = loadActions(join(root, "data", "actions"));
 
 const availableTools = new Set(["knife"]);
 
-let potato: Instance = { entityId: "potato", state: "raw" };
+let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
 const inventory: Instance[] = [potato];
 
 for (const actionId of ["wash", "peel"]) {

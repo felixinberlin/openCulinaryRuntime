@@ -21,7 +21,7 @@ function apply(
   return result;
 }
 
-let potato: Instance = { entityId: "potato", state: "raw" };
+let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
 ({ instance: potato } = apply(potato, "wash"));
 
 const peelResult = apply(potato, "peel");

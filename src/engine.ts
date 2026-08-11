@@ -17,11 +17,18 @@ import type { Action } from "./action.ts";
  * the fuller transition table Phase 4 will add. It also only checks that a
  * qualifying ingredient is *present*, not consume/decrement it — real
  * quantity tracking belongs to Phase 4's recipe-level inventory.
+ *
+ * `state` and `tags` are deliberately separate: `state` is the one
+ * mutually-exclusive form/cooking-method value (raw/washed/.../boiled/
+ * fried/...), while `tags` holds any number of orthogonal properties
+ * (e.g. "salted") that coexist with whatever the current state is — see
+ * ActionOutputsSchema.addsTag in action.ts.
  */
 
 export interface Instance {
   entityId: string;
   state: string;
+  tags: string[];
 }
 
 export interface ExecutionResult {
@@ -111,7 +118,13 @@ export function applyAction(
     }
     nextState = value;
   }
-  const updated: Instance = { entityId: instance.entityId, state: nextState };
+
+  let nextTags = instance.tags;
+  if (action.outputs.addsTag && !instance.tags.includes(action.outputs.addsTag)) {
+    nextTags = [...instance.tags, action.outputs.addsTag];
+  }
+
+  const updated: Instance = { entityId: instance.entityId, state: nextState, tags: nextTags };
 
   const spawned: Instance[] = [];
   if (action.outputs.spawnsTargetByproducts) {
@@ -120,6 +133,7 @@ export function applyAction(
       spawned.push({
         entityId: byproductId,
         state: byproductEntity?.possibleStates[0] ?? "raw",
+        tags: [],
       });
     }
   }

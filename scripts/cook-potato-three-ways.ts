@@ -20,7 +20,7 @@ function apply(
 }
 
 function washedAndPeeledPotato(): Instance {
-  let potato: Instance = { entityId: "potato", state: "raw" };
+  let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
   potato = apply(potato, "wash", new Set(["knife"]));
   potato = apply(potato, "peel", new Set(["knife"]));
   return potato;

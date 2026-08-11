@@ -7,13 +7,21 @@ const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const availableTools = new Set(["knife"]);
 
-function run(sequence: string[]): Instance {
+interface Step {
+  id: string;
+  params?: Record<string, string>;
+}
+
+function run(steps: Step[]): Instance {
   let potato: Instance = { entityId: "potato", state: "raw" };
-  for (const actionId of sequence) {
-    const action = actions.get(actionId);
-    if (!action) throw new Error(`Unknown action "${actionId}"`);
-    console.log(`Applying ${action.verb} to potato (state: "${potato.state}")`);
-    potato = applyAction(potato, action, entities, availableTools).instance;
+  for (const step of steps) {
+    const action = actions.get(step.id);
+    if (!action) throw new Error(`Unknown action "${step.id}"`);
+    const label = step.params
+      ? ` (${Object.entries(step.params).map(([k, v]) => `${k}: ${v}`).join(", ")})`
+      : "";
+    console.log(`Applying ${action.verb}${label} to potato (state: "${potato.state}")`);
+    potato = applyAction(potato, action, entities, availableTools, step.params).instance;
     console.log(`  -> potato is now "${potato.state}"`);
   }
   return potato;
@@ -21,11 +29,27 @@ function run(sequence: string[]): Instance {
 
 console.log('Recipe says "cut the potatoes" — trying it straight from washed, unpeeled:');
 try {
-  run(["wash", "cut"]);
+  run([{ id: "wash" }, { id: "cut", params: { shape: "diced" } }]);
 } catch (err) {
   console.log(`  REJECTED: ${(err as Error).message}`);
 }
 
-console.log('\nSame recipe, engine-satisfying order — wash, peel, then cut:');
-const result = run(["wash", "peel", "cut"]);
-console.log(`\nFinal state: potato is "${result.state}"`);
+console.log("\nCorrect order, diced:");
+run([{ id: "wash" }, { id: "peel" }, { id: "cut", params: { shape: "diced" } }]);
+
+console.log("\nCorrect order, julienne:");
+run([{ id: "wash" }, { id: "peel" }, { id: "cut", params: { shape: "julienne" } }]);
+
+console.log("\nCUT with no shape given:");
+try {
+  run([{ id: "wash" }, { id: "peel" }, { id: "cut" }]);
+} catch (err) {
+  console.log(`  REJECTED: ${(err as Error).message}`);
+}
+
+console.log("\nCUT with an invalid shape:");
+try {
+  run([{ id: "wash" }, { id: "peel" }, { id: "cut", params: { shape: "shredded" } }]);
+} catch (err) {
+  console.log(`  REJECTED: ${(err as Error).message}`);
+}

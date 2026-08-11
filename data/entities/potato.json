@@ -16,7 +16,7 @@
       "carbohydrate_g": 17
     }
   },
-  "possibleStates": ["raw", "washed", "peeled", "chopped", "boiled", "fried", "mashed"],
+  "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "mashed"],
   "allowedTransformations": ["wash", "peel", "cut"],
   "statePrerequisites": {
     "cut": "peeled"

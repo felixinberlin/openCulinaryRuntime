@@ -8,13 +8,24 @@
   "requiredTools": ["knife"],
   "requiredTargetCapability": "isChoppable",
   "validTargetKinds": ["ingredient"],
+  "parameters": [
+    {
+      "id": "shape",
+      "names": {
+        "en": "Shape",
+        "es": "Forma"
+      },
+      "required": true,
+      "allowedValues": ["sliced", "diced", "julienne", "chopped", "minced"]
+    }
+  ],
   "outputs": {
-    "transformedState": "chopped",
+    "transformedStateFromParameter": "shape",
     "spawnsTargetByproducts": false
   },
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "CUT itself carries no notion of peeling — it's generic across whatever's isChoppable. Whether a given ingredient must be peeled first is recorded on that entity's statePrerequisites (see potato.json)."
+    "notes": "CUT is one verb with a 'shape' parameter (CLAUDE_DEV_CTX.md's 4th pillar, Parameters), not five separate verbs — the resulting state is whatever shape was chosen, so allowedValues doubles as the set of post-cut states."
   }
 }

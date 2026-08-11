@@ -17,6 +17,21 @@ import { EntityKindSchema } from "./ingredient.ts";
  */
 
 /**
+ * A "Parameter" — CLAUDE_DEV_CTX.md's 4th pillar, "Culinary Details":
+ * quantitative/qualitative details modifying a specific action, e.g. CUT's
+ * "shape". `allowedValues` is a closed set (not a free string) because a
+ * value here doubles as a state id when `outputs.transformedStateFromParameter`
+ * points at it — see below.
+ */
+export const ActionParameterSchema = z.object({
+  id: z.string().min(1),
+  names: z.record(z.string(), z.string()).optional(),
+  required: z.boolean().default(true),
+  allowedValues: z.array(z.string()).min(1),
+});
+export type ActionParameter = z.infer<typeof ActionParameterSchema>;
+
+/**
  * Byproducts are deliberately NOT listed on the action. CONCEPT.md §9:
  * "Recipes don't exist, transformations exist" — but *which* byproducts a
  * transformation yields is a fact about the target ingredient (see
@@ -25,12 +40,25 @@ import { EntityKindSchema } from "./ingredient.ts";
  * PEEL is identical in both cases. `spawnsTargetByproducts: true` tells the
  * engine to read the byproducts off the target entity at execution time.
  */
-export const ActionOutputsSchema = z.object({
-  /** State id the primary target transitions to, e.g. "peeled". */
-  transformedState: z.string().optional(),
-  /** If true, entities listed in the target's own `producedByproducts` are spawned. */
-  spawnsTargetByproducts: z.boolean().default(false),
-});
+export const ActionOutputsSchema = z
+  .object({
+    /** State id the primary target transitions to, e.g. "peeled". For actions
+     *  with no state-determining parameter (PEEL, WASH). */
+    transformedState: z.string().optional(),
+    /**
+     * For a parameterized action (CUT), the resulting state instead of a
+     * fixed `transformedState`: names one of this action's `parameters[].id`,
+     * and the target's new state becomes whatever value was passed for that
+     * parameter (e.g. shape: "diced" -> state "diced"). Mutually exclusive
+     * with `transformedState`.
+     */
+    transformedStateFromParameter: z.string().optional(),
+    /** If true, entities listed in the target's own `producedByproducts` are spawned. */
+    spawnsTargetByproducts: z.boolean().default(false),
+  })
+  .refine((o) => !(o.transformedState && o.transformedStateFromParameter), {
+    message: "transformedState and transformedStateFromParameter are mutually exclusive",
+  });
 export type ActionOutputs = z.infer<typeof ActionOutputsSchema>;
 
 export const ActionSchema = z.object({
@@ -61,6 +89,7 @@ export const ActionSchema = z.object({
    */
   requiredTargetCapability: z.string().optional(),
   validTargetKinds: z.array(EntityKindSchema).default(["ingredient"]),
+  parameters: z.array(ActionParameterSchema).default([]),
   outputs: ActionOutputsSchema,
   duration: z.enum(["fixed", "variable"]).default("variable"),
   precision: z.enum(["required", "optional"]).default("optional"),

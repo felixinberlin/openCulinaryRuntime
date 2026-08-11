@@ -9,11 +9,14 @@ import type { Action } from "./action.ts";
  * matrix, HACCP, an ordered recipe sequence). It checks: the target
  * entity's capability, required tools being on hand, `Entity.statePrerequisites`
  * (a narrower per-action "must already be in this state first" precondition,
- * e.g. potato.json: cut requires "peeled"), and — new — the action's declared
- * `parameters` (e.g. CUT's "shape"). It does NOT yet check arbitrary
- * forbidden state transitions in general (e.g. nothing here stops peeling an
- * already-boiled potato) — that needs the fuller transition table Phase 4
- * will add.
+ * e.g. potato.json: cut requires "peeled"), the action's declared
+ * `parameters` (e.g. CUT's "shape"), and — new — `requiredIngredientCapabilities`
+ * (e.g. FRY needs some available ingredient with isFryingMedium, like oil).
+ * It does NOT yet check arbitrary forbidden state transitions in general
+ * (e.g. nothing here stops peeling an already-boiled potato) — that needs
+ * the fuller transition table Phase 4 will add. It also only checks that a
+ * qualifying ingredient is *present*, not consume/decrement it — real
+ * quantity tracking belongs to Phase 4's recipe-level inventory.
  */
 
 export interface Instance {
@@ -31,7 +34,8 @@ export function applyAction(
   action: Action,
   entities: Map<string, Entity>,
   availableTools: ReadonlySet<string>,
-  params: Readonly<Record<string, string>> = {}
+  params: Readonly<Record<string, string>> = {},
+  availableIngredients: ReadonlySet<string> = new Set()
 ): ExecutionResult {
   const target = entities.get(instance.entityId);
   if (!target) {
@@ -62,6 +66,17 @@ export function applyAction(
   for (const toolId of action.requiredTools) {
     if (!availableTools.has(toolId)) {
       throw new Error(`${action.verb} requires tool "${toolId}", which is not available.`);
+    }
+  }
+
+  for (const capability of action.requiredIngredientCapabilities) {
+    const satisfied = [...availableIngredients].some(
+      (id) => entities.get(id)?.capabilities[capability] === true
+    );
+    if (!satisfied) {
+      throw new Error(
+        `${action.verb} requires an available ingredient with capability "${capability}", but none is on hand.`
+      );
     }
   }
 

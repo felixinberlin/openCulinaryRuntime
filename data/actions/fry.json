@@ -8,6 +8,7 @@
   "requiredTools": ["pan"],
   "requiredTargetCapability": "isFryable",
   "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isFryingMedium"],
   "parameters": [],
   "outputs": {
     "transformedState": "fried",
@@ -16,6 +17,6 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded."
+    "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded. requiredIngredientCapabilities: needs a frying medium (oil.json) present, on top of the pan tool and the target itself."
   }
 }

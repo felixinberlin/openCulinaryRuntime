@@ -10,7 +10,8 @@ const availableTools = new Set(["knife", "pan"]);
 function apply(
   instance: Instance,
   actionId: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
+  availableIngredients?: ReadonlySet<string>
 ): ExecutionResult {
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
@@ -18,7 +19,7 @@ function apply(
     ? ` (${Object.entries(params).map(([k, v]) => `${k}: ${v}`).join(", ")})`
     : "";
   console.log(`Applying ${action.verb}${label} to ${instance.entityId} (state: "${instance.state}")`);
-  const result = applyAction(instance, action, entities, availableTools, params);
+  const result = applyAction(instance, action, entities, availableTools, params, availableIngredients);
   console.log(`  -> ${instance.entityId} is now "${result.instance.state}"`);
   for (const s of result.spawned) console.log(`  -> spawned ${s.entityId} (state: "${s.state}")`);
   return result;
@@ -34,8 +35,17 @@ if (!peel) throw new Error("Expected 'peel' to spawn a potato_peel byproduct");
 
 ({ instance: potato } = apply(potato, "cut", { shape: "diced" }));
 
-console.log("\nThe spawned potato_peel isn't discarded — it's a full instance and can take its own actions:");
-const friedPeel = apply(peel, "fry").instance;
+console.log("\nThe spawned potato_peel isn't discarded — it's a full instance and can take its own actions.");
+
+console.log("\nTrying to fry it with no oil on hand:");
+try {
+  apply(peel, "fry");
+} catch (err) {
+  console.log(`  REJECTED: ${(err as Error).message}`);
+}
+
+console.log("\nWith oil available:");
+const friedPeel = apply(peel, "fry", undefined, new Set(["oil"])).instance;
 
 console.log("\nFinal inventory:");
 console.log(`  potato: ${potato.state}`);

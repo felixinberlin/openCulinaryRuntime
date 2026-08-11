@@ -89,6 +89,16 @@ export const ActionSchema = z.object({
    */
   requiredTargetCapability: z.string().optional(),
   validTargetKinds: z.array(EntityKindSchema).default(["ingredient"]),
+  /**
+   * Capabilities required of some OTHER ingredient present alongside the
+   * target — e.g. FRY needs a frying medium (oil, butter, ...) in addition
+   * to whatever's being fried. Capability-based like requiredTargetCapability,
+   * not id-based like requiredTools: any isFryingMedium ingredient will do,
+   * not one specific entity. Checked for presence only (not consumed/
+   * decremented) — proper ingredient consumption belongs to the full
+   * recipe-level inventory in ROADMAP.md Phase 4, not this per-action check.
+   */
+  requiredIngredientCapabilities: z.array(z.string()).default([]),
   parameters: z.array(ActionParameterSchema).default([]),
   outputs: ActionOutputsSchema,
   duration: z.enum(["fixed", "variable"]).default("variable"),

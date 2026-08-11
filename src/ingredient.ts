@@ -98,6 +98,7 @@ export const CapabilitiesSchema = z
     isSeasoning: z.boolean(),
     isWashable: z.boolean(),
     isBlendable: z.boolean(),
+    isFryingMedium: z.boolean(),
   })
   .partial()
   .catchall(z.boolean());

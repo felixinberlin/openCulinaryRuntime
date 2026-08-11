@@ -1,0 +1,34 @@
+{
+  "id": "oil",
+  "kind": "ingredient",
+  "names": {
+    "en": "Oil",
+    "es": "Aceite"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["cold", "hot"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isFryingMedium": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 920
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["liquid"],
+    "color": "yellow"
+  },
+  "cooklang": {
+    "canonicalToken": "aceite",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "isFryingMedium makes oil satisfy FRY's requiredIngredientCapabilities (data/actions/fry.json) — 'used for cooking, frying' starts with frying specifically; a broader isCookingMedium/general-cooking capability can be added once a generic COOK verb exists."
+  }
+}

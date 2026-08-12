@@ -1,0 +1,24 @@
+{
+  "id": "egg_pasteurization_liquid",
+  "names": {
+    "en": "Liquid egg pasteurization (already separated, stays raw)",
+    "es": "Pasteurización de huevo líquido (ya separado, queda crudo)"
+  },
+  "instantaneousC": 71,
+  "heldC": 60,
+  "heldSeconds": 210,
+  "pathogen": "Salmonella spp.",
+  "advisoryOnly": false,
+  "source": "60°C (140°F) for 3.5 minutes (210s) is the commonly-cited USDA-regulated minimum pasteurization requirement for liquid whole egg product (9 CFR Part 590 / FDA egg products standards) — a real, regulated figure, not an estimate. Flagged explicitly: this repo has not independently verified the exact regulated combination specifically for separated YOLK alone (as opposed to whole liquid egg) against the primary regulatory text — yolk's higher fat content generally provides somewhat more thermal protection, so a yolk-specific regulated combination may differ slightly. Verify against 9 CFR 590 / FDA egg products standards directly before production use.",
+  "thermalModel": {
+    "referenceTempC": 60,
+    "referenceHoldSeconds": 210,
+    "zValueC": 4.5,
+    "validityCondition": "Valid ONLY because the target here is already-separated, liquid egg yolk in a shallow water bath — thin, no insulating shell, reaches bath temperature quickly. NOT reused for egg.json's in-shell case (see egg_pasteurization_raw.json) — applying this same model against water-bath temperature for a whole shelled egg would understate the required time; see thermal.ts's ThermalInactivationModelSchema doc comment.",
+    "source": "z-value ~4.5°C is a commonly-cited representative figure in food-science literature for Salmonella thermal inactivation kinetics in egg products — flagged with the same confidence caveat as the source field above: verify against a primary source before production use, not independently re-derived here."
+  },
+  "metadata": {
+    "shellLagFinding": "Computed check, not asserted: requiredHoldSeconds(this model, 57°C) = 210 × 10^((60-57)/4.5) ≈ 975s (~16.2 min). egg_pasteurization_raw.json's actual in-shell empirical figure at the SAME 57°C is 3900s (65 min) — almost exactly 4x longer. That ~4x gap is consistent with real heat-penetration lag through the shell (the yolk doesn't actually reach 57°C the instant the water bath does) — a genuine, computed illustration of why the two CCPs in this repo are NOT interchangeable, not just a stated rule.",
+    "note": "Two-point simplification pattern retained (instantaneousC/heldC/heldSeconds) alongside the new thermalModel for backward compatibility with any consumer that doesn't look at thermalModel — the two are meant to agree at heldC/heldSeconds (they do, by construction: thermalModel.referenceTempC/referenceHoldSeconds equal heldC/heldSeconds here)."
+  }
+}

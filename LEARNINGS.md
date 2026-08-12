@@ -237,6 +237,32 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   before being asked about. Worth asking, for any dish name: what's the most
   common real-world qualifier attached to an order for it, and is it actually
   representable yet?
+- **Implementing the REAL D-value/z-value thermal-death-time model (the actual
+  math the FDA Food Code's own tables are built from) instead of two
+  hand-picked anchor points found a genuine, computable ~4x discrepancy
+  between my two existing egg-pasteurization CCPs — not a bug, but real
+  physics I hadn't made visible.** Both CCPs cite 57°C as a hold temperature;
+  one requires 3900s (in-shell), the other's real model predicts only ~975s
+  would be needed at 57°C (liquid). Computing that gap rather than asserting
+  "the shell matters" turned a plausible-sounding claim into a checkable
+  number (`node -e` one-liner, `~4.00x`, matches the expected order of
+  magnitude for real heat-penetration lag through a shell). General lesson:
+  where a genuinely standard, textbook formula exists (D/z-value kinetics is
+  not novel, it's how the reference tables were made in the first place),
+  implementing it as real, runnable math finds inconsistencies that citing
+  two separately-sourced numbers side by side will not — the numbers looked
+  independently plausible until asked to agree with each other via the same
+  formula.
+- **The real math also produced a genuine simplification, not just more
+  rigor**: once egg_yolk could be pasteurized directly (already-liquid,
+  no shell — the case where the model's uniform-temperature assumption is
+  actually valid), the alioli-with-egg-yolk recipe's wait dropped from 65
+  minutes to 3.5, backed by an actual USDA-cited regulated figure instead of
+  an in-shell process ported over by analogy. Being MORE correct (recognizing
+  two different physical scenarios need two different, properly-scoped
+  models) and MORE convenient (much shorter real recipe) turned out to be the
+  same fix, not a tradeoff — worth remembering that "more rigorous" and
+  "simpler for the end user" aren't always in tension.
 - **Auditing every action for "is blind retry safe" found a real bug: `PEEL`
   can spawn a byproduct that doesn't physically exist.** `PEEL` neither
   `destroysTarget` nor checks the target isn't already peeled — so a robot's

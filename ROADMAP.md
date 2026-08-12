@@ -258,6 +258,28 @@ implied to be a small addition.
       EMULSIFY are flagged `true` with an explicit caveat that re-running a
       finished result risks overcooking or, for EMULSIFY specifically,
       breaking an already-stable emulsion.
+- [x] **Real D-value/z-value thermal-death-time model — closed 2026-08-12,
+      not part of the original Phase 4.5 scope but a direct answer to "make
+      the system real, do the math, use standards."** `thermal.ts`'s
+      `ThermalInactivationModelSchema` + `requiredHoldSeconds()`: the actual
+      textbook microbiology formula the FDA Food Code's own multi-point
+      tables were derived from — computes required hold time at ANY actual
+      temperature from one cited reference point + a z-value, not just a
+      fixed two-point lookup. Applied to a NEW CCP,
+      `egg_pasteurization_liquid.json` (60°C/210s, a real USDA-cited
+      regulated figure for already-liquid egg product) — explicitly NOT
+      applied to the existing in-shell CCP, because the model's core
+      assumption (product reaches medium temperature quickly) is false for a
+      whole shelled egg. Computing what the model WOULD predict at the
+      in-shell CCP's own 57°C (~975s) against its real empirical figure
+      (3900s) surfaced a genuine ~4x gap — the measurable signature of shell
+      heat-penetration lag, not asserted, calculated. Real payoff, not just
+      rigor for its own sake: `handmade-alioli-egg-yolk.json`'s pasteurization
+      step dropped from 65 minutes to 3.5, because pasteurizing the
+      already-separated yolk directly is both MORE correct (right model for
+      the right physical situation) and simpler (shorter, standards-backed,
+      matches real commercial liquid-egg practice) — not a tradeoff between
+      rigor and convenience.
 - [ ] Structured `DomainFact`/`PhysicalProperty` records (typed value, unit,
       source, `verified: boolean`) alongside — not replacing — the prose
       `metadata.notes` this repo is full of. A robot's planner/verifier

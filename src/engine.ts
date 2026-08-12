@@ -1,6 +1,6 @@
 import type { Entity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
-import type { CriticalControlPoint } from "./thermal.ts";
+import { requiredHoldSeconds, type CriticalControlPoint } from "./thermal.ts";
 
 /**
  * Minimal execution engine — applies one canonical Action to one instance.
@@ -333,10 +333,29 @@ export function applyAction(
       if (Number.isNaN(seconds)) {
         throw new Error(`${action.verb} on "${target.id}": durationSeconds "${durationRaw}" is not a valid number — cannot verify the "${ccp.names.en}" threshold, so refusing to proceed.`);
       }
-      if (seconds < ccp.heldSeconds) {
-        const msg =
-          `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` +
-          `${ccp.heldSeconds}s at ${ccp.heldC}°C (or ${ccp.instantaneousC}°C instantaneous) for ${ccp.pathogen}. ${ccp.source}`;
+
+      // If this CCP has a real, computable thermal model AND the step
+      // supplied an actual temperature (waterTempC), compute the required
+      // hold time at THAT exact temperature instead of only ever checking
+      // against the one fixed heldC/heldSeconds anchor — see
+      // ThermalInactivationModelSchema's doc comment (thermal.ts) for the
+      // real D/z-value math and its validity condition.
+      let requiredSeconds = ccp.heldSeconds;
+      let thresholdDescription = `${ccp.heldSeconds}s at ${ccp.heldC}°C (or ${ccp.instantaneousC}°C instantaneous)`;
+      const waterTempRaw = params["waterTempC"];
+      if (ccp.thermalModel && waterTempRaw !== undefined) {
+        const actualTempC = Number(waterTempRaw);
+        if (Number.isNaN(actualTempC)) {
+          throw new Error(`${action.verb} on "${target.id}": waterTempC "${waterTempRaw}" is not a valid number — cannot compute the "${ccp.names.en}" threshold, so refusing to proceed.`);
+        }
+        requiredSeconds = requiredHoldSeconds(ccp.thermalModel, actualTempC);
+        thresholdDescription =
+          `${requiredSeconds.toFixed(1)}s, computed for the actual ${actualTempC}°C via thermal.ts's D/z model ` +
+          `(reference ${ccp.thermalModel.referenceHoldSeconds}s @ ${ccp.thermalModel.referenceTempC}°C, z=${ccp.thermalModel.zValueC}°C — ${ccp.thermalModel.validityCondition})`;
+      }
+
+      if (seconds < requiredSeconds) {
+        const msg = `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` + `${thresholdDescription} for ${ccp.pathogen}. ${ccp.source}`;
         const overridden = policy.mode === "autonomous" && policy.humanOverrides?.has(ccp.id) === true;
         if (ccp.advisoryOnly && (policy.mode === "human" || overridden)) {
           warnings.push(overridden ? `${msg} [autonomous mode: proceeding on explicit human override]` : msg);

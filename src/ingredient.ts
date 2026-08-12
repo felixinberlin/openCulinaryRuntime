@@ -161,8 +161,24 @@ export const EntitySchema = z.object({
    * CUT can target needs peeling first).
    */
   statePrerequisites: z.record(z.string(), z.string()).default({}),
-  /** Entity ids this entity may spawn when consumed (CONCEPT.md §9). */
+  /**
+   * Entity ids this entity may spawn when consumed (CONCEPT.md §9). This is
+   * the fallback list any `spawnsTargetByproducts` action uses when it has
+   * no more specific entry in `byproductsByAction` below — correct as long
+   * as an entity has at most one action that spawns byproducts (e.g.
+   * potato.json + peel -> potato_peel).
+   */
   producedByproducts: z.array(z.string()).default([]),
+  /**
+   * Per-action override of `producedByproducts`, keyed by action id, for an
+   * entity with more than one `spawnsTargetByproducts` action that don't
+   * yield the same things — e.g. egg.json: PEEL (a boiled egg's shell)
+   * should spawn only egg_shell, while SEPARATE (cracking a raw egg) spawns
+   * egg_shell + egg_yolk + egg_white. Without this, both actions would
+   * spawn the full flat `producedByproducts` list, which is wrong for PEEL.
+   * An action id absent here falls back to the flat list.
+   */
+  byproductsByAction: z.record(z.string(), z.array(z.string())).default({}),
   capabilities: CapabilitiesSchema.default({}),
   thermophysical: ThermophysicalPropertiesSchema.optional(),
   sensory: SensoryPropertiesSchema.optional(),

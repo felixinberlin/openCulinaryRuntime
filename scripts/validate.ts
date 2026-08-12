@@ -52,6 +52,16 @@ for (const entity of entities.items.values()) {
       fail(`entities/${entity.id}.json: allowedTransformations references unknown action "${actionId}"`);
     }
   }
+  for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
+    if (!actions.items.has(actionId)) {
+      fail(`entities/${entity.id}.json: byproductsByAction references unknown action "${actionId}"`);
+    }
+    for (const byproductId of byproductIds) {
+      if (!entities.items.has(byproductId)) {
+        fail(`entities/${entity.id}.json: byproductsByAction["${actionId}"] references unknown entity "${byproductId}"`);
+      }
+    }
+  }
 }
 
 for (const action of actions.items.values()) {

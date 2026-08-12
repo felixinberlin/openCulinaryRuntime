@@ -61,11 +61,18 @@ export function runRecipe(
 
     try {
       const result = applyAction(instance, action, entities, availableTools, step.params, availableIngredientEntityIds);
-      inventory.set(step.targetInstanceId, result.instance);
       const tagsLabel = result.instance.tags.length ? `, tags [${result.instance.tags}]` : "";
-      log.push(
-        `${action.verb} ${step.targetInstanceId}: state "${instance.state}" -> "${result.instance.state}"${tagsLabel}`
-      );
+      if (result.destroyed) {
+        inventory.delete(step.targetInstanceId);
+        log.push(
+          `${action.verb} ${step.targetInstanceId}: state "${instance.state}" -> "${result.instance.state}"${tagsLabel} (destroyed — conservation of mass)`
+        );
+      } else {
+        inventory.set(step.targetInstanceId, result.instance);
+        log.push(
+          `${action.verb} ${step.targetInstanceId}: state "${instance.state}" -> "${result.instance.state}"${tagsLabel}`
+        );
+      }
       for (const spawned of result.spawned) {
         const spawnedId = `${spawned.entityId}-${++spawnCounter}`;
         inventory.set(spawnedId, spawned);

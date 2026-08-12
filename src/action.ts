@@ -63,6 +63,16 @@ export const ActionOutputsSchema = z
     addsTag: z.string().optional(),
     /** If true, entities listed in the target's own `producedByproducts` are spawned. */
     spawnsTargetByproducts: z.boolean().default(false),
+    /**
+     * If true, the target instance is fully consumed and removed from the
+     * simulation inventory rather than kept around in `transformedState` —
+     * CLAUDE_DEV_CTX.md's conservation-of-mass rule: "separate" destroys
+     * the parent egg; only the spawned children remain afterward.
+     * `transformedState` may still be set alongside this — it becomes the
+     * state recorded in the run log for the instance's last moment before
+     * removal, not a state anything will ever observe it in afterward.
+     */
+    destroysTarget: z.boolean().default(false),
   })
   .refine((o) => !(o.transformedState && o.transformedStateFromParameter), {
     message: "transformedState and transformedStateFromParameter are mutually exclusive",

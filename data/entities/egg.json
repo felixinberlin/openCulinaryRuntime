@@ -1,0 +1,54 @@
+{
+  "id": "egg",
+  "kind": "ingredient",
+  "names": {
+    "en": "Egg",
+    "es": "Huevo"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 76,
+      "protein_g": 13,
+      "fat_g": 11,
+      "carbohydrate_g": 1.1
+    }
+  },
+  "possibleStates": ["raw", "boiled", "fried", "peeled", "separated"],
+  "possibleTags": ["salted"],
+  "allowedTransformations": ["boil", "fry", "peel", "salt", "separate"],
+  "statePrerequisites": {
+    "peel": "boiled"
+  },
+  "producedByproducts": ["egg_shell"],
+  "byproductsByAction": {
+    "separate": ["egg_shell", "egg_yolk", "egg_white"]
+  },
+  "capabilities": {
+    "isBoilable": true,
+    "isFryable": true,
+    "isPeelable": true,
+    "isSeasonable": true,
+    "isSeparable": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 1030,
+    "thermalConductivityWPerMK": 0.34
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["smooth"],
+    "color": "off-white"
+  },
+  "cooklang": {
+    "canonicalToken": "huevo",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE specifically to also spawn egg_yolk + egg_white, since (unlike PEEL) SEPARATE also destroysTarget — see data/actions/separate.json."
+  }
+}

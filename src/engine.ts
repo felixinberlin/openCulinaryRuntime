@@ -23,6 +23,15 @@ import type { Action } from "./action.ts";
  * fried/...), while `tags` holds any number of orthogonal properties
  * (e.g. "salted") that coexist with whatever the current state is — see
  * ActionOutputsSchema.addsTag in action.ts.
+ *
+ * `ExecutionResult.destroyed` (driven by `action.outputs.destroysTarget`)
+ * is the conservation-of-mass case CLAUDE_DEV_CTX.md and ROADMAP.md Phase 4
+ * call out: e.g. SEPARATE on an egg — the caller (recipe-runner.ts) must
+ * drop the target from inventory instead of writing `instance` back, while
+ * still spawning `spawned` in its place. This engine only implements that
+ * for a single explicit action's target; it is not the general "decrement
+ * quantities against an arbitrary inventory" system Phase 4 ultimately
+ * wants.
  */
 
 export interface Instance {
@@ -32,8 +41,14 @@ export interface Instance {
 }
 
 export interface ExecutionResult {
+  /** The target's state/tags right before this action finished — still
+   *  populated even when `destroyed` is true, for logging purposes; the
+   *  caller must not write it back into inventory in that case. */
   instance: Instance;
   spawned: Instance[];
+  /** True when `action.outputs.destroysTarget` fired: the caller must
+   *  remove the target from inventory rather than keep `instance`. */
+  destroyed: boolean;
 }
 
 export function applyAction(
@@ -128,7 +143,8 @@ export function applyAction(
 
   const spawned: Instance[] = [];
   if (action.outputs.spawnsTargetByproducts) {
-    for (const byproductId of target.producedByproducts) {
+    const byproductIds = target.byproductsByAction[action.id] ?? target.producedByproducts;
+    for (const byproductId of byproductIds) {
       const byproductEntity = entities.get(byproductId);
       spawned.push({
         entityId: byproductId,
@@ -138,5 +154,5 @@ export function applyAction(
     }
   }
 
-  return { instance: updated, spawned };
+  return { instance: updated, spawned, destroyed: action.outputs.destroysTarget };
 }

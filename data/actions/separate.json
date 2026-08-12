@@ -1,0 +1,23 @@
+{
+  "id": "separate",
+  "verb": "SEPARATE",
+  "names": {
+    "en": "Separate",
+    "es": "Separar"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isSeparable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "separated",
+    "spawnsTargetByproducts": true,
+    "destroysTarget": true
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "CLAUDE_DEV_CTX.md's own conservation-of-mass example: 'separate' destroys the parent egg, spawns disjoint egg_shell + egg_yolk + egg_white in its place (data/entities/egg.json's byproductsByAction.separate). requiredTargetCapability 'isSeparable' isn't one of CapabilitiesSchema's named fields (ingredient.ts) — it validates anyway via that schema's deliberate .catchall(z.boolean()), same pattern as any future unrecognized capability. destroysTarget: true is what actually makes recipe-runner.ts remove the egg instance from inventory instead of keeping it as a 'separated' egg alongside its own byproducts — see engine.ts's ExecutionResult.destroyed and ROADMAP.md's previously-unchecked 'Conservation of mass/entities on applyStep' item, now implemented for this explicit-opt-in case (not yet a general inventory-quantity system)."
+  }
+}

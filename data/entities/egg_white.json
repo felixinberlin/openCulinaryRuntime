@@ -1,0 +1,40 @@
+{
+  "id": "egg_white",
+  "kind": "ingredient",
+  "names": {
+    "en": "Egg white",
+    "es": "Clara de huevo"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 88,
+      "protein_g": 11,
+      "carbohydrate_g": 0.7
+    }
+  },
+  "possibleStates": ["raw", "blended"],
+  "allowedTransformations": ["mix"],
+  "producedByproducts": [],
+  "capabilities": {
+    "isBlendable": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["viscous", "translucent"],
+    "color": "clear"
+  },
+  "cooklang": {
+    "canonicalToken": "clara",
+    "spiceLock": false
+  },
+  "metadata": {
+    "producedBy": ["separate"],
+    "notes": "Byproduct entity spawned when 'separate' is applied to egg.json (see EntitySchema.producedByproducts on egg) — mirrors potato_peel.json's producedBy convention for potato's 'peel' byproduct.",
+    "todo": "isBlendable/mix reuses the existing MIX action (data/actions/mix.json, mixer tool) — same mechanism as potato_peel.json. MIX has no intensity/duration parameter yet, so 'mixed a little vs. a lot' isn't distinguishable, just raw-vs-blended; whipping to stiff peaks specifically (soft/firm/stiff peak stages) isn't modeled."
+  }
+}

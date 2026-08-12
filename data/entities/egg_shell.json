@@ -1,0 +1,31 @@
+{
+  "id": "egg_shell",
+  "kind": "ingredient",
+  "names": {
+    "en": "Egg shell",
+    "es": "Cáscara de huevo"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "chemicalFormula": "CaCO3"
+  },
+  "possibleStates": ["raw"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "byproductsByAction": {},
+  "capabilities": {},
+  "sensory": {
+    "texture": ["brittle"],
+    "color": "off-white"
+  },
+  "metadata": {
+    "isWaste": true,
+    "reusable": false,
+    "producedBy": ["peel", "separate"],
+    "notes": "The one byproduct common to both of egg.json's spawning actions — PEEL (shell off a boiled egg) and SEPARATE (cracking a raw egg) — hence it's egg.json's flat producedByproducts fallback, with byproductsByAction only overriding SEPARATE to add egg_yolk + egg_white on top. Unlike potato_peel.json, marked non-reusable: no fry/mix-equivalent reuse path modeled for it."
+  }
+}

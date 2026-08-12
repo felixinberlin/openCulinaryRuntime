@@ -1,6 +1,6 @@
 # CONCEPT.md — Tortilla World
 
-> Captured from `masideas.md` (raw outline/notes). This is a structured write-up of that outline, not a finished spec — sections marked **TODO (from source)** were only a heading in the original notes and still need real content. This document has **not** been reconciled with `CLAUDE_DEV_CTX.md` / `Culinary_Informatics_Research_Plan.pdf` / `ROADMAP.md`, which build around a linear step-sequence recipe model that this outline explicitly argues against (see §12). Treat the two as parallel design tracks until that's resolved.
+> Captured from `masideas.md` (raw outline/notes). This is a structured write-up of that outline, not a finished spec — sections marked **TODO (from source)** were only a heading in the original notes and still need real content. This document was **not** reconciled with `CLAUDE_DEV_CTX.md` / `Culinary_Informatics_Research_Plan.pdf` / `ROADMAP.md`, which build around a linear step-sequence recipe model that this outline explicitly argues against (see §12), for most of this project's life. **Resolved 2026-08-12 — see `WORLD_MODEL.md`**: the world (§10's event-sourced objects, undergoing continuous physical/chemical transformation) is the primary representation; a recipe is one layer of intent on top, not the core. The linear-sequence machinery already built (`Action`/`Entity`/`RecipeScript`/`engine.ts`) isn't discarded — `WORLD_MODEL.md` argues it's already shaped like a planning domain (preconditions/effects) that a not-yet-built planner would search over, with a completed run's trace being exactly this section's Timeline.
 
 Working title: **Tortilla World**. Philosophy, per the source notes: *"Grandma First, Machine Deep"* — recipes are authored the way a person actually talks about cooking; the mechanical/scientific structure lives underneath, never the other way around.
 
@@ -141,7 +141,7 @@ It contains:
 - Tolerance
 - Victory Conditions
 
-i.e. a recipe declares *what counts as done*, not an ordered procedure to follow. (This is the piece that conflicts with `RecipeScriptSchema`'s linear `sequence: MechanicalAction[]` in `CLAUDE_DEV_CTX.md` — unresolved, see the note at the top of this file.)
+i.e. a recipe declares *what counts as done*, not an ordered procedure to follow. (This is the piece that conflicts with `RecipeScriptSchema`'s linear `sequence: MechanicalAction[]` in `CLAUDE_DEV_CTX.md` — **resolved 2026-08-12, see `WORLD_MODEL.md`**: this section's shape — Goals/Constraints/Acceptable States/Tolerance/Victory Conditions — is the intent layer a not-yet-built planner would compile into one of `RecipeScriptSchema`'s linear sequences, not a competing format to pick instead of it.)
 
 ## 13. Validation Engine
 

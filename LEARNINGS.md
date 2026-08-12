@@ -146,3 +146,77 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   it explicitly doesn't simulate a run, just logs a NOTE for any
   `targetInstanceId`/`secondaryInstanceId` not in `initialInventory`. Running
   the recipe and reading the actual log is the only real check.
+- **A wrong/typo'd id in `availableIngredientInstanceIds` fails SILENTLY, not
+  loudly — found this the hard way, not by design review.**
+  `handmade-alioli-egg-yolk.json` referenced `"egg_yolk-1"` for months of
+  session-time (several turns) when the actual spawned id was always
+  `"egg_yolk-3"` — and it never errored, because `recipe-runner.ts`'s
+  resolution (`inventory.get(id)?.entityId`, filtered for `undefined`) just
+  drops an unresolvable id rather than failing. The step "worked" anyway
+  because `oil-1` alone already satisfied `isEmulsifier`. A step can look
+  correct in every log line and still be silently not using an ingredient you
+  meant it to. Worth grep-checking recipe files for instance ids that don't
+  appear anywhere as a spawn source, not just trusting a clean run.
+- **Byproduct/combine spawning always hardcoded `tags: []` for the new
+  instance, discarding the parent's tags — a real bug, not a hypothetical
+  one.** Would have silently defeated a `pasteurize` → `separate` → `emulsify`
+  safety chain: the whole point of tagging a pasteurized egg is that the tag
+  survives being split into yolk/white. Fixed by inheriting the parent's (and,
+  for `combinesInto`, the secondary instance's) tags into spawned instances,
+  filtered against the spawned entity's own `possibleTags` so nothing
+  semantically nonsensical leaks through. Every entity that's meant to receive
+  an inherited tag needs that tag explicitly listed in its own `possibleTags`
+  — the filter is a feature (stops garbage propagation), not a bug, but it
+  means adding a new safety tag anywhere requires updating every entity
+  downstream that should be able to carry it.
+- **Not every safety shortfall deserves the same `advisoryOnly` treatment.**
+  `egg_cooking.json` (a runny yolk from active cooking) is `advisoryOnly: true`
+  — a real FDA-recognized "disclosed, diner accepts it" practice.
+  `egg_pasteurization_raw.json` (raw egg yolk used with NO pasteurization step
+  at all, e.g. in alioli) is `advisoryOnly: false` — a hard reject in every
+  `SafetyPolicy` mode, including "human," on purpose: there's no equivalent
+  "the child knowingly accepted this" framing for silently skipping the one
+  mitigation available. The mechanism (`SafetyPolicy`) doesn't decide this by
+  itself — the CCP author has to make the actual judgment call per hazard, and
+  say why, not default every CCP to the same posture.
+- **A recipe using a raw, safety-relevant ingredient (raw egg yolk) can run
+  with ZERO enforcement for a long time if the enforcement mechanism is keyed
+  to the wrong trigger.** `egg_cooking.json`'s CCP only checks on
+  `FRY`/`SCRAMBLE`/`POACH`/`BOIL` — actions with a `durationSeconds` tied to
+  active cooking. `handmade-alioli-egg-yolk.json` never cooks the yolk at all
+  (that's the entire point of the dish), so that CCP silently never applied,
+  across several turns of session-time, until directly asked to "refine" the
+  recipe for real use. The fix needed a genuinely different CCP (a different
+  point on the real time-temperature curve — low-temp, long-hold, stays raw —
+  not a stricter version of the cooking one) tied to a NEW action
+  (`PASTEURIZE`) that the recipe didn't previously have a reason to include.
+  Worth checking, for any raw/never-cooked ingredient use: is there actually
+  an action in the sequence the safety mechanism can attach to at all?
+- **A boolean comparison against `NaN` is `false`, not an error — so
+  `if (seconds < threshold)` silently SKIPS a safety check on malformed input
+  instead of failing it.** Found by deliberately asking "what would a robot
+  need this to guarantee" rather than by code review: the CCP-shortfall check
+  in `engine.ts` only worked correctly because every CCP-linked action
+  happens, by convention, to also declare `durationSeconds` as a validated
+  `numericRange` parameter (which throws on `NaN` earlier in the same
+  function) — the CCP check itself wasn't self-defending. Fixed with an
+  explicit `Number.isNaN` guard right at the check, not relying on an
+  implicit, unenforced coupling between two different parts of the function.
+  General lesson: any comparison-based safety gate fed by user/parsed input
+  needs its own guard against the input not being a valid number at all — a
+  missing bounds check elsewhere in the same function is not a substitute.
+- **`ActionSchema`'s precondition/effect shape (`requiredTargetCapability`
+  etc. as preconditions, `outputs.*` as effects) turns out to already be a
+  STRIPS/PDDL-style planning-operator representation — discovered by asking
+  "what recipe format would a robot actually want," not by designing for it
+  up front.** Every `RecipeScript.sequence` authored this session was a
+  human (me) doing backward-chaining through that precondition/effect graph
+  by hand, one file at a time — exactly the job an automated planner exists
+  to do. This reframes `CONCEPT.md` §12's long-flagged, unreconciled fork
+  (goal-based recipes vs. linear step-sequence): they're not actually
+  competing formats, one is the compiled OUTPUT of planning against the
+  other's GOAL spec. See `WORLD_MODEL.md`. Worth remembering generally: a
+  schema built for one purpose (validating/executing hand-authored recipes)
+  can turn out to already fit a different, larger purpose (automated
+  planning) it was never explicitly designed for — recognizing that is
+  cheaper than redesigning from scratch.

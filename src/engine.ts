@@ -321,6 +321,18 @@ export function applyAction(
         );
       }
       const seconds = Number(durationRaw);
+      // Self-defending against malformed input, not just relying on the
+      // parameters[] loop above having already validated durationSeconds as
+      // a numericRange param: `NaN < ccp.heldSeconds` is FALSE in JS, so
+      // without this guard a garbled duration would silently SKIP the
+      // safety check entirely rather than fail it — the exact failure mode
+      // this whole mechanism exists to prevent. That the parameters loop
+      // currently always catches this first (every CCP-linked action
+      // declares durationSeconds formally) is a convention, not an enforced
+      // invariant; this check must not depend on that convention holding.
+      if (Number.isNaN(seconds)) {
+        throw new Error(`${action.verb} on "${target.id}": durationSeconds "${durationRaw}" is not a valid number — cannot verify the "${ccp.names.en}" threshold, so refusing to proceed.`);
+      }
       if (seconds < ccp.heldSeconds) {
         const msg =
           `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` +

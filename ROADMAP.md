@@ -175,6 +175,44 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       calibration per physical rig) that a schema/validation repo like this
       one cannot substitute for — flagged clearly rather than implied away.
 
+## Phase 4.5 — Goal-directed planning (`WORLD_MODEL.md`, new, 2026-08-12)
+Resolves `CONCEPT.md`'s long-flagged fork (see that file's updated top note and
+§12): the world is primary, a recipe is one layer of intent on top of it. Not
+started — a real proposal, scoped honestly as substantial separate work, not
+implied to be a small addition.
+- [ ] `RecipeIntentSchema` (or similar) — goals/constraints/acceptable-states/
+      tolerance/victory-conditions, replacing hand-authored `RecipeScript` as
+      the AUTHORING format. `RecipeScriptSchema` itself doesn't go away — it
+      becomes the planner's grounded output / a completed run's trace.
+- [ ] An actual planner — searches `Action`'s existing precondition/effect
+      shape (`requiredTargetCapability`/`requiredTools`/
+      `requiredIngredientCapabilities`/`requiredSecondaryCapability` as
+      preconditions; `outputs.*` as effects — already structurally a STRIPS/
+      PDDL-style planning domain, just never driven that way) from current
+      world state to a goal. Every `data/recipes/*.json` file today is a
+      hand-computed example of exactly this search, done manually, one file
+      at a time.
+- [ ] Closed-loop / replanning execution mode, distinct from
+      `recipe-runner.ts`'s current "log the failure, continue to the next
+      step anyway" — correct for offline validation, actively wrong if ever
+      reused verbatim to drive a real robot through a physical failure.
+- [ ] `VerificationCriterion`-per-state-transition — generalizes the CCP
+      pattern (a sensor-checkable threshold classification over a continuous
+      quantity) beyond just HACCP, so a discrete state label like `"fried"`
+      has an explicit, structured, checkable definition instead of an
+      open-loop "trust the timer" parameter. Still NOT a continuous-physics
+      simulator — measuring the continuous quantity stays a real sensing
+      layer's job, out of scope here same as the item above.
+- [ ] Structured `DomainFact`/`PhysicalProperty` records (typed value, unit,
+      source, `verified: boolean`) alongside — not replacing — the prose
+      `metadata.notes` this repo is full of. A robot's planner/verifier
+      cannot safely consult an English paragraph for a safety-critical number
+      at runtime; having anything interpret one to extract such a number
+      (most obviously an LLM) is exactly what `ENGINE_INVARIANTS.md` #10
+      forbids. `egg_cooking.json`'s `metadata.coagulationReferenceC` is the
+      right instinct already present, just not yet a consistent, first-class
+      pattern.
+
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 - [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.
 - [ ] Cooklang parser. Partial groundwork exists — every entity has a

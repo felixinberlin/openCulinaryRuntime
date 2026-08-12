@@ -1,0 +1,30 @@
+{
+  "id": "handmade_alioli_egg_yolk",
+  "names": {
+    "en": "Handmade Alioli with Egg Yolk",
+    "es": "Alioli Casero con Yema de Huevo"
+  },
+  "initialInventory": [
+    { "id": "garlic-1", "entityId": "garlic", "state": "raw", "tags": [] },
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["knife", "mortar"],
+  "sequence": [
+    { "actionId": "peel", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    { "actionId": "crush", "targetInstanceId": "garlic-1", "params": { "fineness": "fine_paste" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "separate", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "emulsify",
+      "targetInstanceId": "garlic-1",
+      "params": { "oilAdditionRate": "slow_stream", "durationSeconds": "240" },
+      "availableIngredientInstanceIds": ["oil-1", "egg_yolk-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "Sibling of handmade-alioli.json (see that file's metadata.comparisonGroup) — same tools (knife only for PEEL, everything else mortar-only), same peel -> salt -> crush(fine_paste) opening sequence on garlic-1, same EMULSIFY action and target. Two differences, both deliberate: (1) an extra step, SEPARATE on egg-1 (data/actions/separate.json), producing egg_yolk-1 (used) plus egg_white-1/egg_shell-1 (spawned, unused here — same 'leftover byproduct just sits in inventory' pattern as potato_peel in salted-fried-potatoes.json); only the yolk goes in, matching real technique (egg white would thin/loosen the emulsion, not stabilize it). (2) emulsify's params: oilAdditionRate 'slow_stream' (not 'drop_by_drop') and durationSeconds 240 (4 minutes, not 900/15) — lecithin's greater stabilizing power (egg_yolk.json's isEmulsionStabilizer) means real technique tolerates faster pouring and finishes far quicker than the egg-free version. Both numbers are directly comparable to handmade-alioli.json's for exactly that reason: same parameter ids, same units, different values, not a different modeling approach.",
+    "honestyNote": "egg_yolk-1's presence in the emulsify step's availableIngredientInstanceIds does not itself change engine behavior — requiredIngredientCapabilities still only checks isEmulsifier (satisfied by oil-1, unchanged from handmade-alioli.json). The faster/more-forgiving outcome this recipe represents lives entirely in the chosen parameter VALUES (oilAdditionRate/durationSeconds), authored to reflect real technique, not derived by the engine from egg_yolk-1 being on hand — see egg_yolk.json's emulsionStabilizerNote and emulsify.json's patienceNote for the same limitation stated elsewhere."
+  }
+}

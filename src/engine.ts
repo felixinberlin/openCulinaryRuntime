@@ -53,7 +53,30 @@ import type { CriticalControlPoint } from "./thermal.ts";
  * A shortfall throws unless the CCP is `advisoryOnly`, in which case it's
  * appended to `ExecutionResult.warnings` instead — the FDA Food Code's
  * actual "increased risk, permitted with disclosure" posture for e.g. a
- * runny egg yolk, not a hard ban.
+ * runny egg yolk, not a hard ban — UNLESS `policy.mode === "autonomous"`
+ * (SafetyPolicy, below), where an unoverridden advisory is *also* a hard
+ * reject: CONCEPT.md §17 says a robot drives the same event timeline as a
+ * human, same API, but "same API" cannot mean "same default judgment call"
+ * when there is no human to make it. "human" (the default) preserves the
+ * original warn-and-continue behavior unchanged for every existing caller.
+ *
+ * CONCEPT.md §17 also means every categorical "informational only, not
+ * enforced" parameter this codebase has accumulated (fry.json's heatLevel/
+ * agitation/doneness, scramble.json's curdSize, emulsify.json's
+ * oilAdditionRate, poach.json's waterTempC, ...) needs to be read
+ * correctly for what it actually is: a human-readable technique hint, NOT
+ * a calibrated robot control setpoint. "heatLevel: high" has no defined
+ * mapping to an actual actuator command — a controller that invented one
+ * unilaterally would itself be a safety problem, not a solution to one.
+ * Autonomous execution of any of this would need a real translation/
+ * control/perception layer (closed-loop temperature control, computer
+ * vision for "golden" vs "brown", force feedback for CRUSH's fineness,
+ * physical proximity/hazard sensing for a knife or a hot pan near a
+ * person) that does not exist in this repo. SafetyPolicy's "autonomous"
+ * mode only changes what happens to a stated HACCP time threshold — it
+ * does NOT mean the rest of this engine is robot-ready. Flagged here
+ * deliberately rather than letting "autonomous mode exists now" imply
+ * more than it does.
  */
 
 export interface Instance {
@@ -61,6 +84,27 @@ export interface Instance {
   state: string;
   tags: string[];
 }
+
+/**
+ * Execution policy for who's actually driving — CONCEPT.md §17: a robot
+ * "consumes/drives the same event timeline a human session would," same
+ * API, but that can't mean same DEFAULT for a safety shortfall. An
+ * advisoryOnly CCP shortfall (thermal.ts) warns-and-continues under
+ * "human" — the existing default, and the right one when a person is
+ * present to judge a runny yolk for themselves. Under "autonomous" (a
+ * robot with no human directly supervising this step), the same shortfall
+ * is a hard reject by default: no judgment call to defer to. It only
+ * proceeds if the specific CCP id is in `humanOverrides` — an explicit,
+ * prior authorization (e.g. a diner ordered a soft yolk knowingly), not a
+ * blanket "trust the robot" switch. Defaults to "human" so every existing
+ * caller's behavior is unchanged unless it opts in.
+ */
+export interface SafetyPolicy {
+  mode: "human" | "autonomous";
+  humanOverrides?: ReadonlySet<string>;
+}
+
+const DEFAULT_SAFETY_POLICY: SafetyPolicy = { mode: "human" };
 
 export interface ExecutionResult {
   /** The target's state/tags right before this action finished — still
@@ -84,7 +128,8 @@ export function applyAction(
   availableTools: ReadonlySet<string>,
   params: Readonly<Record<string, string>> = {},
   availableIngredients: ReadonlySet<string> = new Set(),
-  ccps: ReadonlyMap<string, CriticalControlPoint> = new Map()
+  ccps: ReadonlyMap<string, CriticalControlPoint> = new Map(),
+  policy: SafetyPolicy = DEFAULT_SAFETY_POLICY
 ): ExecutionResult {
   const target = entities.get(instance.entityId);
   if (!target) {
@@ -215,8 +260,14 @@ export function applyAction(
         const msg =
           `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` +
           `${ccp.heldSeconds}s at ${ccp.heldC}°C (or ${ccp.instantaneousC}°C instantaneous) for ${ccp.pathogen}. ${ccp.source}`;
-        if (ccp.advisoryOnly) {
-          warnings.push(msg);
+        const overridden = policy.mode === "autonomous" && policy.humanOverrides?.has(ccp.id) === true;
+        if (ccp.advisoryOnly && (policy.mode === "human" || overridden)) {
+          warnings.push(overridden ? `${msg} [autonomous mode: proceeding on explicit human override]` : msg);
+        } else if (ccp.advisoryOnly) {
+          // autonomous, not overridden: an advisory a human could judge for
+          // themselves has no judge here, so the safe default is reject —
+          // see SafetyPolicy's doc comment.
+          throw new Error(`${msg} [autonomous mode: no human present to accept this risk — rejected by default; pass this CCP's id in humanOverrides to proceed]`);
         } else {
           throw new Error(msg);
         }

@@ -2,7 +2,7 @@ import type { Entity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript, RecipeStep } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
-import { applyAction, type Instance } from "./engine.ts";
+import { applyAction, type Instance, type SafetyPolicy } from "./engine.ts";
 
 /**
  * Walks a RecipeScript's sequence against engine.ts's applyAction, the way
@@ -33,7 +33,8 @@ export function runRecipe(
   recipe: RecipeScript,
   entities: Map<string, Entity>,
   actions: Map<string, Action>,
-  ccps: Map<string, CriticalControlPoint> = new Map()
+  ccps: Map<string, CriticalControlPoint> = new Map(),
+  policy?: SafetyPolicy
 ): RecipeRunResult {
   const inventory = new Map<string, Instance>();
   for (const item of recipe.initialInventory) {
@@ -66,7 +67,7 @@ export function runRecipe(
     );
 
     try {
-      const result = applyAction(instance, action, entities, availableTools, step.params, availableIngredientEntityIds, ccps);
+      const result = applyAction(instance, action, entities, availableTools, step.params, availableIngredientEntityIds, ccps, policy);
       const tagsLabel = result.instance.tags.length ? `, tags [${result.instance.tags}]` : "";
       for (const warning of result.warnings) {
         warnings.push(warning);

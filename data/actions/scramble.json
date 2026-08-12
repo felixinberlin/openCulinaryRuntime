@@ -1,0 +1,22 @@
+{
+  "id": "scramble",
+  "verb": "SCRAMBLE",
+  "names": {
+    "en": "Scramble",
+    "es": "Revolver"
+  },
+  "requiredTools": ["pan"],
+  "requiredTargetCapability": "isScramblable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isFryingMedium"],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "scrambled",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Distinct verb from FRY even though both need the same pan + frying-medium setup: stirred while cooking into curds, vs. FRY left undisturbed as a held sheet (the plain/French omelette reading of FRY on egg_cracked). Deliberately its own capability (isScramblable) rather than reusing isFryable, matching this codebase's one-capability-per-verb convention (isPeelable/PEEL, isBoilable/BOIL, ...) instead of overloading one flag across two verbs. Targets egg_cracked, not the whole raw egg — see data/actions/crack.json."
+  }
+}

@@ -18,22 +18,25 @@
       "carbohydrate_g": 1.1
     }
   },
-  "possibleStates": ["raw", "boiled", "fried", "peeled", "separated"],
+  "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached"],
   "possibleTags": ["salted"],
-  "allowedTransformations": ["boil", "fry", "peel", "salt", "separate"],
+  "allowedTransformations": ["boil", "fry", "peel", "salt", "separate", "crack", "poach"],
   "statePrerequisites": {
     "peel": "boiled"
   },
   "producedByproducts": ["egg_shell"],
   "byproductsByAction": {
-    "separate": ["egg_shell", "egg_yolk", "egg_white"]
+    "separate": ["egg_shell", "egg_yolk", "egg_white"],
+    "crack": ["egg_shell", "egg_cracked"]
   },
   "capabilities": {
     "isBoilable": true,
     "isFryable": true,
     "isPeelable": true,
     "isSeasonable": true,
-    "isSeparable": true
+    "isSeparable": true,
+    "isCrackable": true,
+    "isPoachable": true
   },
   "thermophysical": {
     "densityKgPerM3": 1030,
@@ -49,6 +52,6 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE specifically to also spawn egg_yolk + egg_white, since (unlike PEEL) SEPARATE also destroysTarget — see data/actions/separate.json."
+    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE (adds egg_yolk + egg_white) and CRACK (adds egg_cracked instead — yolk and white kept together, see data/actions/crack.json) since both also destroysTarget. POACH deliberately does NOT go through crack/separate first — like FRY it glosses over shell removal for a raw whole egg cooked directly (see data/actions/poach.json)."
   }
 }

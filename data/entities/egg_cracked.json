@@ -1,0 +1,44 @@
+{
+  "id": "egg_cracked",
+  "kind": "ingredient",
+  "names": {
+    "en": "Cracked egg",
+    "es": "Huevo batido"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 76,
+      "protein_g": 13,
+      "fat_g": 11,
+      "carbohydrate_g": 1.1
+    }
+  },
+  "possibleStates": ["raw", "lightly_beaten", "beaten", "well_beaten", "fried", "scrambled"],
+  "possibleTags": ["salted"],
+  "allowedTransformations": ["beat", "fry", "scramble", "salt"],
+  "producedByproducts": [],
+  "capabilities": {
+    "isFryable": true,
+    "isBeatable": true,
+    "isScramblable": true,
+    "isSeasonable": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["viscous"],
+    "color": "pale yellow"
+  },
+  "cooklang": {
+    "canonicalToken": "huevo_batido",
+    "spiceLock": false
+  },
+  "metadata": {
+    "producedBy": ["crack"],
+    "notes": "Yolk and white opened out of the shell but deliberately NOT split apart — the entry point for scrambled eggs and the plain/French omelette (tortilla francesa), as opposed to egg_yolk/egg_white (data/entities/egg_yolk.json, egg_white.json) which come from SEPARATE. FRY on this entity ('fried', undisturbed sheet) reads as an omelette; SCRAMBLE ('scrambled', stirred curds) is the other outcome of the same pan+oil setup. isBeatable/BEAT (bowl, not mixer — data/actions/beat.json) replaced an earlier isBlendable/MIX wiring: MIX had no way to express 'a little vs. a lot', while BEAT's 'intensity' parameter (lightly_beaten/beaten/well_beaten) does, and a bowl-and-fork is the actual tool for this, not an electric mixer. Entirely optional and reachable from 'raw' either way — FRY/SCRAMBLE don't require a prior BEAT."
+  }
+}

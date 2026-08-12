@@ -1,0 +1,22 @@
+{
+  "id": "bowl",
+  "kind": "tool",
+  "names": {
+    "en": "Bowl",
+    "es": "Bol"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added so data/actions/beat.json's requiredTools reference resolves — same minimal-tool precedent as knife.json/mixer.json. Deliberately distinct from 'mixer': beating eggs with a fork/whisk in a bowl is a different, lower-tech operation than blending in mixer.json's electric mixer, and — unlike MIX — is naturally controllable by degree (a few strokes vs. thoroughly whipped), which is what data/actions/beat.json's 'intensity' parameter captures."
+  }
+}

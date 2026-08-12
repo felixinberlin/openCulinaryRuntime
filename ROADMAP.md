@@ -31,7 +31,7 @@ Depends on Phase 3. This is where the "strict simulation heuristics" from the sp
 - [ ] `OcrValidationEngine` class, ported from the reference implementation in `CLAUDE_DEV_CTX.md`
 - [ ] `INVALID_TRANSITIONS` forbidden-state-transition matrix (e.g. can't peel something already boiled; can't chop something mashed/liquid)
 - [ ] Requirement checks (tool/entity present, required state matches) before a step executes
-- [ ] Conservation of mass/entities on `applyStep`: inputs decremented/removed from inventory; outputs merged or spawned (e.g. "separate" destroys the parent, spawns disjoint children)
+- [x] Conservation of mass/entities on `applyStep`: inputs decremented/removed from inventory; outputs merged or spawned (e.g. "separate" destroys the parent, spawns disjoint children) — implemented as `ActionOutputsSchema.destroysTarget` (action.ts) + `ExecutionResult.destroyed` (engine.ts), consumed by `recipe-runner.ts`; see `data/actions/separate.json` + `egg.json`/`egg_yolk.json`/`egg_white.json`/`egg_shell.json`. Scoped to this explicit per-action opt-in, not a general inventory-quantity decrement system.
 - [ ] HACCP CCP enforcement wired into thermal steps (minimum hold temperature + duration)
 - [ ] Unit tests per forbidden-transition rule and per HACCP threshold
 

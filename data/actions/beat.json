@@ -1,0 +1,32 @@
+{
+  "id": "beat",
+  "verb": "BEAT",
+  "names": {
+    "en": "Beat",
+    "es": "Batir"
+  },
+  "requiredTools": ["bowl"],
+  "requiredTargetCapability": "isBeatable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [
+    {
+      "id": "intensity",
+      "names": {
+        "en": "Intensity",
+        "es": "Intensidad"
+      },
+      "required": true,
+      "allowedValues": ["lightly_beaten", "beaten", "well_beaten"]
+    }
+  ],
+  "outputs": {
+    "transformedStateFromParameter": "intensity",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "CUT-shaped (data/actions/cut.json): one verb with an 'intensity' parameter rather than three separate verbs, since 'how much' is the only thing that varies. Answers 'mix the eggs more or less, or not at all' before an omelette/scrambled eggs — 'or not at all' is simply skipping this action; FRY/SCRAMBLE don't require a prior BEAT (see egg_cracked.json's possibleStates, still reachable directly from 'raw'). Optional like SALT: nothing downstream requires this action to have run."
+  }
+}

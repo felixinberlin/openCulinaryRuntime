@@ -1,0 +1,22 @@
+{
+  "id": "poach",
+  "verb": "POACH",
+  "names": {
+    "en": "Poach",
+    "es": "Escalfar"
+  },
+  "requiredTools": ["pan"],
+  "requiredTargetCapability": "isPoachable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isBoilingMedium"],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "poached",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Cracked straight into barely-simmering water in a pan — the shallow-water technique (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell in a pot. requiredTools is 'pan', not 'pot': poaching is standardly done in a wide shallow pan, unlike in-shell boiling. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor."
+  }
+}

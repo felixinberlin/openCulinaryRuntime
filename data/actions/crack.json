@@ -1,0 +1,23 @@
+{
+  "id": "crack",
+  "verb": "CRACK",
+  "names": {
+    "en": "Crack",
+    "es": "Cascar"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isCrackable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [],
+  "outputs": {
+    "transformedState": "cracked",
+    "spawnsTargetByproducts": true,
+    "destroysTarget": true
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Opens the egg without separating yolk from white — the entry point for scrambled eggs and the plain/French omelette, as opposed to SEPARATE (data/actions/separate.json) which explicitly splits yolk and white apart for recipes that need them independently (meringue, custard, ...). Same destroysTarget + spawnsTargetByproducts mechanism as SEPARATE; see egg.json's byproductsByAction.crack (spawns egg_shell + egg_cracked, not egg_yolk/egg_white)."
+  }
+}

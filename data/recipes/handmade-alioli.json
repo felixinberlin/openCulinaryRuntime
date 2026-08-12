@@ -1,0 +1,27 @@
+{
+  "id": "handmade_alioli",
+  "names": {
+    "en": "Handmade Alioli",
+    "es": "Alioli Casero"
+  },
+  "initialInventory": [
+    { "id": "garlic-1", "entityId": "garlic", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["knife", "mortar"],
+  "sequence": [
+    { "actionId": "peel", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    { "actionId": "crush", "targetInstanceId": "garlic-1", "params": { "fineness": "fine_paste" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "emulsify",
+      "targetInstanceId": "garlic-1",
+      "params": { "oilAdditionRate": "drop_by_drop", "durationSeconds": "900" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "No egg, no mixer — a knife is only for PEEL (peeling isn't mortar work), everything else works garlic-1 entirely in the mortar, matching the traditional Catalan technique. SALT before CRUSH, not after: salt is traditionally added early and pounded in with the garlic itself (helping break it down, per real technique), not sprinkled on at the end the way salted-fried-potatoes.json salts a finished potato — a genuine sequencing difference between the two recipes, not an arbitrary one. oilAdditionRate: 'drop_by_drop' and durationSeconds: 900 (15 minutes) are the 'patience' the request asked for made concrete and slow on purpose — see emulsify.json's patienceNote for exactly what this does and doesn't enforce. The finished garlic-1 ends in state 'emulsified', tag 'salted' — this recipe's `names` field is what carries 'alioli' as a concept, the same way salted-fried-potatoes.json names a potato-in-a-particular-state 'Salted Fried Potatoes' rather than spawning a separate dish entity; see emulsify.json's eggComparisonNote for why a real distinct composite 'alioli' entity was deliberately not modeled yet."
+  }
+}

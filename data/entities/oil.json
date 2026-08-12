@@ -11,11 +11,13 @@
     "components": []
   },
   "possibleStates": ["cold", "hot"],
-  "allowedTransformations": [],
+  "possibleTags": ["garlic_infused"],
+  "allowedTransformations": ["infuse"],
   "producedByproducts": [],
   "capabilities": {
     "isFryingMedium": true,
-    "isEmulsifier": true
+    "isEmulsifier": true,
+    "isInfusable": true
   },
   "thermophysical": {
     "densityKgPerM3": 920
@@ -30,6 +32,6 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "isFryingMedium makes oil satisfy FRY's requiredIngredientCapabilities (data/actions/fry.json) — 'used for cooking, frying' starts with frying specifically; a broader isCookingMedium/general-cooking capability can be added once a generic COOK verb exists."
+    "notes": "isFryingMedium makes oil satisfy FRY's requiredIngredientCapabilities (data/actions/fry.json) — 'used for cooking, frying' starts with frying specifically; a broader isCookingMedium/general-cooking capability can be added once a generic COOK verb exists. isEmulsifier makes oil satisfy EMULSIFY's requiredIngredientCapabilities (data/actions/emulsify.json, e.g. handmade alioli) — kept as its own flag rather than reusing isFryingMedium: physically the same fat, but a distinct culinary role (dispersed phase in an emulsion vs. a hot cooking medium), matching this codebase's one-capability-per-verb convention. isInfusable is the TARGET-side capability for data/actions/infuse.json — oil is what INFUSE acts on (it's the oil that 'becomes garlic-flavored'), unlike FRY/EMULSIFY where oil is the secondary ingredient satisfying someone else's requiredIngredientCapabilities."
   }
 }

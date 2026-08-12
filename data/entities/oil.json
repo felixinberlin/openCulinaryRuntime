@@ -14,7 +14,8 @@
   "allowedTransformations": [],
   "producedByproducts": [],
   "capabilities": {
-    "isFryingMedium": true
+    "isFryingMedium": true,
+    "isEmulsifier": true
   },
   "thermophysical": {
     "densityKgPerM3": 920

@@ -1,0 +1,27 @@
+{
+  "id": "garlic_peel",
+  "kind": "ingredient",
+  "names": {
+    "en": "Garlic skin",
+    "es": "Piel de ajo"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["raw"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {},
+  "sensory": {
+    "texture": ["papery", "brittle"],
+    "color": "off-white"
+  },
+  "metadata": {
+    "isWaste": true,
+    "reusable": false,
+    "producedBy": ["peel"],
+    "notes": "Byproduct entity spawned when 'peel' is applied to garlic.json (see EntitySchema.producedByproducts on garlic) — same producedBy convention as potato_peel.json/egg_shell.json. Unlike potato_peel.json, no fry/mix reuse path: papery garlic skin isn't a real reuse candidate the way potato peel (crisps) or a stock-simmered offcut would be, so allowedTransformations/capabilities are left empty rather than invented."
+  }
+}

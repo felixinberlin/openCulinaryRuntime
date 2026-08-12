@@ -1,0 +1,22 @@
+{
+  "id": "mortar",
+  "kind": "tool",
+  "names": {
+    "en": "Mortar and pestle",
+    "es": "Mortero"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added so data/actions/crush.json and emulsify.json's requiredTools reference resolves — same minimal-tool precedent as knife.json/mixer.json/bowl.json. Deliberately distinct from those: a mortar is what makes handmade alioli handmade — no electric mixer/blender substitutes for it in the traditional technique this entity exists to model (see emulsify.json's notes)."
+  }
+}

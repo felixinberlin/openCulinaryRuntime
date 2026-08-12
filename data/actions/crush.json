@@ -1,0 +1,29 @@
+{
+  "id": "crush",
+  "verb": "CRUSH",
+  "names": {
+    "en": "Crush",
+    "es": "Majar"
+  },
+  "requiredTools": ["mortar"],
+  "requiredTargetCapability": "isCrushable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [
+    {
+      "id": "fineness",
+      "names": { "en": "Fineness", "es": "Finura" },
+      "required": true,
+      "allowedValues": ["coarse", "fine_paste"]
+    }
+  ],
+  "outputs": {
+    "transformedStateFromParameter": "fineness",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "CUT-shaped (data/actions/cut.json): one verb with a 'fineness' parameter rather than two, since coarse-vs-paste is a difference of degree, not of kind. The generic mash/crush verb potato.json's metadata flagged as missing since the very first potato entity ('mash isn't wired up yet') — implemented here for garlic first, where it's load-bearing (see emulsify.json's statePrerequisite), not retrofitted onto potato speculatively. Mortar-specific, not mixer/blender-based — see mortar.json."
+  }
+}

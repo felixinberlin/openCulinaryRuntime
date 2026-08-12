@@ -1,0 +1,37 @@
+{
+  "id": "pasteurize",
+  "verb": "PASTEURIZE",
+  "names": {
+    "en": "Pasteurize",
+    "es": "Pasteurizar"
+  },
+  "requiredTools": ["pot"],
+  "requiredTargetCapability": "isPasteurizable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [
+    {
+      "id": "waterTempC",
+      "names": { "en": "Water bath temperature", "es": "Temperatura del baño de agua" },
+      "required": true,
+      "numericRange": { "unit": "celsius", "min": 55, "max": 60 }
+    },
+    {
+      "id": "durationSeconds",
+      "names": { "en": "Duration", "es": "Duración" },
+      "required": true,
+      "numericRange": { "unit": "seconds", "min": 1800, "max": 7200 }
+    }
+  ],
+  "outputs": {
+    "addsTag": "pasteurized",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "required",
+  "metadata": {
+    "notes": "In-shell water-bath pasteurization — the whole egg, submerged, held at a temperature low enough to keep it raw-textured for long enough to substantially reduce Salmonella (see data/ccps/egg_pasteurization_raw.json for the specific figures and their sourcing/caveats). addsTag 'pasteurized', not a state change: the egg is still 'raw' afterward — that's the entire point, texture unchanged, risk reduced. Both parameters are 'required': true (unlike almost every other numeric parameter in this codebase) — a PASTEURIZE step with an unstated temperature/duration is meaningless; there is no sensible default to fall back to for a step whose only job is hitting a specific safety threshold.",
+    "whyThisExists": "Built directly in response to a real, previously-unaddressed gap: data/recipes/handmade-alioli-egg-yolk.json used raw egg yolk that was NEVER heated anywhere in that recipe, so egg_cooking.json's CCP (checked only on FRY/SCRAMBLE/POACH/BOIL) never applied — the recipe had zero food-safety enforcement despite serving raw egg. This action + CCP is what that recipe now runs BEFORE separating the egg — see that recipe's own metadata for the full before/after.",
+    "tagPropagationNote": "Relies on engine.ts's byproduct/combine tag-inheritance fix (added alongside this action) — without it, the 'pasteurized' tag added here would be silently dropped the moment SEPARATE spawns egg_yolk/egg_white, exactly defeating the purpose. See egg_yolk.json/egg_white.json's possibleTags for where it's allowed to land."
+  }
+}

@@ -11,7 +11,7 @@
     "components": ["potato", "egg"]
   },
   "possibleStates": ["raw", "fried"],
-  "possibleTags": ["flipped"],
+  "possibleTags": ["flipped", "salted"],
   "allowedTransformations": ["fry", "flip"],
   "producedByproducts": [],
   "capabilities": {

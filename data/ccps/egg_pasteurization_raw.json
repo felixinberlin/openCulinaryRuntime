@@ -1,0 +1,17 @@
+{
+  "id": "egg_pasteurization_raw",
+  "names": {
+    "en": "In-shell egg pasteurization (stays raw)",
+    "es": "Pasteurización de huevo en cáscara (queda crudo)"
+  },
+  "instantaneousC": 71,
+  "heldC": 57,
+  "heldSeconds": 3900,
+  "pathogen": "Salmonella spp.",
+  "advisoryOnly": false,
+  "source": "instantaneousC (71°C) is the same USDA FoodSafety.gov figure as egg_cooking.json, included because CriticalControlPointSchema requires one, but it is NOT usable for this process — reaching it would cook the egg, defeating the entire point. heldC/heldSeconds (57°C / ~65 minutes) is a commonly-cited figure in food-science / extension literature for in-shell pasteurization that keeps the egg raw-textured (the process popularized academically at Kansas State University and used commercially by e.g. Davidson's Safest Choice eggs) — flagged explicitly: this repo has NOT independently verified the exact published minutes against a primary source, and exact commercial process parameters vary/are sometimes proprietary. Verify against a primary food-safety-authority source before relying on this for an actual production process.",
+  "metadata": {
+    "note": "advisoryOnly: false, unlike egg_cooking.json's runny-yolk case. A cooked-but-runny egg is an FDA-recognized 'increased risk, disclosed' practice a diner can knowingly accept. Serving raw egg to someone (a child, by name, per the request that motivated this file) with NO pasteurization step at all is not that — there is no equivalent 'disclosed and accepted' framing for silently skipping the one mitigation this process exists to provide, so a shortfall here is a hard reject regardless of SafetyPolicy.mode, not something even a human operator's warning-and-continue path should wave through by default.",
+    "whyNotJustUseEggCooking": "egg_cooking.json's 63°C/15s or 71°C-instant points would cook/set the yolk — incompatible with a process whose whole purpose is keeping the egg raw. This is a genuinely different point on the FDA Food Code's real time-temperature curve, not a stricter or looser version of the same one; see thermal.ts's doc comment on why that schema only captures two anchor points, not the full curve — this CCP is a third, separate anchor for a different use case."
+  }
+}

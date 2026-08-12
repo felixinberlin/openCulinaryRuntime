@@ -19,8 +19,8 @@
     }
   },
   "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached"],
-  "possibleTags": ["salted"],
-  "allowedTransformations": ["boil", "fry", "peel", "salt", "separate", "crack", "poach"],
+  "possibleTags": ["salted", "pasteurized"],
+  "allowedTransformations": ["boil", "fry", "peel", "salt", "separate", "crack", "poach", "pasteurize"],
   "statePrerequisites": {
     "peel": "boiled"
   },
@@ -32,7 +32,8 @@
   "criticalControlPointsByAction": {
     "fry": "egg_cooking",
     "poach": "egg_cooking",
-    "boil": "egg_cooking"
+    "boil": "egg_cooking",
+    "pasteurize": "egg_pasteurization_raw"
   },
   "capabilities": {
     "isBoilable": true,
@@ -41,7 +42,8 @@
     "isSeasonable": true,
     "isSeparable": true,
     "isCrackable": true,
-    "isPoachable": true
+    "isPoachable": true,
+    "isPasteurizable": true
   },
   "thermophysical": {
     "densityKgPerM3": 1030,
@@ -57,6 +59,7 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE (adds egg_yolk + egg_white) and CRACK (adds egg_cracked instead — yolk and white kept together, see data/actions/crack.json) since both also destroysTarget. POACH deliberately does NOT go through crack/separate first — like FRY it glosses over shell removal for a raw whole egg cooked directly (see data/actions/poach.json). criticalControlPointsByAction (data/ccps/egg_cooking.json, src/thermal.ts) ties FRY/POACH/BOIL on this whole egg to the same Salmonella threshold FRY/SCRAMBLE carry on egg_cracked.json below — the risk belongs to the egg, not to whichever verb happens to cook it. Not on PEEL/SALT/SEPARATE/CRACK (no thermal step)."
+    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE (adds egg_yolk + egg_white) and CRACK (adds egg_cracked instead — yolk and white kept together, see data/actions/crack.json) since both also destroysTarget. POACH deliberately does NOT go through crack/separate first — like FRY it glosses over shell removal for a raw whole egg cooked directly (see data/actions/poach.json). criticalControlPointsByAction (data/ccps/egg_cooking.json, src/thermal.ts) ties FRY/POACH/BOIL on this whole egg to the same Salmonella threshold FRY/SCRAMBLE carry on egg_cracked.json below — the risk belongs to the egg, not to whichever verb happens to cook it. Not on PEEL/SALT/SEPARATE/CRACK (no thermal step, PASTEURIZE aside).",
+    "pasteurizeNote": "isPasteurizable + criticalControlPointsByAction.pasteurize (data/ccps/egg_pasteurization_raw.json, advisoryOnly: false — a hard reject, not a warning, unlike egg_cooking.json's runny-yolk case). Added for the alioli-with-egg-yolk case: any recipe using raw separated yolk (data/entities/egg_yolk.json) should pasteurize the whole egg here BEFORE separating — see data/actions/separate.json's byproduct spawning, which now inherits the 'pasteurized' tag onto egg_yolk/egg_white (engine.ts tag-propagation fix) rather than silently dropping it."
   }
 }

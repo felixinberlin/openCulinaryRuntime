@@ -268,19 +268,32 @@ export function applyAction(
     const byproductIds = target.byproductsByAction[action.id] ?? target.producedByproducts;
     for (const byproductId of byproductIds) {
       const byproductEntity = entities.get(byproductId);
+      // Byproducts are pieces of the SAME original substance (egg ->
+      // egg_yolk/white/shell) — a whole-substance safety property like
+      // "pasteurized" legitimately carries to every piece, conservation-
+      // of-mass style. Filtered against the byproduct entity's own
+      // possibleTags so nothing nonsensical leaks through (e.g. a spawned
+      // potato_peel never declares "flipped" as valid, so it can't
+      // inherit it even if the parent somehow had it).
+      const inheritable = nextTags.filter((t) => byproductEntity?.possibleTags?.includes(t));
       spawned.push({
         entityId: byproductId,
         state: byproductEntity?.possibleStates[0] ?? "raw",
-        tags: [],
+        tags: inheritable,
       });
     }
   }
   if (action.outputs.combinesInto) {
     const combinedEntity = entities.get(action.outputs.combinesInto);
+    // Merge tags from BOTH instances being combined — e.g. a salted beaten
+    // egg combined with plain fried potato should leave the resulting
+    // tortilla_mixture "salted" too. Same possibleTags filter as above.
+    const mergedTags = [...new Set([...nextTags, ...(secondaryInstance?.tags ?? [])])];
+    const inheritable = mergedTags.filter((t) => combinedEntity?.possibleTags?.includes(t));
     spawned.push({
       entityId: action.outputs.combinesInto,
       state: combinedEntity?.possibleStates[0] ?? "raw",
-      tags: [],
+      tags: inheritable,
     });
   }
   // combinesInto implies both instances are gone, same conservation-of-mass

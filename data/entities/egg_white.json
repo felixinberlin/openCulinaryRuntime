@@ -18,6 +18,7 @@
     }
   },
   "possibleStates": ["raw", "blended"],
+  "possibleTags": ["pasteurized"],
   "allowedTransformations": ["mix"],
   "producedByproducts": [],
   "capabilities": {
@@ -35,6 +36,7 @@
   "metadata": {
     "producedBy": ["separate"],
     "notes": "Byproduct entity spawned when 'separate' is applied to egg.json (see EntitySchema.producedByproducts on egg) — mirrors potato_peel.json's producedBy convention for potato's 'peel' byproduct.",
-    "todo": "isBlendable/mix reuses the existing MIX action (data/actions/mix.json, mixer tool) — same mechanism as potato_peel.json. MIX has no intensity/duration parameter yet, so 'mixed a little vs. a lot' isn't distinguishable, just raw-vs-blended; whipping to stiff peaks specifically (soft/firm/stiff peak stages) isn't modeled."
+    "todo": "isBlendable/mix reuses the existing MIX action (data/actions/mix.json, mixer tool) — same mechanism as potato_peel.json. MIX has no intensity/duration parameter yet, so 'mixed a little vs. a lot' isn't distinguishable, just raw-vs-blended; whipping to stiff peaks specifically (soft/firm/stiff peak stages) isn't modeled.",
+    "pasteurizedTagNote": "possibleTags: ['pasteurized'] for the same reason as egg_yolk.json's — a raw meringue/royal icing use case would carry the same never-independently-cooked risk this whole mechanism exists for. See data/actions/pasteurize.json."
   }
 }

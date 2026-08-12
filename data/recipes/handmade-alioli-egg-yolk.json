@@ -10,21 +10,29 @@
     { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
     { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
   ],
-  "availableTools": ["knife", "mortar"],
+  "availableTools": ["knife", "mortar", "pot"],
   "sequence": [
     { "actionId": "peel", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "salt", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
     { "actionId": "crush", "targetInstanceId": "garlic-1", "params": { "fineness": "fine_paste" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "pasteurize",
+      "targetInstanceId": "egg-1",
+      "params": { "waterTempC": "57", "durationSeconds": "3900" },
+      "availableIngredientInstanceIds": []
+    },
     { "actionId": "separate", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
     {
       "actionId": "emulsify",
       "targetInstanceId": "garlic-1",
       "params": { "oilAdditionRate": "slow_stream", "durationSeconds": "240" },
-      "availableIngredientInstanceIds": ["oil-1", "egg_yolk-1"]
+      "availableIngredientInstanceIds": ["oil-1", "egg_yolk-3"]
     }
   ],
   "metadata": {
-    "notes": "Sibling of handmade-alioli.json (see that file's metadata.comparisonGroup) — same tools (knife only for PEEL, everything else mortar-only), same peel -> salt -> crush(fine_paste) opening sequence on garlic-1, same EMULSIFY action and target. Two differences, both deliberate: (1) an extra step, SEPARATE on egg-1 (data/actions/separate.json), producing egg_yolk-1 (used) plus egg_white-1/egg_shell-1 (spawned, unused here — same 'leftover byproduct just sits in inventory' pattern as potato_peel in salted-fried-potatoes.json); only the yolk goes in, matching real technique (egg white would thin/loosen the emulsion, not stabilize it). (2) emulsify's params: oilAdditionRate 'slow_stream' (not 'drop_by_drop') and durationSeconds 240 (4 minutes, not 900/15) — lecithin's greater stabilizing power (egg_yolk.json's isEmulsionStabilizer) means real technique tolerates faster pouring and finishes far quicker than the egg-free version. Both numbers are directly comparable to handmade-alioli.json's for exactly that reason: same parameter ids, same units, different values, not a different modeling approach.",
-    "honestyNote": "egg_yolk-1's presence in the emulsify step's availableIngredientInstanceIds does not itself change engine behavior — requiredIngredientCapabilities still only checks isEmulsifier (satisfied by oil-1, unchanged from handmade-alioli.json). The faster/more-forgiving outcome this recipe represents lives entirely in the chosen parameter VALUES (oilAdditionRate/durationSeconds), authored to reflect real technique, not derived by the engine from egg_yolk-1 being on hand — see egg_yolk.json's emulsionStabilizerNote and emulsify.json's patienceNote for the same limitation stated elsewhere."
+    "notes": "Sibling of handmade-alioli.json (see that file's metadata.comparisonGroup) — same tools plus 'pot' (for the water bath), same peel -> salt -> crush(fine_paste) opening sequence on garlic-1, same EMULSIFY action and target. PASTEURIZE now runs on the WHOLE egg-1 BEFORE SEPARATE — in-shell, 57°C for 3900s (65 min), both at data/actions/pasteurize.json's minimum thresholds; see data/ccps/egg_pasteurization_raw.json. SEPARATE then spawns egg_shell-2/egg_yolk-3/egg_white-4, and — as of the engine.ts tag-propagation fix added alongside this change — egg_yolk-3 now actually CARRIES the 'pasteurized' tag inherited from egg-1, rather than silently losing it (byproducts previously always spawned with tags: [], regardless of the parent's tags). Only the yolk goes into EMULSIFY, matching real technique (egg white would thin/loosen the emulsion, not stabilize it).",
+    "safetyHistory": "This recipe originally had ZERO food-safety enforcement: it used raw egg yolk that was never heated anywhere in the sequence, so egg_cooking.json's CCP (checked only on FRY/SCRAMBLE/POACH/BOIL) never applied. Raw egg used in a preparation that itself is never cooked (homemade mayonnaise/aioli) is exactly the case USDA/FDA specifically flag as unsafe for children, the elderly, and immunocompromised people — a real gap, not a hypothetical one, caught and fixed in response to a direct request to make this specific recipe safe. PASTEURIZE + egg_pasteurization_raw.json's advisoryOnly: false means an under-pasteurized attempt now HARD REJECTS regardless of SafetyPolicy.mode (human or autonomous) — this one doesn't get the 'disclosed, diner accepts the risk' treatment egg_cooking.json's runny-yolk case gets, on purpose: there's no equivalent 'the child knowingly accepted this' framing for silently skipping the one mitigation available.",
+    "instanceIdBugNote": "This file previously referenced 'egg_yolk-1' in the emulsify step's availableIngredientInstanceIds — WRONG (the actual spawned id was always 'egg_yolk-3'), but silently harmless: recipe-runner.ts's availableIngredientInstanceIds resolution (`inventory.get(id)?.entityId`, filtered for undefined) drops an unresolvable id with no error, and isEmulsifier was satisfied by oil-1 regardless. Worth knowing generally: a wrong/typo'd instance id in availableIngredientInstanceIds fails SILENTLY, not loudly — only actually running the recipe and reading the log surfaces it, same lesson as LEARNINGS.md's spawned-instance-id entry. Fixed to the correct id while making this change, verified by actually running it, not by inspection.",
+    "remainingGap": "The engine does not (yet) HARD-BLOCK using an unpasteurized egg_yolk in EMULSIFY specifically — this recipe demonstrates and enforces the safe path by construction (PASTEURIZE genuinely runs, genuinely checked, before SEPARATE), but nothing stops a different recipe from skipping PASTEURIZE and feeding a raw, never-pasteurized egg_yolk into EMULSIFY directly; requiredIngredientCapabilities only checks presence of a capability, not a tag on the specific instance satisfying it. A real fix would need a new mechanism (checking a required TAG on whichever instance satisfies a capability, not just the capability itself) — a genuine engine extension, not built here to keep this change scoped to making THIS recipe correct and safe rather than re-architecting ingredient-capability checking under the same request."
   }
 }

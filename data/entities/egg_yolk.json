@@ -18,6 +18,7 @@
     }
   },
   "possibleStates": ["raw", "blended"],
+  "possibleTags": ["pasteurized"],
   "allowedTransformations": ["mix"],
   "producedByproducts": [],
   "capabilities": {
@@ -37,6 +38,7 @@
     "producedBy": ["separate"],
     "notes": "aggregationState 'emulsion' rather than 'liquid' or 'paste': raw yolk is the textbook example of a natural food emulsion (lecithin-stabilized fat-in-water), and the schema's enum has a dedicated value for exactly this case. Byproduct entity spawned when 'separate' is applied to egg.json (see EntitySchema.producedByproducts on egg) — mirrors potato_peel.json's producedBy convention for potato's 'peel' byproduct.",
     "todo": "isBlendable/mix reuses the existing MIX action (data/actions/mix.json, mixer tool) — same mechanism as potato_peel.json. MIX has no intensity/duration parameter yet, so 'mixed a little vs. a lot' isn't distinguishable, just raw-vs-blended; whipping to stiff peaks, curing, or tempering into a sauce still aren't modeled.",
-    "emulsionStabilizerNote": "isEmulsionStabilizer reflects lecithin's real role as a much more effective, forgiving emulsifier than garlic's own mucilage alone — see data/actions/emulsify.json's eggComparisonNote and data/recipes/handmade-alioli-egg-yolk.json, the egg-yolk variant of handmade-alioli.json built specifically to compare the two. NOT added to emulsify.json's requiredIngredientCapabilities (that stays isEmulsifier/oil only, unchanged) — doing so would newly require egg_yolk for the original egg-free recipe too, breaking the exact 'no egg, mortar and patience' distinction that recipe exists to demonstrate. Its presence in the egg-yolk recipe's availableIngredientInstanceIds is informational/provenance only, same honesty limitation as fry.json's doneness — the engine has no mechanism to causally derive 'faster because lecithin is present' from an ingredient's mere presence."
+    "emulsionStabilizerNote": "isEmulsionStabilizer reflects lecithin's real role as a much more effective, forgiving emulsifier than garlic's own mucilage alone — see data/actions/emulsify.json's eggComparisonNote and data/recipes/handmade-alioli-egg-yolk.json, the egg-yolk variant of handmade-alioli.json built specifically to compare the two. NOT added to emulsify.json's requiredIngredientCapabilities (that stays isEmulsifier/oil only, unchanged) — doing so would newly require egg_yolk for the original egg-free recipe too, breaking the exact 'no egg, mortar and patience' distinction that recipe exists to demonstrate. Its presence in the egg-yolk recipe's availableIngredientInstanceIds is informational/provenance only, same honesty limitation as fry.json's doneness — the engine has no mechanism to causally derive 'faster because lecithin is present' from an ingredient's mere presence.",
+    "pasteurizedTagNote": "possibleTags: ['pasteurized'] exists so this entity can actually RECEIVE the tag data/actions/pasteurize.json adds to the whole egg before SEPARATE spawns this instance (engine.ts filters inherited tags against the byproduct entity's own possibleTags — without this, 'pasteurized' would be silently dropped at exactly the moment it matters). This entity being raw and never independently cooked is exactly why that tag matters here specifically — see data/recipes/handmade-alioli-egg-yolk.json."
   }
 }

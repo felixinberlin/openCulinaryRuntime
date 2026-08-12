@@ -1,0 +1,29 @@
+{
+  "id": "ruhei",
+  "names": {
+    "en": "Rührei (German-style scrambled eggs)",
+    "de": "Rührei",
+    "es": "Huevos revueltos al estilo alemán"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["pan", "bowl"],
+  "sequence": [
+    { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "beat", "targetInstanceId": "egg_cracked-2", "params": { "intensity": "beaten" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-2", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    {
+      "actionId": "scramble",
+      "targetInstanceId": "egg_cracked-2",
+      "params": { "heatLevel": "low", "durationSeconds": "240", "curdSize": "small" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "German-style Rührei: low heat, long-ish gentle cook, small/creamy curds — the opposite of a fast hot American-diner scramble, a real, deliberate technique choice (curdSize: 'small', heatLevel: 'low'). Uses ONLY actions that already existed before this recipe was written (CRACK, BEAT, SALT, SCRAMBLE) — no new action or entity needed, unlike tortilla_de_patatas.json (which needed COMBINE + FLIP) or handmade-alioli-egg-yolk.json (which needed PASTEURIZE). Written to answer a concrete question: 'a robot downloads this model to cook breakfast — how does it help?' — this file plus a clean `npm run recipe -- ruhei` run is the literal, checkable answer, not a description of one.",
+    "haccpNote": "egg_cracked.json's criticalControlPointsByAction.scramble is already wired to egg_cooking.json (built several turns before this recipe existed) — durationSeconds: 240 clears its 15s heldSeconds trivially, same as every other scramble/fry use of a real cook time. No new safety wiring needed for this dish specifically; it inherited a safety net that already existed for a different reason."
+  }
+}

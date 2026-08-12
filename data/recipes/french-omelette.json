@@ -1,0 +1,30 @@
+{
+  "id": "french_omelette",
+  "names": {
+    "en": "French Omelette (baveuse, folded)",
+    "es": "Tortilla al Estilo Francés (jugosa, doblada)",
+    "fr": "Omelette (baveuse, roulée)"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["pan", "bowl"],
+  "sequence": [
+    { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "beat", "targetInstanceId": "egg_cracked-2", "params": { "intensity": "well_beaten" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-2", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "egg_cracked-2",
+      "params": { "heatLevel": "high", "durationSeconds": "45", "agitation": "constant_stir", "internalTexture": "baveuse" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "fold", "targetInstanceId": "egg_cracked-2", "params": {}, "availableIngredientInstanceIds": [] }
+  ],
+  "metadata": {
+    "notes": "Same opening three steps as tortilla-francesa.json (same entity, same CRACK/BEAT/SALT) — deliberately, to make the divergence point exact rather than starting from two different setups. Diverges at FRY: 'well_beaten' (not just 'beaten' — classical technique wants the mixture fully homogeneous), high heat + only 45s (not medium/180s) + constant_stir (not undisturbed — the French technique actively scrambles briefly with a fork/spatula before letting it set, producing small soft curds that then get rolled together, not a static sheet) + internalTexture: 'baveuse' (deliberately still soft/custardy, not cooked through). Then FOLD (data/actions/fold.json) — the step tortilla-francesa.json never takes — rolls it into the classical oval shape. tags end [salted, folded], distinct from tortilla-francesa.json's [salted] alone.",
+    "haccpNote": "durationSeconds: 45 still clears egg_cooking.json's 15s heldSeconds — baveuse/soft is not the same axis as unsafe; a properly executed French omelette is a fully cooked dish (albeit briefly, at high heat) that happens to look custardy, not an undercooked one. Contrast with handmade-alioli-egg-yolk.json's raw, never-heated yolk, which needed PASTEURIZE precisely because no heat step existed at all."
+  }
+}

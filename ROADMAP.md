@@ -32,6 +32,34 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Handmade alioli (egg yolk) | ✅ Makeable | `npm run recipe -- handmade_alioli_egg_yolk` |
 | Garlic oil potatoes | ✅ Makeable | `npm run recipe -- garlic_oil_potatoes` |
 | **Tortilla de patatas (sin cebolla)** | ✅ **Makeable** (was ❌ blocked, closed 2026-08-12) | `npm run recipe -- tortilla_de_patatas` |
+| Rührei (German-style scrambled eggs) | ✅ Makeable — **zero new vocabulary needed** | `npm run recipe -- ruhei` |
+| Huevo frito (runny yolk, puntilla) | ✅ Makeable | `npm run recipe -- huevo_frito` |
+| Tortilla francesa (flat, fully set) | ✅ Makeable | `npm run recipe -- tortilla_francesa` |
+| French omelette (baveuse, folded) | ✅ Makeable | `npm run recipe -- french_omelette` |
+| Soft-boiled egg (jammy, shocked, peeled) | ✅ Makeable | `npm run recipe -- soft_boiled_egg` |
+
+**`BOIL` had zero parameters, silently, until audited for it.** No
+`durationSeconds`, no `yolkDoneness` — despite `egg.json` already wiring a CCP
+to it that depends on exactly the first one. Fixed alongside a genuine,
+previously-unmodeled culinary-physics gap: carryover cooking (a boiled egg
+keeps cooking after leaving the pot; `durationSeconds` alone doesn't fix final
+doneness). New `SHOCK` action (ice bath) gives an explicit lever to arrest it —
+not a physics simulation, an honestly-scoped concrete instance of
+`WORLD_MODEL.md`'s abstract "state is a derived classification of continuous
+reality" point, showing up in an actual dish rather than a design doc.
+
+**"Tortilla francesa" vs "French omelette" — a naming false-friend, not one dish.**
+Same starting entity (`egg_cracked`), same `FRY` action — genuinely different result:
+`tortilla_francesa.json` ends `tags: [salted]` (flat, `internalTexture: fully_set`,
+never folded); `french_omelette.json` ends `tags: [salted, folded]` (`baveuse`,
+`FOLD`ed). `fry.json`'s new `yolkDoneness`/`edgeStyle`/`internalTexture` params and
+the new `FOLD` action (`egg_cracked.json`'s `isFoldable`) exist because the
+previous vocabulary could only express ONE flat/set omelette, with no way to
+represent the classical French technique or order a fried/poached egg by yolk
+doneness — the actual most-common real-world order specification for either dish,
+previously entirely unmodeled. OCR can represent both precisely now; it does not
+and should not try to resolve which one a customer meant by the word "omelette"
+— that's the LLM-intent layer's job (CONCEPT.md §14), not this schema's.
 
 **Tortilla de patatas — originally blocked, checked and closed 2026-08-12.** The
 two *components* were always makeable (fried potato via `PEEL`→`CUT`→`FRY`;

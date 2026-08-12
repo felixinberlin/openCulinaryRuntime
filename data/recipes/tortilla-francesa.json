@@ -1,0 +1,27 @@
+{
+  "id": "tortilla_francesa",
+  "names": {
+    "en": "Tortilla Francesa (Spanish plain omelette — flat, fully set)",
+    "es": "Tortilla Francesa"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["pan", "bowl"],
+  "sequence": [
+    { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "beat", "targetInstanceId": "egg_cracked-2", "params": { "intensity": "beaten" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-2", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "egg_cracked-2",
+      "params": { "heatLevel": "medium", "durationSeconds": "180", "agitation": "undisturbed", "internalTexture": "fully_set" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "The everyday Spanish 'tortilla francesa': despite the name, NOT the classical French folded omelette — see fry.json's internalTextureNote for the real disambiguation this recipe exists to demonstrate concretely. internalTexture: 'fully_set' (cooked all the way through) and agitation: 'undisturbed' (held flat as a sheet, matching a real omelette rather than scrambled curds), no FOLD step at all — served flat. Compare directly against french-omelette.json, which shares this recipe's first three steps exactly and diverges only at the final FRY's parameters plus an added FOLD step."
+  }
+}

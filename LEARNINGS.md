@@ -220,3 +220,47 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   can turn out to already fit a different, larger purpose (automated
   planning) it was never explicitly designed for — recognizing that is
   cheaper than redesigning from scratch.
+- **A dish name can be a false friend across cuisines/languages —
+  "tortilla francesa" (Spanish: an everyday flat, fully-cooked plain omelette)
+  and "French omelette" (the classical technique: baveuse, folded) are NOT
+  the same dish despite the near-identical name.** Missed entirely until
+  directly asked to think about what a robot needs to make either "as asked":
+  the vocabulary could only express one flat/set outcome, no way to represent
+  a fold or a deliberately-soft interior. Fixed with new informational
+  parameters (`yolkDoneness`, `edgeStyle`, `internalTexture` on
+  `fry.json`/`poach.json`) and a new `FOLD` action — plus two recipes sharing
+  their first three steps EXACTLY, diverging only where the dishes actually
+  diverge, so the difference is checkable in a diff, not just asserted in
+  prose. General lesson: "make an omelette" isn't fully specified in any
+  cuisine's default — yolk doneness and fold-or-not are usually the two axes
+  that actually distinguish what was ordered, and neither was representable
+  before being asked about. Worth asking, for any dish name: what's the most
+  common real-world qualifier attached to an order for it, and is it actually
+  representable yet?
+- **`boil.json` had ZERO parameters — not even `durationSeconds` — despite
+  `egg.json`'s `criticalControlPointsByAction.boil` already referencing a CCP
+  that checks exactly that.** It still worked, because the CCP check reads
+  `params["durationSeconds"]` directly, independent of whether the action
+  formally declares it — but without a declared `numericRange`, `BOIL` never
+  got the sane-bounds/`NaN` validation `FRY`/`POACH`/`PASTEURIZE` all get from
+  the `parameters[]` loop. This is the exact concrete case the standalone
+  `Number.isNaN` guard added to the CCP check (a turn earlier, found by asking
+  "what would a robot need this to guarantee") existed to protect — not a
+  hypothetical, a real gap sitting in the same file the CCP referenced. Found
+  by deliberately auditing for parity across the cooking actions, not by
+  anyone flagging it directly. Worth periodically checking: does every action
+  wired to a CCP actually declare the parameter that CCP depends on?
+- **Carryover (residual) cooking is real, and `BOIL` was quietly pretending it
+  doesn't exist.** An egg keeps cooking for a period after leaving boiling
+  water — outer layers are hotter than the center, and that stored heat keeps
+  diffusing inward with zero external heat applied — so `durationSeconds`
+  alone does not fully determine final doneness; what happens immediately
+  after boiling does too. `BOIL`'s `transformedState: "boiled"` firing the
+  instant `durationSeconds` is reached was always a simplification of a
+  continuous process — exactly `WORLD_MODEL.md`'s abstract point (`Instance.
+  state` as a derived classification, not the underlying continuous reality)
+  showing up concretely, unprompted, in a dish rather than in a design
+  document. Fixed with `SHOCK` (an ice bath, `addsTag: "shocked"`) — not a
+  physics simulation (still correctly out of scope), just an explicit lever
+  to actually arrest the process at a known point, which is the honestly-
+  scoped answer, not a fuller simulation.

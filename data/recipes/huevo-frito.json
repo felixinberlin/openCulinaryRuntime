@@ -1,0 +1,26 @@
+{
+  "id": "huevo_frito",
+  "names": {
+    "en": "Fried Egg (Spanish-style, runny yolk, puntilla)",
+    "es": "Huevo Frito (yema líquida, con puntilla)"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["pan"],
+  "sequence": [
+    {
+      "actionId": "fry",
+      "targetInstanceId": "egg-1",
+      "params": { "heatLevel": "high", "durationSeconds": "90", "yolkDoneness": "runny", "edgeStyle": "crispy_lace_puntilla" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "salt", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "The classic Spanish tapas-bar huevo frito: generous hot oil basted over the egg (edgeStyle: 'crispy_lace_puntilla' — real technique, see fry.json's edgeStyleNote), yolk left runny (yolkDoneness: 'runny'), 90 seconds at high heat — fast, hot, short. Salted after, not before (unlike garlic in the alioli recipes) — salting a raw egg before frying draws out moisture and can toughen/thin it, the opposite of tortilla-de-patatas.json's potato-and-egg sequencing logic, which is exactly why each recipe's salt placement has been decided per-dish rather than copied.",
+    "haccpNote": "yolkDoneness: 'runny' + durationSeconds: 90 (well above egg_cooking.json's 15s heldSeconds — this dish is FRIED, unlike the raw-yolk alioli case) still clears the CCP comfortably: fry.json's yolkDonenessNote's warning is about a customer-ordered runny yolk NEEDING a duration that's honest about being short, not about every runny-yolk fried egg being unsafe. 90s of active frying at high heat is not the same risk profile as raw, unpasteurized, never-heated yolk (handmade-alioli-egg-yolk.json) — this is the FDA's ordinary 'increased risk, disclosed' cooked-egg case (advisoryOnly: true), not the hard-reject raw case (egg_pasteurization_raw.json, advisoryOnly: false)."
+  }
+}

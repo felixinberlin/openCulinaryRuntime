@@ -1,0 +1,28 @@
+{
+  "id": "soft_boiled_egg",
+  "names": {
+    "en": "Soft-Boiled Egg (jammy yolk, shocked and peeled)",
+    "es": "Huevo Pasado por Agua (yema jugosa)"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["pot", "bowl", "knife"],
+  "sequence": [
+    {
+      "actionId": "boil",
+      "targetInstanceId": "egg-1",
+      "params": { "durationSeconds": "390", "yolkDoneness": "soft" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    { "actionId": "shock", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "390 seconds (6.5 minutes) is the classic jammy-yolk soft-boil window from a boiling-water start — but see shock.json's carryoverCookingNote: that duration alone doesn't guarantee the jammy result, SHOCK immediately afterward is what actually locks it in rather than letting residual heat push it further toward 'medium'/'hard'. Built specifically to demonstrate boil.json's belated durationSeconds/yolkDoneness parity fix and shock.json together, end to end, not just described.",
+    "peelingNote": "PEEL runs right after SHOCK, not as an afterthought — shock.json's peelingNote is the real-world reason for that order: peeling a shocked egg is noticeably easier than one that cooled slowly, so this recipe's sequencing reflects actual technique, not just 'do the safety-relevant step whenever'."
+  }
+}

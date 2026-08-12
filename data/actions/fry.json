@@ -33,6 +33,24 @@
       "names": { "en": "Doneness", "es": "Punto de cocción" },
       "required": false,
       "allowedValues": ["golden", "brown"]
+    },
+    {
+      "id": "yolkDoneness",
+      "names": { "en": "Yolk doneness", "es": "Punto de la yema" },
+      "required": false,
+      "allowedValues": ["runny", "medium", "well_done"]
+    },
+    {
+      "id": "edgeStyle",
+      "names": { "en": "Edge style", "es": "Estilo del borde" },
+      "required": false,
+      "allowedValues": ["plain", "crispy_lace_puntilla"]
+    },
+    {
+      "id": "internalTexture",
+      "names": { "en": "Internal texture", "es": "Textura interior" },
+      "required": false,
+      "allowedValues": ["baveuse", "soft_set", "fully_set"]
     }
   ],
   "outputs": {
@@ -44,6 +62,9 @@
   "metadata": {
     "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded. requiredIngredientCapabilities: needs a frying medium (oil.json) present, on top of the pan tool and the target itself.",
     "parameterNotes": "None of heatLevel/durationSeconds/agitation/doneness are state-determining (transformedState stays fixed at 'fried') or required — FRY covers potato, egg, and garlic, with very different typical durations, so durationSeconds' range is deliberately wide (10s-30min) rather than tuned to any one of them. heatLevel is descriptive only: low/medium/high map loosely to ~120-150°C / ~150-190°C / ~190-230°C+ pan-surface bands (commonly cited ranges in culinary-science references, e.g. Harold McGee's On Food and Cooking, for the Maillard range and typical shallow-frying temps) — not a measured, enforced value. agitation is what distinguishes an omelette reading of this action (undisturbed, held as a sheet) from a rougher stir-fried style; true continuous scrambling is its own verb, see scramble.json. See data/entities/egg.json / egg_cracked.json's criticalControlPointsByAction for how durationSeconds actually gets checked against a real safety threshold when frying egg.",
-    "donenessNote": "Added for garlic specifically ('golden' vs 'brown' — e.g. toasted for garlic-infused oil, see infuse.json), but deliberately kept as informational-only like the others rather than made state-determining via transformedStateFromParameter: doing that would require EVERY caller of this shared action (potato, egg, garlic) to always supply a doneness value the moment any one of them wants a distinct outcome state, since ActionOutputsSchema only supports one fixed transformedState OR one parameter-driven state for the whole action, not 'fixed by default, overridable per-call' — the engine has no default-value concept for transformedStateFromParameter. A genuinely distinct 'browned garlic' state would need either that engine feature, or a separate verb (like SCRAMBLE was split from FRY) — not done here since 'fried' + doneness recorded for provenance is an honest, sufficient, non-breaking answer to 'cook it until brown'."
+    "donenessNote": "Added for garlic specifically ('golden' vs 'brown' — e.g. toasted for garlic-infused oil, see infuse.json), but deliberately kept as informational-only like the others rather than made state-determining via transformedStateFromParameter: doing that would require EVERY caller of this shared action (potato, egg, garlic) to always supply a doneness value the moment any one of them wants a distinct outcome state, since ActionOutputsSchema only supports one fixed transformedState OR one parameter-driven state for the whole action, not 'fixed by default, overridable per-call' — the engine has no default-value concept for transformedStateFromParameter. A genuinely distinct 'browned garlic' state would need either that engine feature, or a separate verb (like SCRAMBLE was split from FRY) — not done here since 'fried' + doneness recorded for provenance is an honest, sufficient, non-breaking answer to 'cook it until brown'.",
+    "yolkDonenessNote": "'doneness' (golden/brown) is SURFACE color — irrelevant to how a fried/poached egg is actually ordered, which is overwhelmingly about the YOLK (huevo frito: '¿con la yema líquida o cuajada?' — runny or set). A distinct parameter, not an overload of 'doneness', because they answer genuinely different questions and both can matter at once (a fried egg can be golden-edged AND runny-yolked). Directly connects to real safety machinery already built: 'runny' is the FDA Food Code's 'increased risk, disclosed' case egg_cooking.json's advisoryOnly:true exists for — a robot fulfilling a 'runny yolk' order should expect the resulting durationSeconds to be short enough to trigger that CCP's warning (human mode) or require an explicit humanOverrides entry (autonomous mode), not treat the warning as a bug to route around. 'well_done' should reliably clear the CCP with room to spare. This parameter doesn't itself drive that outcome (informational only, like every other parameter here) — the actual duration chosen has to be consistent with it, which is on whoever authors the recipe/plan, not enforced by the schema.",
+    "edgeStyleNote": "'crispy_lace_puntilla' names a specific, real Spanish tapas-bar technique for huevo frito: hot oil is repeatedly spooned/basted over the egg while frying (rather than just letting it sit in a shallow pool), causing the white's edges to bubble, blister, and crisp into a lacy, golden, crunchy border ('puntilla' — lit. 'little point/edging', as in lace trim) distinct from the soft, plain edge of a dry- or lightly-oiled fried egg. A real technique difference (more oil, active basting motion vs. passive), not just a name for the same result — informational only, same limits as every other parameter here: this records what was asked for, it doesn't make the pan baste itself.",
+    "internalTextureNote": "For egg_cracked specifically (the omelette reading of FRY, agitation: undisturbed — see egg_cracked.json). Exists because 'tortilla francesa' (the common Spanish name for a plain beaten-egg omelette) and 'French omelette' (the specific classical French technique) are NOT reliably the same dish despite the near-identical name: a Spanish tortilla francesa is typically cooked through and served FLAT, unfolded ('fully_set' here); the classical French omelette is cooked fast over higher heat, left deliberately soft/custardy inside ('baveuse'), and rolled/folded before serving (see data/actions/fold.json — egg_cracked.json's isFoldable). Same starting entity, same FRY action, genuinely different intended outcome depending on which was actually meant. This model can represent either precisely; it cannot itself resolve which a customer meant by the word 'omelette' or 'tortilla francesa' — that's the LLM-intent-parsing layer's job (CONCEPT.md §14: LLM produces a structured Intent, never decides which dish rule applies), not something to guess at here. See data/recipes/tortilla-francesa.json and data/recipes/french-omelette.json for both, built explicitly to make this disambiguation concrete rather than just asserted."
   }
 }

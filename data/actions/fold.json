@@ -1,0 +1,22 @@
+{
+  "id": "fold",
+  "verb": "FOLD",
+  "names": {
+    "en": "Fold",
+    "es": "Doblar"
+  },
+  "requiredTools": ["pan"],
+  "requiredTargetCapability": "isFoldable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [],
+  "outputs": {
+    "addsTag": "folded",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "addsTag 'folded', mirroring FLIP's addsTag: 'flipped' and SALT's precedent — the classical French omelette's defining shape step (rolled/folded into an oval with a spatula, off or just at the end of heat), distinct from FRY itself. Not the Spanish tortilla francesa's usual presentation (typically served flat, unfolded) — see fry.json's internalTextureNote for that disambiguation. requiredTools 'pan' only, same as FLIP's toolAndTechniqueGap reasoning: doesn't gate on a specific utensil (spatula) since none is modeled as a distinct tool entity."
+  }
+}

@@ -15,6 +15,7 @@
     "demo:salted-boiled-potato": "tsx scripts/salted-boiled-potato.ts",
     "demo:separate-egg": "tsx scripts/separate-egg.ts",
     "demo:cook-egg-many-ways": "tsx scripts/cook-egg-many-ways.ts",
+    "demo:egg-haccp": "tsx scripts/egg-haccp.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "build": "tsc -p ."
   },

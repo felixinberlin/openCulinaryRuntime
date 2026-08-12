@@ -9,7 +9,26 @@
   "requiredTargetCapability": "isScramblable",
   "validTargetKinds": ["ingredient"],
   "requiredIngredientCapabilities": ["isFryingMedium"],
-  "parameters": [],
+  "parameters": [
+    {
+      "id": "heatLevel",
+      "names": { "en": "Heat level", "es": "Nivel de fuego" },
+      "required": false,
+      "allowedValues": ["low", "medium", "high"]
+    },
+    {
+      "id": "durationSeconds",
+      "names": { "en": "Duration", "es": "Duración" },
+      "required": false,
+      "numericRange": { "unit": "seconds", "min": 30, "max": 600 }
+    },
+    {
+      "id": "curdSize",
+      "names": { "en": "Curd size", "es": "Tamaño del grumo" },
+      "required": false,
+      "allowedValues": ["small", "medium", "large"]
+    }
+  ],
   "outputs": {
     "transformedState": "scrambled",
     "spawnsTargetByproducts": false
@@ -17,6 +36,7 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "Distinct verb from FRY even though both need the same pan + frying-medium setup: stirred while cooking into curds, vs. FRY left undisturbed as a held sheet (the plain/French omelette reading of FRY on egg_cracked). Deliberately its own capability (isScramblable) rather than reusing isFryable, matching this codebase's one-capability-per-verb convention (isPeelable/PEEL, isBoilable/BOIL, ...) instead of overloading one flag across two verbs. Targets egg_cracked, not the whole raw egg — see data/actions/crack.json."
+    "notes": "Distinct verb from FRY even though both need the same pan + frying-medium setup: stirred while cooking into curds, vs. FRY left undisturbed as a held sheet (the plain/French omelette reading of FRY on egg_cracked). Deliberately its own capability (isScramblable) rather than reusing isFryable, matching this codebase's one-capability-per-verb convention (isPeelable/PEEL, isBoilable/BOIL, ...) instead of overloading one flag across two verbs. Targets egg_cracked, not the whole raw egg — see data/actions/crack.json.",
+    "parameterNotes": "durationSeconds' 30-600s range spans both styles well documented in professional technique: low heat + frequent folding over several minutes yields small, creamy curds (the French/Ramsay style — longer end of the range); higher heat + less frequent stirring sets larger curds faster (the diner-style American scramble — shorter end). curdSize records the intended outcome directly rather than trying to derive it from heatLevel+durationSeconds, since the real determinant (stir frequency) isn't itself modeled as a parameter. None of these are state-determining; see fry.json's parameterNotes for the same heatLevel caveat, and egg_cracked.json's criticalControlPointsByAction for durationSeconds' actual safety-threshold check."
   }
 }

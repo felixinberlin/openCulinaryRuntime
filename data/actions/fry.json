@@ -9,7 +9,26 @@
   "requiredTargetCapability": "isFryable",
   "validTargetKinds": ["ingredient"],
   "requiredIngredientCapabilities": ["isFryingMedium"],
-  "parameters": [],
+  "parameters": [
+    {
+      "id": "heatLevel",
+      "names": { "en": "Heat level", "es": "Nivel de fuego" },
+      "required": false,
+      "allowedValues": ["low", "medium", "high"]
+    },
+    {
+      "id": "durationSeconds",
+      "names": { "en": "Duration", "es": "Duración" },
+      "required": false,
+      "numericRange": { "unit": "seconds", "min": 10, "max": 1800 }
+    },
+    {
+      "id": "agitation",
+      "names": { "en": "Agitation", "es": "Agitación" },
+      "required": false,
+      "allowedValues": ["undisturbed", "occasional_nudge", "constant_stir"]
+    }
+  ],
   "outputs": {
     "transformedState": "fried",
     "spawnsTargetByproducts": false
@@ -17,6 +36,7 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded. requiredIngredientCapabilities: needs a frying medium (oil.json) present, on top of the pan tool and the target itself."
+    "notes": "First reuse path for a byproduct: potato_peel.json is isFryable, so the potato_peel instance spawned by 'peel' isn't a dead end — it can flow back through the engine (fried into crisps) instead of only ever being discarded. requiredIngredientCapabilities: needs a frying medium (oil.json) present, on top of the pan tool and the target itself.",
+    "parameterNotes": "None of heatLevel/durationSeconds/agitation are state-determining (transformedState stays fixed at 'fried') or required — FRY covers both potato and egg, with very different typical durations, so durationSeconds' range is deliberately wide (10s-30min) rather than tuned to either. heatLevel is descriptive only: low/medium/high map loosely to ~120-150°C / ~150-190°C / ~190-230°C+ pan-surface bands (commonly cited ranges in culinary-science references, e.g. Harold McGee's On Food and Cooking, for the Maillard range and typical shallow-frying temps) — not a measured, enforced value. agitation is what distinguishes an omelette reading of this action (undisturbed, held as a sheet) from a rougher stir-fried style; true continuous scrambling is its own verb, see scramble.json. See data/entities/egg.json / egg_cracked.json's criticalControlPointsByAction for how durationSeconds actually gets checked against a real safety threshold when frying egg."
   }
 }

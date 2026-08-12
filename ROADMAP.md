@@ -19,7 +19,7 @@ The vocabulary layer everything else depends on.
 ## Phase 2 — Execution sequence & safety models (`recipe-step.ts`)
 Depends on Phase 1's entity/state vocabulary.
 - [ ] `EntityStateSchema` — entity id + active physical state + quantity/unit
-- [ ] `CriticalControlPointSchema` — USDA HACCP phases, critical temperature limits (°F), holding times
+- [x] `CriticalControlPointSchema` — USDA HACCP phases, critical temperature limits (°F), holding times — implemented in `src/thermal.ts` (°C, not °F as the spec literally says, for consistency with the rest of the codebase's units; instantaneous + held-time two-point model, not the Food Code's full multi-point curve — see the file's doc comment). Data: `data/ccps/egg_cooking.json`.
 - [ ] `MechanicalActionSchema` — a step: tools used, inputs consumed, outputs generated
 
 ## Phase 3 — Compiled recipe container (`recipe.ts`)
@@ -32,8 +32,8 @@ Depends on Phase 3. This is where the "strict simulation heuristics" from the sp
 - [ ] `INVALID_TRANSITIONS` forbidden-state-transition matrix (e.g. can't peel something already boiled; can't chop something mashed/liquid)
 - [ ] Requirement checks (tool/entity present, required state matches) before a step executes
 - [x] Conservation of mass/entities on `applyStep`: inputs decremented/removed from inventory; outputs merged or spawned (e.g. "separate" destroys the parent, spawns disjoint children) — implemented as `ActionOutputsSchema.destroysTarget` (action.ts) + `ExecutionResult.destroyed` (engine.ts), consumed by `recipe-runner.ts`; see `data/actions/separate.json` + `egg.json`/`egg_yolk.json`/`egg_white.json`/`egg_shell.json`. Scoped to this explicit per-action opt-in, not a general inventory-quantity decrement system.
-- [ ] HACCP CCP enforcement wired into thermal steps (minimum hold temperature + duration)
-- [ ] Unit tests per forbidden-transition rule and per HACCP threshold
+- [x] HACCP CCP enforcement wired into thermal steps (minimum hold temperature + duration) — `EntitySchema.criticalControlPointsByAction` (ingredient.ts) + `applyAction`'s `ccps` param (engine.ts): a `durationSeconds` parameter below the CCP's `heldSeconds` throws, or warns instead when `advisoryOnly` (the FDA Food Code's actual permitted-with-disclosure posture for e.g. a runny egg yolk). Does NOT simulate heat transfer/internal temperature — see engine.ts's doc comment for the stated thin-food assumption this rests on. Demo: `npm run demo:egg-haccp`.
+- [ ] Unit tests per forbidden-transition rule and per HACCP threshold — still just demo scripts + validate.ts's schema/cross-ref checks, no assertion-based test runner in this repo yet.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 Depends on Phase 4 types.

@@ -29,6 +29,11 @@
     "separate": ["egg_shell", "egg_yolk", "egg_white"],
     "crack": ["egg_shell", "egg_cracked"]
   },
+  "criticalControlPointsByAction": {
+    "fry": "egg_cooking",
+    "poach": "egg_cooking",
+    "boil": "egg_cooking"
+  },
   "capabilities": {
     "isBoilable": true,
     "isFryable": true,
@@ -52,6 +57,6 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE (adds egg_yolk + egg_white) and CRACK (adds egg_cracked instead — yolk and white kept together, see data/actions/crack.json) since both also destroysTarget. POACH deliberately does NOT go through crack/separate first — like FRY it glosses over shell removal for a raw whole egg cooked directly (see data/actions/poach.json)."
+    "notes": "Whole egg-in-shell, modeled solid like potato.json even though its contents are liquid until cracked — same 'intact object until an action changes it' convention. statePrerequisites.peel mirrors potato.json's statePrerequisites.cut: you peel a BOILED egg's shell, not a raw one, so peel presupposes state 'boiled' — reuses the existing peel action rather than inventing a new verb. thermophysical values are typical whole-egg literature approximations, not measured. producedByproducts (egg_shell) is the flat fallback both PEEL and SEPARATE would otherwise use; byproductsByAction overrides SEPARATE (adds egg_yolk + egg_white) and CRACK (adds egg_cracked instead — yolk and white kept together, see data/actions/crack.json) since both also destroysTarget. POACH deliberately does NOT go through crack/separate first — like FRY it glosses over shell removal for a raw whole egg cooked directly (see data/actions/poach.json). criticalControlPointsByAction (data/ccps/egg_cooking.json, src/thermal.ts) ties FRY/POACH/BOIL on this whole egg to the same Salmonella threshold FRY/SCRAMBLE carry on egg_cracked.json below — the risk belongs to the egg, not to whichever verb happens to cook it. Not on PEEL/SALT/SEPARATE/CRACK (no thermal step)."
   }
 }

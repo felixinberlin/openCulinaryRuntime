@@ -18,17 +18,36 @@ import { EntityKindSchema } from "./ingredient.ts";
 
 /**
  * A "Parameter" — CLAUDE_DEV_CTX.md's 4th pillar, "Culinary Details":
- * quantitative/qualitative details modifying a specific action, e.g. CUT's
- * "shape". `allowedValues` is a closed set (not a free string) because a
- * value here doubles as a state id when `outputs.transformedStateFromParameter`
- * points at it — see below.
+ * quantitative/qualitative details modifying a specific action. Two shapes:
+ *
+ * - `allowedValues`: a closed set (CUT's "shape", BEAT's "intensity"). A
+ *   value here can double as a state id when
+ *   `outputs.transformedStateFromParameter` points at it.
+ * - `numericRange`: a continuous physical quantity that a closed enum can't
+ *   honestly represent — CLAUDE_DEV_CTX.md's own "timing (seconds)" and
+ *   "physics" examples (e.g. FRY's durationSeconds, POACH's waterTempC).
+ *   Never state-determining — engine.ts only range-checks it, and it can
+ *   feed a CriticalControlPointSchema check (thermal.ts) instead.
+ *
+ * Exactly one of the two must be set.
  */
-export const ActionParameterSchema = z.object({
-  id: z.string().min(1),
-  names: z.record(z.string(), z.string()).optional(),
-  required: z.boolean().default(true),
-  allowedValues: z.array(z.string()).min(1),
-});
+export const ActionParameterSchema = z
+  .object({
+    id: z.string().min(1),
+    names: z.record(z.string(), z.string()).optional(),
+    required: z.boolean().default(true),
+    allowedValues: z.array(z.string()).min(1).optional(),
+    numericRange: z
+      .object({
+        unit: z.string().min(1),
+        min: z.number(),
+        max: z.number(),
+      })
+      .optional(),
+  })
+  .refine((p) => !!p.allowedValues !== !!p.numericRange, {
+    message: "exactly one of allowedValues or numericRange must be set",
+  });
 export type ActionParameter = z.infer<typeof ActionParameterSchema>;
 
 /**

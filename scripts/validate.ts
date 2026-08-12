@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { EntitySchema, type Entity } from "../src/ingredient.ts";
 import { ActionSchema, type Action } from "../src/action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "../src/recipe.ts";
+import { CriticalControlPointSchema, type CriticalControlPoint } from "../src/thermal.ts";
 
 const root = join(import.meta.dirname, "..");
 
@@ -34,6 +35,7 @@ function loadDir<T extends { id: string }>(
 const entities = loadDir<Entity>(join(root, "data", "entities"), "entities", EntitySchema);
 const actions = loadDir<Action>(join(root, "data", "actions"), "actions", ActionSchema);
 const recipes = loadDir<RecipeScript>(join(root, "data", "recipes"), "recipes", RecipeScriptSchema);
+const ccps = loadDir<CriticalControlPoint>(join(root, "data", "ccps"), "ccps", CriticalControlPointSchema);
 
 let crossFailed = 0;
 function fail(msg: string) {
@@ -60,6 +62,14 @@ for (const entity of entities.items.values()) {
       if (!entities.items.has(byproductId)) {
         fail(`entities/${entity.id}.json: byproductsByAction["${actionId}"] references unknown entity "${byproductId}"`);
       }
+    }
+  }
+  for (const [actionId, ccpId] of Object.entries(entity.criticalControlPointsByAction)) {
+    if (!actions.items.has(actionId)) {
+      fail(`entities/${entity.id}.json: criticalControlPointsByAction references unknown action "${actionId}"`);
+    }
+    if (!ccps.items.has(ccpId)) {
+      fail(`entities/${entity.id}.json: criticalControlPointsByAction["${actionId}"] references unknown CCP "${ccpId}"`);
     }
   }
 }
@@ -106,12 +116,12 @@ for (const recipe of recipes.items.values()) {
   }
 }
 
-const failed = entities.failed + actions.failed + recipes.failed + crossFailed;
-const total = entities.total + actions.total + recipes.total;
+const failed = entities.failed + actions.failed + recipes.failed + ccps.failed + crossFailed;
+const total = entities.total + actions.total + recipes.total + ccps.total;
 if (failed > 0) {
   console.error(`\n${failed} problem(s) found.`);
   process.exit(1);
 }
 console.log(
-  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes); cross-references OK.`
+  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps); cross-references OK.`
 );

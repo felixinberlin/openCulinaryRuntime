@@ -179,6 +179,15 @@ export const EntitySchema = z.object({
    * An action id absent here falls back to the flat list.
    */
   byproductsByAction: z.record(z.string(), z.array(z.string())).default({}),
+  /**
+   * Per-action HACCP tie-in, keyed by action id -> CriticalControlPointSchema
+   * id (thermal.ts, data/ccps/*.json) — e.g. egg.json: { fry: "egg_cooking",
+   * scramble: "egg_cooking", poach: "egg_cooking" }. Lives on the entity,
+   * not the action, for the same reason byproductsByAction does: FRY itself
+   * carries no food-safety risk (frying a potato has no Salmonella CCP) —
+   * the risk is a fact about *what's* being fried, not the verb.
+   */
+  criticalControlPointsByAction: z.record(z.string(), z.string()).default({}),
   capabilities: CapabilitiesSchema.default({}),
   thermophysical: ThermophysicalPropertiesSchema.optional(),
   sensory: SensoryPropertiesSchema.optional(),

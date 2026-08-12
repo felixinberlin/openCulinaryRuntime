@@ -9,7 +9,20 @@
   "requiredTargetCapability": "isPoachable",
   "validTargetKinds": ["ingredient"],
   "requiredIngredientCapabilities": ["isBoilingMedium"],
-  "parameters": [],
+  "parameters": [
+    {
+      "id": "waterTempC",
+      "names": { "en": "Water temperature", "es": "Temperatura del agua" },
+      "required": false,
+      "numericRange": { "unit": "celsius", "min": 70, "max": 100 }
+    },
+    {
+      "id": "durationSeconds",
+      "names": { "en": "Duration", "es": "Duración" },
+      "required": false,
+      "numericRange": { "unit": "seconds", "min": 60, "max": 600 }
+    }
+  ],
   "outputs": {
     "transformedState": "poached",
     "spawnsTargetByproducts": false
@@ -17,6 +30,7 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "Cracked straight into barely-simmering water in a pan — the shallow-water technique (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell in a pot. requiredTools is 'pan', not 'pot': poaching is standardly done in a wide shallow pan, unlike in-shell boiling. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor."
+    "notes": "Cracked straight into barely-simmering water in a pan — the shallow-water technique (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell in a pot. requiredTools is 'pan', not 'pot': poaching is standardly done in a wide shallow pan, unlike in-shell boiling. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor.",
+    "parameterNotes": "waterTempC's 70-100°C range deliberately excludes a full rolling boil as the intended target (100°C is the max only because water can't physically exceed it at sea-level pressure, not because it's recommended) — standard technique keeps poaching water at a bare simmer, ~85-95°C: a rolling boil's turbulence tears the white apart and can shatter the yolk. Neither parameter is state-determining. See egg.json's criticalControlPointsByAction for durationSeconds' actual safety-threshold check."
   }
 }

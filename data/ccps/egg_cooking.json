@@ -1,0 +1,21 @@
+{
+  "id": "egg_cooking",
+  "names": {
+    "en": "Egg cooking (Salmonella)",
+    "es": "Cocción de huevo (Salmonella)"
+  },
+  "instantaneousC": 71,
+  "heldC": 63,
+  "heldSeconds": 15,
+  "pathogen": "Salmonella spp.",
+  "advisoryOnly": true,
+  "source": "USDA FoodSafety.gov 'Safe Minimum Internal Temperature Chart' (egg dishes: 160°F / 71°C, instantaneous) — https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperature. heldC/heldSeconds (145°F / 63°C for 15 seconds) is the FDA Food Code §3-401.11(A) time-temperature-equivalence figure widely cited for shell eggs prepared for immediate service. advisoryOnly: true because the FDA Food Code (§3-603.11) explicitly recognizes eggs cooked to order with a still-runny yolk as a permitted 'increased risk' practice requiring a consumer advisory, not a banned one.",
+  "metadata": {
+    "note": "Two-point simplification, not the Food Code's full multi-point (temperature, time) table — treat instantaneousC/heldC as verified anchors from the sources above, not a reconstruction of every intermediate point on that curve.",
+    "coagulationReferenceC": {
+      "eggWhite": [62, 65],
+      "eggYolk": [65, 70],
+      "note": "Standard food-science figures (ovalbumin/ovotransferrin denaturation ranges, e.g. as summarized in Harold McGee, On Food and Cooking) for when white vs. yolk visually set — informational context for why a 'soft' egg is possible below the CCP at all, not itself a safety threshold."
+    }
+  }
+}

@@ -119,3 +119,30 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   stops short before physical execution is even the question. Worth
   re-attempting a new real dish periodically specifically to surface the next
   missing verb, rather than guessing at what to build speculatively.
+- **Both gaps above are now closed — `COMBINE` needed a genuine new engine
+  mechanism, `FLIP` didn't.** `FLIP` fit the existing single-target action
+  shape exactly (`addsTag`, same as `SALT`) — no schema/engine change at all,
+  pure data. `COMBINE` couldn't: `applyAction` only ever took one target
+  instance, and every existing "second ingredient" mechanism
+  (`requiredIngredientCapabilities`) explicitly only checks *presence*, never
+  consumes anything (that limitation is stated in `ROADMAP.md` Phase 4 itself).
+  Merging two real instances into a new one needed: a second required-capability
+  slot on the action (`requiredSecondaryCapability`, distinct from
+  `requiredIngredientCapabilities` on purpose — presence-check vs.
+  consume-and-replace are genuinely different operations, not degrees of the
+  same one), a new output shape (`combinesInto`, mutually exclusive with
+  `transformedState`/`transformedStateFromParameter` — there's no "resulting
+  state" on an instance being replaced by a different entity), and a second
+  destroyed-flag (`secondaryDestroyed`) so `recipe-runner.ts` knows to remove
+  the secondary instance too. All of it optional/unset by default, so every
+  action defined before this stayed completely unaffected — verified by full
+  regression, same discipline as every other engine change this session.
+- **Runtime-assigned spawned instance IDs (`entityId-N`, global counter across
+  the whole run) can't be predicted by reading a recipe file — they have to be
+  run to find out.** First draft of `tortilla-de-patatas.json` guessed
+  `egg_cracked-1`; the actual ID was `egg_cracked-3` (CRACK's own
+  `["egg_shell", "egg_cracked"]` byproduct order, after `potato_peel-1` from an
+  earlier step, ate counters 1 and 2 first). `validate.ts` can't catch this —
+  it explicitly doesn't simulate a run, just logs a NOTE for any
+  `targetInstanceId`/`secondaryInstanceId` not in `initialInventory`. Running
+  the recipe and reading the actual log is the only real check.

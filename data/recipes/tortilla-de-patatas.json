@@ -1,0 +1,51 @@
+{
+  "id": "tortilla_de_patatas",
+  "names": {
+    "en": "Spanish Tortilla (sin cebolla)",
+    "es": "Tortilla de Patatas (sin cebolla)"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+  ],
+  "availableTools": ["knife", "pan", "bowl"],
+  "sequence": [
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "potato-1",
+      "params": { "heatLevel": "low", "durationSeconds": "900" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "beat", "targetInstanceId": "egg_cracked-3", "params": { "intensity": "beaten" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-3", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    {
+      "actionId": "combine",
+      "targetInstanceId": "potato-1",
+      "secondaryInstanceId": "egg_cracked-3",
+      "params": {},
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "tortilla_mixture-4",
+      "params": { "heatLevel": "medium", "durationSeconds": "180" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "flip", "targetInstanceId": "tortilla_mixture-4", "params": {}, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "tortilla_mixture-4",
+      "params": { "heatLevel": "medium", "durationSeconds": "120" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "The recipe ROADMAP.md's capability test named as blocked, now run end-to-end: PEEL/CUT/FRY the potato (low heat, long duration — soft-fried, deliberately not browned, real technique); CRACK/BEAT/SALT the egg; COMBINE merges the two fried-potato and beaten-egg instances into ONE new tortilla_mixture instance (both consumed — verify in the log: potato-1 and egg_cracked-3 are both gone from final inventory); FRY the mixture, FLIP it, FRY the other side. Onion-free (sin cebolla) — no onion entity exists in this vocabulary yet, and it's a legitimate traditional variant on its own, not a workaround.",
+    "instanceIdNote": "targetInstanceId 'egg_cracked-3'/'tortilla_mixture-4' aren't in initialInventory — they're ids CRACK/COMBINE spawn at runtime (recipe-runner.ts's spawnCounter), matching the same convention salted-fried-potatoes.json already uses for potato_peel-1. validate.ts logs a NOTE for these, not a failure — see that script's own comment on why spawned ids can't be verified statically."
+  }
+}

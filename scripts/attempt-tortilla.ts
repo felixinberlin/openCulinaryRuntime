@@ -3,13 +3,21 @@ import { loadEntities, loadActions } from "../src/registry.ts";
 import { applyAction, type Instance } from "../src/engine.ts";
 
 /**
- * Empirical test: how far can the CURRENT vocabulary actually get toward a
- * tortilla de patatas (Spanish potato omelette) — not a reasoned guess, an
- * actual attempted run against the real registry, same discipline as every
- * other claim made this session. Onion-free (sin cebolla) on purpose: no
- * onion entity exists yet, and it's a legitimate traditional variant, not a
- * cop-out — see tortilladepatatas.org's own "facciones" debate on exactly
- * this, a separate repo, referenced only as prior art, not reused here.
+ * Originally an empirical capability test (2026-08-12) that PROVED, by
+ * trying and failing, that the vocabulary couldn't make a tortilla de
+ * patatas: two real components (fried potato, beaten egg) were makeable,
+ * but nothing combined two instances into one, and no FLIP verb existed.
+ * See ROADMAP.md's capability-test table and LEARNINGS.md's 2026-08-12
+ * entry for the original findings.
+ *
+ * Both gaps are now closed (data/actions/combine.json, data/actions/
+ * flip.json, data/entities/tortilla_mixture.json) — this script is kept,
+ * updated, as a standing regression check that they STAY closed, rather
+ * than deleted or left claiming "BLOCKED" after the fact (which would be
+ * exactly the stale-docs failure mode CLAUDE.md warns against). The
+ * canonical, full recipe is data/recipes/tortilla-de-patatas.json — run it
+ * with `npm run recipe -- tortilla_de_patatas`. This script is the narrower
+ * "does the vocabulary itself still support it" check.
  */
 
 const root = join(import.meta.dirname, "..");
@@ -29,13 +37,8 @@ console.log("--- Potato component ---");
 let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
 potato = apply(potato, "peel").instance;
 potato = apply(potato, "cut", { shape: "sliced" }).instance;
-// Real technique: potato confit-fried low and slow until SOFT, deliberately
-// NOT browned. fry.json's doneness enum is ["golden","brown"] — both
-// browning descriptors, borrowed from the garlic use case (infuse.json) —
-// there is no "soft, unbrowned" option. Omitting doneness entirely rather
-// than picking a wrong one.
 potato = apply(potato, "fry", { heatLevel: "low", durationSeconds: "900" }).instance;
-console.log(`  Potato component done: "${potato.state}" (soft-fried, unbrowned — doneness param has no vocabulary for this)`);
+console.log(`  Potato component done: "${potato.state}" (soft-fried, unbrowned)`);
 
 console.log("\n--- Egg component ---");
 const crackResult = applyAction({ entityId: "egg", state: "raw", tags: [] }, actions.get("crack")!, entities, tools, {}, ingredients);
@@ -45,29 +48,22 @@ egg = apply(egg, "beat", { intensity: "beaten" }).instance;
 egg = apply(egg, "salt").instance;
 console.log(`  Egg component done: "${egg.state}", tags [${egg.tags}]`);
 
-console.log("\n--- The actual tortilla step: combine potato + egg into one mixture ---");
-const combineAction = actions.get("combine") ?? actions.get("assemble") ?? actions.get("mix_in");
-if (!combineAction) {
-  console.log("  BLOCKED: no action in data/actions/ combines two separate instances into a new one.");
-  console.log("  MIX (mix.json) blends ONE target with a mixer tool — it doesn't take a second instance as input.");
-  console.log("  EMULSIFY (emulsify.json) is the closest precedent (garlic target + oil ingredient) but still");
-  console.log("  only ever changes ONE target's state — it never produces a genuinely new entity from two.");
-} else {
-  console.log(`  Found ${combineAction.verb} — this comment is stale, script needs updating.`);
+console.log("\n--- Combine: potato (target) + egg (secondary) -> tortilla_mixture ---");
+const combineAction = actions.get("combine")!;
+const combineResult = applyAction(potato, combineAction, entities, tools, {}, new Set(), new Map(), undefined, egg);
+if (!combineResult.destroyed || !combineResult.secondaryDestroyed) {
+  throw new Error("Expected COMBINE to consume BOTH the potato and the egg instance");
 }
+let tortilla = combineResult.spawned.find((s) => s.entityId === "tortilla_mixture")!;
+if (!tortilla) throw new Error("Expected COMBINE to spawn tortilla_mixture");
+console.log(`  Both potato and egg instances consumed. Spawned tortilla_mixture ("${tortilla.state}").`);
 
-console.log("\n--- Even if combined: flipping the tortilla ---");
-const flipAction = actions.get("flip");
-if (!flipAction) {
-  console.log("  BLOCKED: no FLIP verb exists. Cooking the second side of a whole tortilla — inverted onto a");
-  console.log("  plate, slid back into the pan — is its own mechanically distinct, notoriously difficult action,");
-  console.log("  not a parameter of FRY.");
-} else {
-  console.log(`  Found ${flipAction.verb} — this comment is stale, script needs updating.`);
-}
+console.log("\n--- Fry, flip, fry again ---");
+tortilla = apply(tortilla, "fry", { heatLevel: "medium", durationSeconds: "180" }).instance;
+tortilla = apply(tortilla, "flip").instance;
+tortilla = apply(tortilla, "fry", { heatLevel: "medium", durationSeconds: "120" }).instance;
 
 console.log("\n=== VERDICT ===");
-console.log("Two components (fried potato, beaten+salted egg) ARE fully makeable with the current vocabulary.");
-console.log("The dish is NOT: no COMBINE/ASSEMBLE verb exists to merge two instances into one, and no FLIP verb");
-console.log("exists for the step that defines the technique. Both are genuine, scoped gaps — not simulation depth,");
-console.log("not robot control/perception (ENGINE_INVARIANTS.md #11) — the VOCABULARY itself stops short.");
+console.log(`Tortilla de patatas: state "${tortilla.state}", tags [${tortilla.tags}]. Fully makeable end-to-end.`);
+console.log("Original blockers (no multi-instance merge, no FLIP) are closed. Not closed by this change:");
+console.log("real robot control/perception for heatLevel/doneness/etc. — see ENGINE_INVARIANTS.md #11.");

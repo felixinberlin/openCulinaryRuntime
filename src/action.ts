@@ -92,9 +92,24 @@ export const ActionOutputsSchema = z
      * removal, not a state anything will ever observe it in afterward.
      */
     destroysTarget: z.boolean().default(false),
+    /**
+     * For an action that MERGES a second instance into the primary target
+     * (COMBINE) rather than transforming the target alone: the entity id of
+     * the brand-new resulting entity. Both the primary target and the
+     * secondary instance (see ActionSchema.requiredSecondaryCapability) are
+     * consumed; one new instance of this entity is spawned in their place —
+     * conceptually `destroysTarget` for TWO instances at once, not one.
+     * Mutually exclusive with transformedState/transformedStateFromParameter:
+     * there's no "resulting state" on an instance that's being replaced by a
+     * different entity entirely.
+     */
+    combinesInto: z.string().optional(),
   })
   .refine((o) => !(o.transformedState && o.transformedStateFromParameter), {
     message: "transformedState and transformedStateFromParameter are mutually exclusive",
+  })
+  .refine((o) => !(o.combinesInto && (o.transformedState || o.transformedStateFromParameter)), {
+    message: "combinesInto is mutually exclusive with transformedState/transformedStateFromParameter",
   });
 export type ActionOutputs = z.infer<typeof ActionOutputsSchema>;
 
@@ -136,6 +151,19 @@ export const ActionSchema = z.object({
    * recipe-level inventory in ROADMAP.md Phase 4, not this per-action check.
    */
   requiredIngredientCapabilities: z.array(z.string()).default([]),
+  /**
+   * The capability a SECONDARY instance must assert `true` for a COMBINE-
+   * shaped action — distinct from requiredIngredientCapabilities, which only
+   * ever checks presence and never consumes anything (ROADMAP.md Phase 4:
+   * "only checks that a qualifying ingredient is present, not consume/
+   * decrement it"). A secondary instance satisfying THIS capability is
+   * consumed exactly like the primary target when outputs.combinesInto is
+   * set — the caller must supply which specific instance via
+   * RecipeStepSchema.secondaryInstanceId (recipe.ts) / applyAction's
+   * secondaryInstance argument (engine.ts), the same way targetInstanceId
+   * designates the primary target.
+   */
+  requiredSecondaryCapability: z.string().optional(),
   parameters: z.array(ActionParameterSchema).default([]),
   outputs: ActionOutputsSchema,
   duration: z.enum(["fixed", "variable"]).default("variable"),

@@ -13,6 +13,12 @@ import { applyAction, type Instance, type SafetyPolicy } from "./engine.ts";
  * A step's failure does not halt the recipe: it's recorded in `errors` and
  * the run continues, mirroring the reference engine's "collect all errors,
  * then report" behavior rather than throwing on the first problem.
+ *
+ * `RecipeStep.secondaryInstanceId` (COMBINE-shaped actions, engine.ts's
+ * `secondaryInstance`) is resolved from inventory the same way
+ * `targetInstanceId` is, and removed from inventory afterward if
+ * `result.secondaryDestroyed` — the same treatment `destroyed` already gets
+ * for the primary target.
  */
 
 export interface RecipeStepError {
@@ -59,6 +65,14 @@ export function runRecipe(
       errors.push({ step, message: `Unknown target instance "${step.targetInstanceId}"` });
       continue;
     }
+    let secondaryInstance: Instance | undefined;
+    if (step.secondaryInstanceId) {
+      secondaryInstance = inventory.get(step.secondaryInstanceId);
+      if (!secondaryInstance) {
+        errors.push({ step, message: `Unknown secondary instance "${step.secondaryInstanceId}"` });
+        continue;
+      }
+    }
 
     const availableIngredientEntityIds = new Set(
       step.availableIngredientInstanceIds
@@ -67,7 +81,17 @@ export function runRecipe(
     );
 
     try {
-      const result = applyAction(instance, action, entities, availableTools, step.params, availableIngredientEntityIds, ccps, policy);
+      const result = applyAction(
+        instance,
+        action,
+        entities,
+        availableTools,
+        step.params,
+        availableIngredientEntityIds,
+        ccps,
+        policy,
+        secondaryInstance
+      );
       const tagsLabel = result.instance.tags.length ? `, tags [${result.instance.tags}]` : "";
       for (const warning of result.warnings) {
         warnings.push(warning);
@@ -83,6 +107,10 @@ export function runRecipe(
         log.push(
           `${action.verb} ${step.targetInstanceId}: state "${instance.state}" -> "${result.instance.state}"${tagsLabel}`
         );
+      }
+      if (result.secondaryDestroyed && step.secondaryInstanceId) {
+        inventory.delete(step.secondaryInstanceId);
+        log.push(`  consumed secondary instance ${step.secondaryInstanceId} (${secondaryInstance!.entityId})`);
       }
       for (const spawned of result.spawned) {
         const spawnedId = `${spawned.entityId}-${++spawnCounter}`;

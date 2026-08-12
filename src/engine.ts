@@ -34,6 +34,19 @@ import type { CriticalControlPoint } from "./thermal.ts";
  * quantities against an arbitrary inventory" system Phase 4 ultimately
  * wants.
  *
+ * `secondaryInstance` / `ExecutionResult.secondaryDestroyed` (ROADMAP.md
+ * Phase 4, "multi-instance composition" — added once the tortilla
+ * capability test proved it necessary, see LEARNINGS.md 2026-08-12): a
+ * COMBINE-shaped action (`action.requiredSecondaryCapability` set) merges a
+ * SECOND instance into the result, not just the primary target — e.g. fried
+ * potato + beaten egg -> tortilla_mixture. Both the primary target and
+ * `secondaryInstance` are destroyed; one new instance of
+ * `action.outputs.combinesInto` is spawned in `spawned`, same array
+ * `spawnsTargetByproducts` already uses. `secondaryInstance` is optional and
+ * `requiredSecondaryCapability` defaults unset, so every action that
+ * doesn't declare it — i.e. everything before this addition — is completely
+ * unaffected.
+ *
  * HACCP (ROADMAP.md Phase 2/4, thermal.ts): if the target entity names a
  * CriticalControlPoint for this action (`criticalControlPointsByAction`,
  * ingredient.ts) and the step supplied a "durationSeconds" parameter, that
@@ -115,6 +128,11 @@ export interface ExecutionResult {
   /** True when `action.outputs.destroysTarget` fired: the caller must
    *  remove the target from inventory rather than keep `instance`. */
   destroyed: boolean;
+  /** True when a secondary instance (COMBINE-shaped action) was consumed —
+   *  the caller must remove IT from inventory too, same as `destroyed` for
+   *  the primary target. Always false when the action has no
+   *  requiredSecondaryCapability. */
+  secondaryDestroyed: boolean;
   /** Non-fatal HACCP notices (see the CCP paragraph in the file doc
    *  comment above) — e.g. a duration below an advisoryOnly CCP's
    *  heldSeconds. Empty when no CCP applies or the threshold was met. */
@@ -129,7 +147,8 @@ export function applyAction(
   params: Readonly<Record<string, string>> = {},
   availableIngredients: ReadonlySet<string> = new Set(),
   ccps: ReadonlyMap<string, CriticalControlPoint> = new Map(),
-  policy: SafetyPolicy = DEFAULT_SAFETY_POLICY
+  policy: SafetyPolicy = DEFAULT_SAFETY_POLICY,
+  secondaryInstance?: Instance
 ): ExecutionResult {
   const target = entities.get(instance.entityId);
   if (!target) {
@@ -153,6 +172,26 @@ export function applyAction(
       const why = has === false ? "explicitly false" : "unasserted";
       throw new Error(
         `${action.verb} requires capability "${action.requiredTargetCapability}" on "${target.id}", but it is ${why}.`
+      );
+    }
+  }
+
+  let secondaryEntity: Entity | undefined;
+  if (action.requiredSecondaryCapability) {
+    if (!secondaryInstance) {
+      throw new Error(
+        `${action.verb} requires a secondary instance (capability "${action.requiredSecondaryCapability}"), but none was supplied.`
+      );
+    }
+    secondaryEntity = entities.get(secondaryInstance.entityId);
+    if (!secondaryEntity) {
+      throw new Error(`Unknown secondary entity "${secondaryInstance.entityId}"`);
+    }
+    const has = secondaryEntity.capabilities[action.requiredSecondaryCapability];
+    if (has !== true) {
+      const why = has === false ? "explicitly false" : "unasserted";
+      throw new Error(
+        `${action.verb} requires secondary capability "${action.requiredSecondaryCapability}" on "${secondaryEntity.id}", but it is ${why}.`
       );
     }
   }
@@ -236,6 +275,19 @@ export function applyAction(
       });
     }
   }
+  if (action.outputs.combinesInto) {
+    const combinedEntity = entities.get(action.outputs.combinesInto);
+    spawned.push({
+      entityId: action.outputs.combinesInto,
+      state: combinedEntity?.possibleStates[0] ?? "raw",
+      tags: [],
+    });
+  }
+  // combinesInto implies both instances are gone, same conservation-of-mass
+  // logic as destroysTarget but for two instances at once — see
+  // ActionOutputsSchema.combinesInto's doc comment (action.ts).
+  const destroyed = action.outputs.destroysTarget || !!action.outputs.combinesInto;
+  const secondaryDestroyed = action.requiredSecondaryCapability !== undefined && secondaryInstance !== undefined;
 
   // Gated on durationSeconds actually being supplied, not merely on the
   // target having a criticalControlPointsByAction entry: durationSeconds is
@@ -275,5 +327,5 @@ export function applyAction(
     }
   }
 
-  return { instance: updated, spawned, destroyed: action.outputs.destroysTarget, warnings };
+  return { instance: updated, spawned, destroyed, secondaryDestroyed, warnings };
 }

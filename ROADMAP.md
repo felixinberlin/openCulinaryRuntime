@@ -31,29 +31,39 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Handmade alioli (egg-free, mortar) | ✅ Makeable | `npm run recipe -- handmade_alioli` |
 | Handmade alioli (egg yolk) | ✅ Makeable | `npm run recipe -- handmade_alioli_egg_yolk` |
 | Garlic oil potatoes | ✅ Makeable | `npm run recipe -- garlic_oil_potatoes` |
-| **Tortilla de patatas (sin cebolla)** | ❌ **Blocked** — see below | `npm run capability-test:tortilla` |
+| **Tortilla de patatas (sin cebolla)** | ✅ **Makeable** (was ❌ blocked, closed 2026-08-12) | `npm run recipe -- tortilla_de_patatas` |
 
-**Tortilla de patatas, checked 2026-08-12:** the two *components* are fully
-makeable (fried potato via `PEEL`→`CUT`→`FRY`; beaten salted egg via `CRACK`→
-`BEAT`→`SALT`) — the dish is not, for two specific, scoped reasons the test
-script demonstrates by trying and failing, not by inspection:
+**Tortilla de patatas — originally blocked, checked and closed 2026-08-12.** The
+two *components* were always makeable (fried potato via `PEEL`→`CUT`→`FRY`;
+beaten salted egg via `CRACK`→`BEAT`→`SALT`); two specific, scoped gaps blocked
+the dish itself, proven by a capability-test script trying and failing, not by
+inspection:
 
-1. **No verb combines two separate instances into one.** `MIX`/`EMULSIFY` each
-   still only ever transform *one* target; nothing takes two finished instances
-   (fried potato + beaten egg) and produces a new merged one. This is the same
-   gap already flagged and deliberately left unbuilt in `garlic-oil-potatoes.json`
-   (reused fried garlic → salad) and noted as unimplemented on
-   `EntitySchema.structure.composite/components` since that field was first
-   written. Three real recipes have now hit this same wall — it's no longer a
-   speculative gap, it's the top of this roadmap.
-2. **No `FLIP` verb.** Cooking a tortilla's second side means inverting the
-   whole thing onto a plate and sliding it back into the pan — the single most
-   technique-defining, failure-prone step in the dish, and there's no verb for
-   it at all, not even an unenforced/informational one.
+1. ~~No verb combines two separate instances into one.~~ **Closed**: `COMBINE`
+   (`data/actions/combine.json`) — `ActionOutputsSchema.combinesInto` +
+   `ActionSchema.requiredSecondaryCapability` (`action.ts`), `applyAction`'s
+   `secondaryInstance` param and `ExecutionResult.secondaryDestroyed`
+   (`engine.ts`), `RecipeStepSchema.secondaryInstanceId` (`recipe.ts`) — a
+   genuinely new engine mechanism, not a data-only fix. Fried potato + beaten
+   egg both consumed; one new `tortilla_mixture` instance spawned in their
+   place (`EntitySchema.structure.composite/components` finally populated —
+   `["potato", "egg"]` — after existing unused since the first draft). Scoped
+   deliberately narrow (this one specific pairing, fixed on one action
+   definition), not a generic pair→result lookup system — see
+   `combine.json`'s `scopeNote` for why that bigger design question is still
+   open, not resolved here.
+2. ~~No `FLIP` verb.~~ **Closed**: `FLIP` (`data/actions/flip.json`) —
+   `addsTag: "flipped"`, mirroring `SALT`'s precedent rather than inventing a
+   new state. Deliberately tool-agnostic (`pan` only) since a fried egg
+   (spatula) and a whole tortilla (inverted onto a plate) flip by different
+   physical motions for the same outcome — see `flip.json`'s
+   `toolAndTechniqueGap` for what that leaves unmodeled.
 
-Neither gap is about robot control/perception (`ENGINE_INVARIANTS.md` #11
-covers that separately, and remains true regardless) — the **vocabulary itself**
-stops short before physical execution would even become the question.
+Full run: `npm run recipe -- tortilla_de_patatas` (also `npm run
+capability-test:tortilla` for the narrower step-by-step vocabulary check).
+Neither fix touches robot control/perception (`ENGINE_INVARIANTS.md` #11 stays
+separately true) — the vocabulary gap is closed; the physical-execution gap
+was never this phase's job.
 
 ## Phase 0 — Project scaffolding
 - [x] `package.json` + TypeScript toolchain — `tsx`, `tsc -p .`
@@ -132,24 +142,25 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       Explicitly scoped: this closes the HACCP-timing gap for autonomous
       execution, it does **not** make the rest of the engine robot-ready —
       see the next item.
-- [ ] **Multi-instance composition (`COMBINE`/`ASSEMBLE`-shaped mechanism).**
-      New, promoted to the top of this phase by the tortilla capability
-      test above. Needed for: tortilla (potato + egg → one dish), reusing
-      fried garlic in a salad, and almost certainly anything else beyond a
-      single ingredient transformed through a linear sequence of states.
-      Real design questions, not yet resolved: does the merged result need
-      to be a genuinely new `Entity` (garlic + oil + egg → "tortilla" as its
-      own definition), or can it stay a looser "these instances are now one
-      group" relation? `EntitySchema.structure.composite/components` exists
-      and has never been populated by anything — this is probably where it
-      finally gets used, but the shape needs a real decision, not another
-      speculative field.
-- [ ] **Compound/named physical-manipulation actions beyond FRY/CUT/etc.**
-      `FLIP` (tortilla) is the concrete, proven-necessary case; there are
-      likely siblings (transferring a hot pan, plating, folding) once a
-      second real dish is attempted. Don't pre-build these speculatively —
-      add them the way `FLIP` got identified: attempt a real dish, watch it
-      fail, name the missing verb precisely.
+- [x] **Multi-instance composition (`COMBINE` mechanism).** Closed
+      2026-08-12 — see the capability-test section above for the full
+      mechanism (`combinesInto`, `requiredSecondaryCapability`,
+      `secondaryInstance`, `secondaryDestroyed`). `EntitySchema.structure.
+      composite/components` is now populated for the first time
+      (`tortilla_mixture.json`: `["potato", "egg"]`). Deliberately scoped to
+      one fixed pairing per action definition, not a generic pair→result
+      lookup — reusing fried garlic in a salad (`garlic-oil-potatoes.json`)
+      is now mechanically possible the same way, but still needs its own
+      action definition (a `salad` entity + the base ingredients it'd need,
+      e.g. lettuce, don't exist yet) — not built speculatively here.
+- [x] **Compound/named physical-manipulation actions beyond FRY/CUT/etc.**
+      `FLIP` closed 2026-08-12 (`data/actions/flip.json`) — the
+      proven-necessary case. Likely siblings (transferring a hot pan,
+      plating, folding) remain unbuilt on purpose: the working method is
+      "attempt a real dish, watch it fail, name the missing verb precisely"
+      (`attempt-tortilla.ts` → `combine.json`/`flip.json` is the worked
+      example), not pre-building speculatively. Next candidate dish should
+      drive whatever's added next.
 - [ ] Unit tests per forbidden-transition rule and per HACCP threshold —
       blocked on Phase 0's test-runner gap.
 - [ ] **Real closed-loop control/perception layer for autonomous execution.**

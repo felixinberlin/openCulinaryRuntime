@@ -30,6 +30,16 @@ export const RecipeStepSchema = z.object({
   params: z.record(z.string(), z.string()).default({}),
   /** Recipe-local instance ids of secondary ingredients (oil, water, salt, ...) available for this step's requiredIngredientCapabilities check. */
   availableIngredientInstanceIds: z.array(z.string()).default([]),
+  /**
+   * Recipe-local instance id of the SECOND instance a COMBINE-shaped action
+   * consumes (engine.ts's `secondaryInstance` / `requiredSecondaryCapability`)
+   * — e.g. the beaten-egg instance id when this step's action is COMBINE and
+   * targetInstanceId is the fried-potato instance. Unlike
+   * availableIngredientInstanceIds (checked for presence only, never
+   * consumed), this instance is destroyed by the step, same as the primary
+   * target. Unset for every action that isn't COMBINE-shaped.
+   */
+  secondaryInstanceId: z.string().optional(),
 });
 export type RecipeStep = z.infer<typeof RecipeStepSchema>;
 

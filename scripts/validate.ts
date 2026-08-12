@@ -83,6 +83,9 @@ for (const action of actions.items.values()) {
       fail(`actions/${action.id}.json: requiredTools references "${toolId}" which is kind "${tool.kind}", not "tool"`);
     }
   }
+  if (action.outputs.combinesInto && !entities.items.has(action.outputs.combinesInto)) {
+    fail(`actions/${action.id}.json: outputs.combinesInto references unknown entity "${action.outputs.combinesInto}"`);
+  }
 }
 
 for (const recipe of recipes.items.values()) {
@@ -111,6 +114,11 @@ for (const recipe of recipes.items.values()) {
     if (!knownInstanceIds.has(step.targetInstanceId)) {
       console.log(
         `NOTE recipes/${recipe.id}.json: sequence[${i}].targetInstanceId "${step.targetInstanceId}" isn't in initialInventory — assumed to be a spawned instance, not checked further.`
+      );
+    }
+    if (step.secondaryInstanceId && !knownInstanceIds.has(step.secondaryInstanceId)) {
+      console.log(
+        `NOTE recipes/${recipe.id}.json: sequence[${i}].secondaryInstanceId "${step.secondaryInstanceId}" isn't in initialInventory — assumed to be a spawned instance, not checked further.`
       );
     }
   }

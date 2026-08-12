@@ -1,0 +1,23 @@
+{
+  "id": "flip",
+  "verb": "FLIP",
+  "names": {
+    "en": "Flip",
+    "es": "Voltear"
+  },
+  "requiredTools": ["pan"],
+  "requiredTargetCapability": "isFlippable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "parameters": [],
+  "outputs": {
+    "addsTag": "flipped",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "addsTag 'flipped', not transformedState — mirrors SALT's precedent (data/actions/salt.json): flipping doesn't change WHAT state the target is cooking in (still 'fried'), it's an orthogonal fact layered on top, and nothing here forces flip-then-fry-again ordering (that's a fact about the recipe sequence, not this action). Added directly in response to ROADMAP.md's tortilla capability test — this exact gap ('the single most technique-defining, failure-prone step in the dish' had no verb at all) was the second of the two named blockers.",
+    "toolAndTechniqueGap": "requiredTools is 'pan' only — deliberately not narrower. Real technique varies by dish: a fried egg flips with a spatula, a whole tortilla is inverted onto a plate and slid back in — mechanically different motions achieving the same 'now cook the other side' outcome. Neither a 'spatula' nor a 'plate' tool entity exists in data/entities/, and gating FLIP on one specific tool would wrongly block the other dish's version of this same action. Left as a known, stated gap rather than arbitrarily picking one technique to require."
+  }
+}

@@ -19,8 +19,8 @@
     }
   },
   "possibleStates": ["raw", "lightly_beaten", "beaten", "well_beaten", "fried", "scrambled"],
-  "possibleTags": ["salted"],
-  "allowedTransformations": ["beat", "fry", "scramble", "salt"],
+  "possibleTags": ["salted", "flipped"],
+  "allowedTransformations": ["beat", "fry", "scramble", "salt", "flip", "combine"],
   "producedByproducts": [],
   "criticalControlPointsByAction": {
     "fry": "egg_cooking",
@@ -30,7 +30,9 @@
     "isFryable": true,
     "isBeatable": true,
     "isScramblable": true,
-    "isSeasonable": true
+    "isSeasonable": true,
+    "isFlippable": true,
+    "isCombinableAddition": true
   },
   "sensory": {
     "taste": ["neutral"],
@@ -44,6 +46,8 @@
   "metadata": {
     "producedBy": ["crack"],
     "notes": "Yolk and white opened out of the shell but deliberately NOT split apart — the entry point for scrambled eggs and the plain/French omelette (tortilla francesa), as opposed to egg_yolk/egg_white (data/entities/egg_yolk.json, egg_white.json) which come from SEPARATE. FRY on this entity ('fried', undisturbed sheet) reads as an omelette; SCRAMBLE ('scrambled', stirred curds) is the other outcome of the same pan+oil setup. isBeatable/BEAT (bowl, not mixer — data/actions/beat.json) replaced an earlier isBlendable/MIX wiring: MIX had no way to express 'a little vs. a lot', while BEAT's 'intensity' parameter (lightly_beaten/beaten/well_beaten) does, and a bowl-and-fork is the actual tool for this, not an electric mixer. Entirely optional and reachable from 'raw' either way — FRY/SCRAMBLE don't require a prior BEAT.",
-    "haccpNote": "Carries the same egg_cooking CCP (data/ccps/egg_cooking.json) as the whole egg, on FRY/SCRAMBLE specifically — cracking and combining yolk/white is, if anything, a slightly *higher*-risk step than an intact shell egg (more surface exposed, potential pooling if multiple eggs are cracked together), which is exactly the FDA Food Code's own reasoning for treating broken/combined eggs 'for immediate service' under the same strict time-temperature standard as pooled eggs generally."
+    "haccpNote": "Carries the same egg_cooking CCP (data/ccps/egg_cooking.json) as the whole egg, on FRY/SCRAMBLE specifically — cracking and combining yolk/white is, if anything, a slightly *higher*-risk step than an intact shell egg (more surface exposed, potential pooling if multiple eggs are cracked together), which is exactly the FDA Food Code's own reasoning for treating broken/combined eggs 'for immediate service' under the same strict time-temperature standard as pooled eggs generally.",
+    "flipNote": "isFlippable added for the plain/French omelette case (FLIP an already-frying egg_cracked to cook its second side) — cheap, directly reuses data/actions/flip.json as-is, no new machinery needed beyond what tortilla_mixture.json already required.",
+    "combineNote": "isCombinableAddition: the secondary instance data/actions/combine.json consumes (poured over already-fried potato — see potato.json's combineNote). No statePrerequisite enforcing 'must be beaten first': engine.ts's statePrerequisites only supports one exact required state string, and 'lightly_beaten' OR 'beaten' OR 'well_beaten' should all be valid real inputs — expressing 'any of these three' isn't something the current mechanism can do, so this is left as a real-world expectation, not an enforced one."
   }
 }

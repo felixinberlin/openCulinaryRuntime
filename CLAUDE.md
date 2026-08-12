@@ -4,7 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository state
 
-This repository currently contains a single planning/spec document, `CLAUDE_DEV_CTX.md`, and no implementation code, package manifest, or test suite. There is nothing to build, lint, or run yet — do not invent commands or tooling for it. When source files are added, update this section (and add real build/lint/test commands) accordingly.
+Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
+`action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`),
+`data/` has real entities/actions/recipes/CCPs (potato, egg + its byproducts, garlic,
+alioli variants, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
+`npm run validate` (schema + cross-reference check — the authoritative one),
+`npm run demo:<name>` (see `package.json` for the full list), `npm run recipe -- <id>`,
+`npx tsc -p . --noEmit` (typecheck — pre-existing `TS5097` import-extension noise across
+the repo is unrelated to any change; filter with `grep -v TS5097`). No assertion-based
+test runner yet (`ROADMAP.md` Phase 4 still flags this) — `validate.ts` + the demo
+scripts are what currently stand in for tests; run all of them, not just the new one,
+after any change to `src/`.
+
+**Before starting work, read `LEARNINGS.md`.** After learning something that would've
+saved time going in — a schema constraint, an engine gotcha, a design tradeoff and why
+— append a dated entry there. Don't just re-derive the same surprise next session, and
+don't let this section (or any other doc here) go stale the way this one just did:
+when the repo's real shape changes, update the doc that describes it in the same
+change, not "later."
 
 ## What this repo is for
 
@@ -25,20 +42,29 @@ This repository currently contains a single planning/spec document, `CLAUDE_DEV_
 - **Cooklang interoperability** — Cooklang is the primary human-writable authoring format. Preserve backward compatibility with its scaling multipliers and spice locks (quantities prefixed with `=` do not scale linearly).
 - **Schema.org is a lossy export target** — Schema.org JSON-LD is a flat target for search-engine indexing only. Conversions from rich, nested OCR JSON to Schema.org must be one-directional (lossless OCR → lossy Schema.org), not treated as a round-trippable source of truth.
 
-### Planned module layout
+### Module layout — as planned vs. as actually built
 
-The spec calls for this file split (none of these files exist yet — create them following this layout rather than inventing a different structure):
+`CLAUDE_DEV_CTX.md`'s original file split didn't survive contact with incremental,
+additive real work; the actual layout diverged under different names. Both are
+listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 
-| File | Purpose |
-|---|---|
-| `ingredient.ts` | Core entity/ingestion models: `EntitySchema` (static entities, ingredients vs. tools), `RecipeIngredientSchema` (instance portions, quantity as fraction/decimal union, localized translations), `ParsedIngredientSchema` (staging for unstructured regex-parser output before entity mapping) |
-| `recipe-step.ts` | Execution sequence & HACCP safety: `EntityStateSchema` (entity id + state + quantity/unit), `CriticalControlPointSchema` (USDA HACCP phases/temp limits/holding times), `MechanicalActionSchema` (a step's tools/inputs/outputs) |
-| `recipe.ts` | `RecipeScriptSchema` — the compiled script container: initial inventory state + linear execution sequence |
-| `nutrition-extension.ts` | Optional pluggable metadata: `UsdaMealPatternContributionSchema` maps USDA school-lunch ounce/cup equivalents onto ingredients without bloating the core schema |
-| `ocr-engine.ts` | `OcrValidationEngine` — walks a `RecipeScript`'s `sequence`, validates each `MechanicalAction` against current inventory (missing entities, required states, forbidden transitions via `INVALID_TRANSITIONS`), then applies it (consumes inputs, spawns/updates outputs) |
-| `ocr-converter.ts` | Bi-directional compilers between OCR's structured model and flat formats: `compileToSchemaOrgIngredient` (structured → Schema.org string), plus the inverse Cooklang/regex tokenizer described below |
+| Planned (`CLAUDE_DEV_CTX.md`) | What actually exists | Notes |
+|---|---|---|
+| `ingredient.ts` — `EntitySchema`, `RecipeIngredientSchema`, `ParsedIngredientSchema` | `src/ingredient.ts` — `EntitySchema` only | `RecipeIngredientSchema`/`ParsedIngredientSchema` not built; nothing consumes raw scraper output yet (Phase 5/7 still unstarted) |
+| `recipe-step.ts` — `EntityStateSchema`, `CriticalControlPointSchema`, `MechanicalActionSchema` | Split across `src/engine.ts` (`Instance` ≈ `EntityStateSchema`), `src/action.ts` (`Action`/`ActionOutputsSchema` ≈ `MechanicalAction`), `src/thermal.ts` (`CriticalControlPointSchema`, built as named) | No single `recipe-step.ts` — the concept fragmented across three files as the engine grew organically |
+| `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
+| `nutrition-extension.ts` | Not built | |
+| `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`) but there is **no `INVALID_TRANSITIONS` forbidden-transition matrix** — still `ROADMAP.md` Phase 4, unchecked | Also not a class named `OcrValidationEngine` — a plain function |
+| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | Not built | `cooklang` fields exist on entities (`canonicalToken`, `spiceLock`) but nothing reads/writes actual Cooklang text yet |
 
-Reference implementations for `ocr-engine.ts` and `ocr-converter.ts` are given in full in `CLAUDE_DEV_CTX.md` — read that file before writing or modifying either module, and keep new code consistent with those signatures (`ValidationError`, `ValidationResult`, `OcrValidationEngine`, `compileToSchemaOrgIngredient`).
+`src/registry.ts` (loading `data/*.json` by directory into typed `Map`s) also isn't
+in the original plan — the whole `data/` directory of JSON files, validated against
+these schemas rather than defined in TypeScript, is itself a divergence from
+`CLAUDE_DEV_CTX.md`'s framing, though a compatible one.
+
+Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
+names against the table above or `ROADMAP.md`, not against that file's original
+naming, before assuming something exists.
 
 ### Planned satellite projects
 

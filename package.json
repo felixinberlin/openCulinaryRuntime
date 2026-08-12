@@ -16,6 +16,7 @@
     "demo:separate-egg": "tsx scripts/separate-egg.ts",
     "demo:cook-egg-many-ways": "tsx scripts/cook-egg-many-ways.ts",
     "demo:egg-haccp": "tsx scripts/egg-haccp.ts",
+    "capability-test:tortilla": "tsx scripts/attempt-tortilla.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "build": "tsc -p ."
   },

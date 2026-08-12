@@ -237,6 +237,29 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   before being asked about. Worth asking, for any dish name: what's the most
   common real-world qualifier attached to an order for it, and is it actually
   representable yet?
+- **Auditing every action for "is blind retry safe" found a real bug: `PEEL`
+  can spawn a byproduct that doesn't physically exist.** `PEEL` neither
+  `destroysTarget` nor checks the target isn't already peeled — so a robot's
+  fault-recovery layer blindly re-issuing "PEEL potato-1" after an
+  interruption would spawn a SECOND `potato_peel` instance. You cannot peel a
+  potato twice and get two peels. The only `retrySafe: false` among all 21
+  actions, found only because the question was asked of every single one, not
+  because anyone flagged PEEL specifically. General lesson: "does re-running
+  this after a fault cause a double-effect" is worth asking of EVERY
+  destructive-adjacent action explicitly, not assumed safe by default — two
+  genuinely different reasons turned out to make most actions actually safe
+  (idempotent-by-construction, via engine.ts's existing `addsTag` dedup guard;
+  or fails-loudly via `destroysTarget` already having removed the target) —
+  and PEEL had neither.
+- **Filling repetitive structured domain data (verification/hazards/retry
+  info) across 21 files by hand invites exactly the kind of silent omission
+  this whole effort was trying to prevent — write a small one-off script
+  instead, then manually add the nuance that actually needs a human's
+  judgment.** Batch-applying a lookup table caught its own gap immediately
+  (missed 2 of 21 actions in the first pass, `bake`/`beat` — a whole-file
+  scan of `validate.ts`'s new NOTE output caught it right away, which is
+  exactly why that soft audit check was added to the tool in the first place,
+  not left as something to remember to check manually).
 - **`boil.json` had ZERO parameters — not even `durationSeconds` — despite
   `egg.json`'s `criticalControlPointsByAction.boil` already referencing a CCP
   that checks exactly that.** It still worked, because the CCP check reads

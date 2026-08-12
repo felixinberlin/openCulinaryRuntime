@@ -5,22 +5,42 @@
     "en": "Boil",
     "es": "Hervir"
   },
-  "requiredTools": ["pot"],
+  "requiredTools": [
+    "pot"
+  ],
   "requiredTargetCapability": "isBoilable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isBoilingMedium"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isBoilingMedium"
+  ],
   "parameters": [
     {
       "id": "durationSeconds",
-      "names": { "en": "Duration", "es": "Duración" },
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
       "required": false,
-      "numericRange": { "unit": "seconds", "min": 60, "max": 2400 }
+      "numericRange": {
+        "unit": "seconds",
+        "min": 60,
+        "max": 2400
+      }
     },
     {
       "id": "yolkDoneness",
-      "names": { "en": "Yolk doneness", "es": "Punto de la yema" },
+      "names": {
+        "en": "Yolk doneness",
+        "es": "Punto de la yema"
+      },
       "required": false,
-      "allowedValues": ["soft", "medium", "hard"]
+      "allowedValues": [
+        "soft",
+        "medium",
+        "hard"
+      ]
     }
   ],
   "outputs": {
@@ -32,6 +52,20 @@
   "metadata": {
     "notes": "Cooked in water — same 'cooking' family as FRY/BAKE but a genuinely different verb: different tool (pot vs pan vs oven), different medium (water vs oil vs none), different resulting state (boiled vs fried vs baked).",
     "belatedParityFix": "BOIL had NO parameters at all until this fix — not even durationSeconds — despite egg.json's criticalControlPointsByAction.boil already referencing egg_cooking.json's CCP for it. That CCP check still worked (engine.ts reads params['durationSeconds'] regardless of whether the action formally declares it), but without a declared numericRange, BOIL never got the sane-bounds/NaN validation FRY/POACH/PASTEURIZE get from the parameters[] loop — it was relying entirely on the direct Number.isNaN guard added to the CCP check itself specifically because relying on a parameter declaration elsewhere in the function was recognized as fragile. This is the concrete case that fragility was about, found by actually looking for it, not hypothetically.",
-    "yolkDonenessNote": "Deliberately different allowedValues from fry.json/poach.json's yolkDoneness ('runny'/'medium'/'well_done') — a boiled egg is conventionally ordered as 'soft-boiled'/'medium-boiled'/'hard-boiled' in real usage, not 'runny'/'well-done'; matching the vocabulary people actually use per cooking method is more honest than forcing one shared enum across all three actions for uniformity's sake. Same non-enforcement caveat as the other two: informational only, doesn't drive durationSeconds. See shock.json for the other half of what actually determines a boiled egg's final doneness — durationSeconds alone is not the whole story."
-  }
+    "yolkDonenessNote": "Deliberately different allowedValues from fry.json/poach.json's yolkDoneness ('runny'/'medium'/'well_done') — a boiled egg is conventionally ordered as 'soft-boiled'/'medium-boiled'/'hard-boiled' in real usage, not 'runny'/'well-done'; matching the vocabulary people actually use per cooking method is more honest than forcing one shared enum across all three actions for uniformity's sake. Same non-enforcement caveat as the other two: informational only, doesn't drive durationSeconds. See shock.json for the other half of what actually determines a boiled egg's final doneness — durationSeconds alone is not the whole story.",
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but see shock.json's carryoverCookingNote: re-boiling something already at the desired doneness will overcook it, a real physical risk, not a data-model one."
+  },
+  "verification": {
+    "method": "thermal",
+    "description": "Water at or near 100°C (a visible rolling boil) maintained for at least durationSeconds",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "hot_liquid",
+      "severity": "high",
+      "note": "Boiling water and rising steam — splash/scald risk"
+    }
+  ],
+  "retrySafe": true
 }

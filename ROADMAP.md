@@ -224,13 +224,40 @@ implied to be a small addition.
       `recipe-runner.ts`'s current "log the failure, continue to the next
       step anyway" — correct for offline validation, actively wrong if ever
       reused verbatim to drive a real robot through a physical failure.
-- [ ] `VerificationCriterion`-per-state-transition — generalizes the CCP
-      pattern (a sensor-checkable threshold classification over a continuous
-      quantity) beyond just HACCP, so a discrete state label like `"fried"`
-      has an explicit, structured, checkable definition instead of an
-      open-loop "trust the timer" parameter. Still NOT a continuous-physics
-      simulator — measuring the continuous quantity stays a real sensing
-      layer's job, out of scope here same as the item above.
+- [x] `VerificationCriterion`-per-action — closed 2026-08-12. `action.ts`'s
+      `VerificationCriterionSchema` (method/description/confidence), audited
+      onto all 21 actions, not left partial. Generalizes the CCP pattern (a
+      sensor-checkable classification over a continuous quantity) beyond just
+      HACCP. Still NOT a continuous-physics simulator or a closed loop —
+      `engine.ts`'s `applyAction` doesn't consume this yet (still open-loop,
+      asserts success the instant preconditions pass); this is the structured
+      domain knowledge a real control loop would need, not the loop itself.
+      `confidence: "low"` on several (EMULSIFY, BEAT, BAKE) is itself honest,
+      useful information — it names exactly where "trust the timer" is
+      weakest, not a defect quietly smoothed over.
+- [x] Physical hazard metadata — closed alongside the above, not originally
+      scoped as its own item but a direct answer to "think like a robot"'s
+      named gap (this codebase only ever modeled FOOD safety via CCPs, never
+      OPERATIONAL safety — a knife or hot oil endangering a person nearby).
+      `action.ts`'s `HazardSchema` (type/severity/note), audited onto all 21
+      actions (empty array is a real claim for SALT/BEAT, not an omission).
+      Records what a real interlock/proximity-sensing system would need to
+      know — doesn't itself keep anyone safe, no sensing exists.
+- [x] `retrySafe` per action — what happens if a robot's fault-recovery
+      blindly re-runs a step after an interruption. Auditing this FOUND a
+      real bug, not a hypothetical one: `PEEL` neither `destroysTarget` nor
+      checks it isn't already peeled — a blind retry would spawn a SECOND
+      `potato_peel`/`egg_shell` byproduct instance that doesn't physically
+      exist. `retrySafe: false` on `peel.json`, the only `false` among all 21.
+      Two other real distinctions found and recorded, not just declared true:
+      idempotent-by-construction (SALT/FLIP/FOLD/SHOCK/INFUSE/PASTEURIZE —
+      engine.ts already guards `addsTag` against duplicates) vs. fails-loudly
+      -instead-of-repeating (CRACK/SEPARATE/COMBINE — target already gone
+      from inventory on a second attempt). `retrySafe: true` at the data/
+      inventory level does NOT mean culinarily harmless — FRY/POACH/SCRAMBLE/
+      EMULSIFY are flagged `true` with an explicit caveat that re-running a
+      finished result risks overcooking or, for EMULSIFY specifically,
+      breaking an already-stable emulsion.
 - [ ] Structured `DomainFact`/`PhysicalProperty` records (typed value, unit,
       source, `verified: boolean`) alongside — not replacing — the prose
       `metadata.notes` this repo is full of. A robot's planner/verifier

@@ -5,9 +5,13 @@
     "en": "Mix",
     "es": "Mezclar"
   },
-  "requiredTools": ["mixer"],
+  "requiredTools": [
+    "mixer"
+  ],
   "requiredTargetCapability": "isBlendable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "parameters": [],
   "outputs": {
     "transformedState": "blended",
@@ -16,6 +20,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "One of CONCEPT.md §10's Event System verbs (PICK_UP, DROP, CUT, MOVE, HEAT, WAIT, MIX). potato_peel.json is the first entity to declare isBlendable — a second reuse path alongside FRY (data/actions/fry.json): peels can be fried into crisps or put in a mixer instead of being discarded."
-  }
+    "notes": "One of CONCEPT.md §10's Event System verbs (PICK_UP, DROP, CUT, MOVE, HEAT, WAIT, MIX). potato_peel.json is the first entity to declare isBlendable — a second reuse path alongside FRY (data/actions/fry.json): peels can be fried into crisps or put in a mixer instead of being discarded.",
+    "retrySafeNote": "retrySafe: true — further mixing an already-blended target is physically continuous, not a discrete duplication risk."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Texture uniformly blended, no distinct unblended chunks remaining",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "moving_blade",
+      "severity": "medium",
+      "note": "Electric mixer/blender — motorized blade risk, distinct from a static knife's"
+    }
+  ],
+  "retrySafe": true
 }

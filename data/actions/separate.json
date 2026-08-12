@@ -7,7 +7,9 @@
   },
   "requiredTools": [],
   "requiredTargetCapability": "isSeparable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "requiredIngredientCapabilities": [],
   "parameters": [],
   "outputs": {
@@ -18,6 +20,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "CLAUDE_DEV_CTX.md's own conservation-of-mass example: 'separate' destroys the parent egg, spawns disjoint egg_shell + egg_yolk + egg_white in its place (data/entities/egg.json's byproductsByAction.separate). requiredTargetCapability 'isSeparable' isn't one of CapabilitiesSchema's named fields (ingredient.ts) — it validates anyway via that schema's deliberate .catchall(z.boolean()), same pattern as any future unrecognized capability. destroysTarget: true is what actually makes recipe-runner.ts remove the egg instance from inventory instead of keeping it as a 'separated' egg alongside its own byproducts — see engine.ts's ExecutionResult.destroyed and ROADMAP.md's previously-unchecked 'Conservation of mass/entities on applyStep' item, now implemented for this explicit-opt-in case (not yet a general inventory-quantity system)."
-  }
+    "notes": "CLAUDE_DEV_CTX.md's own conservation-of-mass example: 'separate' destroys the parent egg, spawns disjoint egg_shell + egg_yolk + egg_white in its place (data/entities/egg.json's byproductsByAction.separate). requiredTargetCapability 'isSeparable' isn't one of CapabilitiesSchema's named fields (ingredient.ts) — it validates anyway via that schema's deliberate .catchall(z.boolean()), same pattern as any future unrecognized capability. destroysTarget: true is what actually makes recipe-runner.ts remove the egg instance from inventory instead of keeping it as a 'separated' egg alongside its own byproducts — see engine.ts's ExecutionResult.destroyed and ROADMAP.md's previously-unchecked 'Conservation of mass/entities on applyStep' item, now implemented for this explicit-opt-in case (not yet a general inventory-quantity system).",
+    "retrySafeNote": "retrySafe: true — but not because it's silently idempotent: destroysTarget means the target instance is already gone from inventory after a first success, so a blind retry fails loudly ('Unknown target instance') instead of duplicating anything."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Yolk and white present as two distinct, unmixed portions, shell fully removed",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "sharp_fragment",
+      "severity": "low",
+      "note": "Eggshell fragments"
+    }
+  ],
+  "retrySafe": true
 }

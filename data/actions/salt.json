@@ -7,8 +7,12 @@
   },
   "requiredTools": [],
   "requiredTargetCapability": "isSeasonable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isSeasoning"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isSeasoning"
+  ],
   "parameters": [],
   "outputs": {
     "addsTag": "salted",
@@ -17,6 +21,14 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "Uses outputs.addsTag, not transformedState: a boiled potato that gets salted is still boiled, just also salted now — the two coexist, unlike boiled vs. fried which are mutually exclusive states. requiredIngredientCapabilities: isSeasoning, which data/entities/salt.json already declares (added back when salt.json was first written)."
-  }
+    "notes": "Uses outputs.addsTag, not transformedState: a boiled potato that gets salted is still boiled, just also salted now — the two coexist, unlike boiled vs. fried which are mutually exclusive states. requiredIngredientCapabilities: isSeasoning, which data/entities/salt.json already declares (added back when salt.json was first written).",
+    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect."
+  },
+  "verification": {
+    "method": "manual_confirmation",
+    "description": "No reliable sensor check for 'properly seasoned' in this vocabulary — taste isn't modeled at all",
+    "confidence": "low"
+  },
+  "hazards": [],
+  "retrySafe": true
 }

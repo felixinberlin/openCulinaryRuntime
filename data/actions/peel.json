@@ -5,9 +5,13 @@
     "en": "Peel",
     "es": "Pelar"
   },
-  "requiredTools": ["knife"],
+  "requiredTools": [
+    "knife"
+  ],
   "requiredTargetCapability": "isPeelable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "outputs": {
     "transformedState": "peeled",
     "spawnsTargetByproducts": true
@@ -15,6 +19,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "The worked example from CONCEPT.md §5 ('World Layer understands PEEL, requires: knife, creates: peeled potato, potato peel') and CLAUDE_DEV_CTX.md ('you cannot peel a potato that is already boiled'). Byproducts are read from the target entity's producedByproducts, not hardcoded here — see ActionOutputsSchema."
-  }
+    "notes": "The worked example from CONCEPT.md §5 ('World Layer understands PEEL, requires: knife, creates: peeled potato, potato peel') and CLAUDE_DEV_CTX.md ('you cannot peel a potato that is already boiled'). Byproducts are read from the target entity's producedByproducts, not hardcoded here — see ActionOutputsSchema.",
+    "retrySafeNote": "retrySafe: FALSE — a real, concrete finding, not a cautious default. PEEL neither destroysTarget nor has a statePrerequisite blocking re-running it on an already-peeled target: a blind retry after an interruption would spawn a SECOND potato_peel/egg_shell byproduct instance that doesn't physically exist — you cannot peel a potato twice and get two peels. A robot's fault-recovery layer must check current state before retrying PEEL specifically, not just re-issue the last step."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Skin/shell/peel fully absent from the target's surface",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "sharp_blade",
+      "severity": "medium",
+      "note": "Requires a knife — blade-to-hand contact risk"
+    }
+  ],
+  "retrySafe": false
 }

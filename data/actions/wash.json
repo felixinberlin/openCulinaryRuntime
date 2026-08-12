@@ -7,7 +7,9 @@
   },
   "requiredTools": [],
   "requiredTargetCapability": "isWashable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "outputs": {
     "transformedState": "washed",
     "spawnsTargetByproducts": false
@@ -15,6 +17,14 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "No requiredTools: running water is treated as ambient rather than a tool entity for now. validTargetKinds is ingredient-only even though knife.json also asserts isWashable — a tool's 'clean' state doesn't map onto the same transformedState ('washed') as an ingredient's, so wiring WASH up to tools is left for later rather than forced to fit here."
-  }
+    "notes": "No requiredTools: running water is treated as ambient rather than a tool entity for now. validTargetKinds is ingredient-only even though knife.json also asserts isWashable — a tool's 'clean' state doesn't map onto the same transformedState ('washed') as an ingredient's, so wiring WASH up to tools is left for later rather than forced to fit here.",
+    "retrySafeNote": "retrySafe: true — re-washing something already clean is harmless."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "No visible dirt/residue remaining on the surface",
+    "confidence": "medium"
+  },
+  "hazards": [],
+  "retrySafe": true
 }

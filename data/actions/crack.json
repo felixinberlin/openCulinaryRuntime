@@ -7,7 +7,9 @@
   },
   "requiredTools": [],
   "requiredTargetCapability": "isCrackable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "requiredIngredientCapabilities": [],
   "parameters": [],
   "outputs": {
@@ -18,6 +20,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "Opens the egg without separating yolk from white — the entry point for scrambled eggs and the plain/French omelette, as opposed to SEPARATE (data/actions/separate.json) which explicitly splits yolk and white apart for recipes that need them independently (meringue, custard, ...). Same destroysTarget + spawnsTargetByproducts mechanism as SEPARATE; see egg.json's byproductsByAction.crack (spawns egg_shell + egg_cracked, not egg_yolk/egg_white)."
-  }
+    "notes": "Opens the egg without separating yolk from white — the entry point for scrambled eggs and the plain/French omelette, as opposed to SEPARATE (data/actions/separate.json) which explicitly splits yolk and white apart for recipes that need them independently (meringue, custard, ...). Same destroysTarget + spawnsTargetByproducts mechanism as SEPARATE; see egg.json's byproductsByAction.crack (spawns egg_shell + egg_cracked, not egg_yolk/egg_white).",
+    "retrySafeNote": "retrySafe: true — but not because it's silently idempotent: destroysTarget means the target instance is already gone from inventory after a first success, so a blind retry fails loudly ('Unknown target instance') instead of duplicating anything."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Shell fully separated from contents; yolk/white or combined mixture visible in the target vessel",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "sharp_fragment",
+      "severity": "low",
+      "note": "Eggshell fragments"
+    }
+  ],
+  "retrySafe": true
 }

@@ -17,6 +17,16 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "Dry heat: unlike FRY/BOIL, no medium ingredient is required at all — requiredIngredientCapabilities is deliberately empty, not just satisfied by something ambient."
-  }
+    "notes": "Dry heat: unlike FRY/BOIL, no medium ingredient is required at all — requiredIngredientCapabilities is deliberately empty, not just satisfied by something ambient.",
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but re-baking an already-done target risks drying it out/overcooking, same culinary caveat as fry.json/boil.json's cooking actions."
+  },
+  "verification": {
+    "method": "thermal",
+    "description": "Internal temperature has risen to the expected range for the target's baked state (weakest verification in this vocabulary — oven air temperature is not the target's actual internal temperature, and no probe is assumed present)",
+    "confidence": "low"
+  },
+  "hazards": [
+    { "type": "hot_surface", "severity": "high", "note": "Oven cavity and bakeware — sustained high-temperature contact burn risk, worse than a stovetop pan (larger hot surface, less visibility of what's inside)" }
+  ],
+  "retrySafe": true
 }

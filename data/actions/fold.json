@@ -5,9 +5,13 @@
     "en": "Fold",
     "es": "Doblar"
   },
-  "requiredTools": ["pan"],
+  "requiredTools": [
+    "pan"
+  ],
   "requiredTargetCapability": "isFoldable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "requiredIngredientCapabilities": [],
   "parameters": [],
   "outputs": {
@@ -17,6 +21,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "addsTag 'folded', mirroring FLIP's addsTag: 'flipped' and SALT's precedent — the classical French omelette's defining shape step (rolled/folded into an oval with a spatula, off or just at the end of heat), distinct from FRY itself. Not the Spanish tortilla francesa's usual presentation (typically served flat, unfolded) — see fry.json's internalTextureNote for that disambiguation. requiredTools 'pan' only, same as FLIP's toolAndTechniqueGap reasoning: doesn't gate on a specific utensil (spatula) since none is modeled as a distinct tool entity."
-  }
+    "notes": "addsTag 'folded', mirroring FLIP's addsTag: 'flipped' and SALT's precedent — the classical French omelette's defining shape step (rolled/folded into an oval with a spatula, off or just at the end of heat), distinct from FRY itself. Not the Spanish tortilla francesa's usual presentation (typically served flat, unfolded) — see fry.json's internalTextureNote for that disambiguation. requiredTools 'pan' only, same as FLIP's toolAndTechniqueGap reasoning: doesn't gate on a specific utensil (spatula) since none is modeled as a distinct tool entity.",
+    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Target rolled/folded into the expected oval shape rather than lying flat",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "hot_surface",
+      "severity": "low",
+      "note": "Still in or near the hot pan"
+    }
+  ],
+  "retrySafe": true
 }

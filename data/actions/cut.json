@@ -5,9 +5,13 @@
     "en": "Cut",
     "es": "Cortar"
   },
-  "requiredTools": ["knife"],
+  "requiredTools": [
+    "knife"
+  ],
   "requiredTargetCapability": "isChoppable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "parameters": [
     {
       "id": "shape",
@@ -16,7 +20,13 @@
         "es": "Forma"
       },
       "required": true,
-      "allowedValues": ["sliced", "diced", "julienne", "chopped", "minced"]
+      "allowedValues": [
+        "sliced",
+        "diced",
+        "julienne",
+        "chopped",
+        "minced"
+      ]
     }
   ],
   "outputs": {
@@ -26,6 +36,20 @@
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "CUT is one verb with a 'shape' parameter (CLAUDE_DEV_CTX.md's 4th pillar, Parameters), not five separate verbs — the resulting state is whatever shape was chosen, so allowedValues doubles as the set of post-cut states."
-  }
+    "notes": "CUT is one verb with a 'shape' parameter (CLAUDE_DEV_CTX.md's 4th pillar, Parameters), not five separate verbs — the resulting state is whatever shape was chosen, so allowedValues doubles as the set of post-cut states.",
+    "retrySafeNote": "retrySafe: true — re-cutting already-cut pieces just re-asserts/changes the shape parameter, no duplication risk (no byproducts spawned)."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Pieces match the requested shape/size (sliced/diced/julienne/chopped/minced)",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "sharp_blade",
+      "severity": "high",
+      "note": "Repeated blade motion directly against the target — the closest sustained hand-to-blade proximity of any action in this vocabulary"
+    }
+  ],
+  "retrySafe": true
 }

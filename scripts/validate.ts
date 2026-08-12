@@ -86,6 +86,12 @@ for (const action of actions.items.values()) {
   if (action.outputs.combinesInto && !entities.items.has(action.outputs.combinesInto)) {
     fail(`actions/${action.id}.json: outputs.combinesInto references unknown entity "${action.outputs.combinesInto}"`);
   }
+  if (!action.verification) {
+    console.log(`NOTE actions/${action.id}.json: no verification criterion — how would a machine confirm this action's effect happened?`);
+  }
+  if (action.retrySafe === undefined) {
+    console.log(`NOTE actions/${action.id}.json: retrySafe not audited — is blindly re-running this after an interruption safe?`);
+  }
 }
 
 for (const recipe of recipes.items.values()) {

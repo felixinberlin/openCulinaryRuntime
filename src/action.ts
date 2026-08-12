@@ -113,6 +113,64 @@ export const ActionOutputsSchema = z
   });
 export type ActionOutputs = z.infer<typeof ActionOutputsSchema>;
 
+/**
+ * How a machine — not a human reading a log line — would actually confirm
+ * this action's effect happened, rather than just trusting that preconditions
+ * passed and a timer elapsed. `WORLD_MODEL.md`'s proposed generalization of
+ * the CCP pattern (a sensor-checkable threshold over a continuous quantity)
+ * to every action, not just HACCP-relevant ones. `engine.ts`'s `applyAction`
+ * is open-loop today — it asserts `outputs` fired the instant preconditions
+ * pass, with no feedback step. This schema does not close that loop (still
+ * no real sensing/perception layer, `ENGINE_INVARIANTS.md` #11 unchanged) —
+ * it records, as structured domain knowledge, WHAT a closed-loop system
+ * would need to check, and how reliable that check actually is. `confidence:
+ * "low"` on an action is itself useful information: it flags where this
+ * model's open-loop "trust the timer" assumption is weakest, not a defect
+ * to silently improve away.
+ */
+export const VerificationCriterionSchema = z.object({
+  method: z.enum([
+    "visual",
+    "thermal",
+    "mass_change",
+    "tactile_force",
+    "olfactory",
+    "elapsed_time_only",
+    "manual_confirmation",
+  ]),
+  /** What specifically to check, concrete enough to hand to a vision
+   *  pipeline, a thermocouple threshold, or a human — not "check it's done". */
+  description: z.string().min(1),
+  /** How reliable this check actually is at confirming the effect really
+   *  happened, not just that the recipe believes it should have. */
+  confidence: z.enum(["high", "medium", "low"]),
+});
+export type VerificationCriterion = z.infer<typeof VerificationCriterionSchema>;
+
+/**
+ * Physical/operational danger from PERFORMING this action — a knife blade, a
+ * hot pan, boiling liquid splatter. Deliberately separate from
+ * `CriticalControlPointSchema` (thermal.ts): a CCP is about the FOOD being
+ * unsafe to eat if under-processed; a hazard here is about the ACT of
+ * performing the step being dangerous to a person nearby, regardless of
+ * whether the food itself turns out fine. Named in the "think like a robot"
+ * discussion as a real, previously-unmodeled gap (this whole codebase only
+ * ever modeled food safety, never operational safety) — this is that gap
+ * closed as structured data, not a control system: it does not itself keep
+ * anyone safe (no proximity sensing, no interlocks — that's
+ * `ENGINE_INVARIANTS.md` #11's unbuilt control/perception layer), it records
+ * what a real safety system protecting a person would need to know about.
+ * `type` is an open string (not a fixed enum), matching `CapabilitiesSchema`'s
+ * own "keep it open" precedent — new hazard categories shouldn't need a
+ * schema change to express.
+ */
+export const HazardSchema = z.object({
+  type: z.string().min(1),
+  severity: z.enum(["low", "medium", "high"]),
+  note: z.string().min(1),
+});
+export type Hazard = z.infer<typeof HazardSchema>;
+
 export const ActionSchema = z.object({
   /** Stable machine id, e.g. "peel". Referenced by EntitySchema.allowedTransformations. */
   id: z.string().min(1),
@@ -168,6 +226,34 @@ export const ActionSchema = z.object({
   outputs: ActionOutputsSchema,
   duration: z.enum(["fixed", "variable"]).default("variable"),
   precision: z.enum(["required", "optional"]).default("optional"),
+  /** How a machine would confirm this action's effect actually happened —
+   *  see VerificationCriterionSchema's doc comment. Optional (existing
+   *  actions predate this field), but every action added or touched from
+   *  here on should carry one deliberately, not by omission. */
+  verification: VerificationCriterionSchema.optional(),
+  /** Physical/operational dangers from PERFORMING this action — see
+   *  HazardSchema's doc comment. Empty array is a real, meaningful claim
+   *  ("this action has no notable physical hazard", e.g. SALT), not just an
+   *  unfilled field — audited per-action, not defaulted-and-forgotten. */
+  hazards: z.array(HazardSchema).default([]),
+  /**
+   * Is blindly re-running this exact action (after an interruption — a
+   * fault, a power loss, a human stopping and resuming) safe, or could it
+   * double an effect that already happened? Two genuinely different reasons
+   * an action can be `true` here, both real: (1) idempotent by construction
+   * — engine.ts guards `addsTag` against duplicates (SALT/FLIP/FOLD/SHOCK/
+   * INFUSE/PASTEURIZE re-running is a silent no-op, not a double effect);
+   * (2) fails LOUDLY instead of silently repeating — a `destroysTarget`
+   * action's target is already gone from inventory on a second attempt
+   * (CRACK/SEPARATE/COMBINE), so a retry errors instead of duplicating.
+   * `false` (or unset) means neither protection applies — most concretely,
+   * PEEL: `spawnsTargetByproducts` fires again on an already-peeled target
+   * (no state check prevents re-running it), producing a byproduct instance
+   * that doesn't physically exist (you cannot peel a potato twice and get a
+   * second peel). Left `undefined`, not defaulted to `false`, where genuinely
+   * not yet audited — but every action in this repo has been.
+   */
+  retrySafe: z.boolean().optional(),
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 export type Action = z.infer<typeof ActionSchema>;

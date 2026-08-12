@@ -237,6 +237,34 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   before being asked about. Worth asking, for any dish name: what's the most
   common real-world qualifier attached to an order for it, and is it actually
   representable yet?
+- **A composite entity built from an at-risk ingredient (egg) needs its OWN
+  `criticalControlPointsByAction` — inheriting the ingredient doesn't
+  inherit the safety wiring.** `tortilla_mixture.json` (built from potato +
+  egg via `COMBINE`) had zero HACCP enforcement, silently, until asked
+  whether tortilla de Betanzos — a real dish DEFINED by an intentionally
+  liquid, barely-cooked interior — was makeable. Exactly the same shape of
+  gap `handmade-alioli-egg-yolk.json` had originally (a real safety-relevant
+  ingredient present, but the specific action/entity pairing that needed a
+  CCP reference never got one), the second time this exact class of bug has
+  been found by asking about a specific real dish rather than by auditing in
+  the abstract. General lesson, now twice-confirmed: whenever `COMBINE`
+  (or any future entity-merging mechanism) produces a new composite entity
+  from an at-risk ingredient, check whether the new entity's own
+  `criticalControlPointsByAction` was actually populated — `structure.
+  components` listing the ingredient is not the same as the safety wiring
+  carrying over, and nothing currently enforces that it does.
+- **Adding a CCP reference to an entity that previously had none can break a
+  standalone script that calls `applyAction` directly without loading
+  `ccps`** — not a flaw in the fix, the exact self-defending check
+  (`"was ccps not loaded/passed into applyAction?"`) written for this precise
+  situation, firing correctly for the first time. `attempt-tortilla.ts` never
+  needed `ccps` before because `tortilla_mixture` had nothing to reference;
+  once it legitimately did, the standalone demo needed the same `loadCcps()`
+  wiring the recipe-driven path already had. Any change that adds a new
+  `criticalControlPointsByAction` entry to an existing entity should be
+  treated as a potential breaking change for scripts that construct
+  `Instance`s directly (not through `run-recipe.ts`) — full regression across
+  the standalone demos, not just the recipes, is what actually caught this.
 - **Implementing the REAL D-value/z-value thermal-death-time model (the actual
   math the FDA Food Code's own tables are built from) instead of two
   hand-picked anchor points found a genuine, computable ~4x discrepancy

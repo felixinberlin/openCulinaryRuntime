@@ -14,6 +14,9 @@
   "possibleTags": ["flipped", "salted"],
   "allowedTransformations": ["fry", "flip"],
   "producedByproducts": [],
+  "criticalControlPointsByAction": {
+    "fry": "egg_cooking"
+  },
   "capabilities": {
     "isFryable": true,
     "isFlippable": true
@@ -30,6 +33,7 @@
   "metadata": {
     "producedBy": ["combine"],
     "notes": "The first entity in this repo to actually populate structure.composite/components (potato + egg) — that field existed, unused, since ingredient.ts's first draft; see data/actions/combine.json. Result of COMBINE-ing a fried-potato instance with a beaten-egg instance (see data/actions/combine.json's requiredTargetCapability/requiredSecondaryCapability). possibleTags 'flipped' rather than a state: flipping doesn't change WHAT the mixture is (still 'fried' — it's mid-cook, on its second side), matching SALT's addsTag precedent, not a new transformedState.",
-    "knownGap": "FRY applied twice (once before FLIP, once after) both times just sets the fixed state 'fried' — this schema has no way to distinguish 'one side fried' from 'both sides fried, fully cooked', since ActionOutputsSchema.transformedState is always a fixed target regardless of the instance's current state. Left honest rather than invented new states ('fried_one_side'/'fried_both_sides') that FRY's shared, fixed-output shape can't actually support without breaking every other FRY user — same category of limitation as fry.json's doneness parameter."
+    "knownGap": "FRY applied twice (once before FLIP, once after) both times just sets the fixed state 'fried' — this schema has no way to distinguish 'one side fried' from 'both sides fried, fully cooked', since ActionOutputsSchema.transformedState is always a fixed target regardless of the instance's current state. Left honest rather than invented new states ('fried_one_side'/'fried_both_sides') that FRY's shared, fixed-output shape can't actually support without breaking every other FRY user — same category of limitation as fry.json's doneness parameter.",
+    "haccpGapFound2026-08-12": "criticalControlPointsByAction was MISSING entirely until asked whether tortilla de Betanzos — a real regional style defined by an intentionally liquid, barely-set interior — was makeable. Same class of bug as handmade-alioli-egg-yolk.json's original zero-enforcement gap: this entity is built from egg (COMBINE's secondary instance) and FRIED for a duration a real recipe could set arbitrarily short, with no safety check at all until this fix. Reuses egg_cooking.json (same organism, same risk, same reasoning egg_cracked.json already uses for FRY/SCRAMBLE) rather than inventing a new CCP — the risk is a fact about egg being present in the mixture, not about which composite entity it ended up in."
   }
 }

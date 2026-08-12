@@ -37,6 +37,27 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Tortilla francesa (flat, fully set) | ✅ Makeable | `npm run recipe -- tortilla_francesa` |
 | French omelette (baveuse, folded) | ✅ Makeable | `npm run recipe -- french_omelette` |
 | Soft-boiled egg (jammy, shocked, peeled) | ✅ Makeable | `npm run recipe -- soft_boiled_egg` |
+| Tortilla de Betanzos (liquid, flowing center) | ✅ Makeable — **found and fixed a real HACCP gap** | `npm run recipe -- tortilla_de_betanzos` |
+
+**Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
+`criticalControlPointsByAction` wiring — the same class of gap
+`handmade-alioli-egg-yolk.json` originally had.** Betanzos's defining trait is
+an intentionally liquid, barely-set interior (the opposite end of
+`internalTexture` from `tortilla_francesa.json`'s `fully_set`) — exactly the
+FDA "increased risk, disclosed" case `egg_cooking.json` exists for, and it had
+no safety check at all until asked whether this specific dish was makeable.
+Fixed by reusing `egg_cooking.json` (same organism, same reasoning
+`egg_cracked.json` already applies to FRY/SCRAMBLE) rather than inventing a
+new CCP. Proven, not asserted: `tortilla_de_betanzos.json`'s two brief,
+high-heat FRY steps (12s, 10s — genuinely below the 15s threshold, matching
+the real technique) both trigger the advisory warning; `tortilla_de_patatas.
+json`'s longer, gentler steps (180s, 120s) trigger none — same entity, same
+COMBINE/FLIP machinery, now provably, not just nominally, different dishes.
+Also found and fixed a second-order regression this caused:
+`attempt-tortilla.ts`'s standalone demo never needed to load `ccps` before
+(`tortilla_mixture` had no CCP to reference) — once it legitimately did, the
+demo hit the exact self-defending "was ccps not loaded/passed?" error written
+for this precise situation, correctly, not a bug in that check.
 
 **`BOIL` had zero parameters, silently, until audited for it.** No
 `durationSeconds`, no `yolkDoneness` — despite `egg.json` already wiring a CCP
@@ -289,6 +310,19 @@ implied to be a small addition.
       forbids. `egg_cooking.json`'s `metadata.coagulationReferenceC` is the
       right instinct already present, just not yet a consistent, first-class
       pattern.
+- [x] **A real domain-question query interface — closed 2026-08-12.**
+      `src/query.ts`'s `answerAboutParameter` + `npm run ask -- <actionId>
+      <parameterId>`: given a question like "how often should I pour olive
+      oil for alioli," the answer comes from actually looking up
+      `emulsify.json`'s `oilAdditionRate` (allowedValues, whether it's
+      state-determining or informational, every metadata note that mentions
+      it, every real recipe that has set it) — not generated prose. Matches
+      CONCEPT.md §14's boundary exactly: turning free text into a structured
+      lookup is the LLM's job; the deterministic data already in `data/*.json`
+      has final say on the actual answer. Narrower than the `DomainFact`
+      item above (this queries existing `metadata.notes` + parameter
+      definitions as-is, not a new structured-fact schema) but real and
+      running today, not just proposed.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 - [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.

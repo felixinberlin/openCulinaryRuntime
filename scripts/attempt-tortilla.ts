@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { loadEntities, loadActions } from "../src/registry.ts";
+import { loadEntities, loadActions, loadCcps } from "../src/registry.ts";
 import { applyAction, type Instance } from "../src/engine.ts";
 
 /**
@@ -23,13 +23,15 @@ import { applyAction, type Instance } from "../src/engine.ts";
 const root = join(import.meta.dirname, "..");
 const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
+const ccps = loadCcps(join(root, "data", "ccps"));
 const tools = new Set(["knife", "pan", "bowl"]);
 const ingredients = new Set(["oil", "salt"]);
 
 function apply(instance: Instance, actionId: string, params?: Record<string, string>) {
   const action = actions.get(actionId)!;
-  const result = applyAction(instance, action, entities, tools, params, ingredients);
+  const result = applyAction(instance, action, entities, tools, params, ingredients, ccps);
   console.log(`  ${action.verb}: "${instance.state}" -> "${result.instance.state}"`);
+  for (const warning of result.warnings) console.log(`  WARNING: ${warning.slice(0, 100)}...`);
   return result;
 }
 

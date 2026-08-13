@@ -220,6 +220,34 @@ proven runnable, not just asserted.
          rest between stages is still a real, named, unbuilt gap
          (`par-fry.json`'s `restNote`) — this repo has no `REST` verb yet.
          Proven end-to-end: `npm run capability-test:double-fry`.
+- [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
+      closed 2026-08-13, raised directly by the user ("getting the perfect
+      egg shape in the pan, throwing the heated oil OVER the egg yolk").
+      Two distinct real facts:
+      1. Egg shape in the pan is overwhelmingly a FRESHNESS effect, not a
+         technique one: `egg.json` gains `fresh`/`aged` possibleTags, cited
+         to MDPI's 2024 egg-freshness review and a real albumen-viscosity
+         study (ovomucin network breakdown as an egg ages — a fresh white
+         holds a tight, tall shape; an older one spreads flat). Deliberately
+         set only as an `initialInventory` starting tag, never derived by an
+         action — this repo has no elapsed-time/`AGE` concept, and inventing
+         one just for this would be dishonest.
+      2. `fry.json` gains `topCookingMethod` (`untouched`/`basted`/`covered`/
+         `flipped`) — four genuinely different real techniques for cooking a
+         sunny-side-up egg's top without flipping, `basted` being literally
+         "throwing heated oil over the yolk" as described, and explicitly
+         distinguished from `edgeStyle`'s `crispy_lace_puntilla` (same
+         physical motion, different target and goal — yolk-setting vs.
+         white-edge-crisping). Informational only, same depth limit as every
+         parameter here. Verified directly (not via a dedicated capability-
+         test script, since nothing here is state-determining or newly
+         enforced beyond an allowedValues/tag check) — see `LEARNINGS.md`
+         2026-08-13.
+      A third thread in the same message — "transformations usually take
+      time... states can change" — was real too but structural, not a data
+      fix: folded into the "Heat as a shared, time-varying property of a
+      PLACE" entry above as the same underlying gap (`applyAction`'s
+      atomicity), not a separate one.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
@@ -285,6 +313,27 @@ covered by what exists:**
       fix. Deliberately named and left unbuilt rather than started
       speculatively — see `LEARNINGS.md` 2026-08-13 for the full reasoning
       on why this is scoped as design-and-record, not implement, for now.
+      **Extended the same day, same root cause, raised again unprompted by
+      the user in different words**: "transformations usually take time...
+      states can change, so its cooking and life." `applyAction` is
+      genuinely atomic — it maps one `Instance` state directly to another;
+      `durationSeconds` is checked as a pass/fail HACCP threshold, never
+      used to represent any state PARTWAY through a transformation. Two
+      concrete real cases this actually blocks, found while building
+      `fry.json`'s `topCookingMethod`/`egg.json`'s `freshnessNote` the same
+      day: an egg's shape in the pan is not fixed at the instant it's
+      cracked, it settles/spreads continuously over the first several
+      seconds (a real, continuous process, not a snapshot); basting
+      (`topCookingMethod: "basted"`) is applied repeatedly DURING frying,
+      not once at the start or end, so its actual effect depends on WHEN in
+      the process it happens, which nothing here can express. Both were
+      handled honestly at the depth this repo already commits to elsewhere
+      (informational-only parameters recording WHAT technique was used, not
+      simulating its moment-to-moment effect) rather than by pretending
+      atomicity isn't a real limitation — but the underlying fact stands:
+      closing this gap for real needs the SAME structural addition as the
+      place/heat gap above (continuous or at least multi-checkpoint time
+      within one action), not a second, separate mechanism.
 - [ ] **Storage/shelf-life common knowledge** (partially, deliberately
       out-of-scope already for one case — `infuse.json`'s garlic-in-oil
       botulism note, `LEARNINGS.md` 2026-08-12 — but nothing general exists:

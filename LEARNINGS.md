@@ -850,3 +850,51 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   `par-fry.json` — the new verb's existence was the forcing function that
   made an old, adjacent gap visible, not the reason to leave it unfixed
   once seen.
+
+### Egg freshness, basting, and "transformations take time" — one message, three separable gaps
+
+- **A single dense user observation split cleanly into three real gaps at
+  three different sizes, and treating them uniformly (all build, or all
+  document) would have been wrong in both directions.** "Getting the
+  perfect egg shape in the pan" turned out to be almost entirely a
+  FRESHNESS fact (real, cited, a small data addition — `fresh`/`aged`
+  tags). "Throwing heated oil over the yolk" turned out to be a real,
+  nameable TECHNIQUE distinct from one already in the schema
+  (`topCookingMethod`, distinguished from `edgeStyle`'s existing
+  `crispy_lace_puntilla` — same physical motion, different target) — also a
+  small, buildable parameter addition. "Transformations usually take time...
+  states can change" turned out to be the SAME structural engine gap
+  already recorded (`ROADMAP.md`'s "heat as a shared, time-varying place"
+  entry) restated in different words, not a new one — folded in rather than
+  duplicated. Splitting a dense message into its separately-sized parts
+  before deciding what to do with each avoided both under-building (leaving
+  the two real, small, buildable facts undocumented) and over-building
+  (starting engine work on the atomicity point that was never actually
+  asked for and isn't newly scoped just because it was mentioned again).
+- **Checked whether the third thread was actually a NEW gap before folding
+  it into the existing one, rather than assuming a philosophical-sounding
+  restatement must be identical to the last one.** The two concrete cases
+  that came with it this time (an egg's shape settling continuously as it
+  fries; basting's effect depending on WHEN mid-process it's applied) are
+  genuinely different scenarios from periodic egg-cooking (the original
+  motivating case for that entry) but root-caused to the exact same
+  mechanism: `applyAction` maps one `Instance` state directly to another
+  with no representation of anything partway through. Worth stating
+  precisely why folding was correct here even though the SIMMER-vs-PAR_FRY
+  entry just above warns against assuming shared framing — those were two
+  different REQUIRED SCHEMA DECISIONS (state string) built independently
+  from convention; this is one and the same UNBUILT MECHANISM restated,
+  confirmed structurally, not merely by the sentences sounding similar.
+- **`fresh`/`aged` needed a real decision about WHERE freshness can be set,
+  not just whether to add it, and the honest answer was "only at
+  `initialInventory`, never by an action."** This repo has no elapsed-time
+  concept and no verb for the passage of time — inventing an `AGE` action
+  just to make freshness feel more "complete" would have manufactured a
+  false capability (the engine pretending to model something — real-world
+  time passing between or during recipe steps — it fundamentally doesn't).
+  `RecipeInstanceSchema.tags` already supports arbitrary starting tags on
+  any inventory instance, so this needed zero new mechanism — confirmed by
+  checking the schema before assuming a new field was needed, the same
+  "check for an existing shape before building a new one" instinct that
+  caught the heat-source circular-import case back on 2026-08-13's first
+  entry in this file.

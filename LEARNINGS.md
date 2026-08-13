@@ -975,3 +975,40 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   unbuilt — the difference was never "engine work is risky," it was
   whether the actual need was small or genuinely structural, checked
   freshly each time rather than assumed from the last decision.
+
+### "Oma boils an egg" — scope-checking a heavily garbled instruction before building it
+
+- **A message that was genuinely hard to parse ("oma first mants we build
+  the base and oma just aks for an boiled egg. Make oma tests in all the
+  places") still had a confident, checkable READING even though its exact
+  SCOPE didn't** — worth separating those two kinds of uncertainty rather
+  than treating the whole message as equally unclear. The persona reading
+  (Oma = a naive end-user who should be able to say "boil me an egg" with
+  zero technical detail and have the robot handle the rest) mapped cleanly
+  onto `CONCEPT.md` §14's already-established Intent pipeline — high
+  confidence, no need to ask. What "in all the places" actually meant
+  (one demo? several dishes? edits scattered across every existing script?)
+  was genuinely unresolvable from the text alone and had real cost
+  attached to guessing wrong (touching many existing files vs. one new
+  one) — that's the part worth an `AskUserQuestion`, not the persona
+  reading itself. Asking about the part that was actually ambiguous,
+  instead of re-clarifying the part that wasn't, kept the question to one
+  round instead of several.
+- **Deliberately built the demo to prove the boundary CONCEPT.md §14 draws,
+  not to blur it.** The easy, wrong version of this script would quietly
+  have the "robot" also decide what Oma meant by "medium" via some ad-hoc
+  heuristic, making it look like the engine does intent resolution. Instead
+  the `Intent` object is explicitly GIVEN/hardcoded in the script with a
+  comment stating why: CONCEPT.md §14 says the LLM's only job is producing
+  that structured `Intent`, and this repo has no LLM — so the honest demo
+  starts one step AFTER where an LLM would have handed off, not before it,
+  even though skipping that distinction would have made for a slightly
+  more impressive-looking script.
+- **Caught and fixed a wrong function name before it would have been an
+  opaque runtime error for whoever ran the script next.** First draft
+  called a `resolveEggBoilDoneness` that doesn't exist — `egg-doneness.ts`
+  actually exports `EGG_BOIL_DONENESS` (the array) and `eggBoilDonenessRange`
+  (a lookup returning just the range, no `description`). Caught by actually
+  running the script (`npx tsx`) rather than trusting the import compiled
+  correctly, the same "run it, don't just write it" discipline this whole
+  session has applied to every other new script.

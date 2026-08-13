@@ -44,6 +44,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Double-fried potato (PAR_FRY then FRY, distinct intermediate state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:double-fry` |
 | **Crispy French fries** (julienne + PAR_FRY 163°C + FRY 191°C golden, first real dish to actually exercise shape/oilTempC/doneness together) | ✅ Makeable, closed 2026-08-13 | `npm run recipe -- crispy_french_fries` |
 | "Complete potato" — skin-on cuts, GRATE, MASH (a dead state made reachable) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:complete-potato` |
+| "Oma boils an egg" — CONCEPT.md §14's Intent pipeline, made concrete | ✅ Makeable, closed 2026-08-13 | `npm run demo:oma-boils-an-egg` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -291,6 +292,24 @@ proven runnable, not just asserted.
       open too — see this session's chat log / `LEARNINGS.md` for why each
       was scoped out rather than attempted. Proven end-to-end: `npm run
       capability-test:complete-potato`.
+- [x] **"Oma boils an egg"** — closed 2026-08-13, `scripts/oma-boils-an-egg.ts`.
+      Makes `CONCEPT.md` §14's Intent pipeline concrete for the first time
+      with a real worked example: "Oma" (a naive end-user, no technical
+      knowledge) says only "boil me an egg, medium" — the script then walks,
+      step by step, everything the deterministic engine already has grounded
+      enough to resolve that into a safe, fully-specified execution with
+      ZERO further input from her: what an egg even is (`egg.json`), what
+      "medium" means in seconds (`EGG_BOIL_DONENESS`), how long the kitchen's
+      actual heat source takes to reach boiling (`heat-source.ts`), and why
+      a robot cooking unattended needs `SafetyPolicy.mode: "autonomous"`
+      rather than the human default (`ENGINE_INVARIANTS.md` #11) for the
+      exact same `BOIL` step. **Scoped precisely, not overclaimed**: this
+      does NOT implement an LLM, a `RecipeIntentSchema`, or a planner — the
+      `Intent` object is GIVEN (hardcoded), matching CONCEPT.md §14's own
+      boundary ("LLM's only job is producing a structured Intent") rather
+      than building the LLM side. That larger, real, unstarted work is
+      Phase 4.5 below — this closes the "prove the deterministic side is
+      actually ready to receive an Intent" half, not that phase itself.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`

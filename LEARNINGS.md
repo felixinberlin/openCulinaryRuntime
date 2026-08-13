@@ -801,3 +801,52 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   either — their `Cooked` is binary. And no candidate has any concept of
   `CitationSchema`'s provenance/confidence layer at all — that's unique to
   this repo, not something any external framework would preserve on import.
+
+### PAR_FRY / double-frying — the same SIMMER-style question, opposite answer
+
+- **The same "does the new verb share the old one's `transformedState`?"
+  question came up again for PAR_FRY vs. FRY, and the correct answer was
+  the OPPOSITE of SIMMER vs. BOIL — which is exactly why the question needs
+  asking fresh each time, not answered by pattern-matching the last
+  decision.** SIMMER correctly reuses BOIL's `"boiled"` because the two
+  processes reach the identical culinary endpoint. PAR_FRY correctly does
+  NOT reuse FRY's `"fried"` — `par_fried` is pale, soft, and unfinished; a
+  cook who stopped there would call it wrong, not gently done. Applying
+  SIMMER's precedent mechanically here (reuse the existing state) would
+  have been a real modeling error masquerading as consistency. The actual
+  discriminator, made explicit this time so it's checkable next time too:
+  ask whether a competent human would call the two RESULTS the same dish.
+  If yes (simmered egg = boiled egg), share the state. If no (par-fried
+  fry ≠ finished fry), don't — even when the verbs are otherwise
+  structurally identical (same tools, same medium, same capability shape).
+- **Not every "this needs a real-world sequence the engine can't do yet"
+  intuition turns out to be true — double-frying looked at first like it
+  might need the same unbuilt "heat as a place" machinery periodic egg
+  cooking does, and turned out not to.** The distinguishing fact, found by
+  actually checking rather than assuming: periodic cooking needs RAPID
+  alternation between two live temperature baths within one continuous
+  process (16 transfers in 32 minutes) — genuinely needs a clock and
+  shared, evolving tool state. Double-frying's two stages are temporally
+  SEPARATE, with a real ~10-minute rest in between — which means it's just
+  two ordinary, independent recipe steps, exactly like BOIL-then-SHOCK
+  already is for egg. Proved this rather than asserted it:
+  `scripts/double-fry-potato.ts` runs PAR_FRY then FRY as two plain
+  `applyAction` calls and it just works, no new engine code. General
+  lesson: "this sounds like it needs the same missing feature as that other
+  gap" is a hypothesis worth testing against the engine directly, not a
+  conclusion to file away — two techniques can look structurally similar
+  (both are "cook twice at different temperatures") while actually needing
+  completely different amounts of new machinery (one needs a world model
+  the other doesn't).
+- **`FRY` had a real, longstanding inconsistency with its sibling
+  thermal-medium verbs that only became visible by actually comparing
+  them side by side: `BOIL`/`SIMMER`/`POACH` all have a real `°C`
+  parameter (`waterTempC`), but `FRY` only ever had the vague `heatLevel`
+  enum (low/medium/high) despite oil temperature being at least as
+  citable and load-bearing as water temperature.** Not something the
+  user asked to fix directly — surfaced while sourcing PAR_FRY's own
+  `oilTempC` and noticing FRY had no equivalent to be consistent with.
+  Fixed by adding `oilTempC` to `fry.json` itself, not just to the new
+  `par-fry.json` — the new verb's existence was the forcing function that
+  made an old, adjacent gap visible, not the reason to leave it unfixed
+  once seen.

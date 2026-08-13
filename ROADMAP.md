@@ -41,6 +41,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Salt/pepper/chili, same potato (seasoning generalization) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:season-potato` |
 | Boiled egg — gas vs. vitro vs. wood preheat time, doneness timing | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:boil-egg-heat-sources` |
 | SIMMER vs. BOIL (potato + egg, same resulting state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:simmer` |
+| Double-fried potato (PAR_FRY then FRY, distinct intermediate state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:double-fry` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -191,6 +192,34 @@ proven runnable, not just asserted.
       without creeping back to a rolling boil is exactly the "how precisely
       can a cook hold a simmer" question those fields were written to
       describe. Proven end-to-end: `npm run capability-test:simmer`.
+- [x] **Frying physics: shape/size/oil temperature** — closed 2026-08-13,
+      raised directly by the user ("depends of shape, size, oil
+      temperature..."). Two real gaps, closed differently:
+      1. `FRY` had only a vague `heatLevel` enum, no real `°C` parameter —
+         inconsistent with `BOIL`/`SIMMER`/`POACH`'s `waterTempC`. Added
+         `oilTempC` (120-200°C) to `fry.json`, sourced from Kalogianni &
+         Smith, "Effect of frying variables on French fry properties,"
+         *International Journal of Food Science and Technology* 48(4):
+         758-770 (2013), doi:10.1111/ijfs.12024 — verified via direct
+         lookup, not recalled.
+      2. **Double-frying** (par-fry low, rest, fry high — the real technique
+         behind crisp fries) needed a genuinely new verb, `PAR_FRY`
+         (`data/actions/par-fry.json`, `isParFryable` on `potato.json`,
+         145-165°C, sourced from Thermoworks' documented method: 163°C
+         par-fry / 191°C finish). Unlike `SIMMER`, this does NOT reuse
+         `FRY`'s `transformedState` — `par_fried` is a genuinely different,
+         unfinished intermediate (pale, soft, not crisp), not the same dish
+         reached more gently, so the two verbs correctly diverge in
+         resulting state where `SIMMER`/`BOIL` correctly didn't (see
+         `simmer.json`'s `sharedTransformedStateNote` for the other half of
+         that same judgment call). Structurally simpler than the "heat as a
+         place" gap below: double-frying's two stages are temporally
+         SEPARATE (with a rest), so it composes from two ordinary sequential
+         `applyAction` calls with no new engine machinery needed — proven in
+         `scripts/double-fry-potato.ts`. The technique's required ~10-minute
+         rest between stages is still a real, named, unbuilt gap
+         (`par-fry.json`'s `restNote`) — this repo has no `REST` verb yet.
+         Proven end-to-end: `npm run capability-test:double-fry`.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`

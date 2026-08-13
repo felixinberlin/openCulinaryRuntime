@@ -21,9 +21,9 @@
       "note": "Figures are in the range USDA FoodData Central publishes for raw potato — this repo has not looked up the exact current FDC entry/ID to confirm the precise values, and potato composition genuinely varies by cultivar (see garlic.json's cultivar note for the same caveat on a different crop)."
     }
   },
-  "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "baked", "mashed"],
+  "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "par_fried", "fried", "baked", "mashed"],
   "possibleTags": ["salted", "peppered", "chili_seasoned"],
-  "allowedTransformations": ["wash", "peel", "cut", "boil", "simmer", "fry", "bake", "salt", "pepper", "chili", "combine"],
+  "allowedTransformations": ["wash", "peel", "cut", "boil", "simmer", "par_fry", "fry", "bake", "salt", "pepper", "chili", "combine"],
   "statePrerequisites": {
     "cut": "peeled",
     "combine": "fried"
@@ -34,6 +34,7 @@
     "isChoppable": true,
     "isBoilable": true,
     "isSimmerable": true,
+    "isParFryable": true,
     "isFryable": true,
     "isBakeable": true,
     "isWashable": true,
@@ -62,6 +63,8 @@
     "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). statePrerequisites.cut records that a recipe just saying 'cut the potato' implies peeling first. boil/fry/bake are three distinct verbs on purpose: cooked in water vs. oil vs. dry heat give different results, so they're not collapsed into one generic COOK verb. mash isn't wired up yet (no 'mash' action exists) even though 'mashed' remains a listed state. possibleTags/salt: seasoning is orthogonal to possibleStates — a 'salted boiled potato' is state 'boiled' plus tag 'salted' held at once, not a single combined state.",
     "combineNote": "isCombinableBase + statePrerequisites.combine: 'fried' — tortilla de patatas combines already-fried potato with beaten egg, not raw. See data/actions/combine.json and data/entities/tortilla_mixture.json (the first entity in this repo to actually use structure.composite/components).",
     "seasoningNote": "pepper/chili added to allowedTransformations 2026-08-13 alongside salt, the first entity to use all three seasoning verbs (data/actions/pepper.json, chili.json) — same addsTag/possibleTags mechanism as salt, no recipe currently exercises them (built to make the vocabulary capable, not forced into an existing dish that wasn't asked to have pepper/chili).",
-    "simmerNote": "SIMMER (data/actions/simmer.json) added 2026-08-13, isSimmerable alongside isBoilable — reaches the SAME 'boiled' state as BOIL, deliberately (see simmer.json's sharedTransformedStateNote), just via a gentler, lower-turbulence process real technique actually recommends for whole/halved potatoes to avoid broken skins and starch-clouded water. No recipe currently exercises it (same 'capable, not forced in' discipline as pepper/chili above)."
+    "simmerNote": "SIMMER (data/actions/simmer.json) added 2026-08-13, isSimmerable alongside isBoilable — reaches the SAME 'boiled' state as BOIL, deliberately (see simmer.json's sharedTransformedStateNote), just via a gentler, lower-turbulence process real technique actually recommends for whole/halved potatoes to avoid broken skins and starch-clouded water. No recipe currently exercises it (same 'capable, not forced in' discipline as pepper/chili above).",
+    "parFryNote": "isParFryable + PAR_FRY (data/actions/par-fry.json), added 2026-08-13 in response to a direct question about how shape/size/oil temperature affect fried potato outcome. Unlike SIMMER, PAR_FRY deliberately does NOT reuse FRY's 'fried' transformedState — 'par_fried' is a genuinely different, unfinished intermediate (pale, soft, not crisp), not the same dish reached more gently, so collapsing it into 'fried' would have been the wrong call here even though it was the right call for SIMMER/BOIL (see simmer.json's sharedTransformedStateNote for why that distinction matters and isn't just inconsistency). No statePrerequisites entry added for 'fry' itself — FRY stays callable from any state, same as before, so a direct single-stage fry from 'peeled'/'raw' still works unchanged; PAR_FRY then FRY is an additional, not exclusive, path.",
+    "fryingScienceNote": "The real physics behind 'depends on shape, size, oil temperature': Kalogianni & Smith, \"Effect of frying variables on French fry properties,\" International Journal of Food Science and Technology 48(4):758-770 (2013) — https://doi.org/10.1111/ijfs.12024 — found water removal and oil uptake are NOT simply linked (a thicker crust from more water loss did not mean proportionally more oil absorbed), most property change happens in the first 1-2 minutes of frying, and crust thickness plateaus (~0.35-0.46mm) despite continued heat penetration, due to compensatory shrinkage. None of this is modeled numerically here — CUT's 'shape' parameter (data/actions/cut.json) already gives potato a real, distinct piece-size state, but nothing connects that state to FRY's/PAR_FRY's durationSeconds or oilTempC the way a real fryer (or a real cook) would adjust for it. Same informational-only depth limit as every other parameter in this vocabulary (see fry.json's parameterNotes) — named honestly rather than implied solved by PAR_FRY's addition."
   }
 }

@@ -22,8 +22,8 @@
     }
   },
   "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "baked", "mashed"],
-  "possibleTags": ["salted"],
-  "allowedTransformations": ["wash", "peel", "cut", "boil", "fry", "bake", "salt", "combine"],
+  "possibleTags": ["salted", "peppered", "chili_seasoned"],
+  "allowedTransformations": ["wash", "peel", "cut", "boil", "fry", "bake", "salt", "pepper", "chili", "combine"],
   "statePrerequisites": {
     "cut": "peeled",
     "combine": "fried"
@@ -59,6 +59,7 @@
   },
   "metadata": {
     "notes": "possibleStates/capabilities grounded in CLAUDE_DEV_CTX.md's own potato examples ('cannot peel a potato that is already boiled', INVALID_TRANSITIONS: boiled/fried/mashed). statePrerequisites.cut records that a recipe just saying 'cut the potato' implies peeling first. boil/fry/bake are three distinct verbs on purpose: cooked in water vs. oil vs. dry heat give different results, so they're not collapsed into one generic COOK verb. mash isn't wired up yet (no 'mash' action exists) even though 'mashed' remains a listed state. possibleTags/salt: seasoning is orthogonal to possibleStates — a 'salted boiled potato' is state 'boiled' plus tag 'salted' held at once, not a single combined state.",
-    "combineNote": "isCombinableBase + statePrerequisites.combine: 'fried' — tortilla de patatas combines already-fried potato with beaten egg, not raw. See data/actions/combine.json and data/entities/tortilla_mixture.json (the first entity in this repo to actually use structure.composite/components)."
+    "combineNote": "isCombinableBase + statePrerequisites.combine: 'fried' — tortilla de patatas combines already-fried potato with beaten egg, not raw. See data/actions/combine.json and data/entities/tortilla_mixture.json (the first entity in this repo to actually use structure.composite/components).",
+    "seasoningNote": "pepper/chili added to allowedTransformations 2026-08-13 alongside salt, the first entity to use all three seasoning verbs (data/actions/pepper.json, chili.json) — same addsTag/possibleTags mechanism as salt, no recipe currently exercises them (built to make the vocabulary capable, not forced into an existing dish that wasn't asked to have pepper/chili)."
   }
 }

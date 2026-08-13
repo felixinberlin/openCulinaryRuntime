@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { QuantitySchema } from "./ingredient.ts";
 
 /**
  * RecipeScriptSchema — Roadmap Phase 3, the compiled recipe container:
@@ -20,6 +21,12 @@ export const RecipeInstanceSchema = z.object({
   entityId: z.string().min(1),
   state: z.string(),
   tags: z.array(z.string()).default([]),
+  /** How much of this instance is present — see QuantitySchema's doc
+   *  comment (ingredient.ts) for why this is a 3-kind union, not one
+   *  number. Optional: a recipe can still name an instance ("salt-1
+   *  exists") without committing to an amount, same as before this field
+   *  existed — every recipe authored before 2026-08-13 is unaffected. */
+  quantity: QuantitySchema.optional(),
 });
 export type RecipeInstance = z.infer<typeof RecipeInstanceSchema>;
 

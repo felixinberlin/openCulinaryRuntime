@@ -439,3 +439,139 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   recipe file guessed — the "wrong/typo'd id" entry above). Neither
   replaces the other; both now belong in the standard post-change check
   list (`npm test`, `npm run validate`, every demo, every recipe, `tsc`).
+
+### Salting timing + quantity (asked about the same day, closed same session)
+
+- **`SALT` had no notion of WHEN relative to cooking it happens, and that's
+  not a cosmetic gap — pre-salting draws moisture out via osmosis (drier
+  surface, better browning/crisping when fried) while post-salting is
+  surface-only seasoning with zero effect on the cook.** Closed with an
+  informational `timing` parameter (`before_cooking`/`during_cooking`/
+  `after_cooking`) on `salt.json`, same non-enforced pattern as `fry.json`'s
+  `heatLevel`/`doneness` — still doesn't feed back into `FRY`'s actual
+  outcome (that would need `FRY` to read a moisture/salting-history signal,
+  flagged as a real, separate, unbuilt gap in `salt.json`'s
+  `timingNote`). Retrofitted onto all 9 existing recipes that call `salt`
+  after an upstream cook step exists, using the recipe's actual step order
+  to decide the value (not guessed) — the 2 alioli recipes were correctly
+  left without a `timing` value, since garlic is never cooked in either
+  dish and the parameter wouldn't mean anything there.
+- **A from-scratch batch-edit of several recipe JSON files via
+  `json.dump()` silently reformats the WHOLE file** (compact single-line
+  array entries become multi-line, unrelated whitespace changes throughout)
+  **even when only one field actually changed** — caught immediately by
+  `git diff` showing a wall of noise for a one-key edit, not by anticipating
+  it. Reverted and redid the same 9 edits as literal string replacements
+  (`Edit`/targeted `str.replace`) that touch only the line that changed.
+  General lesson: never round-trip a hand-formatted JSON file through a
+  generic serializer for a small edit — diff what you're about to write
+  before trusting it, or edit the text directly.
+- **Quantity ("how much is a pinch, compared to what?") was not a small
+  follow-up question — it's `ROADMAP.md` Phase 1's known-unbuilt
+  `RecipeIngredientSchema`, and it's the thing the OTHER two questions
+  asked the same session (crystal size, generalizing SALT to
+  pepper/chili) actually sit on top of, not a peer of either.** Confirmed
+  by grep before building anything: zero quantity representation existed
+  anywhere (`RecipeInstanceSchema` had `id`/`entityId`/`state`/`tags`, no
+  amount field at all) — `salt-1` was "a salt instance that exists," not
+  "3g of salt." Worth recognizing explicitly when several small-sounding
+  questions arrive in a burst: check whether they're actually independent,
+  or whether one is foundational and the others are downstream of it — build
+  in dependency order, not arrival order.
+- **"A pinch" and "2% of flour by weight" are not the same KIND of
+  quantity, and collapsing them into one `amount` field would misrepresent
+  whichever one doesn't fit** — this is why `QuantitySchema` is a
+  3-way discriminated union (`precise`/`imprecise`/`relative`), not a
+  single number+unit. `imprecise` exists because cooks genuinely do not
+  measure a pinch (forcing a fake gram value would itself violate this
+  repo's own "don't imply more precision than was verified" standard,
+  already established for `CitationSchema`); `relative` exists because
+  some real quantities (professional bread salt, dosed as a baker's
+  percentage of flour mass) genuinely ARE precise but answer "how much"
+  only in terms of another ingredient, not an absolute number — directly
+  answers "a pinch, compared to what?" for the cases where the honest
+  answer is "it doesn't compare to anything, it's just vague" vs. the
+  cases where the honest answer is "precisely 2% of the flour."
+- **A pinch's real-world gram equivalent depends on the SAME crystal-size
+  axis raised as a separate question in the same conversation (coarse vs.
+  fine salt) — the two gaps aren't independent, one is a concrete instance
+  of the other.** Recorded directly in `QuantitySchema`'s `"imprecise"`
+  branch doc comment rather than treated as unrelated, so the connection
+  isn't lost between the two LEARNINGS entries. Crystal size itself (fine
+  table salt vs. coarse sea salt vs. kosher as separate entities, or a
+  property on one) remains genuinely unbuilt — deliberately deferred
+  rather than guessed at, same reasoning as `garlic-oil-potatoes.json`'s
+  salad gap: name it precisely, don't build it speculatively until a real
+  dish needs to distinguish them.
+- **Generalizing `SALT` into a parameter-driven `SEASON` verb (so pepper/
+  chili don't need copy-pasted actions) was deliberately NOT built this
+  session, on the user's own call, in favor of building quantity first.**
+  Real blocker if it had been attempted: `ActionOutputsSchema.addsTag` is a
+  fixed string today, with no `addsTagFromParameter` counterpart to
+  `transformedStateFromParameter` — and `requiredIngredientCapabilities`
+  only checks presence, never identifies WHICH specific instance among
+  several satisfied the capability, so there'd be no way to know which
+  literal tag to add even with that engine feature. Both real, both still
+  open — next real dish that needs a second seasoning (not just salt)
+  should be what drives building this, per this repo's established working
+  method, not built ahead of that need.
+- **Told directly to build PEPPER/CHILI without the SEASON generalization
+  (engine work explicitly paused) — duplicating SALT's shape found a real
+  correctness bug BEFORE it shipped, not after.** `requiredIngredientCapabilities:
+  ["isSeasoning"]` on `salt.json`'s action was fine when salt was the only
+  entity declaring `isSeasoning: true` — the moment `black_pepper`/
+  `chili_flakes` were added with the same generic flag, `SALT` would have
+  silently accepted pepper as satisfying "a salt-like ingredient is
+  present." Caught by asking "does adding a sibling break the existing
+  one" before writing the new entities, not by testing after — fixed by
+  splitting the generic `isSeasoning` (kept, genuinely useful as "is this
+  A seasoning at all") from three specific capabilities
+  (`isSaltySeasoning`/`isPepperySeasoning`/`isSpicySeasoning`) that each
+  verb's `requiredIngredientCapabilities` actually checks. Proven, not just
+  reasoned about: `scripts/season-potato-three-ways.ts`'s last check
+  deliberately tries to SALT a potato with only `black_pepper` on hand and
+  asserts it's rejected.
+- **`ActionOutputsSchema.addsTag` is applied by `applyAction` completely
+  independent of the target entity's `possibleTags`** — only byproduct/
+  `combinesInto` tag INHERITANCE is filtered against `possibleTags`
+  (`engine.ts`), the primary `addsTag` path never was. This means an entity
+  could `allowedTransformations`-permit an addsTag-shaped action without
+  ever listing the resulting tag in its own `possibleTags`, and nothing
+  would catch it — not a hypothetical, found while manually wiring
+  "peppered"/"chili_seasoned" onto potato/egg/egg_cracked and realizing
+  there was no check forcing that step to be remembered. Added as a
+  permanent `scripts/validate.ts` NOTE (not a hard fail — the asymmetry
+  with inheritance-filtering is real, so a false-positive-safe soft check
+  is the honest one) rather than trusting it to be done right by hand
+  again next time. Proven to fire by deliberately dropping "peppered" from
+  potato.json's possibleTags and confirming the NOTE appeared, then
+  reverting — same discipline as every other check in this repo.
+- **Extending a closed enum (`CRUSH`'s `fineness`: `coarse`/`fine_paste` →
+  + `cracked`/`ground`) to fit a second, differently-shaped use case (whole
+  peppercorns, which never become a paste) is backward-compatible by
+  construction — worth reaching for before assuming a new parameter or new
+  verb is needed.** Same reasoning `CUT`'s single `shape` enum already
+  generalizes across every choppable entity, applied here for the first
+  time to a SECOND action (`CRUSH`) instead of just cited as precedent.
+- **A gap flagged honestly in a doc comment, then left alone, is worth
+  actually revisiting once the vocabulary grows into it — not just citing
+  as "still true."** `garlic.json`'s `flavorChemistryNote` flagged
+  `SensoryPropertiesSchema.taste`'s missing "pungent" category back on
+  2026-08-12 (allicin's sharpness isn't one of the five basic tastes,
+  'umami' was the closest available value, not the correct one) but wasn't
+  fixed then — closed now, adding black pepper (piperine) and chili
+  (capsaicin) made it load-bearing for THREE entities' sensory accuracy at
+  once instead of one, not just garlic's.
+- **User-directed scope change ("don't worry about the engine yet, get
+  common knowledge into schemas") is a real instruction to prioritize
+  breadth-of-coverage work over the engine-consumption work flagged as
+  open in the previous entries — not a request to build speculatively
+  everywhere.** Handled by: (1) still choosing the concretely-teed-up next
+  step (seasoning generalization) rather than picking an arbitrary new
+  domain, (2) auditing what's ACTUALLY unrepresented (allergens, cross-
+  contamination, staple-ingredient breadth, more verbs) and writing it down
+  as a prioritized, honestly-scoped list (`ROADMAP.md`'s new "Common
+  culinary knowledge coverage" section) rather than either silently picking
+  one to build next unprompted or claiming "all common knowledge" was
+  actually achieved in one session — "all" is not a completable claim to
+  make honestly here, a checkable list is.

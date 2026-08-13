@@ -7,13 +7,28 @@
   "initialInventory": [
     { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
     { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
-    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "pinch",
+        "approxRangeGrams": { "min": 0.3, "max": 0.6 },
+        "citation": {
+          "source": "Commonly cited culinary conversion: 1 pinch \u2248 1/16 tsp of fine table salt",
+          "confidence": "commonly_cited_unverified",
+          "note": "Genuinely imprecise by convention, not just uncited \u2014 cooks don't measure a pinch. Also varies by crystal size (fine vs. coarse), which this repo doesn't model as a separate entity yet \u2014 see QuantitySchema's doc comment (ingredient.ts)."
+        }
+      }
+    }
   ],
   "availableTools": ["pan", "bowl"],
   "sequence": [
     { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "beat", "targetInstanceId": "egg_cracked-2", "params": { "intensity": "beaten" }, "availableIngredientInstanceIds": [] },
-    { "actionId": "salt", "targetInstanceId": "egg_cracked-2", "params": {}, "availableIngredientInstanceIds": ["salt-1"] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-2", "params": { "timing": "before_cooking" }, "availableIngredientInstanceIds": ["salt-1"] },
     {
       "actionId": "fry",
       "targetInstanceId": "egg_cracked-2",

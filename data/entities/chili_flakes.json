@@ -1,0 +1,52 @@
+{
+  "id": "chili_flakes",
+  "kind": "ingredient",
+  "names": {
+    "en": "Dried chili flakes",
+    "es": "Copos de guindilla"
+  },
+  "aggregationState": "granular",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 8,
+      "carbohydrate_g": 57,
+      "protein_g": 12
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), spices, pepper, red or cayenne — the closest standard FDC entry to a generic crushed dried chili flake product",
+      "confidence": "commonly_cited_unverified",
+      "note": "Lower confidence tier than potato.json/garlic.json/black_pepper.json's citations on purpose: 'chili flakes' is not one botanically precise ingredient the way NaCl or a specific vegetable is — commercial products sold as chili/red pepper flakes are made from many different Capsicum cultivars/blends with genuinely different composition and heat, so this figure is a representative stand-in, not a value for A specific product."
+    }
+  },
+  "possibleStates": ["dry"],
+  "possibleTags": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isSeasoning": true,
+    "isSpicySeasoning": true,
+    "isWashable": false,
+    "isChoppable": false,
+    "isCrushable": false
+  },
+  "sensory": {
+    "taste": ["pungent"],
+    "aroma": ["smoky", "earthy"],
+    "texture": ["dry", "flaky"],
+    "color": "red"
+  },
+  "cooklang": {
+    "canonicalToken": "guindilla",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "crushed red pepper flakes",
+    "notes": "Modeled as an already-flaked, ready-to-use product (allowedTransformations: [], isCrushable: false), not whole dried chilies — unlike black_pepper.json's whole-peppercorn starting point, there's no single common 'crush a whole dried chili with a mortar' home-kitchen step this repo's CRUSH verb should represent generically (deseeding, toasting, and grinding whole dried chilies is a real technique but a more involved, recipe-specific one, not the default 'add heat' action) — flages are the more honest common starting point for a generic seasoning verb the way this repo models SALT/PEPPER. A whole-dried-chili entity/technique remains a genuine, unbuilt gap if a specific recipe ever needs it, not something faked here.",
+    "capabilityNote": "isSpicySeasoning (not the generic isSeasoning) is what data/actions/chili.json actually checks via requiredIngredientCapabilities — same reasoning as black_pepper.json's isPepperySeasoning and salt.json's isSaltySeasoning.",
+    "flavorChemistryNote": "Chili heat comes from capsaicinoids (mainly capsaicin), measured on the Scoville scale — a genuinely enormous real range (roughly 100-500 SHU for a mild bell-pepper-adjacent product up to 1,000,000+ SHU for a superhot cultivar), unlike black pepper's piperine content, which varies far less between common peppercorn products. This entity intentionally represents ONE common product (crushed red pepper flakes, roughly cayenne-range, often cited around 30,000-50,000 SHU) rather than a parametrized heat level — a real, separate axis this schema doesn't model (no 'heatSHU' field anywhere), flagged rather than collapsed into a single number this entity can't actually guarantee across every real product sold under this name. Capsaicin is also the same 'pungent' trigeminal/chemesthetic channel as garlic's allicin and pepper's piperine (see SensoryPropertiesSchema's doc comment, ingredient.ts), not a taste-bud response — consistent with both those entities' notes, not a new claim invented here."
+  }
+}

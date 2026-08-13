@@ -97,8 +97,19 @@ export type ThermophysicalProperties = z.infer<typeof ThermophysicalPropertiesSc
 /** masideas.md §6 "Sensory Properties". */
 export const SensoryPropertiesSchema = z
   .object({
+    /**
+     * "pungent" closed 2026-08-13 — flagged as a real gap in garlic.json's
+     * own flavorChemistryNote before it blocked anything: the five basic
+     * tastes (salty/sweet/sour/bitter/umami) don't include the trigeminal/
+     * chemesthetic "heat" sensation (capsaicin in chili, piperine in black
+     * pepper, allicin in garlic) — a real, distinct sensory channel (pain/
+     * temperature nerve fibers, not taste buds), not a degree of
+     * bitterness. Kept as one added enum value rather than a separate
+     * schema field: still just "how does this register on the tongue/in
+     * the mouth," the same question every other taste value answers.
+     */
     taste: z.array(
-      z.enum(["salty", "sweet", "sour", "bitter", "umami", "neutral"])
+      z.enum(["salty", "sweet", "sour", "bitter", "umami", "pungent", "neutral"])
     ),
     aroma: z.array(z.string()),
     texture: z.array(z.string()),
@@ -150,6 +161,88 @@ export const CooklangInteropSchema = z.object({
   spiceLock: z.boolean().default(false),
 });
 export type CooklangInterop = z.infer<typeof CooklangInteropSchema>;
+
+/**
+ * How much of an ingredient instance is actually present/used —
+ * ROADMAP.md Phase 1's `RecipeIngredientSchema`, closed 2026-08-13 (used as
+ * `RecipeInstanceSchema.quantity`, recipe.ts, not on `EntitySchema` itself:
+ * an amount is a fact about one recipe's USE of an ingredient, not about the
+ * ingredient's own immutable knowledge — same reasoning `EntitySchema`
+ * elsewhere applies to state/tags never living on the entity).
+ *
+ * Three genuinely different KINDS, not one fuzzy `amount` field, because
+ * real recipes use different KINDS of quantity, not just different units of
+ * the same kind — collapsing them into one number would misrepresent
+ * whichever ones don't actually work that way:
+ *
+ * - `"precise"`: a real measured amount + unit (5g, 200ml, 2 count). The
+ *   ordinary case for most ingredients.
+ * - `"imprecise"`: a real, commonly-used culinary quantity descriptor that
+ *   is NOT reducible to a precise number by convention — "a pinch," "a
+ *   dash," "to taste." Cooks genuinely do not measure these; forcing a fake
+ *   gram value here would misrepresent how the quantity is actually used —
+ *   the same "don't imply more precision than was verified" standard this
+ *   repo already holds citations to (`CitationSchema` above).
+ *   `approxRangeGrams` is optional, explicitly non-authoritative reference
+ *   context for a human (or a future planner), never consumed by
+ *   engine.ts. It's also inherently imprecise for a SECOND reason, not just
+ *   "pinches aren't measured": how much salt a pinch actually is depends on
+ *   crystal size/shape (fine table salt vs. flaky sea salt vs. coarse
+ *   kosher packs very differently by volume) — a gap this repo doesn't
+ *   model at all yet (no separate entities for salt by crystal size), so
+ *   `approxRangeGrams` should be read as "commonly cited for ordinary table
+ *   salt," not a figure this schema can actually guarantee.
+ * - `"relative"`: a real, PRECISE, but ratio-based quantity — the amount is
+ *   defined as a percentage of some OTHER ingredient's mass/count, not an
+ *   absolute number. The canonical case: professional bread salt, dosed at
+ *   ~1.8-2.2% of flour weight (a real "baker's percentage"), not "a pinch."
+ *   Answers "compared to what?" directly for the cases where a quantity
+ *   really is relative, instead of collapsing it into a precise-but-wrong
+ *   absolute number the way a single `amount` field would.
+ *
+ * Deliberately NOT wired into engine.ts/recipe-runner.ts's execution path:
+ * ingredients are still never consumed/decremented (engine.ts's own doc
+ * comment; LEARNINGS.md 2026-08-12) — this records how much of an instance
+ * exists/was used, for a human or a future real inventory system to read;
+ * it does not make `applyAction` quantity-aware. Also not wired to any
+ * recipe-scaling engine: `CooklangInteropSchema.spiceLock` above already
+ * flags "this entity's amount doesn't scale linearly" at the entity level,
+ * but no scaling-multiplier feature exists anywhere in this repo to scale
+ * AGAINST — `spiceLock` stays exactly as informational as it always was;
+ * this schema doesn't change that, it only answers "how much right now,"
+ * not "how much if this recipe were doubled."
+ */
+export const QuantitySchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("precise"),
+    amount: z.number().positive(),
+    unit: z.enum(["g", "kg", "ml", "l", "tsp", "tbsp", "cup", "count"]),
+  }),
+  z.object({
+    kind: z.literal("imprecise"),
+    descriptor: z.enum(["pinch", "dash", "handful", "splash", "to_taste"]),
+    /** Non-authoritative reference range only — see the doc comment above
+     *  for why this can't be treated as a real measurement. */
+    approxRangeGrams: z
+      .object({ min: z.number().positive(), max: z.number().positive() })
+      .optional(),
+    citation: CitationSchema.optional(),
+    note: z.string().optional(),
+  }),
+  z.object({
+    kind: z.literal("relative"),
+    /** e.g. 0.02 for a 2% baker's percentage. */
+    ratio: z.number().positive(),
+    /** The entity id this ratio is computed against, e.g. "flour" — must be
+     *  another instance's entityId present in the same recipe's
+     *  initialInventory (scripts/validate.ts cross-checks this; engine.ts
+     *  does not compute an absolute amount from it). */
+    ofEntityId: z.string().min(1),
+    basis: z.enum(["mass", "count"]).default("mass"),
+    note: z.string().optional(),
+  }),
+]);
+export type Quantity = z.infer<typeof QuantitySchema>;
 
 /**
  * EntitySchema — validates a static entity (CLAUDE_DEV_CTX.md).

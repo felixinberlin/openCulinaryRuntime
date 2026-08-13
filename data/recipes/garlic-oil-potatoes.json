@@ -8,7 +8,22 @@
     { "id": "garlic-1", "entityId": "garlic", "state": "raw", "tags": [] },
     { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
     { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
-    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "pinch",
+        "approxRangeGrams": { "min": 0.3, "max": 0.6 },
+        "citation": {
+          "source": "Commonly cited culinary conversion: 1 pinch \u2248 1/16 tsp of fine table salt",
+          "confidence": "commonly_cited_unverified",
+          "note": "Genuinely imprecise by convention, not just uncited \u2014 cooks don't measure a pinch. Also varies by crystal size (fine vs. coarse), which this repo doesn't model as a separate entity yet \u2014 see QuantitySchema's doc comment (ingredient.ts)."
+        }
+      }
+    }
   ],
   "availableTools": ["knife", "pan"],
   "sequence": [
@@ -30,7 +45,7 @@
     { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
     { "actionId": "fry", "targetInstanceId": "potato-1", "params": { "heatLevel": "medium" }, "availableIngredientInstanceIds": ["oil-1"] },
-    { "actionId": "salt", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] }
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
   ],
   "metadata": {
     "notes": "Two products from one pan of oil, in order: (1) garlic-1 sliced and fried until doneness:'brown' — see fry.json's donenessNote for why that's informational, not a distinct enforced state; still ends in state 'fried', same as any other fried garlic. (2) oil-1 then INFUSEd (garlic-1 as the available ingredient, not consumed — engine.ts only checks ingredient presence, never decrements it, so the same garlic-1 instance that just finished frying is exactly what satisfies INFUSE's isAromaticSource requirement) — oil-1 gains tag 'garlic_infused' without losing its own state. (3) The SAME oil-1 instance is then reused as potato-1's frying medium two steps later — proving 'the oil, now flavored, is used to cook something else' is already fully supported: nothing here consumes/removes oil-1 from availableIngredientInstanceIds' pool between steps.",

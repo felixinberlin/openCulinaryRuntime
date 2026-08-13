@@ -23,7 +23,9 @@
       "required": true,
       "allowedValues": [
         "coarse",
-        "fine_paste"
+        "fine_paste",
+        "cracked",
+        "ground"
       ]
     }
   ],
@@ -35,6 +37,7 @@
   "precision": "optional",
   "metadata": {
     "notes": "CUT-shaped (data/actions/cut.json): one verb with a 'fineness' parameter rather than two, since coarse-vs-paste is a difference of degree, not of kind. The generic mash/crush verb potato.json's metadata flagged as missing since the very first potato entity ('mash isn't wired up yet') — implemented here for garlic first, where it's load-bearing (see emulsify.json's statePrerequisite), not retrofitted onto potato speculatively. Mortar-specific, not mixer/blender-based — see mortar.json.",
+    "finenessNote": "'cracked'/'ground' added 2026-08-13 for black_pepper.json (whole peppercorns crushed to cracked or ground, the real distinction behind 'freshly cracked black pepper' vs. table-ground — coarse/fine_paste don't fit a dry spice that never becomes a paste). Kept as ONE shared enum on the existing verb rather than a second fineness parameter or a new verb: garlic and pepper both answer the same real question ('how finely was this crushed'), just with different endpoint vocabulary for their respective materials — same reasoning CUT's single 'shape' enum already applies across every choppable entity in this repo, not just potato.",
     "retrySafeNote": "retrySafe: true — further crushing an already-crushed target is physically continuous (coarse -> fine_paste is a spectrum), not a discrete duplication risk."
   },
   "verification": {

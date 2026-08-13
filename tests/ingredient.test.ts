@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { EntitySchema, CitationSchema, StructureSchema } from "../src/ingredient.ts";
+import { EntitySchema, CitationSchema, StructureSchema, QuantitySchema } from "../src/ingredient.ts";
 import { makeEntity } from "./helpers.ts";
 
 describe("EntitySchema", () => {
@@ -50,5 +50,41 @@ describe("CitationSchema", () => {
 describe("StructureSchema", () => {
   test("defaults to non-composite with no components when omitted entirely", () => {
     assert.deepEqual(StructureSchema.parse(undefined), { composite: false, components: [] });
+  });
+});
+
+describe("QuantitySchema", () => {
+  test("'precise' requires a positive amount and a real unit", () => {
+    assert.doesNotThrow(() => QuantitySchema.parse({ kind: "precise", amount: 5, unit: "g" }));
+    assert.throws(() => QuantitySchema.parse({ kind: "precise", amount: 0, unit: "g" }));
+    assert.throws(() => QuantitySchema.parse({ kind: "precise", amount: 5, unit: "smidgen" }));
+  });
+
+  test("'imprecise' takes a real culinary descriptor, not an arbitrary string, and doesn't require a gram range", () => {
+    assert.doesNotThrow(() => QuantitySchema.parse({ kind: "imprecise", descriptor: "pinch" }));
+    assert.throws(() => QuantitySchema.parse({ kind: "imprecise", descriptor: "a bit" }));
+  });
+
+  test("'imprecise' approxRangeGrams, when given, is non-authoritative reference context, not a hard number", () => {
+    const q = QuantitySchema.parse({
+      kind: "imprecise",
+      descriptor: "pinch",
+      approxRangeGrams: { min: 0.3, max: 0.6 },
+      citation: { source: "commonly cited conversion", confidence: "commonly_cited_unverified" },
+    });
+    if (q.kind !== "imprecise") throw new Error("expected imprecise");
+    assert.deepEqual(q.approxRangeGrams, { min: 0.3, max: 0.6 });
+  });
+
+  test("'relative' expresses a ratio against another entity — e.g. baker's-percentage salt", () => {
+    const q = QuantitySchema.parse({ kind: "relative", ratio: 0.02, ofEntityId: "flour" });
+    if (q.kind !== "relative") throw new Error("expected relative");
+    assert.equal(q.ratio, 0.02);
+    assert.equal(q.ofEntityId, "flour");
+    assert.equal(q.basis, "mass", "basis defaults to mass, not count");
+  });
+
+  test("an unrecognized 'kind' is rejected — not silently accepted as a 4th shape", () => {
+    assert.throws(() => QuantitySchema.parse({ kind: "vague", amount: 1 }));
   });
 });

@@ -7,7 +7,22 @@
   "initialInventory": [
     { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
     { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
-    { "id": "salt-1", "entityId": "salt", "state": "dry", "tags": [] }
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "pinch",
+        "approxRangeGrams": { "min": 0.3, "max": 0.6 },
+        "citation": {
+          "source": "Commonly cited culinary conversion: 1 pinch \u2248 1/16 tsp of fine table salt",
+          "confidence": "commonly_cited_unverified",
+          "note": "Genuinely imprecise by convention, not just uncited \u2014 cooks don't measure a pinch. Also varies by crystal size (fine vs. coarse), which this repo doesn't model as a separate entity yet \u2014 see QuantitySchema's doc comment (ingredient.ts)."
+        }
+      }
+    }
   ],
   "availableTools": ["pan"],
   "sequence": [
@@ -17,7 +32,7 @@
       "params": { "heatLevel": "high", "durationSeconds": "90", "yolkDoneness": "runny", "edgeStyle": "crispy_lace_puntilla" },
       "availableIngredientInstanceIds": ["oil-1"]
     },
-    { "actionId": "salt", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": ["salt-1"] }
+    { "actionId": "salt", "targetInstanceId": "egg-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
   ],
   "metadata": {
     "notes": "The classic Spanish tapas-bar huevo frito: generous hot oil basted over the egg (edgeStyle: 'crispy_lace_puntilla' — real technique, see fry.json's edgeStyleNote), yolk left runny (yolkDoneness: 'runny'), 90 seconds at high heat — fast, hot, short. Salted after, not before (unlike garlic in the alioli recipes) — salting a raw egg before frying draws out moisture and can toughen/thin it, the opposite of tortilla-de-patatas.json's potato-and-egg sequencing logic, which is exactly why each recipe's salt placement has been decided per-dish rather than copied.",

@@ -1,0 +1,52 @@
+{
+  "id": "black_pepper",
+  "kind": "ingredient",
+  "names": {
+    "en": "Black pepper",
+    "es": "Pimienta negra"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 10.5,
+      "carbohydrate_g": 64,
+      "protein_g": 10.4
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), spices, pepper, black",
+      "confidence": "standard_reference",
+      "note": "Same caveat as potato.json/garlic.json — this repo has not looked up the exact current FDC entry/ID to confirm the precise values."
+    }
+  },
+  "possibleStates": ["whole", "cracked", "ground"],
+  "possibleTags": [],
+  "allowedTransformations": ["crush"],
+  "producedByproducts": [],
+  "capabilities": {
+    "isCrushable": true,
+    "isSeasoning": true,
+    "isPepperySeasoning": true,
+    "isWashable": false,
+    "isChoppable": false
+  },
+  "sensory": {
+    "taste": ["pungent", "bitter"],
+    "aroma": ["woody", "citrusy"],
+    "texture": ["hard"],
+    "color": "black"
+  },
+  "cooklang": {
+    "canonicalToken": "pimienta_negra",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "black peppercorns",
+    "notes": "Modeled starting from WHOLE peppercorns, not pre-ground, on purpose — the same reasoning garlic.json applies to peeling: the more common real starting point for someone actually cooking, and it's the one that lets a genuine technique distinction (see flavorChemistryNote) be represented at all. No thermophysical block: unlike salt.json (a pure, well-characterized compound), black pepper is a complex plant material never heated to a phase-change point in this vocabulary's actions — a density/conductivity figure would be recalled-approximate at best and isn't consumed by anything here (no CCP, no thermal-model use), so it's omitted rather than filled with an unused placeholder number, same reasoning garlic_peel.json's metadata gives for skipping composition/thermophysical entirely.",
+    "capabilityNote": "isPepperySeasoning (not the generic isSeasoning) is what data/actions/pepper.json actually checks via requiredIngredientCapabilities — see salt.json's capabilityNote for why the generic flag alone isn't specific enough once more than one seasoning entity exists. isSeasoning stays true here too, for the separate 'is this a seasoning at all' question.",
+    "flavorChemistryNote": "Source: Harold McGee, \"On Food and Cooking\" (rev. 2004), spices chapter — not re-verified against a primary source this session, recalled with reasonable confidence as well-established. Black pepper's bite comes from piperine, an alkaloid concentrated in the outer layer of the dried berry — it's volatile aromatic compounds (terpenes), not piperine itself, that oxidize/evaporate fastest once ground, which is the real, specific mechanism behind 'always use freshly ground/cracked pepper' being standard advice rather than folklore: pre-ground pepper isn't unsafe or non-pungent, it's measurably less aromatic within days to weeks of grinding. This is exactly the same shape of fact CUT's shape parameter and CRUSH's fineness parameter don't otherwise carry any notion of 'time since prepared' for — not modeled here either (no shelf-life/staleness mechanic exists anywhere in this repo yet), flagged rather than implied to already be captured just because 'whole' is now a representable starting state."
+  }
+}

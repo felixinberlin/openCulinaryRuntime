@@ -1,0 +1,48 @@
+{
+  "id": "pepper",
+  "verb": "PEPPER",
+  "names": {
+    "en": "Pepper",
+    "es": "Añadir pimienta"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isSeasonable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isPepperySeasoning"
+  ],
+  "parameters": [
+    {
+      "id": "timing",
+      "names": {
+        "en": "Timing relative to cooking",
+        "es": "Momento respecto a la cocción"
+      },
+      "required": false,
+      "allowedValues": [
+        "before_cooking",
+        "during_cooking",
+        "after_cooking"
+      ]
+    }
+  ],
+  "outputs": {
+    "addsTag": "peppered",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Same shape as data/actions/salt.json on purpose (outputs.addsTag not transformedState, same requiredTargetCapability, same timing parameter) — closed 2026-08-13 as the first concrete instance of 'port the same seasoning logic to another seasoning,' deliberately WITHOUT generalizing into one parameter-driven SEASON verb: ActionOutputsSchema.addsTag has no addsTagFromParameter counterpart to transformedStateFromParameter (same fixed-vs-parameter-driven limitation LEARNINGS.md 2026-08-12 already documents for FRY's doneness), and requiredIngredientCapabilities only checks presence, never identifies WHICH specific instance satisfied it — so there'd be no way to know which literal tag to add even with that engine feature. Building that generalization is flagged as a real, separate, still-open piece of work (see LEARNINGS.md 2026-08-13), not attempted here; duplicating SALT's shape for PEPPER (and CHILI) is the honest, engine-unchanged answer for now.",
+    "timingNote": "Same real chemistry as salt.json's timingNote applies here too (osmosis/surface-drying is about salt specifically, not pepper — pepper doesn't draw moisture out the way salt does), but timing still matters for a DIFFERENT reason: pepper's aromatic compounds degrade under prolonged heat, so pepper added at the START of a long cook loses more pungency than pepper added at the END — the opposite practical advice from salt's 'salt early for better browning.' Still purely informational here, same limits as fry.json's parameters: this records what was asked for, it does not make FRY's outcome depend on it."
+  },
+  "verification": {
+    "method": "manual_confirmation",
+    "description": "No reliable sensor check for 'properly peppered' in this vocabulary — taste isn't modeled at all",
+    "confidence": "low"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

@@ -38,6 +38,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | French omelette (baveuse, folded) | ✅ Makeable | `npm run recipe -- french_omelette` |
 | Soft-boiled egg (jammy, shocked, peeled) | ✅ Makeable | `npm run recipe -- soft_boiled_egg` |
 | Tortilla de Betanzos (liquid, flowing center) | ✅ Makeable — **found and fixed a real HACCP gap** | `npm run recipe -- tortilla_de_betanzos` |
+| Salt/pepper/chili, same potato (seasoning generalization) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:season-potato` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -114,6 +115,78 @@ Neither fix touches robot control/perception (`ENGINE_INVARIANTS.md` #11 stays
 separately true) — the vocabulary gap is closed; the physical-execution gap
 was never this phase's job.
 
+## Common culinary knowledge coverage
+
+Started 2026-08-13 in response to a direct instruction to prioritize this
+over engine work: "get all the common knowledge for cooking reflected in
+system and schemas." Honest framing up front — "all" isn't achievable in one
+pass (this repo has 5 seasoning/base ingredients total: potato, egg + its
+byproducts, garlic, oil, salt/pepper/chili, water); this section exists so
+progress is a checkable, prioritized list instead of an implied, unverifiable
+"done." Same discipline as the capability-tests table above: closed items are
+proven runnable, not just asserted.
+
+**Closed:**
+- [x] Salting timing (`before_cooking`/`during_cooking`/`after_cooking`,
+      `salt.json`) — real osmosis/browning chemistry, informational-only.
+- [x] Quantity (`QuantitySchema` — precise/imprecise/relative) — "a pinch,
+      compared to what" answerable for the first time; see `ROADMAP.md`
+      Phase 1.
+- [x] Seasoning generalized beyond salt (`PEPPER`/`CHILI`) — see Phase 4
+      above.
+- [x] `SensoryPropertiesSchema.taste`'s missing "pungent" category (capsaicin/
+      piperine/allicin — a real trigeminal channel, not a 6th basic taste but
+      not representable by the other five either) — closed, applied to
+      garlic/black_pepper/chili_flakes.
+- [x] A real schema-integrity check that was previously silent: `addsTag`
+      actions were never cross-checked against the target entity's own
+      `possibleTags` — `scripts/validate.ts` now flags this (NOTE-level,
+      proven to fire — see `LEARNINGS.md` 2026-08-13).
+
+**Explicitly deferred, with the real reason why (not silently skipped):**
+- [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
+      verb — needs a real engine feature (`addsTagFromParameter`, mirroring
+      `transformedStateFromParameter`) plus a way for
+      `requiredIngredientCapabilities` to identify WHICH specific instance
+      satisfied the check, not just that one did. Out of scope while engine
+      work is explicitly paused; the 3 separate verbs work correctly today.
+- [ ] Salt/pepper crystal/grind size as distinct products (fine vs. coarse vs.
+      kosher salt; whole vs. cracked vs. ground pepper is partially modeled —
+      `black_pepper.json` starts "whole", `CRUSH` reaches "cracked"/"ground" —
+      but salt itself is still one undifferentiated entity).
+
+**Known-large, not yet started — flagged so the gap is visible, not implied
+covered by what exists:**
+- [ ] **Allergens.** Nothing in `EntitySchema` records allergen information at
+      all (egg is a major allergen; nothing currently says so). Arguably the
+      single highest-priority gap against this repo's own stated mission
+      (`ROADMAP.md`'s "Why this exists" — cooking unattended for someone who's
+      relying on the system): a system that can't say "this dish contains
+      egg" is more dangerous by omission than one that's merely incomplete on
+      technique.
+- [ ] **Cross-contamination / hygiene knowledge.** `HazardSchema` models
+      danger to the PERSON performing an action (a blade, hot oil); nothing
+      models danger to the FOOD from equipment/surface reuse (same knife for
+      raw egg then a ready-to-eat ingredient; a cutting board not washed
+      between uses). `CriticalControlPointSchema` is thermal-only by design
+      (see `LEARNINGS.md` 2026-08-12) — this would need a genuinely different
+      mechanism, not a stretched CCP.
+- [ ] **Far more staple ingredients/entities.** No flour, dairy (milk/butter/
+      cheese), onion, herbs, sugar, vinegar/acid, or any protein besides egg.
+      The vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
+      chemistry) is disproportionate to its ingredient BREADTH right now.
+- [ ] **More common technique verbs.** `SIMMER` (a real, distinct temperature
+      band below a rolling `BOIL`), `WHISK`, `STEAM`, `ROAST`/`GRILL`,
+      `MARINATE`, `REST` (post-cook carryover exists narrowly for egg via
+      `SHOCK`, not generally), `KNEAD`, `STRAIN`/`DRAIN`.
+- [ ] **Storage/shelf-life common knowledge** (partially, deliberately
+      out-of-scope already for one case — `infuse.json`'s garlic-in-oil
+      botulism note, `LEARNINGS.md` 2026-08-12 — but nothing general exists:
+      no "how long is this safe/good for" anywhere).
+- [ ] **Yield/waste factors** (edible-portion %, e.g. how much of a potato's
+      mass a peel actually is) — `producedByproducts` records WHAT spawns,
+      never HOW MUCH.
+
 ## Phase 0 — Project scaffolding
 - [x] `package.json` + TypeScript toolchain — `tsx`, `tsc -p .`
 - [x] Zod, confirmed as the schema/validation library
@@ -139,9 +212,22 @@ was never this phase's job.
       `byproductsByAction`, `criticalControlPointsByAction` (both added
       beyond the original spec, out of necessity — see `LEARNINGS.md`
       2026-08-12).
-- [ ] `RecipeIngredientSchema` — instance portion sizes (fraction/decimal
-      quantity union), localized translations. Not built — nothing in this
-      repo tracks *how much* of an ingredient, only *which* and *what state*.
+- [x] `RecipeIngredientSchema` — closed 2026-08-13 as `QuantitySchema`
+      (`src/ingredient.ts`) + `RecipeInstanceSchema.quantity` (`recipe.ts`),
+      optional. A discriminated 3-kind union (`"precise"` amount+unit,
+      `"imprecise"` a real culinary descriptor like "pinch"/"to_taste" with
+      an optional non-authoritative gram range, `"relative"` a ratio
+      against another entity in the same recipe, e.g. baker's-percentage
+      salt) rather than one fraction/decimal field — a plain number would
+      have misrepresented the ones that genuinely aren't reducible to one
+      (see the schema's own doc comment for why). `scripts/validate.ts`
+      cross-checks `"relative"`'s `ofEntityId` against the recipe's own
+      `initialInventory`. Localized unit NAMES (e.g. "cucharadita" for tsp)
+      deliberately not built — no other numeric-unit field in this repo
+      localizes its unit string either, and nothing has asked for it yet.
+      Still NOT wired into engine.ts/recipe-runner.ts execution — ingredients
+      remain un-consumed/undecremented (Phase 4's own documented limit);
+      this only lets a quantity be RECORDED, not enforced or scaled against.
 - [ ] `ParsedIngredientSchema` — staging shape for raw scraper output. Not
       built (blocked on Phase 7 anyway).
 
@@ -223,6 +309,16 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       suite (gating on `durationSeconds` presence, advisory-vs-hard-reject,
       `SafetyPolicy` human/autonomous/override branches, the `thermalModel`
       D/z-value path, the NaN-fails-closed guard).
+- [x] **Seasoning verbs beyond SALT** — `PEPPER`/`CHILI` closed 2026-08-13
+      (`data/actions/pepper.json`, `chili.json`; `data/entities/black_pepper.
+      json`, `chili_flakes.json`), same shape as `SALT` (fixed `addsTag`,
+      shared `timing` parameter), deliberately NOT generalized into one
+      parameter-driven `SEASON` verb — see "Common culinary knowledge
+      coverage" below for why, and what a real generalization would need.
+      Proven end-to-end, including that `SALT` correctly rejects pepper as a
+      substitute (`isSaltySeasoning` vs. the generic `isSeasoning` — a real
+      precision gap the second seasoning entity would have silently opened),
+      by `npm run capability-test:season-potato`.
 - [ ] Unit tests per forbidden-transition rule — genuinely still blocked, but
       now on the `INVALID_TRANSITIONS` matrix itself not existing (this
       phase's own next unchecked item), not on the test-runner gap.
@@ -357,7 +453,8 @@ implied to be a small addition.
 - [ ] Tokenizer: lossy `recipeIngredient` strings → quantity/unit/name/prep.
 - [ ] Auto-generate Cooklang text; compile to an executable OCR JSON script.
 Unstarted; depends on Phase 5's Cooklang parser (or a Python equivalent) and
-Phase 1's still-unbuilt `RecipeIngredientSchema`/`ParsedIngredientSchema`.
+Phase 1's still-unbuilt `ParsedIngredientSchema` (`RecipeIngredientSchema`
+itself closed 2026-08-13 — see Phase 1).
 
 ## Phase 8 — Satellite: Mobile reference app (React Native + Expo)
 Unstarted. Depends on a stable OCR JSON shape (has one, informally, via

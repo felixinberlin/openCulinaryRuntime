@@ -50,8 +50,26 @@ for (const entity of entities.items.values()) {
     }
   }
   for (const actionId of entity.allowedTransformations) {
-    if (!actions.items.has(actionId)) {
+    const action = actions.items.get(actionId);
+    if (!action) {
       fail(`entities/${entity.id}.json: allowedTransformations references unknown action "${actionId}"`);
+      continue;
+    }
+    // outputs.addsTag is applied by engine.ts unconditionally (never
+    // checked against the target's own possibleTags — only byproduct/
+    // combinesInto tag INHERITANCE is filtered that way, see engine.ts's
+    // doc comment) — so this can't be a hard fail without risking a false
+    // positive against that real asymmetry. Still worth a NOTE: an entity
+    // that allows an addsTag-shaped action but never lists the resulting
+    // tag in its own possibleTags is very likely an oversight, the same
+    // shape of gap salt/pepper/chili's possibleTags wiring was checked for
+    // by hand 2026-08-13 — this makes that check permanent instead of
+    // relying on remembering to do it again next time a seasoning verb
+    // (or any other addsTag action) is added to a new entity.
+    if (action.outputs.addsTag && !entity.possibleTags.includes(action.outputs.addsTag)) {
+      console.log(
+        `NOTE entities/${entity.id}.json: allows "${actionId}" (which adds tag "${action.outputs.addsTag}") but doesn't list "${action.outputs.addsTag}" in possibleTags.`
+      );
     }
   }
   for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
@@ -114,9 +132,22 @@ for (const action of actions.items.values()) {
 
 for (const recipe of recipes.items.values()) {
   const knownInstanceIds = new Set(recipe.initialInventory.map((i) => i.id));
+  const knownEntityIds = new Set(recipe.initialInventory.map((i) => i.entityId));
   for (const item of recipe.initialInventory) {
     if (!entities.items.has(item.entityId)) {
       fail(`recipes/${recipe.id}.json: initialInventory references unknown entity "${item.entityId}"`);
+    }
+    // A "relative" quantity (e.g. baker's-percentage salt) is meaningless
+    // without the entity it's a ratio OF actually being present in the
+    // same recipe — unlike targetInstanceId/secondaryInstanceId below,
+    // this checks against entityId (a recipe-wide ingredient), not a
+    // specific instance id, so it can be a hard fail rather than a NOTE:
+    // there's no "assumed to be spawned later" escape hatch for an entity
+    // that was never in this recipe at all.
+    if (item.quantity?.kind === "relative" && !knownEntityIds.has(item.quantity.ofEntityId)) {
+      fail(
+        `recipes/${recipe.id}.json: initialInventory["${item.id}"].quantity.ofEntityId references entity "${item.quantity.ofEntityId}", which isn't used anywhere in this recipe's initialInventory`
+      );
     }
   }
   for (const toolId of recipe.availableTools) {

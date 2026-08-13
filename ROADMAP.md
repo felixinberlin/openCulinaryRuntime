@@ -45,6 +45,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Crispy French fries** (julienne + PAR_FRY 163°C + FRY 191°C golden, first real dish to actually exercise shape/oilTempC/doneness together) | ✅ Makeable, closed 2026-08-13 | `npm run recipe -- crispy_french_fries` |
 | "Complete potato" — skin-on cuts, GRATE, MASH (a dead state made reachable) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:complete-potato` |
 | "Oma boils an egg" — CONCEPT.md §14's Intent pipeline, made concrete | ✅ Makeable, closed 2026-08-13 | `npm run demo:oma-boils-an-egg` |
+| DISSOLVE — salt's own self-admitted "dissolved" dead state, closed | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:dissolve-salt` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -310,6 +311,44 @@ proven runnable, not just asserted.
       than building the LLM side. That larger, real, unstarted work is
       Phase 4.5 below — this closes the "prove the deterministic side is
       actually ready to receive an Intent" half, not that phase itself.
+- [x] **Verb/transformation refinement pass** — closed 2026-08-13, in
+      direct response to "refine the verbs and transformations we have
+      now." Rather than restyling existing verbs speculatively, ran a real
+      audit: diffed every entity's asserted-true `capabilities` against
+      every action's `requiredTargetCapability`/`requiredIngredientCapabilities`/
+      `requiredSecondaryCapability`, looking for the exact class of bug
+      already found twice this session (`pan.json`'s dead `"hot"`/`"cold"`,
+      `potato.json`'s dead `"mashed"`) — an asserted capability nothing ever
+      checks. Found 5 hits, and correctly did NOT treat them all the same:
+      - **4 were already honestly documented as informational-only**, not
+        bugs: `black_pepper.json`/`chili_flakes.json`/`salt.json`'s generic
+        `isSeasoning` (deliberately distinct from the verb-specific
+        `isSaltySeasoning` — see `salt.json`'s own `capabilityNote`) and
+        `egg_yolk.json`'s `isEmulsionStabilizer` (`emulsify.json`'s own
+        `eggComparisonNote` already named it informational). Left unchanged
+        — "fixing" these by force-wiring them into a check would have
+        broken working, correctly-scoped honesty.
+      - **1 was real**: `salt.json`'s `isDissolvable` + `"dissolved"` — a
+        gap `salt.json`'s own `metadata.notes` had named since before this
+        session ("allowedTransformations is empty until a 'dissolve' verb
+        exists"). Closed: `data/actions/dissolve.json`, `isDissolvingMedium`
+        on `water.json` (its own capability, not a reuse of
+        `isBoilingMedium` — same one-capability-per-verb convention as
+        `oil.json`'s `isFryingMedium`/`isEmulsifier` split). Names, without
+        building, the obvious next real technique this unlocks: a brine is
+        exactly "salt dissolved in water," which this repo cannot represent
+        beyond the bare `"dissolved"` state (no concentration/ratio, no
+        soak-duration model).
+      Also audited `retrySafe`/`verification`/`hazards`/`metadata` presence
+      across all actions: found `BEAT` was the one real inconsistency (an
+      empty `hazards: []` where its close analog `MASH` — same manual,
+      repetitive utensil motion — correctly declares a low-severity
+      `repetitive_strain` hazard); fixed to match. Confirmed `WASH`/`SALT`/
+      `PEPPER`'s own empty hazard arrays are genuinely correct (no
+      comparable motion exists), not further inconsistencies — not
+      padded just to make every array non-empty. Proven end-to-end: `npm
+      run capability-test:dissolve-salt`; full suite re-run for the `BEAT`
+      change.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`

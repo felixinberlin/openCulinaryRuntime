@@ -28,13 +28,20 @@
   "precision": "optional",
   "metadata": {
     "notes": "CUT-shaped (data/actions/cut.json): one verb with an 'intensity' parameter rather than three separate verbs, since 'how much' is the only thing that varies. Answers 'mix the eggs more or less, or not at all' before an omelette/scrambled eggs — 'or not at all' is simply skipping this action; FRY/SCRAMBLE don't require a prior BEAT (see egg_cracked.json's possibleStates, still reachable directly from 'raw'). Optional like SALT: nothing downstream requires this action to have run.",
-    "retrySafeNote": "retrySafe: true — re-beating further is physically continuous (lightly_beaten -> beaten -> well_beaten is a spectrum, transformedStateFromParameter just re-asserts whichever intensity is requested), not a discrete duplication risk."
+    "retrySafeNote": "retrySafe: true — re-beating further is physically continuous (lightly_beaten -> beaten -> well_beaten is a spectrum, transformedStateFromParameter just re-asserts whichever intensity is requested), not a discrete duplication risk.",
+    "hazardsNote": "hazards added 2026-08-13 — found empty during a full audit of all actions and compared against MASH's near-identical manual, repetitive utensil-in-hand motion (which does declare one); an empty array here was an inconsistency, not a considered 'genuinely zero hazard' call the way WASH/SALT/PEPPER's empty arrays are (those really don't have a comparable motion at all)."
   },
   "verification": {
     "method": "visual",
     "description": "Mixture uniformly yellow with no visible separate streaks of yolk/white remaining, texture matching the requested intensity",
     "confidence": "low"
   },
-  "hazards": [],
+  "hazards": [
+    {
+      "type": "repetitive_strain",
+      "severity": "low",
+      "note": "Manual whisking/beating motion — minor, low-severity strain risk, same category as MASH's identical hazard"
+    }
+  ],
   "retrySafe": true
 }

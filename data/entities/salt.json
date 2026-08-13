@@ -22,7 +22,10 @@
     }
   },
   "possibleStates": ["dry", "wet", "dissolved"],
-  "allowedTransformations": [],
+  "allowedTransformations": ["dissolve"],
+  "statePrerequisites": {
+    "dissolve": ["dry", "wet"]
+  },
   "producedByproducts": [],
   "capabilities": {
     "isDissolvable": true,
@@ -55,6 +58,6 @@
     "casNumber": "7647-14-5",
     "notes": "spiceLock reflects CLAUDE_DEV_CTX.md's Cooklang interop rule: '='-prefixed quantities don't scale linearly with recipe size — salt is the canonical example.",
     "capabilityNote": "isSaltySeasoning added 2026-08-13, alongside the generic isSeasoning, when black_pepper.json/chili_flakes.json were added as the first other isSeasoning entities: data/actions/salt.json's requiredIngredientCapabilities now checks isSaltySeasoning specifically, not the generic isSeasoning — otherwise SALT would have silently accepted pepper or chili flakes as satisfying 'a salt-like ingredient is present' the moment a second isSeasoning entity existed. isSeasoning itself stays true here too, for a genuinely different purpose: 'is this entity a seasoning at all' (useful for a future generic query), distinct from 'is this entity THE seasoning this specific verb needs'.",
-    "todo": "isDissolvable capability is asserted true, but allowedTransformations is empty until a 'dissolve' verb exists in data/actions/ — see scripts/validate.ts's cross-reference check."
+    "todo": "RESOLVED 2026-08-13, kept for history: isDissolvable was previously asserted true with allowedTransformations empty, exactly the dead-declaration gap this note used to flag. data/actions/dissolve.json now exists; allowedTransformations/statePrerequisites above are wired to it. Found during a full audit that diffed every entity's asserted-true capabilities against every action's requiredTargetCapability/requiredIngredientCapabilities/requiredSecondaryCapability — the same 'checked, not assumed' discipline that found pan.json's dead hot/cold states and potato.json's dead 'mashed' state earlier the same day."
   }
 }

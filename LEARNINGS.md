@@ -1012,3 +1012,44 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   running the script (`npx tsx`) rather than trusting the import compiled
   correctly, the same "run it, don't just write it" discipline this whole
   session has applied to every other new script.
+
+### "Refine the verbs and transformations" — an audit needs a real check, not a re-read
+
+- **A vague instruction to "refine" what exists had a precise, checkable
+  interpretation available, once framed as "find the same class of bug
+  already found twice, systematically" instead of "read everything and see
+  what feels off."** Re-reading all 27 action files for a subjective sense
+  of quality would have been slow and unreliable. Instead wrote one script
+  that diffed every entity's asserted-true capability against every
+  action's three capability-reference fields — mechanical, exhaustive,
+  and it directly generalizes the exact bug shape `pan.json`'s dead states
+  and `potato.json`'s dead `"mashed"` already established as real and
+  worth finding. General lesson: when a vague "clean this up" request
+  follows a session that already found a specific, well-defined class of
+  bug, checking systematically for MORE instances of that exact class
+  is a much stronger first move than an unstructured read-through.
+- **5 hits from the audit, and the right response to most of them was "no
+  change" — worth stating precisely, since finding a hit and fixing it
+  are different actions, and conflating them would have broken working
+  code.** 4 of 5 were `isSeasoning`/`isEmulsionStabilizer`, both already
+  carrying their own doc comments explaining exactly why they're
+  intentionally unchecked. Verified this by reading those existing notes,
+  not by assuming "audit found it, therefore audit should fix it." Only
+  `salt.json`'s `isDissolvable` lacked that kind of justification — it had
+  a `"todo"` instead, the schema's own way of admitting a real gap rather
+  than a considered scope decision. That distinction (a note that JUSTIFIES
+  vs. a note that ADMITS) is what separated a fifth "leave alone" from the
+  one real fix.
+- **Checked one MORE property while already in an audit mindset
+  (retrySafe/verification/hazards/metadata completeness) and found a real,
+  smaller inconsistency (`BEAT`'s missing hazard) — but resisted the
+  temptation to pad the OTHER empty-hazard actions (`WASH`/`SALT`/`PEPPER`)
+  just to make the audit's output uniformly "fixed."** Compared each
+  empty-hazards action against whether a comparably-risky action elsewhere
+  in the vocabulary declares one for a similar motion — `BEAT` failed that
+  comparison against `MASH` (both manual, repetitive, utensil-in-hand);
+  `WASH`/`SALT`/`PEPPER` didn't fail it against anything, because nothing
+  comparably risky-shaped exists for sprinkling a seasoning or rinsing
+  something under water. Adding a hazard to those three just for symmetry
+  would have been dishonest padding — the opposite of what an audit for
+  refinement should produce.

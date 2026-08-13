@@ -41,12 +41,39 @@ export const StructureSchema = z
   .default({ composite: false, components: [] });
 export type Structure = z.infer<typeof StructureSchema>;
 
+/**
+ * A citation for a numeric claim — replaces burying "commonly cited,
+ * unverified" hedges inconsistently in prose (found 2026-08-12: `egg.json`/
+ * `garlic.json` got that hedge, `potato.json`/`salt.json`/`water.json`/
+ * `oil.json`/`egg_yolk.json`/`egg_white.json`/`egg_cracked.json` didn't, for
+ * numbers with the exact same epistemic status — inconsistently applied
+ * rigor, not consistently absent rigor).
+ *
+ * `confidence` is deliberately two-valued, not three: this repo has no live
+ * retrieval capability, so nothing here has ever been checked against a
+ * primary source directly — there is no honest "primary_source" tier to
+ * offer. `standard_reference` means a specific, real, canonical work for
+ * this class of fact is named (USDA FoodData Central, the CRC Handbook of
+ * Chemistry and Physics, a named paper) — checkable by a reader, not
+ * independently verified by this repo. `commonly_cited_unverified` means
+ * recalled as generally taught/published but without confidence in which
+ * specific canonical source it traces to. Neither is a substitute for actual
+ * primary-source verification before any real-world/production use.
+ */
+export const CitationSchema = z.object({
+  source: z.string().min(1),
+  confidence: z.enum(["standard_reference", "commonly_cited_unverified"]),
+  note: z.string().optional(),
+});
+export type Citation = z.infer<typeof CitationSchema>;
+
 /** Chemical/nutritional composition. masideas.md §6 "Composition". */
 export const CompositionSchema = z
   .object({
     chemicalFormula: z.string().optional(),
     /** Nutrient amount per 100g of entity, keyed by nutrient id (e.g. "sodium_mg"). */
     nutrientsPer100g: z.record(z.string(), z.number()).optional(),
+    citation: CitationSchema.optional(),
   })
   .partial();
 export type Composition = z.infer<typeof CompositionSchema>;
@@ -62,6 +89,7 @@ export const ThermophysicalPropertiesSchema = z
     specificHeatJPerKgK: z.number().positive(),
     meltingPointC: z.number(),
     boilingPointC: z.number(),
+    citation: CitationSchema.optional(),
   })
   .partial();
 export type ThermophysicalProperties = z.infer<typeof ThermophysicalPropertiesSchema>;

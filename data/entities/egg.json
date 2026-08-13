@@ -16,6 +16,11 @@
       "protein_g": 13,
       "fat_g": 11,
       "carbohydrate_g": 1.1
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw whole egg",
+      "confidence": "standard_reference",
+      "note": "Same caveat as potato.json/garlic.json: this repo has not looked up the exact current FDC entry to confirm the precise values against it."
     }
   },
   "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached"],
@@ -49,7 +54,12 @@
   },
   "thermophysical": {
     "densityKgPerM3": 1030,
-    "thermalConductivityWPerMK": 0.34
+    "thermalConductivityWPerMK": 0.34,
+    "citation": {
+      "source": "Choi & Okos (1986) predictive food-thermal-property model — see potato.json's identical citation",
+      "confidence": "standard_reference",
+      "note": "Recalled as typical whole-egg literature values, not re-derived from the Choi-Okos model against egg's actual composition in this session."
+    }
   },
   "sensory": {
     "taste": ["neutral"],

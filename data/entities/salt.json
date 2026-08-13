@@ -13,7 +13,12 @@
   "composition": {
     "chemicalFormula": "NaCl",
     "nutrientsPer100g": {
-      "sodium_mg": 38758
+      "sodium_mg": 39337
+    },
+    "citation": {
+      "source": "Computed from IUPAC standard atomic weights (Na 22.98977, Cl 35.453) — sodium's mass fraction in NaCl (22.98977/58.44277 = 39.337%) times 100g, not looked up from a food-composition table",
+      "confidence": "standard_reference",
+      "note": "Found and fixed 2026-08-12: the previous value (38758mg) was off by 1.49% from the exact stoichiometric figure — checked while adding citations generally, not flagged before. This is the one composition figure in this repo that's exactly derivable rather than an empirical/approximate figure, since table salt is essentially pure NaCl by definition."
     }
   },
   "possibleStates": ["dry", "wet", "dissolved"],
@@ -28,7 +33,12 @@
   "thermophysical": {
     "densityKgPerM3": 2170,
     "meltingPointC": 801,
-    "boilingPointC": 1413
+    "boilingPointC": 1413,
+    "citation": {
+      "source": "CRC Handbook of Chemistry and Physics — standard reference values for sodium chloride",
+      "confidence": "standard_reference",
+      "note": "A meaningfully higher-confidence category than a food's composition/thermophysical figures elsewhere in this repo (potato.json, egg.json, ...): these are properties of a pure, well-characterized chemical compound with essentially no natural variance, not a biological product averaged across cultivars/specimens."
+    }
   },
   "sensory": {
     "taste": ["salty"],

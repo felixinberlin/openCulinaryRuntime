@@ -8,13 +8,16 @@ Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`),
 `data/` has real entities/actions/recipes/CCPs (potato, egg + its byproducts, garlic,
 alioli variants, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
-`npm run validate` (schema + cross-reference check — the authoritative one),
-`npm run demo:<name>` (see `package.json` for the full list), `npm run recipe -- <id>`,
-`npx tsc -p . --noEmit` (typecheck — pre-existing `TS5097` import-extension noise across
-the repo is unrelated to any change; filter with `grep -v TS5097`). No assertion-based
-test runner yet (`ROADMAP.md` Phase 4 still flags this) — `validate.ts` + the demo
-scripts are what currently stand in for tests; run all of them, not just the new one,
-after any change to `src/`.
+`npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
+`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`, no `data/*.json` dependency),
+`npm run validate` (schema + cross-reference check over the real `data/*.json` — the
+authoritative integration check), `npm run demo:<name>` (see `package.json` for the
+full list), `npm run recipe -- <id>`, `npx tsc -p . --noEmit` (typechecks `src`,
+`scripts`, AND `tests` — pre-existing `TS5097` import-extension noise across the repo
+is unrelated to any change; filter with `grep -v TS5097`). `npm test` and
+`validate.ts` are complementary, not alternatives (see `LEARNINGS.md` 2026-08-13) —
+run both, plus every demo and every recipe, after any change to `src/`, not just the
+new thing.
 
 **Before starting work, read `LEARNINGS.md`.** After learning something that would've
 saved time going in — a schema constraint, an engine gotcha, a design tradeoff and why

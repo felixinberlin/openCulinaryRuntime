@@ -117,9 +117,17 @@ was never this phase's job.
 ## Phase 0 — Project scaffolding
 - [x] `package.json` + TypeScript toolchain — `tsx`, `tsc -p .`
 - [x] Zod, confirmed as the schema/validation library
-- [ ] Test runner / unit tests — still just `scripts/validate.ts` (schema +
-      cross-reference checks) and demo scripts that assert-by-throwing. No
-      assertion-based test runner (vitest/jest/node:test) exists yet.
+- [x] Test runner / unit tests — closed 2026-08-13. `node:test` (built into
+      Node, no new dependency) + `tsx` as the loader (`npm test` →
+      `node --import tsx --test tests/*.test.ts`), 44 assertions across
+      `tests/{engine,action,thermal,ingredient}.test.ts` covering
+      `applyAction`'s preconditions/outputs/conservation-of-mass/HACCP-CCP
+      branches and the three schemas' `.refine()`s. `tests/` added to
+      `tsconfig.json`'s `include` so `tsc --noEmit` typechecks it too.
+      `scripts/validate.ts` (schema + cross-reference checks over the real
+      `data/*.json`) and the demo/recipe scripts remain the complementary
+      integration layer — this closes the *unit*-test gap specifically, not
+      a replacement for either.
 - [ ] Lint/format config — none present (no eslint/oxlint/prettier config in
       the repo).
 - [x] `CLAUDE.md`'s "Repository state" — kept current as of this rewrite;
@@ -210,8 +218,14 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       (`attempt-tortilla.ts` → `combine.json`/`flip.json` is the worked
       example), not pre-building speculatively. Next candidate dish should
       drive whatever's added next.
-- [ ] Unit tests per forbidden-transition rule and per HACCP threshold —
-      blocked on Phase 0's test-runner gap.
+- [x] Unit tests per HACCP threshold — closed 2026-08-13 alongside Phase 0's
+      test-runner gap; see `tests/engine.test.ts`'s "HACCP / CCP enforcement"
+      suite (gating on `durationSeconds` presence, advisory-vs-hard-reject,
+      `SafetyPolicy` human/autonomous/override branches, the `thermalModel`
+      D/z-value path, the NaN-fails-closed guard).
+- [ ] Unit tests per forbidden-transition rule — genuinely still blocked, but
+      now on the `INVALID_TRANSITIONS` matrix itself not existing (this
+      phase's own next unchecked item), not on the test-runner gap.
 - [ ] **Real closed-loop control/perception layer for autonomous execution.**
       Explicitly out of scope for this repo as it stands — `engine.ts`'s own
       doc comment and `ENGINE_INVARIANTS.md` #11 are direct about this:

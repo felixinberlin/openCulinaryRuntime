@@ -18,7 +18,12 @@
   },
   "thermophysical": {
     "densityKgPerM3": 1000,
-    "boilingPointC": 100
+    "boilingPointC": 100,
+    "citation": {
+      "source": "Standard physical constants for water at 1 atm (sea-level standard atmospheric pressure) — CRC Handbook of Chemistry and Physics",
+      "confidence": "standard_reference",
+      "note": "boilingPointC: 100 is pressure-dependent, not a universal constant — real water boils below 100°C at altitude (e.g. ~95°C around 1900m/6200ft, ~93°C in Denver). This repo has no altitude/pressure parameter anywhere — every BOIL/POACH duration and every CCP threshold implicitly assumes sea-level pressure. A robot operating at meaningful altitude would need this accounted for; flagged as a real, unaddressed gap, not silently assumed away."
+    }
   },
   "sensory": {
     "taste": ["neutral"],

@@ -14,6 +14,11 @@
     "nutrientsPer100g": {
       "water_g": 79,
       "carbohydrate_g": 17
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw potato, flesh and skin",
+      "confidence": "standard_reference",
+      "note": "Figures are in the range USDA FoodData Central publishes for raw potato — this repo has not looked up the exact current FDC entry/ID to confirm the precise values, and potato composition genuinely varies by cultivar (see garlic.json's cultivar note for the same caveat on a different crop)."
     }
   },
   "possibleStates": ["raw", "washed", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "baked", "mashed"],
@@ -36,7 +41,12 @@
   },
   "thermophysical": {
     "densityKgPerM3": 1080,
-    "thermalConductivityWPerMK": 0.5
+    "thermalConductivityWPerMK": 0.5,
+    "citation": {
+      "source": "Choi & Okos (1986), \"Effects of Temperature and Composition on the Thermal Properties of Foods\" — the standard predictive model in food engineering for deriving thermal conductivity/density/specific heat from a food's composition",
+      "confidence": "standard_reference",
+      "note": "This repo has not run potato's actual composition through the Choi-Okos model to re-derive these numbers — they're recalled as being in the right range for a starchy tuber, not computed from it here."
+    }
   },
   "sensory": {
     "taste": ["neutral"],

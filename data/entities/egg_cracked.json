@@ -16,6 +16,10 @@
       "protein_g": 13,
       "fat_g": 11,
       "carbohydrate_g": 1.1
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw whole egg — cracking doesn't change composition, only physical form, so egg.json's citation applies unchanged",
+      "confidence": "standard_reference"
     }
   },
   "possibleStates": ["raw", "lightly_beaten", "beaten", "well_beaten", "fried", "scrambled"],

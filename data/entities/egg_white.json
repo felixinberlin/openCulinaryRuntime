@@ -15,6 +15,11 @@
       "water_g": 88,
       "protein_g": 11,
       "carbohydrate_g": 0.7
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw egg white",
+      "confidence": "standard_reference",
+      "note": "Same caveat as egg.json/egg_yolk.json — not checked against the exact current FDC entry."
     }
   },
   "possibleStates": ["raw", "blended"],

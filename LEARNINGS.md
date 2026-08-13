@@ -265,6 +265,52 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   treated as a potential breaking change for scripts that construct
   `Instance`s directly (not through `run-recipe.ts`) — full regression across
   the standalone demos, not just the recipes, is what actually caught this.
+- **A systematic sweep (every cooking-capable entity × its CCP wiring) found
+  ZERO further gaps after the Betanzos fix — worth doing proactively once a
+  pattern repeats twice, not waiting for a third dish to find a third
+  instance.** `tortilla_mixture` had the gap `handmade-alioli-egg-yolk` had;
+  once the same shape of bug showed up twice, auditing every
+  `isFryable`/`isBoilable`/`isPoachable`/`isScramblable` entity against its
+  `criticalControlPointsByAction` directly (rather than continuing to wait
+  for the next specific dish to expose the next instance) confirmed the
+  vocabulary was actually clean — `potato`/`potato_peel`/`garlic` correctly
+  have none (no comparable pathogen risk), everything egg-derived correctly
+  does. Turned into a permanent `validate.ts` NOTE (cooking capability +
+  zero CCP wiring) so this stays checked going forward, not just fixed once.
+- **The same inconsistent-rigor pattern existed for citations, not just
+  safety wiring — `egg`/`garlic` got an explicit "not independently
+  verified" hedge, `potato`/`salt`/`water`/`oil`/`egg_yolk`/`egg_white`/
+  `egg_cracked` didn't, for numbers with identical epistemic status.** Fixed
+  with a real `CitationSchema` (source + two honest confidence tiers —
+  deliberately no "primary_source" tier, since nothing in this repo has ever
+  been checked against one) added to `CompositionSchema`/
+  `ThermophysicalPropertiesSchema`, populated across every entity: USDA
+  FoodData Central for food composition, the CRC Handbook for pure chemical
+  constants (salt, water), Choi & Okos (1986) for the food-thermal-property
+  model, Eric Block's Allium chemistry work for garlic's flavor-chemistry
+  claim. Distinguishing WHY salt's melting point is higher-confidence than
+  potato's water content (pure compound, no natural variance, vs. a
+  biological product averaged across cultivars) is itself the more
+  scientifically honest position — not flattening every citation to the same
+  confidence level for consistency's sake.
+- **Citing salt's sodium content properly (instead of re-asserting the same
+  hedge) surfaced an actual, fixable numeric error**: the stored value
+  (38758mg/100g) was 1.49% off from the exact stoichiometric figure
+  (39337mg/100g, computed from IUPAC standard atomic weights — table salt is
+  essentially pure NaCl, so this is exactly derivable, not an empirical
+  approximation with real biological variance like the food-composition
+  figures). Found only by actually doing the arithmetic while sourcing the
+  citation, not by the citation exercise alone — "add a source" and "check
+  the number is actually right" turned out to be different, complementary
+  checks, and only doing the first would have left this wrong.
+- **Citing water's boiling point surfaced an unaddressed gap with no
+  workaround yet, not something fixable in the same pass**: 100°C is only
+  correct at 1 atm/sea level — this repo has no altitude/pressure parameter
+  anywhere, so every BOIL/POACH duration and every CCP threshold implicitly
+  assumes sea level. Recorded as a real, open gap (in `water.json`'s new
+  citation note) rather than silently assumed away — a robot operating at
+  meaningful altitude would need this accounted for and currently can't get
+  it from this model.
 - **Implementing the REAL D-value/z-value thermal-death-time model (the actual
   math the FDA Food Code's own tables are built from) instead of two
   hand-picked anchor points found a genuine, computable ~4x discrepancy
@@ -341,3 +387,55 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   physics simulation (still correctly out of scope), just an explicit lever
   to actually arrest the process at a known point, which is the honestly-
   scoped answer, not a fuller simulation.
+
+## 2026-08-13
+
+### Test runner (ROADMAP.md Phase 0, closed)
+
+- **`node:test` (built into Node 24, already the runtime here) + `tsx` as
+  the loader needs an explicit glob, not a directory, as its file arg.**
+  `node --import tsx --test tests/` throws `ERR_UNSUPPORTED_DIR_IMPORT` —
+  tsx's own resolver intercepts the bare directory path before node:test's
+  file-discovery glob logic gets to it. `node --import tsx --test
+  tests/*.test.ts` (shell-expanded explicit file list) works fine. No new
+  devDependency needed (`vitest`/`jest` were the assumed candidates in
+  ROADMAP.md's original phrasing; `node:test` was better-fitting since this
+  repo already runs everything through `tsx`, not a bundler).
+- **Zod's `z.infer` (post-default output type) is the wrong type to build
+  test-fixture builders against — use `z.input` instead, and `Partial<>`
+  it.** A helper like `makeAction({ id, outputs: { transformedState: "x" } })`
+  needs `outputs` to accept a partial object (missing
+  `spawnsTargetByproducts`/`destroysTarget`, which Zod fills in at parse
+  time) — `Partial<Action>`'s `outputs` field is typed as the FULL
+  post-default `ActionOutputs` shape (booleans required), so TypeScript
+  rejected every fixture that only set one field. `Partial<z.input<typeof
+  ActionSchema>>` uses the pre-default shape instead, where those same
+  fields are genuinely optional — matches what `.parse()` actually accepts.
+- **A regression test is only proven to catch its regression by actually
+  breaking the code and watching it fail red** — same discipline as every
+  other check in this repo (this file's running theme: "caught by running
+  it, not by reading the code"). Deliberately removed the
+  `Number.isNaN(seconds)` guard `engine.ts`'s CCP check depends on (see the
+  2026-08-12 entry on this same guard) and confirmed exactly the intended
+  test failed, then restored it — the other 43 tests staying green in the
+  same run is itself a check that the fixture builders aren't accidentally
+  coupled to each other.
+- **`tsconfig.json`'s `include` didn't cover `tests/` by default** — added
+  it, since `npx tsc -p . --noEmit` is one of the two authoritative checks
+  this repo runs after any change ("Process" section above), and a test
+  file with a real type error should fail that check like any other file,
+  not be silently skipped because it lives outside `src`/`scripts`.
+- **Unit tests (fast, synthetic `Entity`/`Action`/`CriticalControlPoint`
+  fixtures built with minimal `.parse()`-validated builders) and
+  `scripts/validate.ts` + the demo/recipe scripts (slower, exercise the
+  real `data/*.json`) are complementary, not redundant.** The unit suite
+  pins down `engine.ts`'s branch logic in isolation (e.g. "does
+  `combinesInto` merge tags from both instances, filtered by
+  `possibleTags`" — provable in ~15 lines with two throwaway entities)
+  without needing a real recipe file to exercise it; the integration layer
+  still catches the class of bug the unit suite structurally cannot (a
+  real `data/entities/*.json` referencing a CCP id that doesn't exist,
+  runtime-assigned instance ids from an actual run not matching what a
+  recipe file guessed — the "wrong/typo'd id" entry above). Neither
+  replaces the other; both now belong in the standard post-change check
+  list (`npm test`, `npm run validate`, every demo, every recipe, `tsc`).

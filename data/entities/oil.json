@@ -20,7 +20,12 @@
     "isInfusable": true
   },
   "thermophysical": {
-    "densityKgPerM3": 920
+    "densityKgPerM3": 920,
+    "citation": {
+      "source": "International Olive Council (IOC) trade standard density range for olive oil (approximately 0.910-0.916 g/cm³ at 20°C) — every recipe in this repo that names an oil is Spanish/Mediterranean and implicitly olive oil, not a generic vegetable oil",
+      "confidence": "commonly_cited_unverified",
+      "note": "This repo has not looked up the current IOC trade standard document to confirm the exact published range/temperature basis — 920 is a round, plausible value within the commonly-cited range, not read off the primary standard directly."
+    }
   },
   "sensory": {
     "taste": ["neutral"],

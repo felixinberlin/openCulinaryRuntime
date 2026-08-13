@@ -15,6 +15,11 @@
       "water_g": 50,
       "protein_g": 16,
       "fat_g": 27
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw egg yolk",
+      "confidence": "standard_reference",
+      "note": "Same caveat as egg.json — not checked against the exact current FDC entry."
     }
   },
   "possibleStates": ["raw", "blended"],

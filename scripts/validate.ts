@@ -72,6 +72,24 @@ for (const entity of entities.items.values()) {
       fail(`entities/${entity.id}.json: criticalControlPointsByAction["${actionId}"] references unknown CCP "${ccpId}"`);
     }
   }
+  // Soft prompts, not failures — both found real gaps by being asked
+  // explicitly (tortilla_mixture.json had a cooking capability and zero CCP
+  // wiring until asked about tortilla de Betanzos; several entities had
+  // composition/thermophysical numbers with no citation until asked to be
+  // "ready to publish"). A NOTE here doesn't mean something is wrong — e.g.
+  // potato/garlic correctly have no CCP — it means a human should confirm
+  // that's deliberate, not silently unaudited.
+  const cookingCapabilities = ["isFryable", "isBoilable", "isPoachable", "isScramblable"] as const;
+  const hasCookingCapability = cookingCapabilities.some((c) => entity.capabilities[c]);
+  if (hasCookingCapability && Object.keys(entity.criticalControlPointsByAction).length === 0) {
+    console.log(`NOTE entities/${entity.id}.json: has a cooking capability but no criticalControlPointsByAction — confirm this is deliberate (no pathogen risk), not unaudited.`);
+  }
+  if (entity.composition?.nutrientsPer100g && !entity.composition.citation) {
+    console.log(`NOTE entities/${entity.id}.json: composition.nutrientsPer100g has no citation.`);
+  }
+  if (entity.thermophysical && Object.keys(entity.thermophysical).some((k) => k !== "citation") && !entity.thermophysical.citation) {
+    console.log(`NOTE entities/${entity.id}.json: thermophysical has no citation.`);
+  }
 }
 
 for (const action of actions.items.values()) {

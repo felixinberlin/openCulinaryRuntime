@@ -15,6 +15,11 @@
       "water_g": 59,
       "carbohydrate_g": 33,
       "protein_g": 6.4
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw garlic",
+      "confidence": "standard_reference",
+      "note": "Same caveat as potato.json/egg.json — not checked against the exact current FDC entry; garlic composition also varies meaningfully by cultivar and curing/storage time."
     }
   },
   "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "boiled", "fried", "baked", "coarse", "fine_paste", "emulsified"],
@@ -40,7 +45,12 @@
   },
   "thermophysical": {
     "densityKgPerM3": 1080,
-    "thermalConductivityWPerMK": 0.52
+    "thermalConductivityWPerMK": 0.52,
+    "citation": {
+      "source": "Choi & Okos (1986) predictive food-thermal-property model — see potato.json's identical citation",
+      "confidence": "standard_reference",
+      "note": "Recalled as typical clove-tissue values, not re-derived from the model against garlic's actual composition in this session."
+    }
   },
   "sensory": {
     "taste": ["umami"],
@@ -53,6 +63,6 @@
   },
   "metadata": {
     "notes": "isWashable: false (explicit, not just omitted) unlike potato.json: garlic is dry-peeled, not washed — the papery skin comes off, it isn't scrubbed. statePrerequisites.cut mirrors potato.json/egg.json's same peel-before-cut pattern. thermophysical values are typical literature approximations for clove tissue, not measured (same caveat as potato.json/egg.json). possibleTags/salt: seasoning is orthogonal to shape/cook-state, same reasoning as potato.json. isAromaticSource is the ingredient-side capability satisfying data/actions/infuse.json's requiredIngredientCapabilities (garlic-infused oil) — the target there is oil.json, not garlic, since it's the oil whose property changes.",
-    "flavorChemistryNote": "Garlic's characteristic pungency (allicin) doesn't exist in the intact clove — alliinase enzyme only converts alliin to allicin once cell walls rupture, i.e. when CUT or CRUSH actually happens. Chopped/minced/crushed garlic is measurably more pungent than sliced for exactly this reason (more ruptured cells per gram — a mortar-crushed fine_paste ruptures far more than a knife ever does), and taste onset is delayed a few seconds after cutting as the reaction proceeds. Not modeled here — neither CUT's 'shape' nor CRUSH's 'fineness' parameter affects flavor intensity in this schema yet — but worth citing since it's the clearest concrete example in this vocabulary so far of a mechanical action being a real chemical transition boundary (CLAUDE_DEV_CTX.md pillar 3), not just a shape change. It's also *why* a mortar-crushed fine_paste is what EMULSIFY requires (see statePrerequisites.emulsify) rather than just knife-minced garlic: maximizing rupture is exactly what makes the paste's alliaceous compounds available to help stabilize the emulsion at all. sensory.taste picks 'umami' as the closest of CapabilitiesSchema's fixed taste enum (salty/sweet/sour/bitter/umami/neutral) — that enum has no 'pungent' category, which is arguably a gap: allicin's sharpness is a trigeminal/chemesthetic sensation (like capsaicin), not one of the five basic tastes, so no enum value is actually correct."
+    "flavorChemistryNote": "Source: Eric Block, \"Garlic and Other Alliums: The Lore and the Science\" (Royal Society of Chemistry, 2010) — the standard reference on Allium organosulfur chemistry; also accessibly covered in Harold McGee's \"On Food and Cooking\" — this repo has not re-verified the claim against either text directly in this session, recalled with reasonable confidence as well-established biochemistry, not a novel or uncertain claim. Garlic's characteristic pungency (allicin) doesn't exist in the intact clove — alliinase enzyme only converts alliin to allicin once cell walls rupture, i.e. when CUT or CRUSH actually happens. Chopped/minced/crushed garlic is measurably more pungent than sliced for exactly this reason (more ruptured cells per gram — a mortar-crushed fine_paste ruptures far more than a knife ever does), and taste onset is delayed a few seconds after cutting as the reaction proceeds. Not modeled here — neither CUT's 'shape' nor CRUSH's 'fineness' parameter affects flavor intensity in this schema yet — but worth citing since it's the clearest concrete example in this vocabulary so far of a mechanical action being a real chemical transition boundary (CLAUDE_DEV_CTX.md pillar 3), not just a shape change. It's also *why* a mortar-crushed fine_paste is what EMULSIFY requires (see statePrerequisites.emulsify) rather than just knife-minced garlic: maximizing rupture is exactly what makes the paste's alliaceous compounds available to help stabilize the emulsion at all. sensory.taste picks 'umami' as the closest of CapabilitiesSchema's fixed taste enum (salty/sweet/sour/bitter/umami/neutral) — that enum has no 'pungent' category, which is arguably a gap: allicin's sharpness is a trigeminal/chemesthetic sensation (like capsaicin), not one of the five basic tastes, so no enum value is actually correct."
   }
 }

@@ -676,3 +676,77 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   claim separately from the crack-containment one and found it weaker/
   disputed (freshness and shocking are the better-supported explanations),
   and said so rather than flattening both claims to the same certainty.
+
+### SIMMER verb, and "heat belongs to a place, not an ingredient"
+
+- **A new verb reusing an existing `transformedState` on purpose, rather
+  than inventing its own, was the right call — and the check for it was
+  concrete, not just a feeling.** Built `SIMMER` (`data/actions/simmer.json`)
+  as a genuinely distinct verb from `BOIL` (different temperature band,
+  85-96°C vs. ~100°C, different technique reasoning) but had it produce the
+  IDENTICAL `outputs.transformedState: "boiled"` rather than a new
+  "simmered" — because a simmered potato/egg and a boiled one are the same
+  dish in real cooking, not two different foods, and inventing a second
+  state for the same real-world outcome would have been the same category
+  error `heat-source.ts`'s "heat source changes TIME, never TEMPERATURE"
+  warning already exists to prevent, just on a different axis (process vs.
+  outcome, here). Verified this wasn't just a plausible-sounding call by
+  actually running `PEEL` (which requires `egg.json`'s
+  `statePrerequisites.peel: "boiled"`) against a `SIMMER`-produced egg in
+  `scripts/simmer-vs-boil.ts` — it passes with zero new wiring, which is
+  the actual evidence the shared-state choice was correct, not merely
+  untested optimism. General lesson: when a new action's real-world result
+  duplicates an existing state, reusing that state string and PROVING
+  downstream consumers (other actions' `statePrerequisites`) still work is
+  stronger evidence than asserting semantic equivalence in a doc comment.
+- **A capability-test written against a schema constraint (here,
+  `durationSeconds`' own `numericRange` floor) can block the exact
+  demonstration it was meant to run — worth catching before shipping a
+  test that would never actually execute its own interesting branch.**
+  First draft of `simmer-vs-boil.ts` tried to replay `egg-haccp.ts`'s "10
+  second flash-cook triggers a HACCP warning" demo for `SIMMER`, but
+  `simmer.json`'s `durationSeconds` floor (60s, matching `boil.json`'s)
+  rejects 10s before the CCP check ever runs — `fry.json`'s floor is 10s
+  specifically, which is WHY that demo works there and wouldn't here.
+  Resisted the tempting fix (lower `simmer.json`'s floor just to make the
+  test pass) since that would be reshaping real data to fit a test rather
+  than the reverse; instead changed the test to prove the actually true,
+  stronger claim directly — `egg.json`'s `criticalControlPointsByAction.simmer`
+  and `.boil` reference the LITERAL SAME CCP id, not a look-alike one, which
+  is the real reason no separate threshold is needed (turbulence doesn't
+  change Salmonella kill-time) — checkable by reading the data, no
+  artificial edge case required.
+- **A direct user observation mid-task — "heat is a function inside a place
+  where many ingredients can live, it increases and decreases in time, you
+  can heat up or play with the pan" — pointed at a real, structurally
+  significant, previously-unnoticed gap, and the repo already had physical
+  evidence of it before this conversation named it.** `pan.json` has listed
+  `possibleStates: ["hot", "cold"]` since before heat-source work started,
+  with its own `metadata.notes` already admitting "not fully modeled (no
+  thermophysical data yet)" — but `allowedTransformations: []` means
+  literally nothing in this vocabulary can ever move a pan between those
+  two states; they've been unreachable dead labels. The deeper point:
+  `engine.ts`'s `applyAction` is fundamentally one-target-instance-at-a-time
+  with heat expressed as a parameter GUESSED PER CALL (`waterTempC`,
+  `heatLevel`) on that one target — there is no representation of the
+  pot/pan itself as a stateful place with a real temperature that persists
+  and evolves over time, which every ingredient currently occupying it
+  would share. Two eggs (or a potato and an egg) simmering in the same pot
+  right now get two independent `applyAction` calls with two independently
+  supplied temperature guesses, not one shared physical truth. This is a
+  materially different, larger kind of gap than the "informational-only
+  parameter" pattern this repo uses everywhere else (`heatLevel`,
+  `startMethod`, `yolkDoneness`) — those all accept that a real mechanism
+  goes unmodeled at the CHOSEN depth; this one is about WHERE the state
+  even lives (the tool, not the ingredient) and WHETHER it's shared, a
+  structural question a parameter tweak can't answer. Explicitly asked the
+  user how far to take this before writing anything engine-side, given
+  `ROADMAP.md` already has engine work paused for a differently-shaped
+  reason (`SEASON` generalization) — answer was "document precisely, don't
+  build yet," recorded as its own `ROADMAP.md` "Known-large" bullet rather
+  than folded quietly into `SIMMER`'s own scope. General lesson: a user
+  aside that sounds like a philosophical remark can be pointing at a real
+  fault line already visible in the data (here, a dead-state pair sitting
+  in `pan.json` for who knows how long) — worth actually checking the code
+  for confirming evidence before either building on the spot or filing it
+  away as a vague someday-gap.

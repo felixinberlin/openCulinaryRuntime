@@ -57,6 +57,18 @@ import { CitationSchema } from "./ingredient.ts";
  * technique's actual thermal effect (how much cooler "the edge of the fire"
  * actually is, precisely) — naming a real, unmodeled control axis honestly
  * beats pretending `controlPrecision` above already accounts for it.
+ *
+ * A STILL-OPEN, LARGER GAP than any of the above, named explicitly rather
+ * than left implicit: everything in this file describes a heat SOURCE, not
+ * where that heat actually accumulates. There is no representation
+ * anywhere in this repo of the pot/pan itself as a stateful place with a
+ * real temperature that persists and evolves over time and that every
+ * ingredient currently occupying it would share — `data/actions/simmer.json`
+ * and `boil.json` still take `waterTempC`/`heatLevel` as a per-call guess on
+ * one target instance, not a read of any real, shared, ongoing state. See
+ * `ROADMAP.md`'s "Heat as a shared, time-varying property of a PLACE" entry
+ * and `LEARNINGS.md` 2026-08-13 for the full reasoning on why this is
+ * recorded, not built, for now.
  */
 export const HeatSourceProfileSchema = z.object({
   id: z.string().min(1),

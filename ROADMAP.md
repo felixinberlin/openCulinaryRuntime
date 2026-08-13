@@ -40,6 +40,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Tortilla de Betanzos (liquid, flowing center) | ✅ Makeable — **found and fixed a real HACCP gap** | `npm run recipe -- tortilla_de_betanzos` |
 | Salt/pepper/chili, same potato (seasoning generalization) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:season-potato` |
 | Boiled egg — gas vs. vitro vs. wood preheat time, doneness timing | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:boil-egg-heat-sources` |
+| SIMMER vs. BOIL (potato + egg, same resulting state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:simmer` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -166,6 +167,30 @@ proven runnable, not just asserted.
       coagulation of leaked white sealing a crack, not flavor) and
       explicitly does NOT endorse the commonly-repeated but weakly-evidenced
       "salt water peels easier" claim.
+- [x] **`SIMMER` — a real, distinct temperature band below a rolling
+      `BOIL`** — closed 2026-08-13, `data/actions/simmer.json`
+      (`isSimmerable` on `potato.json`/`egg.json`, `waterTempC` capped 85-96°C,
+      genuinely below `BOIL`'s ~100°C ceiling). Deliberately reuses `BOIL`'s
+      exact `transformedState` ("boiled") rather than inventing a new
+      "simmered" state — a simmered potato/egg is not a different dish from
+      a boiled one, just a gentler process to the identical result; a
+      separate state would have both misrepresented that and silently broken
+      `egg.json`'s existing `statePrerequisites` (`peel`/`shock` require
+      "boiled"). `criticalControlPointsByAction.simmer` on `egg.json` points
+      at the identical `egg_cooking` CCP `boil`/`fry`/`poach` already use —
+      Salmonella kill-time depends on temperature/duration, not on how
+      turbulently the water got there, so this is the physically correct
+      choice, not a shortcut. Real technique reason it's its own verb rather
+      than an unstated aside on `BOIL`: a rolling boil's turbulence is a
+      common, preventable cause of both broken potato skins/cloudy cooking
+      water and cracked eggshells — ties directly to `egg.json`'s existing
+      `crackContainmentNote`. Also the first action where
+      `heat-source.ts`'s `controlPrecision`/`manualPositioningRelevance`
+      fields (written earlier the same day, before `SIMMER` existed) become
+      load-bearing rather than incidental: holding a stable 85-96°C band
+      without creeping back to a rolling boil is exactly the "how precisely
+      can a cook hold a simmer" question those fields were written to
+      describe. Proven end-to-end: `npm run capability-test:simmer`.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
@@ -199,10 +224,38 @@ covered by what exists:**
       cheese), onion, herbs, sugar, vinegar/acid, or any protein besides egg.
       The vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
       chemistry) is disproportionate to its ingredient BREADTH right now.
-- [ ] **More common technique verbs.** `SIMMER` (a real, distinct temperature
-      band below a rolling `BOIL`), `WHISK`, `STEAM`, `ROAST`/`GRILL`,
-      `MARINATE`, `REST` (post-cook carryover exists narrowly for egg via
-      `SHOCK`, not generally), `KNEAD`, `STRAIN`/`DRAIN`.
+- [ ] **More common technique verbs.** ~~`SIMMER`~~ **closed 2026-08-13** —
+      see "Common culinary knowledge coverage" below. Still open: `WHISK`,
+      `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `REST` (post-cook carryover
+      exists narrowly for egg via `SHOCK`, not generally), `KNEAD`,
+      `STRAIN`/`DRAIN`.
+- [ ] **Heat as a shared, time-varying property of a PLACE (pot/pan), not a
+      per-action-call parameter on one ingredient.** Raised directly by the
+      user while `SIMMER` was being built: "heat is a function inside a
+      place where many ingredients can live. it increase and decrease in
+      time. You can heat up, or play with the pan." Concretely confirmed by
+      the code itself, not just conceptually true: `pan.json` already lists
+      `possibleStates: ["hot", "cold"]` with ZERO actions or engine support
+      that ever reaches either one, and no `thermophysical` data — noted in
+      its own `metadata.notes` as "not fully modeled" since before this
+      entry existed. Two ingredients simmering in the same pot right now get
+      independent, unlinked `applyAction` calls each carrying their own
+      `waterTempC`/`durationSeconds` guess, not one shared temperature that
+      rises/falls over real time and that anything "in" that pot at that
+      moment would actually feel. Pan-repositioning
+      (`heat-source.ts`'s `manualPositioningRelevance`) is a descriptive
+      rating today, not an actual control action a recipe step can invoke.
+      Closing this for real needs: tool-level thermal state (a temperature
+      that persists and evolves on the `pot`/`pan` entity itself, not on
+      whatever ingredient happens to be the current action's target), a
+      time-based heating/cooling model (building on `estimatedPreheatSeconds`'s
+      existing energy-balance math, `heat-source.ts`), and a new engine
+      concept of instances co-located in one tool instance sharing its
+      state — a real, structural addition to `engine.ts`'s current
+      one-target-instance-at-a-time `applyAction` shape, not a data-only
+      fix. Deliberately named and left unbuilt rather than started
+      speculatively — see `LEARNINGS.md` 2026-08-13 for the full reasoning
+      on why this is scoped as design-and-record, not implement, for now.
 - [ ] **Storage/shelf-life common knowledge** (partially, deliberately
       out-of-scope already for one case — `infuse.json`'s garlic-in-oil
       botulism note, `LEARNINGS.md` 2026-08-12 — but nothing general exists:

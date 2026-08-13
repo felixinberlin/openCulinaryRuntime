@@ -544,6 +544,24 @@ specified anywhere in this repo — flagged as an open dependency, not assumed.
 Unstarted. Depends on a running CookCLI server and a `.menu` file format
 neither of which is defined anywhere in this repo — flagged, not assumed.
 
+## Phase 10 — Research: simulation/robot-execution targets (`SIMULATION_TARGETS.md`)
+- [x] **Research closed 2026-08-13** — compared five open-source candidates
+      (PDDL/Fast Downward, VirtualHome, AI2-THOR/ProcTHOR, OmniGibson/
+      BEHAVIOR-1K, RoboCasa) for eventually grounding this repo's `Entity`/
+      `State`/`Action` model in a simulated or robot-executed world, plus a
+      worked mapping of all six base ingredients (egg, potato, water, oil,
+      salt, garlic) into each — see `SIMULATION_TARGETS.md` for the full
+      comparison table and mapping. Recommendation: PDDL first (near-zero
+      cost, validates the action graph is a sound planning domain), then
+      VirtualHome if a visual world is wanted. RoboCasa (manipulator
+      training) is correctly a later-tier concern with no actuator layer
+      to hand it to yet.
+- [ ] **Not started**: no PDDL compiler, VirtualHome program generator, or
+      any simulator integration exists in this repo. `ENGINE_INVARIANTS.md`
+      #11 ("a future closed-loop control/perception layer is a separate,
+      larger piece of work, not implied by this one") still applies —
+      research being closed does not imply a build was authorized.
+
 ## Open dependencies / unknowns
 - `.menu` file format (Phases 8 & 9) — still undefined anywhere.
 - CookCLI server API surface (Phase 9) — still undefined.

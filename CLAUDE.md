@@ -90,6 +90,15 @@ naming, before assuming something exists.
 2. **Mobile reference app (React Native + Expo)** — 4-tab navigator: Discover (local recipe search), Community (feed with `FormData` uploads + `onUploadProgress`), Meal Plan (`.menu` schedule parsing), Profile (JWT with auto-logout on expiry).
 3. **Home Assistant HACS component (Python)** — talks to a local CookCLI server at `http://localhost:9080`; sensors for expiring food / depleted pantry; populates HA Calendar from `.menu` schedules.
 
+A fourth, adjacent topic — not one of the three original assignments, not
+scoped for a build — is **`SIMULATION_TARGETS.md`**: research comparing five
+open-source options (PDDL/Fast Downward, VirtualHome, AI2-THOR/ProcTHOR,
+OmniGibson/BEHAVIOR-1K, RoboCasa) for eventually grounding this repo's
+`Entity`/`State`/`Action` model in a simulated or robot-executed world, plus
+a worked mapping of all six base ingredients (egg, potato, water, oil, salt,
+garlic) into each. Read that file before assuming a simulation target has or
+hasn't been chosen — none has; `ENGINE_INVARIANTS.md` #11 still applies.
+
 ## A Gemini CLI config was found
 
 `~/.gemini/settings.json` exists on this machine (user-level, not project-level). If you want its MCP servers/instructions/etc. available in Claude Code, reply `/import` to scan it.

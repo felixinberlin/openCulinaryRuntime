@@ -750,3 +750,54 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   in `pan.json` for who knows how long) — worth actually checking the code
   for confirming evidence before either building on the spot or filing it
   away as a vague someday-gap.
+
+### Simulation-target research (`SIMULATION_TARGETS.md`)
+
+- **A vague-sounding request ("robot simulator?") had two structurally
+  different honest answers, and asking which was meant mattered more than
+  picking one.** First pass toward "robot thingy" defaulted to the
+  manipulation/physics tier (RoboCasa, MuJoCo) — real and correctly
+  sourced, but the user's follow-up ("states and worlds, or game frameworks
+  where we can throw the cooking truth") revealed they meant the symbolic
+  world-model tier instead. The two tiers don't overlap much: one answers
+  "how does an arm move," the other answers "is this a coherent world of
+  objects and states" — this repo currently has an answer to neither, but
+  is MUCH closer in shape to the second. Re-searched rather than retrofitting
+  the first answer to fit — the honest fix for a misjudged question is a
+  second, differently-scoped search, not a reframing of the first result.
+- **Live web research beat recalled knowledge here for a concrete, checkable
+  reason: the field moved during this model's own training cutoff gap.**
+  The current date (2026-08-13) is well past this session's knowledge
+  cutoff (Jan 2026) for a fast-moving research area — RoboCasa365 (the
+  actual current release) and the "periodic cooking" egg paper (published
+  Feb 2025, `Communications Engineering`) both needed `WebSearch`/`WebFetch`
+  to state correctly rather than from memory, matching this repo's own
+  citation discipline (`CitationSchema`) applied to the AGENT's own claims,
+  not just the data files.
+- **The worked ingredient-mapping table surfaced a real, useful check that
+  a written comparison alone wouldn't have: `requiredIngredientCapabilities`
+  (water for BOIL, salt for SALT) is structurally an EXISTENTIAL PDDL
+  precondition, not an operator parameter.** This wasn't obvious going in —
+  water and salt are never the ingredient a JSON action's own
+  `requiredTargetCapability` names, only ever the thing checked as merely
+  *present*. Actually trying to translate `boil.json` into a PDDL operator
+  forced the distinction into the open and confirmed something worth
+  knowing on its own: this repo's presence-only, non-consuming semantics
+  for `requiredIngredientCapabilities` (`ROADMAP.md` Phase 4's own framing)
+  was the right design, not an approximation — PDDL's own standard
+  vocabulary already has the matching shape (`exists`), so nothing had to
+  be invented to accommodate it. General lesson: translating a schema into
+  an unrelated, well-established formalism is a good pressure test for
+  whether a design decision is principled or accidental — a principled one
+  translates cleanly; an accidental one needs new machinery to express.
+- **Named, precisely, what none of the five candidates capture, rather than
+  present the comparison as if picking one would be a full solution.**
+  Classical/STRIPS PDDL (what Fast Downward runs by default) has no numeric
+  fluents — `thermal.ts`'s D/z-value hold-time math literally cannot be
+  expressed without a numeric-capable planner variant (PDDL2.1/Metric-FF/
+  ENHSP), a real, specific fact worth stating rather than waving at "PDDL
+  can do numbers somehow." None of VirtualHome/AI2-THOR/ProcTHOR/OmniGibson's
+  built-in object-state vocabularies model a CCP's accumulated thermal dose
+  either — their `Cooked` is binary. And no candidate has any concept of
+  `CitationSchema`'s provenance/confidence layer at all — that's unique to
+  this repo, not something any external framework would preserve on import.

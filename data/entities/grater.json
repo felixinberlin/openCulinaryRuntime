@@ -1,0 +1,22 @@
+{
+  "id": "grater",
+  "kind": "tool",
+  "names": {
+    "en": "Box grater",
+    "es": "Rallador"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added 2026-08-13 so data/actions/grate.json's requiredTools reference resolves — same minimal-tool precedent as knife.json/masher.json. Deliberately NOT reused for CUT: grating shreds by friction against a grating surface, a physically different mechanical action from a knife's slicing motion, so it gets its own tool and verb rather than becoming a shape value on CUT — see potato.json's gratedNote."
+  }
+}

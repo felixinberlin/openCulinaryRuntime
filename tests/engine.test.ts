@@ -45,6 +45,27 @@ describe("applyAction — preconditions", () => {
     assert.equal(result.instance.state, "diced");
   });
 
+  test("statePrerequisites accepts an array of acceptable prior states (added 2026-08-13 for skin-on cuts)", () => {
+    const potato = makeEntity({
+      id: "potato",
+      statePrerequisites: { cut: ["washed", "peeled"] },
+    });
+    const action = makeAction({ id: "cut", outputs: { transformedState: "diced" } });
+    const entities = new Map([["potato", potato]]);
+
+    // Neither listed state is required exclusively — either satisfies it.
+    const fromWashed = applyAction({ entityId: "potato", state: "washed", tags: [] }, action, entities, NO_TOOLS);
+    assert.equal(fromWashed.instance.state, "diced");
+    const fromPeeled = applyAction({ entityId: "potato", state: "peeled", tags: [] }, action, entities, NO_TOOLS);
+    assert.equal(fromPeeled.instance.state, "diced");
+
+    // A state outside the set is still rejected, and the error names both options.
+    assert.throws(
+      () => applyAction({ entityId: "potato", state: "raw", tags: [] }, action, entities, NO_TOOLS),
+      /requires "potato" to already be "washed" or "peeled"/
+    );
+  });
+
   test("requiredTargetCapability: missing vs. explicit false both block, distinguishably", () => {
     const unasserted = makeEntity({ id: "rock" });
     const denied = makeEntity({ id: "bone", capabilities: { isPeelable: false } });

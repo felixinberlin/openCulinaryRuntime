@@ -1,0 +1,22 @@
+{
+  "id": "masher",
+  "kind": "tool",
+  "names": {
+    "en": "Potato masher",
+    "es": "Aplastapatatas"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Minimal tool entity, added 2026-08-13 so data/actions/mash.json's requiredTools reference resolves — same minimal-tool precedent as knife.json/pan.json/mortar.json. A ricer or fork would produce a real, different texture (ricer: fine and fluffy, no gluten-like gumminess risk; fork: coarser, more variable) — not modeled as separate tools here, same 'built for what's asked, not speculative' discipline as elsewhere in this vocabulary; see mash.json's consistencyNote for the one texture distinction that IS modeled (via a parameter, not a tool choice)."
+  }
+}

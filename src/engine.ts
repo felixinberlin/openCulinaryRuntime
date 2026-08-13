@@ -160,10 +160,18 @@ export function applyAction(
   }
 
   const requiredPriorState = target.statePrerequisites[action.id];
-  if (requiredPriorState && instance.state !== requiredPriorState) {
-    throw new Error(
-      `${action.verb} requires "${target.id}" to already be "${requiredPriorState}" (currently "${instance.state}").`
-    );
+  if (requiredPriorState) {
+    // A single required state is treated as a one-element allowed set, so
+    // this branch's behavior/error message is unchanged for every
+    // statePrerequisites entry written before array values existed
+    // (ingredient.ts's own doc comment) — only a genuinely multi-valued
+    // entry (e.g. potato.json's cut: ["washed", "peeled"]) takes the OR path.
+    const allowedPriorStates = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
+    if (!allowedPriorStates.includes(instance.state)) {
+      throw new Error(
+        `${action.verb} requires "${target.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}").`
+      );
+    }
   }
 
   if (action.requiredTargetCapability) {

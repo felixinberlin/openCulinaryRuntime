@@ -928,3 +928,50 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   real-world result would be wrong (raw center or burnt-thin edges) — named
   explicitly in the recipe's own `shapeConnectionNote` rather than left to
   be rediscovered by whoever authors the next FRY-using recipe.
+
+### "Complete potato" — being challenged directly on "ANY" was the right prompt to actually test, not just re-explain
+
+- **Asked "are you sure we can make ANY egg mix AND ANY potato fry style,"
+  the right response was to test the edges, not to defend or re-assert the
+  existing summary.** Ran four direct checks before answering at all: does
+  a MASH action exist (no), can you CUT an unpeeled potato (no, hard
+  error), does a grated/shredded shape exist (no), can egg be baked (no).
+  All four were real, previously-uncited gaps, found in under a minute of
+  actual checking rather than reasoning from what had already been built.
+  General lesson, worth stating because it's easy to skip under time
+  pressure: when asked "are you SURE," the answer is a fresh check against
+  the code, not a more confident restatement of the last answer.
+- **Caught and fixed a real mistake mid-build, not after: grating is not a
+  sixth `CUT` shape.** First instinct was to add `"grated"` to `cut.json`'s
+  `shape` enum, matching the path of least resistance (one file edit
+  instead of two new entities). Caught before committing by asking the
+  same question this repo asks of every other verb/tool pairing: does the
+  PHYSICAL MECHANISM match? A box grater shreds by friction against a
+  grating surface; a knife slices. Folding `"grated"` into `CUT` would have
+  asserted a knife produces grated potato, which is false — the same class
+  of error `PAR_FRY` getting its own tool/temperature band (not a `FRY`
+  parameter) or `MASH` getting its own tool (not reusing `mortar`) were
+  already built to avoid. Fixed by giving `GRATE` its own verb and tool
+  (`grater.json`) instead. General lesson: "which existing enum could this
+  value slot into" is the wrong first question for a new technique — "does
+  an existing TOOL actually perform this motion" is the right one, and
+  answering it wrong is cheap to catch immediately, expensive to catch
+  after data/recipes start depending on the wrong shape.
+- **`statePrerequisites` needed to become "one state OR a set of acceptable
+  states," and the fix was small because the question was scoped precisely
+  first.** The actual need (skin-on cuts, mash needing boiled-OR-baked) was
+  never "should transitions be freely composable" (a much bigger, riskier
+  question — see the `INVALID_TRANSITIONS` gap this session already found
+  concrete evidence for, `FRY` then `BOIL` composing with zero complaint).
+  It was narrowly "can more than one prior state satisfy the same
+  prerequisite." Widened `ingredient.ts`'s type to `string | string[]`,
+  kept `engine.ts`'s single-state behavior and exact error-message format
+  unchanged by treating a lone string as a one-element set — verified by a
+  new unit test asserting the OLD single-value error message still matches
+  a literal string, not just a looser regex, so a subtle format change
+  would have been caught. A small, precisely-scoped engine change (one
+  field's type, one function's check) delivered on the same day a much
+  larger, precisely-NOT-scoped one (heat-as-a-place) was correctly left
+  unbuilt — the difference was never "engine work is risky," it was
+  whether the actual need was small or genuinely structural, checked
+  freshly each time rather than assumed from the last decision.

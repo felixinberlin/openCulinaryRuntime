@@ -274,14 +274,24 @@ export const EntitySchema = z.object({
   /** Action ids that may legally target this entity. */
   allowedTransformations: z.array(z.string()).default([]),
   /**
-   * Per-action state preconditions: action id -> the state this entity must
-   * already be in before that action may run, e.g. { "cut": "peeled" } —
-   * "cutting a potato presupposes it's already peeled." Lives on the entity
-   * rather than on the generic CUT verb because the precondition is a fact
-   * about *this* ingredient, not about cutting in general (not everything
-   * CUT can target needs peeling first).
+   * Per-action state preconditions: action id -> the state(s) this entity
+   * must already be in before that action may run, e.g. { "cut": "peeled" }
+   * — "cutting a potato presupposes it's already peeled." Lives on the
+   * entity rather than on the generic CUT verb because the precondition is
+   * a fact about *this* ingredient, not about cutting in general (not
+   * everything CUT can target needs peeling first).
+   *
+   * A value may be a single state (the original, still-valid shape — every
+   * entity file written before 2026-08-13 needs no change) OR an array of
+   * acceptable prior states, added the same day for a real case that a
+   * single required state couldn't express: potato.json's `cut` needs to
+   * accept EITHER "washed" (skin-on wedges/rustic fries, a real, legitimate
+   * style) OR "peeled" (the conventional path) — not force one specific
+   * predecessor when either is genuinely valid. `engine.ts`'s check treats
+   * a single string as a one-element set, so nothing about the single-value
+   * case's behavior or error message changes.
    */
-  statePrerequisites: z.record(z.string(), z.string()).default({}),
+  statePrerequisites: z.record(z.string(), z.union([z.string(), z.array(z.string())])).default({}),
   /**
    * Entity ids this entity may spawn when consumed (CONCEPT.md §9). This is
    * the fallback list any `spawnsTargetByproducts` action uses when it has

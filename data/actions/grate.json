@@ -1,0 +1,39 @@
+{
+  "id": "grate",
+  "verb": "GRATE",
+  "names": {
+    "en": "Grate",
+    "es": "Rallar"
+  },
+  "requiredTools": [
+    "grater"
+  ],
+  "requiredTargetCapability": "isGratable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "outputs": {
+    "transformedState": "grated",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Added 2026-08-13, deliberately its own verb/tool rather than a sixth value on CUT's 'shape' parameter — a box grater shreds by friction against a grating surface, physically nothing like a knife's slicing motion CUT models (data/entities/grater.json's own notes). Fixed transformedState (not transformedStateFromParameter, unlike CUT/CRUSH) since GRATE only ever produces one shape here — no 'coarse vs. fine' grate distinction is modeled, unlike CRUSH's fineness parameter, a real depth limit named rather than silently implied absent.",
+    "hashBrownsNote": "The real reason this verb exists: hash browns and rösti both start from grated (not sliced/diced) potato — a genuinely different piece shape with a different cooking behavior (much more exposed surface area, cooks fast, binds into a cake via its own released starch rather than staying separate pieces). See potato.json's gratedNote for the rinsed-vs-unrinsed technique distinction this schema does not model.",
+    "retrySafeNote": "retrySafe: true — re-grating already-grated potato is physically continuous, not a discrete duplication risk, same reasoning as CUT's/MASH's identical flag."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Potato reduced to fine shreds, no intact slices/pieces remaining",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "abrasion",
+      "severity": "medium",
+      "note": "Box grater's shredding surface directly against fingers/knuckles as the piece being grated gets smaller — a real, distinct hazard from a knife's cut risk"
+    }
+  ],
+  "retrySafe": true
+}

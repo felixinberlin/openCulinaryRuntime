@@ -43,6 +43,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | SIMMER vs. BOIL (potato + egg, same resulting state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:simmer` |
 | Double-fried potato (PAR_FRY then FRY, distinct intermediate state) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:double-fry` |
 | **Crispy French fries** (julienne + PAR_FRY 163°C + FRY 191°C golden, first real dish to actually exercise shape/oilTempC/doneness together) | ✅ Makeable, closed 2026-08-13 | `npm run recipe -- crispy_french_fries` |
+| "Complete potato" — skin-on cuts, GRATE, MASH (a dead state made reachable) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:complete-potato` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -249,6 +250,47 @@ proven runnable, not just asserted.
       fix: folded into the "Heat as a shared, time-varying property of a
       PLACE" entry above as the same underlying gap (`applyAction`'s
       atomicity), not a separate one.
+- [x] **"Complete potato" — skin-on cuts, GRATE, MASH** — closed 2026-08-13,
+      in response to being challenged directly on whether this repo could
+      really make "ANY potato fry style," checked rather than asserted.
+      Found and closed three real gaps:
+      1. **Skin-on cuts were IMPOSSIBLE** — `CUT` hard-required `"peeled"`,
+         so rustic wedges/skin-on fries (a real, legitimate style) couldn't
+         be represented at all. Fixed at the engine level, not just the
+         data level: `ingredient.ts`'s `statePrerequisites` now accepts
+         EITHER a single required state (unchanged, every pre-2026-08-13
+         entity file needs no change) OR an array of acceptable prior
+         states — `potato.json`'s `cut` is now `["washed", "peeled"]`.
+         Covered by a new unit test in `tests/engine.test.ts`, not just the
+         capability-test script.
+      2. **`GRATE` didn't exist** — hash browns/rösti need a genuinely
+         different piece shape (shredded, not sliced/diced). Deliberately
+         its own verb and tool (`grater.json`), NOT folded into `CUT`'s
+         `shape` enum as a sixth value — a box grater's friction-shredding
+         is physically nothing like a knife's slicing motion, and the first
+         draft of this fix made exactly that mistake before being caught
+         and corrected (see `LEARNINGS.md` 2026-08-13).
+      3. **`MASH` didn't exist at all** — the single most glaring gap: every
+         `potato.json` since the first commit has listed `"mashed"` in
+         `possibleStates` while `metadata.notes` said outright "mash isn't
+         wired up yet." The exact same shape of dead-label gap as
+         `pan.json`'s unreachable `"hot"`/`"cold"` states, found the same
+         way (checked the code, not assumed). `data/actions/mash.json` +
+         `masher.json`, gated on `statePrerequisites.mash: ["boiled",
+         "baked"]` (using the same array mechanism from fix #1) — you
+         cannot mash a raw potato, and the engine now actually enforces
+         that. A mashed potato can still be `FRY`ed afterward with ZERO
+         further changes (`FRY` has no `statePrerequisites` entry at all) —
+         a real, simple potato-cake/leftover-mash technique.
+      **Still NOT closed, named honestly rather than implied covered**: a
+      true breaded croquette (mash → shape → bread/batter → fry) — no
+      coating/breading mechanism exists in this vocabulary. Waffle/curly/
+      crinkle cuts, twice-baked potato structure (hollow-and-refill), and
+      the real alkaline (baking-soda) parboil-roughening technique (Kenji
+      López-Alt's actual best method, cited in conversation) all remain
+      open too — see this session's chat log / `LEARNINGS.md` for why each
+      was scoped out rather than attempted. Proven end-to-end: `npm run
+      capability-test:complete-potato`.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`

@@ -1,0 +1,55 @@
+{
+  "id": "mash",
+  "verb": "MASH",
+  "names": {
+    "en": "Mash",
+    "es": "Aplastar"
+  },
+  "requiredTools": [
+    "masher"
+  ],
+  "requiredTargetCapability": "isMashable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "parameters": [
+    {
+      "id": "consistency",
+      "names": {
+        "en": "Consistency",
+        "es": "Consistencia"
+      },
+      "required": false,
+      "allowedValues": [
+        "chunky",
+        "smooth"
+      ]
+    }
+  ],
+  "outputs": {
+    "transformedState": "mashed",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "Closes a real, longstanding gap, not a speculative addition: 'mashed' has been a listed potato.json possibleState since the very first potato entity in this repo, with NO action ever producing it — potato.json's own metadata.notes said so directly ('mash isn't wired up yet'). Same class of dead-label gap as pan.json's unreachable 'hot'/'cold' states, found the same way (checked the code, not assumed). requiredTools: masher (data/entities/masher.json, added alongside this action) rather than reusing mortar.json — a potato masher is a genuinely different, single-purpose tool from a mortar and pestle.",
+    "statePrerequisiteNote": "potato.json's statePrerequisites.mash is ['boiled', 'baked'] (using the array form of statePrerequisites added the same day this action was — see ingredient.ts's doc comment) — you cannot mash a raw potato; it has to already be cooked soft by one of two real, distinct paths: boiled (the conventional mashed-potato route) or baked-then-scooped (the twice-baked-potato route). Both are real, both produce genuinely mashable flesh, so this is an OR, not a single required predecessor.",
+    "consistencyNote": "Real, citable food science, not a cosmetic label: over-mashing ruptures too many of the potato's starch cells, releasing excess free starch (amylose/amylopectin) that makes the result gluey/gummy rather than light — the actual reason a ricer or food mill is traditionally preferred over a blender/food processor for mash (see Harold McGee, On Food and Cooking, for the underlying starch-cell-rupture mechanism; confidence: commonly_cited_unverified, same tier as this repo's other McGee citations, e.g. fry.json's heatLevel note). Informational only, same depth limit as every parameter in this vocabulary: this schema does not compute or enforce gumminess from mashing duration/technique, it only records which consistency was intended.",
+    "toolGapNote": "A ricer vs. a fork vs. this masher would produce genuinely different real textures (ricer: fine, fluffy, minimal cell rupture; fork: coarse, uneven) — not modeled as separate tools here, same 'built for what's asked, not speculative' discipline as elsewhere; masher.json's own notes flag this precisely rather than implying one generic tool covers every real technique.",
+    "retrySafeNote": "retrySafe: true — further mashing an already-mashed potato is physically continuous (more mashing just changes consistency further, same as CRUSH's coarse->fine_paste spectrum in garlic.json), not a discrete duplication risk."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "No intact potato pieces remain; texture matches the requested consistency (chunky/smooth)",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "repetitive_strain",
+      "severity": "low",
+      "note": "Manual mashing motion — minor, low-severity strain risk, not a cut/burn/impact hazard like most other tools in this vocabulary"
+    }
+  ],
+  "retrySafe": true
+}

@@ -22,6 +22,7 @@
     "capability-test:boil-egg-heat-sources": "tsx scripts/boil-egg-heat-sources.ts",
     "capability-test:simmer": "tsx scripts/simmer-vs-boil.ts",
     "capability-test:double-fry": "tsx scripts/double-fry-potato.ts",
+    "capability-test:complete-potato": "tsx scripts/complete-potato.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "ask": "tsx scripts/ask.ts",
     "build": "tsc -p ."

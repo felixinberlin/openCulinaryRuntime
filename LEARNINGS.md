@@ -898,3 +898,33 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   "check for an existing shape before building a new one" instinct that
   caught the heat-source circular-import case back on 2026-08-13's first
   entry in this file.
+
+### `crispy_french_fries` — capability existing and capability demonstrated are different claims
+
+- **Asked to "consolidate" frying knowledge, and checking the existing
+  recipes first (rather than assuming the new parameters were already in
+  use somewhere) found a real, worth-naming gap: nothing actually
+  exercised what had just been built.** `salted_fried_potatoes.json` (the
+  one FRY-using recipe with any depth) cuts its potato `diced` and calls
+  FRY with zero parameters — no `oilTempC`, no `doneness`, no `PAR_FRY`.
+  `oilTempC`/`PAR_FRY`/`topCookingMethod` all existed, were tested in
+  isolation (`capability-test:double-fry`), and validated cleanly — but
+  "the vocabulary can express X" and "a real dish in this repo actually
+  uses X" are different, both worth checking, and only the second is what
+  `ROADMAP.md`'s own "Capability tests" section claims to measure
+  ("Empirically checked, not reasoned about"). `crispy_french_fries.json`
+  closes that specific gap: the first recipe where shape (`julienne`),
+  `PAR_FRY`'s temperature, and `FRY`'s finishing temperature/doneness all
+  appear together on one dish, not exercised separately in three different
+  test scripts.
+- **Writing the recipe surfaced the shape↔duration disconnection concretely
+  instead of just abstractly.** `potato.json`'s `fryingScienceNote` already
+  said nothing connects `CUT`'s shape to frying duration — but actually
+  authoring a real recipe made the practical consequence visible: this
+  recipe's `julienne` shape and its `163°C`/`191°C` durations are only
+  correct together because they were BOTH chosen to match the same cited
+  source (Thermoworks' ~6mm stick assumption). Swap the shape to `diced`
+  with the same numbers and the schema validates identically while the
+  real-world result would be wrong (raw center or burnt-thin edges) — named
+  explicitly in the recipe's own `shapeConnectionNote` rather than left to
+  be rediscovered by whoever authors the next FRY-using recipe.

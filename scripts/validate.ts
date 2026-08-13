@@ -4,6 +4,7 @@ import { EntitySchema, type Entity } from "../src/ingredient.ts";
 import { ActionSchema, type Action } from "../src/action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "../src/recipe.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "../src/thermal.ts";
+import { HeatSourceProfileSchema, type HeatSourceProfile } from "../src/heat-source.ts";
 
 const root = join(import.meta.dirname, "..");
 
@@ -36,6 +37,7 @@ const entities = loadDir<Entity>(join(root, "data", "entities"), "entities", Ent
 const actions = loadDir<Action>(join(root, "data", "actions"), "actions", ActionSchema);
 const recipes = loadDir<RecipeScript>(join(root, "data", "recipes"), "recipes", RecipeScriptSchema);
 const ccps = loadDir<CriticalControlPoint>(join(root, "data", "ccps"), "ccps", CriticalControlPointSchema);
+const heatSources = loadDir<HeatSourceProfile>(join(root, "data", "heat-sources"), "heat-sources", HeatSourceProfileSchema);
 
 let crossFailed = 0;
 function fail(msg: string) {
@@ -179,12 +181,12 @@ for (const recipe of recipes.items.values()) {
   }
 }
 
-const failed = entities.failed + actions.failed + recipes.failed + ccps.failed + crossFailed;
-const total = entities.total + actions.total + recipes.total + ccps.total;
+const failed = entities.failed + actions.failed + recipes.failed + ccps.failed + heatSources.failed + crossFailed;
+const total = entities.total + actions.total + recipes.total + ccps.total + heatSources.total;
 if (failed > 0) {
   console.error(`\n${failed} problem(s) found.`);
   process.exit(1);
 }
 console.log(
-  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps); cross-references OK.`
+  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps, ${heatSources.total} heat-sources); cross-references OK.`
 );

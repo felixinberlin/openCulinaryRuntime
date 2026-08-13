@@ -30,6 +30,33 @@ import { CitationSchema } from "./ingredient.ts";
  * required BOIL `durationSeconds` (the time spent AT temperature, which is
  * what actually cooks the egg / clears a CCP) would be physically wrong;
  * this schema deliberately stays out of that number's way.
+ *
+ * ALSO SCIENTIFICALLY IMPORTANT, added when asked directly to not overstate
+ * precision here: delivered heat is a real, continuously time-varying curve
+ * for every one of these sources, never a constant — most obviously for
+ * wood (a fire's output drifts on its own between deliberate adjustments,
+ * see wood_fire.json), but genuinely also true for gas and vitro during
+ * their own startup ramp and any manual adjustment. `typicalPowerWattsRange`/
+ * `thermalEfficiencyPercentRange` and `estimatedPreheatSeconds` below use a
+ * SINGLE constant average value across the whole heating interval — a
+ * first-order energy-balance estimate (total energy delivered roughly equal
+ * to total energy needed), not a differential simulation of the actual
+ * curve. That's a deliberate, stated depth limit (a real curve model would
+ * need transient thermal-mass/heat-loss dynamics this repo has no reason to
+ * build yet), not an oversight — see `estimatedPreheatSeconds`'s own doc
+ * comment for exactly what the approximation does and doesn't capture.
+ *
+ * A skilled cook's actual fine control over delivered heat is NOT limited
+ * to the source's own dial/damper either: physically moving the pan itself
+ * — off direct flame, to a cooler edge of a fire, lifting it entirely for a
+ * few seconds — is a real, separate control technique, most essential on
+ * wood fire (where the fire itself often can't be finely dialed at all, so
+ * pan position IS the primary fine control) but genuinely used on gas too.
+ * `manualPositioningRelevance` records how load-bearing that technique
+ * typically is for a given source; it does not attempt to model the
+ * technique's actual thermal effect (how much cooler "the edge of the fire"
+ * actually is, precisely) — naming a real, unmodeled control axis honestly
+ * beats pretending `controlPrecision` above already accounts for it.
  */
 export const HeatSourceProfileSchema = z.object({
   id: z.string().min(1),
@@ -54,6 +81,12 @@ export const HeatSourceProfileSchema = z.object({
    *  airflow/fuel state drift on their own between deliberate adjustments. */
   responseSpeed: z.enum(["instant", "fast", "slow", "highly_variable"]),
   controlPrecision: z.enum(["precise", "moderate", "coarse"]),
+  /** How much a skilled cook typically relies on physically repositioning
+   *  the pan (not just adjusting the source's own control) to fine-tune
+   *  delivered heat — see this schema's top doc comment. "high" for wood
+   *  (often the ONLY fine control available), "low" for vitro (there's
+   *  usually nowhere cooler to move a pan TO on a flat zoned surface). */
+  manualPositioningRelevance: z.enum(["low", "moderate", "high"]),
   citation: CitationSchema,
   note: z.string().optional(),
   metadata: z.record(z.string(), z.unknown()).default({}),
@@ -79,6 +112,20 @@ export type HeatSourceProfile = z.infer<typeof HeatSourceProfileSchema>;
  * `waterSpecificHeatJPerKgK` defaults to water's real, standard value
  * (4186 J/(kg·K), CRC Handbook) rather than requiring every caller to pass
  * it — see `water.json`'s `thermophysical.specificHeatJPerKgK`.
+ *
+ * WHAT THIS DOES vs. DOES NOT CAPTURE, stated explicitly rather than left
+ * implicit (the same "don't imply more precision than was verified"
+ * standard this repo already holds citations to): it computes a single
+ * energy-balance estimate using ONE constant power/efficiency value for the
+ * whole interval. It does NOT model: the real startup ramp (a burner isn't
+ * at full output the instant it's lit), heat lost to the pot/room while
+ * heating (some of the energy budgeted here never reaches the water),
+ * moment-to-moment fluctuation (especially wood fire — see
+ * `wood_fire.json`), or a cook's manual pan-repositioning compensating for
+ * any of the above (`manualPositioningRelevance`). Treat the return value as
+ * a rough, physically-grounded ESTIMATE for planning purposes ("wood will
+ * take noticeably longer than gas"), not a precise prediction a robot
+ * should treat as a countdown timer.
  */
 export function estimatedPreheatSeconds(
   waterMassKg: number,

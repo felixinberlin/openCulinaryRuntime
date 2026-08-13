@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository state
 
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
-`action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`),
-`data/` has real entities/actions/recipes/CCPs (potato, egg + its byproducts, garlic,
-alioli variants, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
+`action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
+`heat-source.ts`, `egg-doneness.ts`), `data/` has real entities/actions/recipes/CCPs/
+heat-sources (potato, egg + its byproducts, garlic, alioli variants, gas/vitro/wood
+heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
 `engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`, no `data/*.json` dependency),
 `npm run validate` (schema + cross-reference check over the real `data/*.json` — the

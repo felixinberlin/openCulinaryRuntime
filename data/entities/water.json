@@ -19,10 +19,11 @@
   "thermophysical": {
     "densityKgPerM3": 1000,
     "boilingPointC": 100,
+    "specificHeatJPerKgK": 4186,
     "citation": {
       "source": "Standard physical constants for water at 1 atm (sea-level standard atmospheric pressure) — CRC Handbook of Chemistry and Physics",
       "confidence": "standard_reference",
-      "note": "boilingPointC: 100 is pressure-dependent, not a universal constant — real water boils below 100°C at altitude (e.g. ~95°C around 1900m/6200ft, ~93°C in Denver). This repo has no altitude/pressure parameter anywhere — every BOIL/POACH duration and every CCP threshold implicitly assumes sea-level pressure. A robot operating at meaningful altitude would need this accounted for; flagged as a real, unaddressed gap, not silently assumed away."
+      "note": "boilingPointC: 100 is pressure-dependent, not a universal constant — real water boils below 100°C at altitude (e.g. ~95°C around 1900m/6200ft, ~93°C in Denver). This repo has no altitude/pressure parameter anywhere — every BOIL/POACH duration and every CCP threshold implicitly assumes sea-level pressure. A robot operating at meaningful altitude would need this accounted for; flagged as a real, unaddressed gap, not silently assumed away. specificHeatJPerKgK: 4186 (4.186 J/(g·K)) added 2026-08-13 as the input src/heat-source.ts's estimatedPreheatSeconds needs — a real, essentially constant value across normal cooking temperatures, not a food-composition average like potato.json's/garlic.json's figures."
     }
   },
   "sensory": {

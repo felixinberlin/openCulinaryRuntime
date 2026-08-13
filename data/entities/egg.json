@@ -25,7 +25,7 @@
   },
   "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached"],
   "possibleTags": ["salted", "peppered", "chili_seasoned", "pasteurized", "shocked"],
-  "allowedTransformations": ["boil", "fry", "peel", "salt", "pepper", "chili", "separate", "crack", "poach", "pasteurize", "shock"],
+  "allowedTransformations": ["boil", "simmer", "fry", "peel", "salt", "pepper", "chili", "separate", "crack", "poach", "pasteurize", "shock"],
   "statePrerequisites": {
     "peel": "boiled",
     "shock": "boiled"
@@ -39,10 +39,12 @@
     "fry": "egg_cooking",
     "poach": "egg_cooking",
     "boil": "egg_cooking",
+    "simmer": "egg_cooking",
     "pasteurize": "egg_pasteurization_raw"
   },
   "capabilities": {
     "isBoilable": true,
+    "isSimmerable": true,
     "isFryable": true,
     "isPeelable": true,
     "isSeasonable": true,
@@ -75,6 +77,7 @@
     "pasteurizeNote": "isPasteurizable + criticalControlPointsByAction.pasteurize (data/ccps/egg_pasteurization_raw.json, advisoryOnly: false — a hard reject, not a warning, unlike egg_cooking.json's runny-yolk case). Added for the alioli-with-egg-yolk case: any recipe using raw separated yolk (data/entities/egg_yolk.json) should pasteurize the whole egg here BEFORE separating — see data/actions/separate.json's byproduct spawning, which now inherits the 'pasteurized' tag onto egg_yolk/egg_white (engine.ts tag-propagation fix) rather than silently dropping it.",
     "shockNote": "isShockable + statePrerequisites.shock: 'boiled' — see data/actions/shock.json's carryoverCookingNote for why this matters more than it looks like it should: BOIL's durationSeconds doesn't fully determine final doneness on its own, residual heat keeps cooking the egg after it leaves the pot until this action (or slow, uncontrolled ambient cooling) stops it.",
     "seasoningNote": "pepper/chili added 2026-08-13 alongside salt — see potato.json's identical seasoningNote.",
+    "simmerNote": "SIMMER (data/actions/simmer.json) added 2026-08-13, isSimmerable alongside isBoilable, reaching the SAME 'boiled' state BOIL does (see simmer.json's sharedTransformedStateNote) — statePrerequisites.peel/shock above ('boiled') therefore work unchanged for an egg cooked via SIMMER, no separate wiring needed. criticalControlPointsByAction.simmer reuses 'egg_cooking', the identical CCP boil/fry/poach already reference: Salmonella kill-time is a function of internal temperature and hold duration, not of how turbulently the water moved to get there. The real reason this verb exists for egg specifically: a rolling boil's turbulence is a common, preventable CAUSE of shell cracking during cooking — see crackContainmentNote below for what to do once a crack has already happened; this is the complementary, more-preventable half of the same real risk.",
     "crackContainmentNote": "Real, commonly-cited technique — salt (or vinegar) added to the BOILING WATER before/while boiling an egg, distinct from and NOT modeled via data/actions/salt.json's SALT verb, on purpose: SALT targets a food entity and adds tag 'salted' for a seasoning/flavor reason (osmosis, browning — see salt.json's timingNote); salting the water an egg boils in is NOT primarily about flavor at all — the shell/white barely absorb it during a ~10 minute boil, unlike a porous food like pasta. The real, causal mechanism is different: if the shell cracks during boiling, salt (and separately, vinegar/acid) speeds coagulation of the leaking egg white on contact with the salted water, sealing the crack faster and containing the mess, rather than letting white stream out into plain water. A commonly-repeated SECOND claim — that salting the water makes peeling easier — is NOT included here with the same confidence: evidence for it is mixed/disputed; easier peeling is more reliably explained by egg freshness (older eggs peel easier as the shell's inner membrane separates more with age/CO2 loss) and by shock.json's ice-bath shock, not by water salinity. Deliberately not built as a new action/mechanism this session (would need water.json to accept an additive for a non-seasoning, non-isSeasonable reason — a genuinely different concept SALT's isSeasonable/isSeasoning capabilities don't fit) — named precisely as a real, correctly out-of-scope gap rather than forced into the wrong verb just to have something."
   }
 }

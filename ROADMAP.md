@@ -290,8 +290,19 @@ covered by what exists:**
       per-action-call parameter on one ingredient.** Raised directly by the
       user while `SIMMER` was being built: "heat is a function inside a
       place where many ingredients can live. it increase and decrease in
-      time. You can heat up, or play with the pan." Concretely confirmed by
-      the code itself, not just conceptually true: `pan.json` already lists
+      time. You can heat up, or play with the pan." A real, external,
+      concrete case that needs exactly this and nothing less: Di Lorenzo &
+      Di Maio, "Periodic cooking of eggs," *Communications Engineering*
+      (Nature Portfolio), Feb 6 2025 —
+      https://www.nature.com/articles/s44172-024-00334-w — alternates an egg
+      between a 100°C and a 30°C water bath every 2 minutes for 32 minutes to
+      get a fully-set white with a sous-vide-creamy yolk. This repo's engine
+      cannot express that recipe at all today, not even informationally —
+      see `REFERENCES.md`'s "discussed, not yet embedded" section; this is
+      the one real source in this repo with no corresponding data/code
+      because the mechanism to hold it doesn't exist yet. Concretely
+      confirmed by the code itself too, not just conceptually true:
+      `pan.json` already lists
       `possibleStates: ["hot", "cold"]` with ZERO actions or engine support
       that ever reaches either one, and no `thermophysical` data — noted in
       its own `metadata.notes` as "not fully modeled" since before this

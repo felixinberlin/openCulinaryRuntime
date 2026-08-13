@@ -27,6 +27,13 @@ don't let this section (or any other doc here) go stale the way this one just di
 when the repo's real shape changes, update the doc that describes it in the same
 change, not "later."
 
+**Every factual claim in `data/*.json`/`src/*.ts` (a safety threshold, a physical
+constant, a technique claim) must trace to a real source, logged in
+`REFERENCES.md`.** Compiled 2026-08-13 ahead of this repo going public — nothing here
+claims novel food science; the schema/engine is the original contribution, the facts
+it enforces are cited. When adding a new citation to any `data/*.json`/`src/*.ts` file,
+add it to `REFERENCES.md` in the same change, same discipline as `LEARNINGS.md` above.
+
 ## What this repo is for
 
 `CLAUDE_DEV_CTX.md` is the design blueprint for the **Open Culinary Runtime (OCR)**, a project that models recipes as deterministic, executable state machines (an Entity-Component-System, not static text) rather than prose instructions. Treat it as the system prompt/spec for any code written in this repo — new files should follow its architecture rather than a generic recipe-app design.

@@ -1,0 +1,18 @@
+{
+  "id": "vitro",
+  "names": {
+    "en": "Ceramic-glass radiant electric hob (\"vitro\")",
+    "es": "Vitrocerámica"
+  },
+  "typicalPowerWattsRange": { "min": 1200, "max": 2100 },
+  "thermalEfficiencyPercentRange": { "min": 65, "max": 74 },
+  "responseSpeed": "slow",
+  "controlPrecision": "moderate",
+  "citation": {
+    "source": "Commonly cited consumer cooktop comparisons (e.g. U.S. Department of Energy consumer cooktop-efficiency guidance; typical single-zone radiant electric hob wattage from consumer appliance spec sheets)",
+    "confidence": "commonly_cited_unverified",
+    "note": "Representative range, not a specific model's spec sheet — no single primary source looked up this session."
+  },
+  "note": "IMPORTANT, commonly confused distinction: 'vitro'/vitrocerámica is a RADIANT electric hob — a resistive coil heats the ceramic glass, which then conducts heat into the pan. It is NOT induction, despite both having a flat glass-look surface and often being confused as the same thing: induction heats the pan directly via a magnetic field (much faster response, works only with ferromagnetic cookware, not modeled as a separate entity here since it wasn't asked about). Vitro's 'slow' response is real, physical thermal lag: the glass and coil have real thermal mass, so turning the dial down does NOT reduce delivered heat immediately the way closing a gas valve does — the surface stays hot and keeps transferring heat for a real, noticeable period after being turned down. This is the single most commonly-experienced practical difference from gas: overshooting a target temperature is easy on vitro precisely because the feedback loop a cook is used to (turn it down, heat drops now) doesn't hold the same way.",
+  "metadata": {}
+}

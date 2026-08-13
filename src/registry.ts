@@ -4,6 +4,7 @@ import { EntitySchema, type Entity } from "./ingredient.ts";
 import { ActionSchema, type Action } from "./action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "./recipe.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "./thermal.ts";
+import { HeatSourceProfileSchema, type HeatSourceProfile } from "./heat-source.ts";
 
 /** Parses every *.json file in `dir` against `schema`, keyed by its `id`. Throws on the first invalid file. */
 function loadDir<T extends { id: string }>(
@@ -37,4 +38,8 @@ export function loadRecipes(recipesDir: string): Map<string, RecipeScript> {
 
 export function loadCcps(ccpsDir: string): Map<string, CriticalControlPoint> {
   return loadDir(ccpsDir, CriticalControlPointSchema);
+}
+
+export function loadHeatSources(heatSourcesDir: string): Map<string, HeatSourceProfile> {
+  return loadDir(heatSourcesDir, HeatSourceProfileSchema);
 }

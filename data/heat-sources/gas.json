@@ -1,0 +1,18 @@
+{
+  "id": "gas",
+  "names": {
+    "en": "Gas burner",
+    "es": "Fuego de gas"
+  },
+  "typicalPowerWattsRange": { "min": 1800, "max": 3500 },
+  "thermalEfficiencyPercentRange": { "min": 32, "max": 40 },
+  "responseSpeed": "instant",
+  "controlPrecision": "moderate",
+  "citation": {
+    "source": "Commonly cited consumer cooktop comparisons (e.g. U.S. Department of Energy consumer cooktop-efficiency guidance; home-burner output figures commonly given in BTU/hr, ~6,000-12,000 BTU/hr converted here to watts)",
+    "confidence": "commonly_cited_unverified",
+    "note": "Representative home-kitchen range, not a specific model's spec sheet — no single primary source looked up this session. Gas cooktops are consistently cited as the LEAST efficient common home heat source (most heat escapes around the pan's sides as visible flame) despite feeling 'powerful' because the response is instant and visible — power output and delivered-heat efficiency are genuinely different numbers, easy to conflate."
+  },
+  "note": "Flame size visibly and immediately tracks the control knob — the most direct, immediate feedback loop of the three, which is why 'instant' response coexists with only 'moderate' control precision here: adjustability isn't the same as precision. Holding a genuinely gentle, even simmer on gas still takes attention (uneven flame ring, easy to overshoot a very low setting) — a real, commonly-experienced limitation, not a contradiction of 'instant'.",
+  "metadata": {}
+}

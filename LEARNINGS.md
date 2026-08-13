@@ -575,3 +575,104 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   one to build next unprompted or claiming "all common knowledge" was
   actually achieved in one session — "all" is not a completable claim to
   make honestly here, a checkable list is.
+
+### Heat sources (gas/vitro/wood) + egg-boiling doneness timing
+
+- **A new, real-world domain (heat providers) needed its own top-level
+  knowledge collection, not a field bolted onto `EntitySchema`, and
+  `CriticalControlPointSchema`/`data/ccps/` was the right precedent to
+  copy, not `EntitySchema.thermophysical`.** Tried to attach heat-source
+  facts to `EntitySchema` first and hit a real circular-import problem
+  immediately: a `HeatSourceProfileSchema` needs `CitationSchema` (defined
+  in `ingredient.ts`), but making `EntitySchema` reference
+  `HeatSourceProfileSchema` back would require `ingredient.ts` to import
+  from the new file too — a genuine cycle, not a style preference. Solved
+  by recognizing this is structurally the SAME problem `thermal.ts`/
+  `data/ccps/` already solved for CCPs (a fact that doesn't belong to one
+  entity, referenced BY id from wherever needed): `src/heat-source.ts` +
+  `data/heat-sources/*.json` + `registry.ts`'s `loadHeatSources`, one-way
+  import from `heat-source.ts` to `ingredient.ts` only. Worth recognizing
+  generally: hitting a circular import is sometimes a signal the new
+  concept is a peer of an existing top-level collection, not a child field
+  of an existing entity — check for a same-shaped precedent already in the
+  repo before restructuring imports to force the field-on-entity shape.
+- **The single most important fact to get right here, stated explicitly
+  because it's a real, common misconception: which heat source you use
+  changes how FAST water reaches boiling, never the TEMPERATURE it boils
+  at.** Water is ~100°C at sea level whether it's a bare simmer or a
+  roaring boil — pressure/altitude is the only thing that moves that
+  number (`water.json`'s existing citation). Modeling heat source as
+  adjusting `BOIL`'s required `durationSeconds` (time spent AT
+  temperature — what actually cooks the egg) would have been physically
+  wrong, not just imprecise; `heat-source.ts`'s new `heatSource` parameter
+  on `boil.json` is deliberately informational-only, same non-enforcement
+  pattern as `heatLevel` elsewhere, specifically so it can't accidentally
+  end up feeding into that number.
+- **Asked directly not to overstate precision here, and the honest answer
+  required two separate corrections to what had just been built, not one.**
+  (1) `estimatedPreheatSeconds` uses one constant average power/efficiency
+  value across the whole heating interval — real delivered heat is a
+  continuously time-varying curve (most obviously for wood fire, but
+  genuinely true for gas/vitro's own startup ramp too); this is now stated
+  explicitly as a first-order energy-balance estimate, not a curve
+  simulation, matching `thermal.ts`'s own "validity condition" discipline
+  for its D/z-value model. (2) A skilled cook's real fine control over
+  delivered heat is NOT fully captured by the source's own dial/damper —
+  physically moving the pan (off flame, to a fire's cooler edge, lifting
+  it) is a real, separate control technique, most load-bearing on wood
+  fire specifically because the fire itself often can't be finely dialed
+  at all. Added `manualPositioningRelevance` (low/moderate/high per source)
+  to name this honestly rather than let `controlPrecision` alone imply it
+  was already covered. General lesson: when told "I don't want to go that
+  deep, but be scientifically accurate," the right response is not
+  refusing to note the limitation — it's stating the limitation precisely
+  enough that a reader knows exactly what's NOT modeled, at whatever depth
+  the model itself stays.
+- **"If I tell a robot I want my egg medium boiled, I want it to
+  understand it" pointed at a real, load-bearing, previously-silent gap:
+  `boil.json`'s `yolkDoneness` (soft/medium/hard) was a label with ZERO
+  attached meaning anywhere in this repo** — informational-only, by design,
+  same as `heatLevel`/`doneness` elsewhere, but for THIS parameter that
+  meant "medium" resolved to literally nothing a robot (or a human) could
+  act on. Closed at the reference-data layer, not the engine layer, on
+  purpose: `src/egg-doneness.ts`'s `EGG_BOIL_DONENESS` gives "medium" a
+  real, cited seconds range (480-540s) instead of nothing — but
+  `applyAction` still doesn't compute `durationSeconds` FROM `yolkDoneness`
+  automatically. That's a deliberate line, not an oversight: CONCEPT.md
+  §14 already establishes that resolving a customer's stated intent into
+  concrete parameters is the LLM-intent-layer's job, not this schema's
+  (the exact same principle `fry.json`'s tortilla-francesa/French-omelette
+  disambiguation note applies) — this repo's job is making sure that
+  resolution has something REAL and GROUNDED to resolve against, which it
+  now does, not doing the resolving itself.
+- **A new reference table is worth cross-checking against data that
+  already existed before it, not just trusting it in isolation.**
+  `EGG_BOIL_DONENESS`'s "soft" range (360-420s) was checked against
+  `soft-boiled-egg.json`'s already-existing choice of 390s (picked in an
+  earlier session, before this table existed) — it falls inside the range,
+  a real consistency check, not a coincidence assumed without checking.
+  Turned into a permanent unit test (`tests/egg-doneness.test.ts`) so this
+  stays checked on every future change, not just verified once by hand.
+  Cold-start timing was deliberately left OUT of the new table for the
+  opposite reason — checked whether preheat-time + hold-time could just be
+  added together for that case and concluded no (the egg cooks gradually
+  through the whole ramp, not just once boiling), so a wrong number wasn't
+  shipped just to have complete coverage.
+- **Salt added to egg-boiling water is real, common technique — but it is
+  NOT an instance of `SALT`'s existing seasoning mechanism, and forcing it
+  into that verb would have been a category error.** `SALT`/`addsTag:
+  "salted"` exists because of osmosis/browning/flavor chemistry
+  (`salt.json`'s `timingNote`); salting boiling water for an egg is
+  causally different (faster coagulation of leaked white sealing a crack
+  if the shell breaks) and isn't really about flavor at all — the egg
+  barely absorbs salt from the water in ~10 minutes, unlike a porous food
+  cooked longer in salted water (pasta, potato). Documented as a real,
+  correctly-scoped, deliberately-not-built gap (`egg.json`'s new
+  `crackContainmentNote`) rather than either ignored or mis-modeled via
+  the wrong verb just to "have something" — same discipline
+  `infuse.json`'s `safetyNote` already established for a differently-shaped
+  CCP mismatch. Also explicitly did NOT repeat the commonly-claimed
+  "salted water peels eggs easier" — checked confidence on that specific
+  claim separately from the crack-containment one and found it weaker/
+  disputed (freshness and shocking are the better-supported explanations),
+  and said so rather than flattening both claims to the same certainty.

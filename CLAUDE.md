@@ -66,6 +66,18 @@ in the original plan — the whole `data/` directory of JSON files, validated ag
 these schemas rather than defined in TypeScript, is itself a divergence from
 `CLAUDE_DEV_CTX.md`'s framing, though a compatible one.
 
+Two more files with no counterpart in the original plan, both added 2026-08-13:
+`src/heat-source.ts` (`HeatSourceProfileSchema` + `estimatedPreheatSeconds`,
+`data/heat-sources/*.json`: gas/vitro/wood — real, cited heat-provider performance
+data, e.g. "how long to boil water on a wood fire vs. gas") and
+`src/egg-doneness.ts` (`EGG_BOIL_DONENESS`, a real cited seconds-range table for
+`boil.json`'s `yolkDoneness` — closes the "if I tell a robot medium boiled, I want it
+to understand it" gap at the reference-data layer). Both are CCP-shaped (their own
+top-level `data/` collection + schema + `registry.ts` loader, mirroring
+`thermal.ts`/`data/ccps/`) rather than fields grafted onto `EntitySchema` — see
+`LEARNINGS.md` 2026-08-13 for why, and `ROADMAP.md`'s "Common culinary knowledge
+coverage" section for the surrounding context this was built under.
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.

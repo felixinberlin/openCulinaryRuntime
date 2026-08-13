@@ -39,6 +39,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Soft-boiled egg (jammy, shocked, peeled) | ✅ Makeable | `npm run recipe -- soft_boiled_egg` |
 | Tortilla de Betanzos (liquid, flowing center) | ✅ Makeable — **found and fixed a real HACCP gap** | `npm run recipe -- tortilla_de_betanzos` |
 | Salt/pepper/chili, same potato (seasoning generalization) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:season-potato` |
+| Boiled egg — gas vs. vitro vs. wood preheat time, doneness timing | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:boil-egg-heat-sources` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -142,6 +143,29 @@ proven runnable, not just asserted.
       actions were never cross-checked against the target entity's own
       `possibleTags` — `scripts/validate.ts` now flags this (NOTE-level,
       proven to fire — see `LEARNINGS.md` 2026-08-13).
+- [x] **Heat provider physics (gas/vitro/wood) + egg-boiling doneness
+      timing** — closed 2026-08-13, `src/heat-source.ts` (`HeatSourceProfileSchema`,
+      `estimatedPreheatSeconds`; `data/heat-sources/gas.json`, `vitro.json`,
+      `wood_fire.json`) + `src/egg-doneness.ts` (`EGG_BOIL_DONENESS`, a real
+      cited soft/medium/hard → seconds-range table). Gets the core physics
+      right explicitly: heat source changes preheat TIME and control
+      precision, never the boiling TEMPERATURE itself (always ~100°C at sea
+      level — conflating the two is a real, common misconception this
+      schema deliberately avoids). Also names, without modeling
+      numerically, two real depth limits raised directly by the user:
+      delivered heat is a genuine time-varying curve, not the constant
+      average this uses; and a skilled cook's pan-positioning (essential on
+      wood fire, where the fire itself often can't be finely dialed) is a
+      real, separate control axis (`manualPositioningRelevance`) distinct
+      from the source's own `controlPrecision`. Proven end-to-end:
+      `npm run capability-test:boil-egg-heat-sources`.
+- [x] Salt-in-boiling-water for egg (crack containment) — documented as a
+      real, correctly-scoped gap rather than force-fit into `SALT`'s
+      seasoning mechanism, which it isn't: `egg.json`'s new
+      `crackContainmentNote` explains the real causal mechanism (faster
+      coagulation of leaked white sealing a crack, not flavor) and
+      explicitly does NOT endorse the commonly-repeated but weakly-evidenced
+      "salt water peels easier" claim.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`

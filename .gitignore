@@ -34,3 +34,8 @@ venv/
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 graft/
+
+# Repomix full-repo dumps — regenerable snapshots for feeding an LLM context
+# window, not source of truth; don't commit them.
+repomix-output.md
+

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Open Culinary Runtime — core schema and validation engine",
+  "license": "MIT",
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts",
     "validate": "tsx scripts/validate.ts",

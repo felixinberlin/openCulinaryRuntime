@@ -449,10 +449,23 @@ covered by what exists:**
       is still no `FILL`/`POUR`/`PLACE` verb in `data/actions/*.json`, and
       the "instances co-located in one tool instance sharing its state"
       engine concept below is still unbuilt. Two ingredients simmering in
-      the same pot still get independent `applyAction` calls. No shell-
-      fragility/handling-care mechanism exists for "place the egg
-      delicately" either — named as a real, separate, still-open gap, not
-      solved by this addition.
+      the same pot still get independent `applyAction` calls.
+      **The "place the egg delicately" half partially closed, same day**
+      (`boil.json`/`simmer.json`'s new `placementMethod` parameter,
+      `egg.json`'s `crackPreventionNote`) — "of course, the robot has to try
+      not to break the egg" turned up that a real crack risk has THREE
+      separate real mechanisms, not one, each already-or-newly covered by a
+      different piece of this vocabulary: mechanical impact at entry
+      (`placementMethod`, new), thermal shock at entry (`startMethod`,
+      already existed — now cross-referenced as a real, unresolved tension
+      against `EGG_BOIL_DONENESS`'s `boiling_start` assumption), and
+      turbulence during cooking (`simmer.json`'s pre-existing `whyPerTarget`
+      note — `SIMMER` exists specifically as that mitigation). Deliberately
+      informational only, same as every other categorical technique
+      parameter here — no crack-probability simulation was built or
+      implied; a real, un-built escalation (piercing the egg's air-cell end
+      before cooking) is named in `boil.json`'s `placementMethodNote` rather
+      than silently added as a new mechanism.
       **Extended the same day, same root cause, raised again unprompted by
       the user in different words**: "transformations usually take time...
       states can change, so its cooking and life." `applyAction` is

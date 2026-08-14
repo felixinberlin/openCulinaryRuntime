@@ -129,6 +129,15 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   against a primary source; internally cross-checked instead against
   `data/recipes/soft-boiled-egg.json`'s pre-existing 390s choice, which
   falls inside the cited "soft" range.
+- **Egg-boiling technique guides converging on the same recommendation**
+  (e.g. J. Kenji López-Alt/Serious Eats "The Food Lab"; America's Test
+  Kitchen) — lowering an egg into the water via a slotted spoon/skimmer,
+  rather than dropping it, is standard advice specifically to avoid a
+  mechanical-impact shell crack against the pot or another egg. Used in
+  `data/actions/boil.json`/`simmer.json`'s `placementMethod` parameter
+  (`lowered_with_spoon`). Confidence: `commonly_cited_unverified` — same
+  tier and same source family as the entry above, not independently
+  re-verified this session.
 - **Harold McGee, *On Food and Cooking*** — general food-science reference
   used for: egg white/yolk coagulation temperature ranges
   (`data/ccps/egg_cooking.json`'s `coagulationReferenceC`), typical

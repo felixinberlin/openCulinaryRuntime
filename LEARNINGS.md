@@ -1185,3 +1185,38 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   more real, physically-distinct vessel and proving BOIL executes against
   it with zero changes to `boil.json` is what actually distinguishes "this
   generalizes" from "this was renamed."
+
+### `placementMethod` — "don't break the egg" split into three real mechanisms, closed exactly one
+
+- **A single, casual instruction ("of course, the robot has to try not to
+  break the egg") turned out to name three physically distinct crack
+  mechanisms, not one — and two of the three already had real coverage
+  elsewhere in this vocabulary, found by checking before building instead
+  of assuming a new mechanism was needed from scratch.** `startMethod`'s
+  existing note already named thermal shock (`cold_start` vs.
+  `boiling_start`) as a real crack factor; `simmer.json`'s `whyPerTarget`
+  note already named turbulence-during-cooking as "a common, preventable
+  CAUSE of shell cracking." The one genuinely uncovered mechanism was
+  mechanical impact AT ENTRY — the literal "place it delicately" moment —
+  which is what `placementMethod` actually closes. Naming all three and
+  being precise about which one is new avoided both under-claiming (missing
+  that two were already real, cited coverage) and over-claiming (implying
+  one new parameter closes "egg cracking" as a topic).
+- **Resisted turning this into a crack-probability simulation, which would
+  have been a strictly worse answer than an honest categorical parameter.**
+  It would be possible to invent a plausible-looking numeric "crack risk
+  score" as a function of `placementMethod`/`startMethod`/turbulence — but
+  nothing in this repo's citation trail supports assigning real numbers to
+  that, and doing so would violate the same standard `fry.json`'s
+  `heatLevel`/`agitation` notes already hold: don't imply more precision
+  than was actually verified. A closed enum recording what technique was
+  used is honest; a fabricated probability model wearing real-looking
+  numbers would not be, and would be a worse answer specifically because it
+  would look more rigorous than it is.
+- **Named a real, further technique (piercing the egg's air-cell end) as
+  explicitly NOT built, rather than either building it speculatively or
+  omitting it silently.** It's real, commonly-cited, and would need a
+  currently-nonexistent shell-integrity/piercing mechanism — a bigger,
+  separate addition with no forcing case yet. Recording it as known-and-
+  deferred keeps the gap list honest without expanding scope past what was
+  actually asked.

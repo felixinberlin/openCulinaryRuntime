@@ -66,16 +66,19 @@ while (!isAtBoiling(place, water)) {
 console.log(`   Boiling reached (${water.thermophysical!.boilingPointC}°C) after ${elapsedPreheatSeconds}s.\n`);
 
 // ---------------------------------------------------------------------
-// 3. "Put the egg very delicately." — the one step this repo genuinely has
-//    no mechanism for: no fragility concept on egg.json, no PLACE/LOWER
-//    verb, no distinction between a mechanical-impact crack (dropped too
-//    hard) and a thermal-shock crack (cold egg into 100°C water). Named
-//    here rather than silently skipped — this script performs the step
-//    procedurally (just adding the egg to the sequence) without any real
-//    engine backing for "delicately," because none exists yet.
+// 3. "Put the egg very delicately." — closed 2026-08-14 (boil.json's new
+//    placementMethod parameter, egg.json's crackPreventionNote):
+//    "lowered_with_spoon" is the real, cited technique that avoids the
+//    mechanical-impact crack a drop risks. Still informational only — no
+//    crack-probability simulation, same honesty limit as every other
+//    categorical technique parameter here — but the technique choice is
+//    now real, named vocabulary a robot's plan can record, not silently
+//    absent. See egg.json's crackPreventionNote for the OTHER two real
+//    crack mechanisms (thermal shock at entry, turbulence during cooking)
+//    this one parameter deliberately does NOT also cover.
 // ---------------------------------------------------------------------
-console.log('3. Egg placed into the boiling water. ("Delicately" — recorded here as a real, unmodeled gap: no');
-console.log("   handling-care or shell-fragility mechanism exists anywhere in this repo yet.)\n");
+const placementMethod = "lowered_with_spoon" as const;
+console.log(`3. Egg placement: "${placementMethod}" — avoids the mechanical-impact crack a drop risks (boil.json's placementMethodNote).\n`);
 
 // ---------------------------------------------------------------------
 // 4. "Is salt needed?" — No. egg.json's own crackContainmentNote is
@@ -109,7 +112,7 @@ const boiled = applyAction(
   actions.get("boil")!,
   entities,
   tools,
-  { durationSeconds: String(holdSeconds), yolkDoneness },
+  { durationSeconds: String(holdSeconds), yolkDoneness, placementMethod },
   ingredients,
   ccps,
   policy
@@ -130,7 +133,8 @@ console.log(
 console.log(
   "\nStill NOT closed by this script, named rather than implied covered: no FILL/PLACE Action exists in " +
     "data/actions/*.json (this sequence is procedural TypeScript, not a validated recipe.sequence step a robot's " +
-    "planner could select the way it selects boil.json today); no shell-fragility/handling-care mechanism; no " +
-    "real closed-loop temperature SENSOR (isAtBoiling here reads place.ts's own simulated state, not a physical " +
-    "thermometer) — ENGINE_INVARIANTS.md #11's control/perception gap stands exactly as documented."
+    "planner could select the way it selects boil.json today); placementMethod (above) records a real technique " +
+    "CHOICE, not a crack-probability simulation — no shell-integrity/fragility model exists; no real closed-loop " +
+    "temperature SENSOR (isAtBoiling here reads place.ts's own simulated state, not a physical thermometer) — " +
+    "ENGINE_INVARIANTS.md #11's control/perception gap stands exactly as documented."
 );

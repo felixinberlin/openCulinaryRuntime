@@ -782,20 +782,25 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
         layered on top of the existing large-egg-only table, not a second
         competing one; `"large"` is an exact no-op, so every recipe
         authored before this parameter existed is unaffected.
-      - **In-shell pasteurization citation — verified, NOT applied.**
-        Found real, peer-reviewed backing (Bermúdez-Aguirre & Niemira,
-        *Comprehensive Reviews in Food Science and Food Safety*, 2023:
-        "the standard pasteurization method for shell eggs is 57°C for
-        57.5 minutes") close to but not identical to
-        `egg_pasteurization_raw.json`'s existing 57°C/65min figure — see
-        `REFERENCES.md`'s "Discussed, not yet embedded" section for the
-        full finding, including a second peer-reviewed CFD study
-        corroborating that the existing 65min figure is conservative, not
-        unsafely short. Deliberately did NOT change the enforced
-        `heldSeconds` unilaterally — a real, safety-relevant threshold for
-        serving raw egg needs the repo owner's explicit sign-off before
-        being altered mid-review, not a silent "verification" that happens
-        to also change what's enforced. See `LEARNINGS.md` 2026-08-14.
+      - **In-shell pasteurization citation — verified, threshold
+        deliberately kept unchanged, per explicit sign-off asked for and
+        given.** Found real, peer-reviewed backing (Bermúdez-Aguirre &
+        Niemira, *Comprehensive Reviews in Food Science and Food Safety*,
+        2023: "the standard pasteurization method for shell eggs is 57°C
+        for 57.5 minutes") shorter than `egg_pasteurization_raw.json`'s
+        existing 57°C/65min figure, plus a second peer-reviewed CFD study
+        with bracketing figures shorter still — both corroborate that
+        65min carries real safety margin, not that it's unsafely short.
+        Surfaced as a real, safety-relevant decision rather than applied
+        unilaterally: asked the repo owner whether to tighten the enforced
+        `heldSeconds` to the peer-reviewed figure or keep the existing,
+        more conservative one — answer was to KEEP 65min, so `heldSeconds`
+        is unchanged; the citation is upgraded in place
+        (`egg_pasteurization_raw.json`'s `metadata.
+        independentVerificationNote`, `REFERENCES.md`) to record the real
+        verification that happened, without silently tightening a food-
+        safety threshold as a side effect of it. See `LEARNINGS.md`
+        2026-08-14.
       - **Cold-start integration, carryover-cooking quantification,
         turbulence quantification — correctly identified by the report
         itself as real, larger, deferred work** ("would need temperature-

@@ -1477,21 +1477,26 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   against real-world commonly-cited figures without needing to trust the
   formula blindly.
 - **A real, safety-relevant number (in-shell pasteurization hold time) got
-  found, verified against a real peer-reviewed source, and DELIBERATELY
-  NOT applied — the correct action was surfacing the finding, not auto-
-  correcting the CCP.** The temptation, having found a specific,
-  real, peer-reviewed figure (57.5min) close to the existing "commonly
-  cited, unverified" one (65min), would be to just update `heldSeconds`
-  and upgrade the citation confidence in the same motion — the report
-  explicitly asked for exactly this verification. But this number gates
-  whether raw egg is safe to serve someone with no other mitigation (the
-  CCP's own note: "the request that motivated this file" was serving raw
-  egg to a child) — a hard-to-reverse, safety-relevant change belongs to
-  the repo owner's explicit decision, not something that happens as a
-  side effect of "use the knowledge in the report." Logged the finding in
-  full (`REFERENCES.md`'s "Discussed, not yet embedded" section, matching
-  the precedent that section already set for a real-but-unapplied source)
-  and left the enforced number untouched pending that decision.
+  found, verified against a real peer-reviewed source, and surfaced as a
+  decision rather than applied automatically — the correct action was
+  asking, not auto-correcting the CCP.** The temptation, having found a
+  specific, real, peer-reviewed figure (57.5min) close to the existing
+  "commonly cited, unverified" one (65min), would be to just update
+  `heldSeconds` and upgrade the citation confidence in the same motion —
+  the report explicitly asked for exactly this verification. But this
+  number gates whether raw egg is safe to serve someone with no other
+  mitigation (the CCP's own note: "the request that motivated this file"
+  was serving raw egg to a child) — a hard-to-reverse, safety-relevant
+  change belongs to the repo owner's explicit decision, not something that
+  happens as a side effect of "use the knowledge in the report." Asked;
+  the answer was to KEEP the existing, more conservative 65min — the
+  citation itself was still worth upgrading in place either way (a real
+  peer-reviewed source now backs the note, whichever number was kept), so
+  `egg_pasteurization_raw.json`'s `metadata` and `REFERENCES.md` were
+  updated to record the verification without touching `heldSeconds`. The
+  general lesson: "verify this citation" and "apply what you found" are
+  two different requests even when phrased as one, for exactly the class
+  of number where getting it wrong has a real, non-hypothetical cost.
 - **The altitude fix is the fourth real proof of `place.ts`'s
   `advanceTempSeconds` generalization, not a coincidence worth letting
   pass unremarked.** Water/boiling (original), oil/frying, potato (via

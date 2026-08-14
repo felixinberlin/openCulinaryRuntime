@@ -52,7 +52,25 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `commonly_cited_unverified` — the file itself flags that the exact
   published minutes haven't been independently verified against a primary
   source, and real commercial process parameters vary/are sometimes
-  proprietary.
+  proprietary. **Independently checked 2026-08-14** (external scientific
+  review request): Bermúdez-Aguirre & Niemira, "A review on egg
+  pasteurization and disinfection: Traditional and novel processing
+  technologies," *Comprehensive Reviews in Food Science and Food Safety*
+  (2023), https://doi.org/10.1111/1541-4337.13088, states "the standard
+  pasteurization method for shell eggs is 57°C for 57.5 minutes" —
+  real, peer-reviewed, and shorter than this file's existing 65min. A
+  second peer-reviewed CFD study (Applied Sciences, MDPI, 2025, "Analysis
+  of Shell Egg Pasteurization Using Computational Fluid Dynamics") gives
+  bracketing large-egg 5-log-Salmonella-reduction figures at 56°C
+  (37.2min) and 58°C (29.1min), shorter still. Both corroborate that
+  65min carries real safety margin, not that it's unsafely short —
+  `heldSeconds` deliberately KEPT at 65min after this check, not tightened
+  to the peer-reviewed figure (see `egg_pasteurization_raw.json`'s
+  `metadata.independentVerificationNote` and `LEARNINGS.md` 2026-08-14 for
+  the full reasoning). Confidence for the Bermúdez-Aguirre figure itself:
+  `standard_reference` (peer-reviewed review article) — the repo's own
+  enforced value stays at the more conservative `commonly_cited_unverified`
+  figure by deliberate choice.
 - **Stumbo's thermal death time model (D-value/z-value kinetics)** — the
   standard textbook thermobacteriology model the FDA Food Code's own
   multi-point tables were themselves derived from; not a novel formula.
@@ -221,28 +239,6 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   implement it. Listed for the same transparency reason as everything
   else: it genuinely informed this repo's design discussion, even though no
   code or data currently encodes it.
-- **Bermúdez-Aguirre & Niemira, "A review on egg pasteurization and
-  disinfection: Traditional and novel processing technologies,"
-  *Comprehensive Reviews in Food Science and Food Safety* (2023),
-  https://doi.org/10.1111/1541-4337.13088** — found 2026-08-14 while
-  independently verifying `egg_pasteurization_raw.json`'s existing
-  "commonly-cited, unverified" 57°C/65min figure, per an external
-  scientific review's request. States "the standard pasteurization method
-  for shell eggs is 57°C for 57.5 minutes" — a real, peer-reviewed figure
-  close to but not identical to this repo's existing one (57.5min vs.
-  65min). A separate peer-reviewed CFD study (Applied Sciences, MDPI,
-  2025, "Analysis of Shell Egg Pasteurization Using Computational Fluid
-  Dynamics") gives bracketing large-egg figures at 56°C (37.2min) and
-  58°C (29.1min) for a 5-log Salmonella reduction — both notably shorter
-  than 65min, corroborating that this repo's existing figure is
-  conservative, not unsafely short. Deliberately **not yet applied** to
-  `egg_pasteurization_raw.json`'s enforced `heldSeconds` — a real,
-  safety-relevant threshold change needs the repo owner's explicit
-  sign-off before altering an enforced value, not a unilateral update
-  mid-review; see `LEARNINGS.md` 2026-08-14 for the full reasoning.
-  Confidence: `standard_reference` for the Bermúdez-Aguirre figure itself
-  (peer-reviewed review article) — logged here, ahead of being embedded,
-  the same as the Di Lorenzo & Di Maio entry above.
 
 ## Simulation / robot-execution research
 

@@ -1,6 +1,7 @@
 import { EntitySchema, type Entity } from "../src/ingredient.ts";
 import { ActionSchema, type Action } from "../src/action.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "../src/thermal.ts";
+import { HeatSourceProfileSchema, type HeatSourceProfile } from "../src/heat-source.ts";
 import type { z } from "zod";
 
 /**
@@ -46,6 +47,27 @@ export function makeCcp(
     heldSeconds: 60,
     pathogen: "Salmonella spp.",
     source: "test fixture — not a real citation",
+    ...overrides,
+  });
+}
+
+/** Consolidated 2026-08-14 (was duplicated identically in
+ *  heat-source.test.ts and place.test.ts — an external review correctly
+ *  flagged the duplication, DRY per this file's own stated purpose). An
+ *  "ideal" heat source (1000W, 100% efficiency) by default — deterministic,
+ *  easy-to-hand-check numbers for tests that don't care about heat-source
+ *  variation, same reasoning the other three builders' defaults follow. */
+export function makeHeatSource(
+  overrides: Partial<z.input<typeof HeatSourceProfileSchema>> & { id: string }
+): HeatSourceProfile {
+  return HeatSourceProfileSchema.parse({
+    names: { en: overrides.id },
+    typicalPowerWattsRange: { min: 1000, max: 1000 },
+    thermalEfficiencyPercentRange: { min: 100, max: 100 },
+    responseSpeed: "instant",
+    controlPrecision: "precise",
+    manualPositioningRelevance: "low",
+    citation: { source: "test fixture", confidence: "commonly_cited_unverified" },
     ...overrides,
   });
 }

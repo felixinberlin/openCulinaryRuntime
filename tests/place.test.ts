@@ -1,22 +1,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { HeatSourceProfileSchema, type HeatSourceProfile } from "../src/heat-source.ts";
 import { emptyPlace, pourInto, advanceHeatSeconds, isAtBoiling } from "../src/place.ts";
-import { makeEntity } from "./helpers.ts";
-
-function makeHeatSource(overrides: Partial<HeatSourceProfile> & { id: string }): HeatSourceProfile {
-  return HeatSourceProfileSchema.parse({
-    names: { en: overrides.id },
-    typicalPowerWattsRange: { min: 1000, max: 1000 },
-    thermalEfficiencyPercentRange: { min: 100, max: 100 },
-    responseSpeed: "instant",
-    controlPrecision: "precise",
-    manualPositioningRelevance: "low",
-    citation: { source: "test fixture", confidence: "commonly_cited_unverified" },
-    ...overrides,
-  });
-}
+import { makeEntity, makeHeatSource } from "./helpers.ts";
 
 const water = makeEntity({
   id: "water",
@@ -46,9 +32,15 @@ describe("pourInto", () => {
 describe("advanceHeatSeconds", () => {
   test("matches the same Q=mcΔT / P physics estimatedPreheatSeconds uses, for a clean case", () => {
     // 1kg water, 20C -> heat for exactly the textbook time to reach 100C at 1000W/100%.
+    const waterMassKg = 1;
+    const startTempC = 20;
+    const targetTempC = 100; // water.thermophysical.boilingPointC, matching the fixture above
+    const waterSpecificHeatJPerKgK = 4186; // matching the fixture's thermophysical.specificHeatJPerKgK
+    const deliveredWattsAt100PercentEfficiency = 1000; // makeHeatSource({id:"ideal"})'s default
     const source = makeHeatSource({ id: "ideal" });
-    const place = pourInto(emptyPlace("pot"), "water", 1, 20);
-    const secondsToBoil = (1 * 4186 * 80) / 1000;
+    const place = pourInto(emptyPlace("pot"), "water", waterMassKg, startTempC);
+    const secondsToBoil =
+      (waterMassKg * waterSpecificHeatJPerKgK * (targetTempC - startTempC)) / deliveredWattsAt100PercentEfficiency;
     const boiled = advanceHeatSeconds(place, source, secondsToBoil, water);
     assert.ok(Math.abs(boiled.currentTempC - 100) < 1e-9);
   });

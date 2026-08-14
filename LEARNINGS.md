@@ -1254,3 +1254,45 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   the SAME function. Consistency checking against a neighbor already proven
   correct keeps finding real bugs in this codebase — worth remembering as a
   review heuristic, not just a coincidence.
+
+### A second external report, same day — mostly stale, two small real fixes taken
+
+- **This report was generated without seeing the previous commit** (its own
+  "Recommended Next Steps" #1 is "implement validation simulation mode" —
+  already shipped a commit earlier the same day — and it repeats the
+  `src/query.ts`-is-dead-code claim already checked and found false).
+  Cross-checking a second report against what's already true in the repo,
+  not just against the code, caught this immediately — the same
+  verify-before-acting discipline as the first report, applied to a report
+  whose own staleness was the thing to catch this time, not a wrong claim
+  about the code itself.
+- **Two suggestions were real and taken**: `makeHeatSource` was duplicated
+  verbatim between `tests/heat-source.test.ts` and `tests/place.test.ts` —
+  consolidated into `tests/helpers.ts` alongside `makeEntity`/`makeAction`/
+  `makeCcp`, the exact pattern that file's own doc comment already
+  describes. And one specific magic-number formula the report quoted
+  directly (`tests/place.test.ts`'s `secondsToBoil` line) got named
+  constants — applied narrowly to the one spot actually quoted, not as a
+  repo-wide magic-number sweep (most numeric literals elsewhere already
+  have adjacent doc-comment explanations, which is a different, already-
+  satisfied bar than "give every number its own named constant").
+- **Declined, with reasons, rather than silently ignored**: a `.strict()`
+  structured `RecipeMetadataSchema` would break every existing recipe's
+  freeform `metadata` (`peelingNote`, `comparisonGroup`, `crackContainmentNote`-
+  style keys are the established, load-bearing convention across every
+  `data/*.json` file in this repo, not sloppiness — see almost every entity/
+  action file's `metadata` block). A `src/index.ts` barrel export (and the
+  matching `src/types/index.ts` suggestion) would re-export `query.ts` as
+  if it were part of the same public surface as everything else, and
+  barrel files are a real, known cost (circular-import risk, worse tree-
+  shaking) for a ~15-file `src/` with no current consumer needing one. A
+  pluggable `Logger` interface has no current caller — every `console.log`
+  today is a demo/capability-test script, not the not-yet-built
+  control/perception layer `ENGINE_INVARIANTS.md` #11 already names as
+  separate, larger, unstarted work; building the logging abstraction now
+  would be speculative infrastructure for a caller that doesn't exist yet,
+  the same anti-pattern this repo's own `LEARNINGS.md` has repeatedly
+  named and avoided elsewhere. Error-message format standardization (choosing
+  one consistent backtick/quote convention across ~29 throw sites) was left
+  alone — genuinely cosmetic, zero functional benefit, and real risk of
+  introducing a typo across many files for a purely stylistic gain.

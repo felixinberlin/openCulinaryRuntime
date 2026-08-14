@@ -1,20 +1,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { HeatSourceProfileSchema, estimatedPreheatSeconds, type HeatSourceProfile } from "../src/heat-source.ts";
-
-function makeHeatSource(overrides: Partial<HeatSourceProfile> & { id: string }): HeatSourceProfile {
-  return HeatSourceProfileSchema.parse({
-    names: { en: overrides.id },
-    typicalPowerWattsRange: { min: 1000, max: 1000 },
-    thermalEfficiencyPercentRange: { min: 100, max: 100 },
-    responseSpeed: "instant",
-    controlPrecision: "precise",
-    manualPositioningRelevance: "low",
-    citation: { source: "test fixture", confidence: "commonly_cited_unverified" },
-    ...overrides,
-  });
-}
+import { estimatedPreheatSeconds } from "../src/heat-source.ts";
+import { makeHeatSource } from "./helpers.ts";
 
 describe("HeatSourceProfileSchema", () => {
   test("names must include an 'en' entry", () => {

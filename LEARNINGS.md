@@ -1296,3 +1296,46 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   one consistent backtick/quote convention across ~29 throw sites) was left
   alone — genuinely cosmetic, zero functional benefit, and real risk of
   introducing a typo across many files for a purely stylistic gain.
+
+### Egg salad prep — one real gap closed, two real gaps found to be already-closed
+
+- **"How do you get the egg out? Do you wait or shock before peeling?"
+  turned out to already be answered by the existing schema, not a new
+  gap** — `egg.json`'s `statePrerequisites.peel` has only ever required
+  `"boiled"`, never the `"shocked"` tag, so `BOIL -> PEEL` (implicitly:
+  however long an uncontrolled wait took) and `BOIL -> SHOCK -> PEEL`
+  (controlled, immediate) were BOTH already valid sequences — proved by
+  actually running both in `scripts/egg-salad-prep.ts`, not just reading
+  the schema and asserting it. Worth stating precisely because it would
+  have been easy to assume a question shaped like "how do I do X" implies
+  X isn't possible yet — checking first, here, found nothing needed
+  building for that half of the question at all.
+- **"Cut in blocks" WAS a real, closed gap — `CUT` had never been wired to
+  egg.** `isChoppable` + `statePrerequisites.cut: "peeled"` closes it,
+  mirroring `potato.json`'s existing `CUT` wiring exactly, with one
+  deliberate difference: `peeled` alone, not `["washed","peeled"]` — there
+  is no skin-on-egg equivalent of a skin-on potato wedge, so the OR-array
+  mechanism `ingredient.ts` added for potato doesn't apply here; checked
+  that before reusing the pattern by rote.
+- **`possibleStates` for the cut egg lists only `sliced`/`diced`/`chopped`,
+  not all five of `cut.json`'s shape values — a real, deliberate narrowing,
+  not a copy-paste of potato's full list.** `julienne`/`minced` aren't real
+  techniques anyone applies to a boiled egg; `potato.json` listing all five
+  is honest for potato (every one of those is real for potato), not a
+  precedent to blindly reuse for a different ingredient. Named the
+  resulting asymmetry explicitly rather than silently: `cut.json`'s `shape`
+  parameter is one shared enum with no per-entity restriction mechanism, so
+  `engine.ts` still wouldn't actually stop a caller from requesting
+  "julienne egg" today — `possibleStates` here is an honest declaration,
+  not an enforcement, and building real per-entity-per-value restriction
+  would be new, unscoped engine architecture (same category as the already-
+  deferred `SEASON`-generalization gap), not attempted as a side effect of
+  this fix.
+- **"Use it in a salad" surfaced the SAME already-named, already-deferred
+  gap as `garlic-oil-potatoes.json`'s salad, not a new one** — `ROADMAP.md`
+  Phase 4's `COMBINE` entry already says reusing fried garlic in a salad
+  "still needs its own action definition... not built speculatively here."
+  Recognized as the identical shape of gap rather than re-litigated or
+  built ad hoc for egg specifically — real composite-dish assembly (a
+  `salad` entity, base ingredients like lettuce/mayo that don't exist yet)
+  stays real, separate, deferred work.

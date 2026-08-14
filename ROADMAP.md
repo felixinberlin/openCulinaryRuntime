@@ -46,6 +46,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | "Complete potato" — skin-on cuts, GRATE, MASH (a dead state made reachable) | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:complete-potato` |
 | "Oma boils an egg" — CONCEPT.md §14's Intent pipeline, made concrete | ✅ Makeable, closed 2026-08-13 | `npm run demo:oma-boils-an-egg` |
 | DISSOLVE — salt's own self-admitted "dissolved" dead state, closed | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:dissolve-salt` |
+| Egg salad prep — hard-boiled, cut diced, salted (CUT was never callable on egg before); proves shock-vs-wait were both already valid | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:egg-salad-prep` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap

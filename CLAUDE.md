@@ -6,11 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
-`heat-source.ts`, `egg-doneness.ts`), `data/` has real entities/actions/recipes/CCPs/
+`heat-source.ts`, `egg-doneness.ts`, `place.ts`), `data/` has real entities/actions/recipes/CCPs/
 heat-sources (potato, egg + its byproducts, garlic, alioli variants, gas/vitro/wood
 heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
-`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`, no `data/*.json` dependency),
+`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`, no `data/*.json`
+dependency),
 `npm run validate` (schema + cross-reference check over the real `data/*.json` — the
 authoritative integration check), `npm run demo:<name>` (see `package.json` for the
 full list), `npm run recipe -- <id>`, `npx tsc -p . --noEmit` (typechecks `src`,
@@ -84,6 +85,19 @@ top-level `data/` collection + schema + `registry.ts` loader, mirroring
 `thermal.ts`/`data/ccps/`) rather than fields grafted onto `EntitySchema` — see
 `LEARNINGS.md` 2026-08-13 for why, and `ROADMAP.md`'s "Common culinary knowledge
 coverage" section for the surrounding context this was built under.
+
+A third such file, added 2026-08-14: `src/place.ts` (`PlaceState` +
+`pourInto`/`advanceHeatSeconds`/`isAtBoiling`) — the physics half of
+`ROADMAP.md`'s "heat as a shared, time-varying property of a PLACE" gap, a
+tool instance (a pot) with a real temperature that persists and evolves as a
+pure function of elapsed simulated time, reusing `estimatedPreheatSeconds`'s
+energy-balance approximation. Same standalone-module-before-engine-wiring
+precedent as `heat-source.ts`/`egg-doneness.ts`: `applyAction` does not
+consume it, and there is still no `FILL`/`PLACE` verb in `data/actions/*.json`
+— see `LEARNINGS.md` 2026-08-14 and `ROADMAP.md`'s same-dated update to that
+entry for exactly what's closed vs. still open. Proven via
+`tests/place.test.ts` and `npm run capability-test:boil-as-robot`
+(`scripts/boil-egg-as-a-robot.ts`).
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

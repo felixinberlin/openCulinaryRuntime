@@ -14,9 +14,11 @@
   "allowedTransformations": [],
   "producedByproducts": [],
   "capabilities": {
-    "isWashable": true
+    "isWashable": true,
+    "isDeepVessel": true
   },
   "metadata": {
-    "notes": "Minimal tool entity, added so boil.json's requiredTools reference resolves. Same minimal-tool precedent as knife.json/pan.json/mixer.json."
+    "notes": "Minimal tool entity, added so boil.json's requiredTools reference resolves. Same minimal-tool precedent as knife.json/pan.json/mixer.json.",
+    "isDeepVesselNote": "Added 2026-08-14 (action.ts's requiredToolCapabilities) directly in response to a real question: a robot with only a pan on hand (no pot) — does BOIL work? It didn't, because BOIL/SIMMER/PASTEURIZE all hardcoded requiredTools: ['pot'], an exact-id match with no substitution possible even in principle. isDeepVessel names the actual physical property that matters (enough depth/capacity to submerge food in liquid for wet-heat cooking), not the specific vessel — see saucepan.json for a second, genuinely different tool that also qualifies. pan.json deliberately does NOT get this capability (see its own metadata) — a typical shallow frying pan really can't submerge an egg, so the honest fix here is substitutability among vessels that actually work, not blanket interchangeability of every cooking tool."
   }
 }

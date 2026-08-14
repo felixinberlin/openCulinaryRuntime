@@ -183,8 +183,35 @@ export const ActionSchema = z.object({
    * Tool entity ids required to perform this action (CONCEPT.md §5/§7:
    * "PEEL requires: knife"). Cross-checked against data/entities/ at
    * validation time — every id here must resolve to an entity of kind "tool".
+   *
+   * Id-based on purpose, for the case where one SPECIFIC tool is genuinely
+   * required (BAKE really does need an oven, not "any heat-capable
+   * enclosure") — but that made every tool requirement id-based even when
+   * the real physical constraint is a property several different tools can
+   * share (any vessel deep enough to submerge food, not literally the one
+   * entity named "pot"). See `requiredToolCapabilities` below for that case.
    */
   requiredTools: z.array(z.string()).default([]),
+  /**
+   * Capabilities required of some available TOOL — the tool-side mirror of
+   * `requiredIngredientCapabilities` below, added 2026-08-14 once a real
+   * case forced it: a robot with only a pan on hand (no pot) hard-failed
+   * BOIL, even for a hypothetical vessel that would genuinely work, because
+   * `requiredTools` can only ever check "is the tool literally named X,"
+   * never "is ANY available tool physically suited for this." Same
+   * capability-vs-id distinction `requiredIngredientCapabilities`'s own doc
+   * comment already draws for ingredients, generalized to tools: an action
+   * lists a capability (e.g. "isDeepVessel"), and ANY tool asserting it true
+   * satisfies the check — not one hardcoded entity id. Purely additive:
+   * every action written before this field existed has an empty array here
+   * and is completely unaffected; `requiredTools` and
+   * `requiredToolCapabilities` can both be used on the same action (ANDed
+   * together) when an action genuinely needs one specific tool AND some
+   * capability from another. Checked for presence only, same limit
+   * `requiredIngredientCapabilities` already states — not consumed/
+   * decremented, no notion of a tool being "busy" elsewhere.
+   */
+  requiredToolCapabilities: z.array(z.string()).default([]),
   /**
    * The capability flag (EntitySchema.capabilities key) a target entity must
    * assert `true` for this action to be legal against it — e.g. "isPeelable".

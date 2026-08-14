@@ -121,6 +121,20 @@ for (const action of actions.items.values()) {
       fail(`actions/${action.id}.json: requiredTools references "${toolId}" which is kind "${tool.kind}", not "tool"`);
     }
   }
+  // Same dead-capability shape the last session's verb audit went looking
+  // for by hand (LEARNINGS.md, "audit for dead capabilities") — a
+  // requiredToolCapabilities entry that no loaded tool entity ever asserts
+  // true would make this action permanently unexecutable no matter what a
+  // caller has on hand, the tool-side mirror of requiredTools referencing
+  // an unknown id, so it's a hard fail, not a NOTE.
+  for (const capability of action.requiredToolCapabilities) {
+    const satisfied = [...entities.items.values()].some(
+      (e) => e.kind === "tool" && e.capabilities[capability] === true
+    );
+    if (!satisfied) {
+      fail(`actions/${action.id}.json: requiredToolCapabilities references "${capability}", which no tool entity asserts true — this action can never be executed`);
+    }
+  }
   if (action.outputs.combinesInto && !entities.items.has(action.outputs.combinesInto)) {
     fail(`actions/${action.id}.json: outputs.combinesInto references unknown entity "${action.outputs.combinesInto}"`);
   }

@@ -116,6 +116,62 @@ describe("applyAction — preconditions", () => {
     );
     assert.doesNotThrow(() => applyAction(instance, action, entities, NO_TOOLS, {}, new Set(["water", "oil"])));
   });
+
+  test("requiredToolCapabilities checks ANY available tool asserting the capability, not one hardcoded id — the pot-vs-pan case", () => {
+    const egg = makeEntity({ id: "egg" });
+    const pot = makeEntity({ id: "pot", kind: "tool", capabilities: { isDeepVessel: true } });
+    const pan = makeEntity({ id: "pan", kind: "tool", capabilities: { isDeepVessel: false } });
+    const saucepan = makeEntity({ id: "saucepan", kind: "tool", capabilities: { isDeepVessel: true } });
+    const action = makeAction({ id: "boil", requiredToolCapabilities: ["isDeepVessel"] });
+    const entities = new Map([
+      ["egg", egg],
+      ["pot", pot],
+      ["pan", pan],
+      ["saucepan", saucepan],
+    ]);
+    const instance: Instance = { entityId: "egg", state: "raw", tags: [] };
+
+    // Only a pan on hand — no substitute exists for it, correctly rejected.
+    assert.throws(
+      () => applyAction(instance, action, entities, new Set(["pan"])),
+      /requires an available tool with capability "isDeepVessel"/
+    );
+    // A pot works...
+    assert.doesNotThrow(() => applyAction(instance, action, entities, new Set(["pot"])));
+    // ...and so does a completely different tool id asserting the same capability —
+    // the actual point: substitutable by capability, not hardcoded to "pot".
+    assert.doesNotThrow(() => applyAction(instance, action, entities, new Set(["saucepan"])));
+  });
+
+  test("requiredTools and requiredToolCapabilities combine with AND semantics when an action declares both", () => {
+    const egg = makeEntity({ id: "egg" });
+    const pot = makeEntity({ id: "pot", kind: "tool", capabilities: { isDeepVessel: true } });
+    const thermometer = makeEntity({ id: "thermometer", kind: "tool" });
+    const action = makeAction({
+      id: "boil",
+      requiredTools: ["thermometer"],
+      requiredToolCapabilities: ["isDeepVessel"],
+    });
+    const entities = new Map([
+      ["egg", egg],
+      ["pot", pot],
+      ["thermometer", thermometer],
+    ]);
+    const instance: Instance = { entityId: "egg", state: "raw", tags: [] };
+
+    // Capability satisfied, but the specific required tool is missing.
+    assert.throws(
+      () => applyAction(instance, action, entities, new Set(["pot"])),
+      /requires tool "thermometer"/
+    );
+    // Specific tool present, but no available tool satisfies the capability.
+    assert.throws(
+      () => applyAction(instance, action, entities, new Set(["thermometer"])),
+      /requires an available tool with capability "isDeepVessel"/
+    );
+    // Both present — passes.
+    assert.doesNotThrow(() => applyAction(instance, action, entities, new Set(["pot", "thermometer"])));
+  });
 });
 
 describe("applyAction — parameters", () => {

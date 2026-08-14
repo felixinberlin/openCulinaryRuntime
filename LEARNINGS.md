@@ -1053,3 +1053,135 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   something under water. Adding a hazard to those three just for symmetry
   would have been dishonest padding — the opposite of what an audit for
   refinement should produce.
+
+## 2026-08-14
+
+### `src/place.ts` — closing the "heat as a place" physics half, once a real forcing case existed
+
+- **A vague structural gap that was correctly left unbuilt for a session
+  became buildable the moment it was walked as a concrete robot procedure.**
+  `ROADMAP.md`'s "heat as a shared, time-varying property of a PLACE" entry
+  (2026-08-13) was scoped as design-and-record on purpose — no recipe
+  needed it yet, and inventing the mechanism speculatively risked the exact
+  dead-capability shape this repo's own audits keep finding and closing
+  (most recently the very last commit before this session). What changed:
+  being asked, step by step, what a robot needs to do to boil an egg ("put
+  water in a pan, apply warm till 100°C, put the egg in, wait — depending
+  on heat, water amount, desired grade") turned the abstract gap into a
+  concrete, checkable one — the same "attempt a real dish, watch it fail,
+  name the missing verb precisely" method this repo already uses, applied
+  to an engine capability instead of a data gap.
+- **Scoped the closure narrower than the full ROADMAP item on purpose, and
+  said so in the code, not just here.** The full item names three pieces:
+  tool-level thermal state, a time-based heating model, and "instances
+  co-located in one tool instance sharing its state" inside `engine.ts`
+  itself. Only the first two were built (`src/place.ts`, standalone). The
+  third — wiring this into `applyAction`'s preconditions, plus real
+  `FILL`/`PLACE` verbs in `data/actions/*.json` — was deliberately NOT
+  built, because nothing yet needs the engine itself to enforce "this pot's
+  water must actually be boiling before BOIL can run"; `boil-egg-as-a-
+  robot.ts` proves the physics by calling `place.ts` directly, not through
+  `applyAction`. Same precedent `heat-source.ts`/`egg-doneness.ts` already
+  set: real, cited, provable capability as a standalone module BEFORE
+  engine wiring, not simultaneously with it. Building the engine-wiring
+  half too, in the same pass, would have been exactly the "started
+  speculatively" mistake the original ROADMAP entry warned against — a
+  precondition check with no recipe yet needing it is just as untested-in-
+  anger as the whole mechanism was a day earlier.
+- **The one real physics fact worth getting exactly right: temperature
+  plateaus at the boiling point instead of climbing indefinitely, because
+  further delivered energy goes into the liquid→vapor phase change (latent
+  heat of vaporization), not further ΔT.** `advanceHeatSeconds` clamps at
+  `contentsEntity.thermophysical.boilingPointC` rather than integrating
+  `energy / (mass × specificHeat)` straight through it — an easy, silently-
+  wrong mistake (predicting an egg pot at 140°C after enough simulated
+  time) if the clamp were left out. Does NOT model evaporative mass loss
+  past that point — flagged as a real, smaller, separate unmodeled effect,
+  not silently assumed away, matching `estimatedPreheatSeconds`'s own
+  stated depth limit.
+- **Reused `estimatedPreheatSeconds`'s exact energy-balance approximation
+  (one constant mid-range power/efficiency value for the whole interval)
+  rather than inventing a second, silently-different one for the same
+  physical question.** Two functions answering "how does heat move into
+  this water" with two different simplifications would have been a real,
+  avoidable inconsistency — checked this before writing `advanceHeatSeconds`,
+  not after.
+- **`isAtBoiling` polled in a loop, not `estimatedPreheatSeconds` called
+  once, is the actual point of this addition — not a stylistic choice.** A
+  real robot control loop reads a sensor and checks it against a threshold
+  repeatedly; it does not compute a predicted total and blindly sleep for
+  it (a precomputed total silently assumes the model's own stated
+  simplifications hold exactly, e.g. no heat loss, constant efficiency —
+  small errors compound over a real multi-minute heat-up). `scripts/boil-
+  egg-as-a-robot.ts` ticks 30s at a time and re-checks real state each
+  time, deliberately different from `oma-boils-an-egg.ts`'s one-shot
+  `estimatedPreheatSeconds` call — both are honest at what they claim to
+  do, but only the tick loop is the shape a real controller would need.
+- **Named three still-open sub-gaps explicitly in both the script's own
+  output and `ROADMAP.md`, rather than letting "place.ts now exists" imply
+  more than it does**: no `FILL`/`PLACE` `Action` definition (this sequence
+  is procedural TypeScript, not a recipe a planner could select the way it
+  selects `boil.json` today), no shell-fragility/handling-care mechanism
+  for "place the egg delicately," and `isAtBoiling` reads `place.ts`'s own
+  simulated state, not a physical sensor — `ENGINE_INVARIANTS.md` #11's
+  control/perception gap is completely unaffected by this addition.
+
+### `requiredToolCapabilities` — generalizing tool matching from id to capability
+
+- **A concrete "will it work" question ("robot has a pan, not a pot") turned
+  up an asymmetry that had been sitting in `action.ts` since the very first
+  version: `requiredTools` matches by exact entity id, and NOTHING about the
+  tool-checking path was ever capability-based, even though the exact same
+  distinction already existed and was already solved for ingredients
+  (`requiredIngredientCapabilities`, `requiredTargetCapability`).** Reading
+  `action.ts`'s own doc comment for `requiredIngredientCapabilities` turned
+  up the tell: it explicitly contrasts itself against `requiredTools`
+  ("not id-based like requiredTools: any isFryingMedium ingredient will
+  do") — the asymmetry was already named in a comment, just never carried
+  over to the tool side. Worth stating plainly: this was found by being
+  asked a concrete scenario question, not by an abstract "is this design
+  consistent" review — the same pattern as almost every other real gap this
+  repo has closed (`LEARNINGS.md`, throughout).
+- **Asked to build it "as generic and abstract as possible," and the right
+  reading of that instruction was: generalize the MECHANISM (capability-
+  based tool matching, reusable by any current or future action), not widen
+  any one entity's capabilities to make more scenarios pass.** The tempting
+  wrong move here would have been marking `pan.json` as `isDeepVessel: true`
+  too, just so the user's literal pan-only scenario would succeed — that
+  would have been dishonest (a real frying pan can't hold enough water to
+  submerge an egg) and would have solved the wrong problem (making one
+  scenario pass, not making the mechanism correct). The actual generic fix
+  is capability-based matching that correctly ADMITS qualifying tools and
+  correctly REJECTS non-qualifying ones — proven by keeping the pan-rejection
+  case in `boil-with-any-deep-vessel.ts` as the first, not discarding it
+  once the "does it work" answer for that specific case was still no.
+- **Checked for sibling gaps of the identical shape before calling this
+  closed, the same discipline as the FRY/oilTempC parity fix
+  (`LEARNINGS.md` 2026-08-13) — found two more (`SIMMER`, `PASTEURIZE`),
+  both hardcoding `requiredTools: ["pot"]` for the identical physical
+  reason, and fixed all three consistently rather than leaving two of
+  them newly inconsistent right next to the one that prompted the
+  question.** Deliberately did NOT extend this to `FRY`/`PAR_FRY`/`POACH`'s
+  `pan` requirement — surface-area-for-oil is a genuinely different
+  physical property from vessel depth, not the same bug wearing a
+  different verb, and generalizing it wasn't asked for or forced by any
+  concrete case yet.
+- **Added a matching dead-capability guard to `validate.ts` in the same
+  change that introduced the mechanism able to create that exact gap.** A
+  `requiredToolCapabilities` entry with no tool anywhere asserting it would
+  be silently, permanently unexecutable — the tool-side identical twin of
+  what `requiredTools` referencing an unknown entity id already catches.
+  Adding the capability-matching mechanism without also adding its own
+  dead-capability check would have reintroduced, in a brand new mechanism,
+  the exact class of gap the immediately-prior session spent a whole audit
+  finding and closing (`git log`: "Refine verbs: audit for dead
+  capabilities...") — closing that loop in the same commit rather than
+  leaving it for a future audit to rediscover.
+- **`saucepan.json` exists to make "generic" a checked claim, not an
+  assertion.** A capability-based mechanism proven only against the one
+  entity (`pot`) that motivated it would still be, empirically, a
+  disguised special case — nothing would demonstrate the check doesn't
+  secretly still key off the literal string `"pot"` somewhere. Adding one
+  more real, physically-distinct vessel and proving BOIL executes against
+  it with zero changes to `boil.json` is what actually distinguishes "this
+  generalizes" from "this was renamed."

@@ -425,6 +425,34 @@ covered by what exists:**
       fix. Deliberately named and left unbuilt rather than started
       speculatively — see `LEARNINGS.md` 2026-08-13 for the full reasoning
       on why this is scoped as design-and-record, not implement, for now.
+      **The PHYSICS half closed 2026-08-14** (`src/place.ts`, `PlaceState` +
+      `pourInto`/`advanceHeatSeconds`/`isAtBoiling`), once a concrete
+      forcing case existed: walking a robot's actual boiling-an-egg sequence
+      step by step ("put water in a pan, apply warm till it boils 100°C,
+      put the egg in, wait — depending on heat, water amount, and desired
+      grade") surfaced exactly this gap again, now with a real dish to build
+      against instead of a hypothetical. `place.ts` gives a tool instance a
+      real temperature that persists and evolves as a pure function of
+      *elapsed simulated time* (not wall-clock — determinism,
+      `ENGINE_INVARIANTS.md` #9), reusing `estimatedPreheatSeconds`'s exact
+      energy-balance approximation rather than inventing a second one, and
+      correctly clamps at `boilingPointC` (latent heat of vaporization —
+      further energy goes to phase change, not temperature rise) instead of
+      overshooting. Proven via `tests/place.test.ts` (unit) and
+      `scripts/boil-egg-as-a-robot.ts` (capability test — `npm run
+      capability-test:boil-as-robot`), which ticks real 30s increments and
+      polls `isAtBoiling` rather than trusting one precomputed total, the
+      concrete thing a robot's own control loop would need to do. **Still
+      NOT closed, named explicitly rather than implied covered**: `place.ts`
+      is a standalone module, same precedent as `heat-source.ts`/
+      `egg-doneness.ts` before it — `applyAction` does not consume it, there
+      is still no `FILL`/`POUR`/`PLACE` verb in `data/actions/*.json`, and
+      the "instances co-located in one tool instance sharing its state"
+      engine concept below is still unbuilt. Two ingredients simmering in
+      the same pot still get independent `applyAction` calls. No shell-
+      fragility/handling-care mechanism exists for "place the egg
+      delicately" either — named as a real, separate, still-open gap, not
+      solved by this addition.
       **Extended the same day, same root cause, raised again unprompted by
       the user in different words**: "transformations usually take time...
       states can change, so its cooking and life." `applyAction` is
@@ -586,6 +614,38 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       substitute (`isSaltySeasoning` vs. the generic `isSeasoning` — a real
       precision gap the second seasoning entity would have silently opened),
       by `npm run capability-test:season-potato`.
+- [x] **Capability-based tool substitution (`requiredToolCapabilities`)** —
+      closed 2026-08-14, in direct response to a real question: "the robot
+      has no pot, only a pan — will BOIL still work?" It didn't, and not for
+      a real physical reason — `requiredTools` (`action.ts`) only ever
+      matched by exact tool id, the one part of `applyAction`'s precondition
+      checks with no capability-based option (unlike
+      `requiredTargetCapability`/`requiredIngredientCapabilities`), so
+      `boil.json`/`simmer.json`/`pasteurize.json` all hardcoded
+      `requiredTools: ["pot"]` even though the real requirement is "some
+      vessel deep enough to submerge the food," not that one specific
+      entity id. Fixed generically, not as a pot/pan special case: a new
+      `requiredToolCapabilities` field (`engine.ts`'s `applyAction`, same
+      "any available X asserting this capability satisfies it" logic
+      `requiredIngredientCapabilities` already used), a new `isDeepVessel`
+      capability on `pot.json` and a genuinely new tool entity
+      (`saucepan.json`) to prove real substitution rather than just a
+      renamed special case, and `pan.json` deliberately left WITHOUT the
+      capability (a real frying pan can't hold enough water depth — see its
+      own `noIsDeepVesselNote`). Applied consistently to all three verbs
+      that had the identical "pot"-only gap (`BOIL`/`SIMMER`/`PASTEURIZE`),
+      not just the one asked about — `FRY`/`PAR_FRY`/`POACH`'s `pan`
+      requirement deliberately left untouched (a genuinely different
+      physical property, not the same bug). `scripts/validate.ts` gained a
+      matching dead-capability check (a `requiredToolCapabilities` entry no
+      tool entity ever asserts would make an action permanently
+      unexecutable — hard fail, mirroring `requiredTools`' own unknown-id
+      check) so this new mechanism can't quietly reopen the exact class of
+      gap the prior session's verb audit went looking for by hand. Proven
+      via `tests/engine.test.ts` (synthetic fixtures) and `npm run
+      capability-test:boil-any-vessel` (`scripts/boil-with-any-deep-
+      vessel.ts` — real data, all three cases: pan correctly still rejected,
+      pot works, saucepan — an id `boil.json` never mentions — also works).
 - [ ] Unit tests per forbidden-transition rule — genuinely still blocked, but
       now on the `INVALID_TRANSITIONS` matrix itself not existing (this
       phase's own next unchecked item), not on the test-runner gap.

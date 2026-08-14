@@ -5,8 +5,9 @@
     "en": "Boil",
     "es": "Hervir"
   },
-  "requiredTools": [
-    "pot"
+  "requiredTools": [],
+  "requiredToolCapabilities": [
+    "isDeepVessel"
   ],
   "requiredTargetCapability": "isBoilable",
   "validTargetKinds": [
@@ -80,7 +81,8 @@
     "yolkDonenessNote": "Deliberately different allowedValues from fry.json/poach.json's yolkDoneness ('runny'/'medium'/'well_done') — a boiled egg is conventionally ordered as 'soft-boiled'/'medium-boiled'/'hard-boiled' in real usage, not 'runny'/'well-done'; matching the vocabulary people actually use per cooking method is more honest than forcing one shared enum across all three actions for uniformity's sake. Still informational only in the strict sense that engine.ts's applyAction does not read it to compute durationSeconds — but as of 2026-08-13, 'what does medium actually mean in seconds' now has a real, cited answer: src/egg-doneness.ts's EGG_BOIL_DONENESS table, closing the 'a robot needs to actually understand \"medium boiled\"' gap at the reference-data layer (CONCEPT.md §14's intent-resolution layer is still what would DO the resolving; this is what it resolves against). See shock.json for the other half of what actually determines a boiled egg's final doneness — durationSeconds alone is not the whole story.",
     "startMethodNote": "cold_start (egg placed in cold water, heated together) vs. boiling_start (egg lowered into already-boiling water) are genuinely different real techniques, not just a timing offset — cold_start eggs cook gradually through the whole temperature ramp, which is gentler (less prone to cracking from thermal shock) but means total time depends on how fast the water heats, i.e. on heatSource below, and src/egg-doneness.ts's EGG_BOIL_DONENESS table explicitly does NOT cover cold_start (see that file's own doc comment for why the two don't just add). boiling_start is what EGG_BOIL_DONENESS and this action's own verification criterion assume.",
     "heatSourceNote": "Purely informational, like heatLevel elsewhere in this vocabulary — recorded for provenance, not read by applyAction. See src/heat-source.ts's HeatSourceProfileSchema (data/heat-sources/*.json: gas, vitro, wood) for what actually differs by heat source: TIME to reach a boil from cold (estimatedPreheatSeconds) and how precisely a simmer can be held — explicitly NOT the boiling temperature itself, which stays ~100°C at sea level regardless (see that file's own doc comment for why conflating the two would be a real physics error, not just an oversimplification). A real, still-open gap: requiredTools above can't express 'exactly one of gas/vitro/wood is required' (AND-only semantics) — this parameter records which was used without the engine actually requiring one to be present.",
-    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but see shock.json's carryoverCookingNote: re-boiling something already at the desired doneness will overcook it, a real physical risk, not a data-model one."
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but see shock.json's carryoverCookingNote: re-boiling something already at the desired doneness will overcook it, a real physical risk, not a data-model one.",
+    "toolCapabilityNote": "requiredTools changed from ['pot'] to requiredToolCapabilities: ['isDeepVessel'] 2026-08-14 (action.ts's requiredToolCapabilities, engine.ts's matching applyAction check) — added directly in response to being asked whether a robot with only a pan (no pot) could still boil an egg. It couldn't, purely because of an id-vs-capability mismatch, not a real physical constraint: BOIL needs SOME vessel deep enough to submerge the egg, not the one entity literally named 'pot'. pot.json and saucepan.json both assert isDeepVessel: true; pan.json deliberately does not (see its own noIsDeepVesselNote) — a real frying pan genuinely can't hold enough water depth, so this is substitutability among vessels that actually work, not blanket permissiveness. Non-breaking: every existing recipe's availableTools already includes 'pot', which still satisfies the new capability check."
   },
   "verification": {
     "method": "thermal",

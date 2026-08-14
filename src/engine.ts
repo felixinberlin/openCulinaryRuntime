@@ -210,6 +210,21 @@ export function applyAction(
     }
   }
 
+  // Capability-based tool check — the substitutable sibling of the exact-id
+  // loop above, mirroring requiredIngredientCapabilities' own logic exactly
+  // (any available tool asserting the capability satisfies it, not one
+  // hardcoded id). See action.ts's requiredToolCapabilities doc comment.
+  for (const capability of action.requiredToolCapabilities) {
+    const satisfied = [...availableTools].some(
+      (id) => entities.get(id)?.capabilities[capability] === true
+    );
+    if (!satisfied) {
+      throw new Error(
+        `${action.verb} requires an available tool with capability "${capability}", but none is on hand.`
+      );
+    }
+  }
+
   for (const capability of action.requiredIngredientCapabilities) {
     const satisfied = [...availableIngredients].some(
       (id) => entities.get(id)?.capabilities[capability] === true

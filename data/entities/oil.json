@@ -21,10 +21,12 @@
   },
   "thermophysical": {
     "densityKgPerM3": 920,
+    "specificHeatJPerKgK": 1970,
+    "smokePointC": 200,
     "citation": {
-      "source": "International Olive Council (IOC) trade standard density range for olive oil (approximately 0.910-0.916 g/cm³ at 20°C) — every recipe in this repo that names an oil is Spanish/Mediterranean and implicitly olive oil, not a generic vegetable oil",
+      "source": "International Olive Council (IOC) trade standard density range for olive oil (approximately 0.910-0.916 g/cm³ at 20°C) — every recipe in this repo that names an oil is Spanish/Mediterranean and implicitly olive oil, not a generic vegetable oil. specificHeatJPerKgK (1970 J/(kg·K), added 2026-08-14): the well-established food-science heuristic that vegetable/olive oil's specific heat runs roughly half of water's (4186 J/(kg·K), water.json) — cross-checked against published experimental ranges for vegetable oils generally (commonly cited as ~1800-2250 J/(kg·K) across temperature and oil type; e.g. Fasina & Colley, \"Viscosity and Specific Heat of Vegetable Oils as a Function of Temperature,\" Journal of Food Process Engineering, 2008). smokePointC (200°C, added 2026-08-14): extra virgin olive oil's commonly-cited smoke point range is ~190-210°C depending on free fatty acid content/quality — 200 is a round, representative value within that range, matching this same file's own 'round, plausible value' convention for densityKgPerM3 above, not a claim that every bottle of olive oil smokes at exactly 200°C.",
       "confidence": "commonly_cited_unverified",
-      "note": "This repo has not looked up the current IOC trade standard document to confirm the exact published range/temperature basis — 920 is a round, plausible value within the commonly-cited range, not read off the primary standard directly."
+      "note": "This repo has not looked up the current IOC trade standard document to confirm the exact published range/temperature basis — 920 is a round, plausible value within the commonly-cited range, not read off the primary standard directly. specificHeatJPerKgK/smokePointC are similarly round representative values within real, commonly-cited ranges, not independently re-measured or read from one single primary source this session."
     }
   },
   "sensory": {

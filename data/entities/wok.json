@@ -1,0 +1,23 @@
+{
+  "id": "wok",
+  "kind": "tool",
+  "names": {
+    "en": "Wok",
+    "es": "Wok"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["clean", "dirty"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true,
+    "isFryingVessel": true
+  },
+  "metadata": {
+    "notes": "Added 2026-08-14 as the concrete proof, not just an assertion, that action.ts's requiredToolCapabilities actually generalizes FRY/PAR_FRY beyond the one hardcoded 'pan' id — a wok is a real, physically distinct vessel from pan.json (deep, curved sides vs. flat, shallow-sided) that a real kitchen genuinely treats as interchangeable with a frying pan for shallow/stir-frying work, the same role saucepan.json plays for BOIL/SIMMER/PASTEURIZE's isDeepVessel. See scripts/fry-egg-as-a-robot.ts for FRY actually executing against this entity, not just this file declaring the capability."
+  }
+}

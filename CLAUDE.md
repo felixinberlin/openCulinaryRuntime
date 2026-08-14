@@ -90,17 +90,21 @@ top-level `data/` collection + schema + `registry.ts` loader, mirroring
 coverage" section for the surrounding context this was built under.
 
 A third such file, added 2026-08-14: `src/place.ts` (`PlaceState` +
-`pourInto`/`advanceHeatSeconds`/`isAtBoiling`) — the physics half of
+`pourInto`/`advanceHeatSeconds`/`isAtBoiling`, plus their general form
+`advanceTempSeconds`/`isAtTargetTemp` added the same day once FRY needed
+oil — no `boilingPointC`, a chosen setpoint clamp instead of a phase-change
+one, `smokePointC` as a hard-reject safety ceiling) — the physics half of
 `ROADMAP.md`'s "heat as a shared, time-varying property of a PLACE" gap, a
-tool instance (a pot) with a real temperature that persists and evolves as a
-pure function of elapsed simulated time, reusing `estimatedPreheatSeconds`'s
+tool instance (a pot/pan) with a real temperature that persists and evolves
+as a pure function of elapsed simulated time, reusing `estimatedPreheatSeconds`'s
 energy-balance approximation. Same standalone-module-before-engine-wiring
 precedent as `heat-source.ts`/`egg-doneness.ts`: `applyAction` does not
 consume it, and there is still no `FILL`/`PLACE` verb in `data/actions/*.json`
 — see `LEARNINGS.md` 2026-08-14 and `ROADMAP.md`'s same-dated update to that
 entry for exactly what's closed vs. still open. Proven via
-`tests/place.test.ts` and `npm run capability-test:boil-as-robot`
-(`scripts/boil-egg-as-a-robot.ts`).
+`tests/place.test.ts` and `npm run capability-test:boil-as-robot`/
+`capability-test:fry-as-robot` (`scripts/boil-egg-as-a-robot.ts`/
+`scripts/fry-egg-as-a-robot.ts`).
 
 A fourth, same day: `src/potato-doneness.ts` (`POTATO_BOIL_DONENESS`,
 `boil.json`/`simmer.json`'s `pieceSize` parameter) — the direct potato

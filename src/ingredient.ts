@@ -89,6 +89,18 @@ export const ThermophysicalPropertiesSchema = z
     specificHeatJPerKgK: z.number().positive(),
     meltingPointC: z.number(),
     boilingPointC: z.number(),
+    /** The real safety ceiling for a heated cooking medium that doesn't
+     *  boil at any cooking-relevant temperature (oil.json — a real
+     *  frying temperature, e.g. 175°C, is nowhere near boiling, but IS
+     *  meaningfully close to a real safety limit) — added 2026-08-14
+     *  alongside `place.ts`'s `advanceTempSeconds` generalization, which
+     *  reads this field to reject an unsafe target temperature outright
+     *  rather than silently heating toward it. Optional and meaningless
+     *  for anything that doesn't have one (water.json has no smoke point;
+     *  `boilingPointC` is that entity's own real ceiling instead) — not
+     *  every thermal medium needs both fields, and forcing one on an
+     *  entity it doesn't apply to would misrepresent the physics. */
+    smokePointC: z.number().optional(),
     citation: CitationSchema.optional(),
   })
   .partial();

@@ -14,10 +14,12 @@
   "allowedTransformations": [],
   "producedByproducts": [],
   "capabilities": {
-    "isWashable": true
+    "isWashable": true,
+    "isFryingVessel": true
   },
   "metadata": {
     "notes": "Minimal tool entity, added only so data/actions/fry.json's requiredTools reference resolves. Not fully modeled (no thermophysical data yet), same as knife.json.",
-    "noIsDeepVesselNote": "Deliberately does NOT declare isDeepVessel (see pot.json/saucepan.json, action.ts's requiredToolCapabilities, added 2026-08-14) — this entity models a typical shallow frying pan, the real tool FRY/PAR_FRY need (wide surface area, shallow sides), which genuinely cannot hold enough water depth to submerge an egg for BOIL/SIMMER/PASTEURIZE. Leaving this capability unasserted (not explicitly false, per EntitySchema's own missing-vs-false distinction) is the honest choice: a specific deep sauté pan could reasonably earn this capability as its own entity later, but this generic 'pan' shouldn't silently gain it just to make a robot's tool substitution more permissive than the physical object it represents actually allows."
+    "noIsDeepVesselNote": "Deliberately does NOT declare isDeepVessel (see pot.json/saucepan.json, action.ts's requiredToolCapabilities, added 2026-08-14) — this entity models a typical shallow frying pan, the real tool FRY/PAR_FRY need (wide surface area, shallow sides), which genuinely cannot hold enough water depth to submerge an egg for BOIL/SIMMER/PASTEURIZE. Leaving this capability unasserted (not explicitly false, per EntitySchema's own missing-vs-false distinction) is the honest choice: a specific deep sauté pan could reasonably earn this capability as its own entity later, but this generic 'pan' shouldn't silently gain it just to make a robot's tool substitution more permissive than the physical object it represents actually allows.",
+    "isFryingVesselNote": "Added 2026-08-14, extending BOIL's requiredToolCapabilities fix (isDeepVessel) to FRY/PAR_FRY, the same shape of gap: fry.json/par-fry.json hardcoded requiredTools: ['pan'] by exact id, even though the real requirement is 'some vessel with enough surface area/heat retention to shallow-fry in,' not that one specific entity. See wok.json for a second, genuinely different tool that also qualifies, proving real substitution rather than a renamed special case — a pot deliberately does NOT get this capability (pot.json unchanged): a tall, narrow pot has poor surface-area-to-volume for shallow frying even though it could physically hold the oil, a real, different limitation from why pan.json doesn't get isDeepVessel."
   }
 }

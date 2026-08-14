@@ -91,6 +91,22 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   is Spanish/Mediterranean and implicitly olive oil. Confidence:
   `commonly_cited_unverified` — this repo has not looked up the current IOC
   document directly.
+- **Vegetable/olive oil specific heat and smoke point** (added 2026-08-14,
+  `oil.json`'s `thermophysical.specificHeatJPerKgK`/`smokePointC`, needed
+  for `src/place.ts`'s FRY generalization) — specific heat (1970 J/(kg·K)):
+  the well-established food-science heuristic that oil's specific heat runs
+  roughly half of water's (4186 J/(kg·K)), cross-checked against published
+  experimental ranges for vegetable oils (~1800–2250 J/(kg·K) across
+  temperature/oil type — e.g. Fasina & Colley, "Viscosity and Specific Heat
+  of Vegetable Oils as a Function of Temperature," *Journal of Food Process
+  Engineering* (2008)). Smoke point (200°C): extra virgin olive oil's
+  commonly-cited smoke point range is ~190–210°C depending on free fatty
+  acid content/quality (multiple convergent consumer/industry sources
+  checked, e.g. America's Test Kitchen-adjacent and olive-oil-industry
+  guidance). Confidence: `commonly_cited_unverified` for both — round,
+  representative values within real cited ranges, not independently
+  re-measured or read from one single primary source this session, matching
+  this same file's density citation immediately above.
 - **U.S. Department of Energy consumer cooktop-efficiency guidance** and
   commonly-cited consumer appliance spec figures — used in
   `data/heat-sources/gas.json`/`vitro.json`'s `citation` for typical

@@ -1390,3 +1390,66 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   none existed — the same "a real number/state needed something to resolve
   against, and nothing was there" shape as most of this session's other
   closed gaps.
+
+### Extending FRY with everything learned from BOIL — a real generalization test, not a repeat
+
+- **"Extend FRY with everything we learned from BOIL" was itself a real
+  test of whether `place.ts`'s design was actually general, or only
+  looked general because it had only ever been asked to model one
+  medium.** It wasn't fully general: `advanceHeatSeconds`/`isAtBoiling`
+  read `contentsEntity.thermophysical.boilingPointC` internally, a real,
+  hidden coupling to "the target is a phase-change point" that boiling
+  water satisfies and frying oil structurally cannot (oil doesn't boil at
+  any cooking-relevant temperature — `oil.json` correctly has no
+  `boilingPointC` field at all). Generalizing to `advanceTempSeconds`
+  (explicit `targetTempC`) surfaced this coupling and removed it, with the
+  two original functions kept as thin, behavior-preserving wrappers —
+  proven, not asserted, by re-running every existing `place.test.ts`
+  assertion unchanged after the refactor before adding a single new test.
+- **The refactor had a real ordering trap, caught by tracing one specific
+  existing test rather than assuming the new structure preserved
+  everything.** The original `advanceHeatSeconds` checked place/entity
+  match BEFORE resolving `boilingPointC`/`specificHeatJPerKgK`. A naive
+  wrapper — resolve `boilingPointC` first, then delegate to
+  `advanceTempSeconds` for the rest — would have resolved
+  `contentsEntity.thermophysical.boilingPointC` before the mismatch check
+  ever ran, breaking the existing "throws when contentsEntity doesn't
+  match" test for exactly the fixture that test uses (an `oil` entity with
+  no `thermophysical` block at all — it would fail on "no boilingPointC"
+  instead of "mismatched entity", a different, wrong error). Fixed by
+  factoring the place/entity check into its own function
+  (`assertPlaceMatchesEntity`) called FIRST by both the general and
+  boiling-specific functions, preserving the original check order exactly.
+  Worth the sentence: "the tests still pass" isn't proof a refactor
+  preserves behavior until the actual failure-message content, not just
+  pass/fail, is checked for cases like this one.
+- **A real, different KIND of "clamp" needed naming explicitly, not just
+  reusing the word.** Water's `boilingPointC` clamp represents a genuine
+  physical impossibility (latent heat of vaporization — water CANNOT
+  exceed it while liquid water remains). Oil's `targetTempC` clamp
+  represents controlled heating stopping at a chosen setpoint — nothing
+  physically prevents oil from continuing past it if more energy kept
+  being added. Both are legitimate model choices, but conflating them
+  in the doc comment would have quietly overstated what the oil case
+  actually represents — named the distinction explicitly rather than
+  letting one clamp mechanism imply the same kind of physical necessity
+  for both.
+- **`smokePointC` is a genuinely new kind of fact for this schema: a real
+  safety ceiling for a SAFE-TO-APPROACH-BUT-NOT-EXCEED ingredient
+  property, distinct from both a food-safety CCP (`thermal.ts` — a
+  pathogen kill-time floor) and a phase-change ceiling
+  (`boilingPointC`).** `advanceTempSeconds` treats it as a hard reject on
+  the requested TARGET, not a runtime clamp during heating — the
+  correct real-world analog (a cook or a thermostat doesn't dial in a
+  temperature past an oil's smoke point either), and arguably a more
+  useful safety behavior than boiling water's silent clamp: an unsafe
+  request should be loud, not quietly capped.
+- **`isFryingVessel` mirrors `isDeepVessel` closely on purpose, but the
+  physical reasoning for what qualifies is genuinely inverted, and stating
+  that inversion explicitly is what makes the mirroring honest rather than
+  a copy-paste.** For `isDeepVessel`, `pot` qualifies and `pan` doesn't
+  (depth). For `isFryingVessel`, `pan`/`wok` qualify and `pot` doesn't
+  (surface-area-to-volume for shallow frying) — the SAME mechanism, a
+  genuinely DIFFERENT and even opposite-looking real-world answer. Checked
+  this explicitly before writing `pot.json`'s omission note, rather than
+  assuming the prior BOIL case's answer (pot=yes) would just transfer.

@@ -48,6 +48,8 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | DISSOLVE — salt's own self-admitted "dissolved" dead state, closed | ✅ Makeable, closed 2026-08-13 | `npm run capability-test:dissolve-salt` |
 | Egg salad prep — hard-boiled, cut diced, salted (CUT was never callable on egg before); proves shock-vs-wait were both already valid | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:egg-salad-prep` |
 | Boil potato as a robot — quartered, real cited hold-time by piece size, place.ts/heat-source.ts reused for a second ingredient with zero code changes | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-potato-as-robot` |
+| Fry egg as a robot — oil heated to a real setpoint via place.ts's new target-temperature generalization, smoke-point safety rejection proven | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-as-robot` |
+| Fry with any vessel — pot correctly rejected, pan works, wok (never named by fry.json) also works | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-any-vessel` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -452,6 +454,26 @@ covered by what exists:**
       the "instances co-located in one tool instance sharing its state"
       engine concept below is still unbuilt. Two ingredients simmering in
       the same pot still get independent `applyAction` calls.
+      **Generalized beyond boiling, same day, once FRY needed it too**:
+      `advanceHeatSeconds`/`isAtBoiling` only ever clamped at
+      `contentsEntity.thermophysical.boilingPointC` — which oil (`fry.json`)
+      doesn't have, and shouldn't (oil never boils at any real cooking
+      temperature). `advanceTempSeconds`/`isAtTargetTemp` take an explicit
+      `targetTempC` instead, with `advanceHeatSeconds`/`isAtBoiling` kept as
+      behavior-preserving thin wrappers over them (zero test changes needed
+      for the water/BOIL case). Named explicitly, not blurred: clamping at
+      `boilingPointC` represents a real physical ceiling (phase change);
+      clamping at a chosen `targetTempC` for oil represents controlled
+      heating stopping once a setpoint is reached, a different KIND of
+      true. `ingredient.ts` gained `smokePointC` (`ThermophysicalPropertiesSchema`)
+      as the real safety mechanism this enables: `advanceTempSeconds`
+      REJECTS a target at or above a declared smoke point outright, rather
+      than silently heating toward a real fire-risk ceiling. Proven via
+      `tests/place.test.ts` and `npm run capability-test:fry-as-robot`
+      (`scripts/fry-egg-as-a-robot.ts`) — oil heated to a real 175°C fry
+      setpoint with zero changes to `place.ts`'s water-facing API, plus a
+      demonstrated rejection of a 220°C target against olive oil's ~200°C
+      smoke point.
       **The "place the egg delicately" half partially closed, same day**
       (`boil.json`/`simmer.json`'s new `placementMethod` parameter,
       `egg.json`'s `crackPreventionNote`) — "of course, the robot has to try
@@ -706,8 +728,22 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       own `noIsDeepVesselNote`). Applied consistently to all three verbs
       that had the identical "pot"-only gap (`BOIL`/`SIMMER`/`PASTEURIZE`),
       not just the one asked about — `FRY`/`PAR_FRY`/`POACH`'s `pan`
-      requirement deliberately left untouched (a genuinely different
-      physical property, not the same bug). `scripts/validate.ts` gained a
+      requirement deliberately left untouched AT THE TIME (a genuinely
+      different physical property, not the same bug).
+      **`FRY`/`PAR_FRY` given the identical fix 2026-08-14** ("extend FRY
+      with everything learned from BOIL"), once actually building the
+      request confirmed the SAME id-vs-capability mismatch was real there
+      too: a new `isFryingVessel` capability (`pan.json`, and a genuinely
+      new `wok.json` proving real substitution the same way `saucepan.json`
+      did for `isDeepVessel`) — `pot.json` deliberately still doesn't get
+      it (a tall, narrow pot has poor surface-area-to-volume for shallow
+      frying even though it could physically hold the oil — the roles
+      reversed from the `isDeepVessel` case, where `pot` qualified and
+      `pan` didn't; here it's `pan`/`wok` that qualify and `pot` that
+      doesn't). `POACH`'s
+      `pan` requirement remains untouched — no forcing case yet. Proven via
+      `npm run capability-test:fry-any-vessel`
+      (`scripts/fry-with-any-vessel.ts`). `scripts/validate.ts` gained a
       matching dead-capability check (a `requiredToolCapabilities` entry no
       tool entity ever asserts would make an action permanently
       unexecutable — hard fail, mirroring `requiredTools`' own unknown-id

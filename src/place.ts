@@ -29,6 +29,43 @@ import type { HeatSourceProfile } from "./heat-source.ts";
  * needs the engine itself to enforce it, not manufactured speculatively
  * here (seen `masideas.md`'s dead-capability problem too many times in
  * this repo's own history to repeat it deliberately).
+ *
+ * GENERALIZED 2026-08-14 (`advanceTempSeconds`/`isAtTargetTemp`), once a
+ * second real forcing case — frying, not just boiling — proved the
+ * boiling-only shape was too narrow: FRY's oil never boils at any real
+ * cooking temperature (`oil.json` has no `boilingPointC` at all, and
+ * shouldn't — it doesn't apply), so `advanceHeatSeconds`'s original
+ * "clamp at `contentsEntity.thermophysical.boilingPointC`" design couldn't
+ * represent heating oil to a real fry temperature at all. `advanceTempSeconds`
+ * takes an explicit `targetTempC` instead of reading one fixed field, and
+ * `advanceHeatSeconds`/`isAtBoiling` are now thin wrappers over it
+ * (`targetTempC = contentsEntity.thermophysical.boilingPointC`) — same
+ * external behavior, same tests, zero breaking change; see
+ * `tests/place.test.ts`.
+ *
+ * ONE REAL PHYSICS DISTINCTION THE GENERALIZATION MUST NOT BLUR: for
+ * water, clamping at `boilingPointC` represents a real, unavoidable
+ * physical ceiling (further energy goes into phase change, not further
+ * ΔT — water CANNOT exceed it while liquid water remains). For oil heated
+ * toward a chosen `targetTempC` (a fry setpoint, not a phase-change
+ * point), nothing physically stops the temperature from continuing past
+ * it — the clamp here instead represents "this function models a
+ * controlled heating process that stops adding energy once the target is
+ * reached," the same real-world behavior a thermostat or an attentive
+ * cook provides, not a law of physics. Both are legitimate, but they are
+ * different KINDS of true, and conflating them would be dishonest —
+ * stated explicitly here rather than left to look like one uniform
+ * mechanism.
+ *
+ * `smokePointC` (`ingredient.ts`'s `ThermophysicalPropertiesSchema`,
+ * added alongside this generalization) is the real safety mechanism that
+ * distinguishes the two cases further: `advanceTempSeconds` REJECTS a
+ * `targetTempC` at or above a declared `smokePointC` outright, rather than
+ * silently heating toward (or past) a genuine fire/smoke-point safety
+ * ceiling the way it would silently clamp at a harmless phase-change
+ * point. A real fryer or cook wouldn't (shouldn't) dial in a temperature
+ * past an oil's smoke point either — this makes that refusal a hard error
+ * instead of an implicit assumption.
  */
 export interface PlaceState {
   /** The tool this place models, e.g. "pot" — matches an `Entity.id` of
@@ -82,51 +119,12 @@ export function pourInto(
   return { toolEntityId: place.toolEntityId, contentsEntityId: ingredientEntityId, massKg, currentTempC: tempC };
 }
 
-/**
- * Advance this place's temperature by `elapsedSeconds` of real (simulated,
- * not wall-clock — `ENGINE_INVARIANTS.md` #9, determinism: same inputs must
- * always produce the same output, which a `Date.now()` read would violate)
- * time under a given heat source — the actual structural piece the ROADMAP
- * item was missing: state that evolves as an explicit function of elapsed
- * time, not a single one-shot total (`heat-source.ts`'s
- * `estimatedPreheatSeconds` already computed a total; this is its
- * complement, letting a caller check progress at any intermediate point,
- * which a real robot control loop — polling "are we there yet" — actually
- * needs).
- *
- * SAME energy-balance simplification `estimatedPreheatSeconds` already
- * documents and uses (one constant mid-range power/efficiency value for the
- * whole interval, no real startup ramp, no heat loss to the pot/room) —
- * reusing that one stated approximation rather than inventing a second,
- * silently different one for the exact same physical question.
- *
- * THE ONE PHYSICS FACT THIS FUNCTION MUST GET RIGHT, deliberately, because
- * getting it wrong would silently predict an impossible temperature: once
- * the contents reach `boilingPointC`, further delivered energy goes into
- * the liquid→vapor phase change (latent heat of vaporization), NOT into
- * further temperature rise — real water at a rolling boil stays at ~100°C
- * (sea level), it does not keep climbing the longer the burner runs. This
- * function therefore CLAMPS at `boilingPointC` rather than integrating
- * `ΔT = energy / (mass × specificHeat)` straight through it. It does NOT
- * model evaporative mass loss past that point (a real, smaller, genuinely
- * separate effect — the pot's water mass measurably drops over a long boil,
- * which this module doesn't track) — flagged as a real, unmodeled
- * refinement rather than silently assumed away, same standard as
- * `estimatedPreheatSeconds`'s own doc comment.
- *
- * Throws if `place` is empty (`pourInto` first) or `contentsEntity` has no
- * `boilingPointC` — a place with unknown contents has no defined ceiling to
- * clamp against, and silently picking one (e.g. 100) would misrepresent
- * anything that isn't water (see `oil.json`'s `smokePoint`, a genuinely
- * different physical ceiling this function doesn't attempt to generalize to
- * — oil doesn't boil at a food-safe temperature the way water does).
- */
-export function advanceHeatSeconds(
-  place: PlaceState,
-  heatSource: HeatSourceProfile,
-  elapsedSeconds: number,
-  contentsEntity: Entity
-): PlaceState {
+/** Shared precondition both `advanceTempSeconds` and `advanceHeatSeconds`
+ *  need, checked in this exact order (place-empty, then mismatched-entity)
+ *  BEFORE either resolves any thermophysical field — a caller passing the
+ *  wrong entity entirely should hear about that before hearing about a
+ *  missing property on it. */
+function assertPlaceMatchesEntity(place: PlaceState, contentsEntity: Entity): void {
   if (place.contentsEntityId === null || place.massKg === null) {
     throw new Error(`Cannot heat "${place.toolEntityId}": nothing has been poured in yet (call pourInto() first).`);
   }
@@ -136,21 +134,60 @@ export function advanceHeatSeconds(
         `thermophysical properties — mismatched entity.`
     );
   }
-  const boilingPointC = contentsEntity.thermophysical?.boilingPointC;
+}
+
+/**
+ * Advance this place's temperature by `elapsedSeconds` of real (simulated,
+ * not wall-clock — `ENGINE_INVARIANTS.md` #9, determinism) time under a
+ * given heat source, toward an explicit `targetTempC` — the general form;
+ * see this file's own top doc comment for why `targetTempC` is a caller-
+ * supplied number here rather than a fixed field read off `contentsEntity`
+ * the way the original boiling-only version worked, and for the real
+ * physics distinction between "clamped at a phase-change ceiling" (water)
+ * and "clamped at a chosen setpoint" (oil) that generalization required
+ * naming explicitly.
+ *
+ * SAME energy-balance simplification `estimatedPreheatSeconds`
+ * (`heat-source.ts`) already documents and uses (one constant mid-range
+ * power/efficiency value for the whole interval, no real startup ramp, no
+ * heat loss to the pot/room) — reused here, not reinvented.
+ *
+ * Throws if: `place` is empty or its contents don't match `contentsEntity`
+ * (`assertPlaceMatchesEntity`); `contentsEntity` has no
+ * `thermophysical.specificHeatJPerKgK` (nothing to compute a heating rate
+ * from); `elapsedSeconds` is negative; or `targetTempC` is at or above a
+ * declared `thermophysical.smokePointC` (a real safety ceiling this
+ * function refuses to heat toward, not a value to silently clamp at).
+ */
+export function advanceTempSeconds(
+  place: PlaceState,
+  heatSource: HeatSourceProfile,
+  elapsedSeconds: number,
+  contentsEntity: Entity,
+  targetTempC: number
+): PlaceState {
+  assertPlaceMatchesEntity(place, contentsEntity);
+
   const specificHeat = contentsEntity.thermophysical?.specificHeatJPerKgK;
-  if (boilingPointC === undefined || specificHeat === undefined) {
+  if (specificHeat === undefined) {
     throw new Error(
-      `"${contentsEntity.id}" has no thermophysical.boilingPointC/specificHeatJPerKgK — cannot heat it without a ` +
-        `known ceiling to clamp against.`
+      `"${contentsEntity.id}" has no thermophysical.specificHeatJPerKgK — cannot compute how it heats.`
     );
   }
+
+  const smokePointC = contentsEntity.thermophysical?.smokePointC;
+  if (smokePointC !== undefined && targetTempC >= smokePointC) {
+    throw new Error(
+      `Refusing to heat "${contentsEntity.id}" toward ${targetTempC}°C: at or above its declared smokePointC ` +
+        `(${smokePointC}°C) — a real safety ceiling, not a target to heat toward. Choose a lower targetTempC.`
+    );
+  }
+
   if (elapsedSeconds < 0) {
     throw new Error(`elapsedSeconds must be non-negative, got ${elapsedSeconds}`);
   }
-  if (place.currentTempC >= boilingPointC) {
-    // Already there (or, for a mis-set starting temp above boiling, already
-    // past it) — nothing left to compute, and dividing by an already-zero
-    // ΔT budget below would be a wasted (if harmless) calculation.
+  if (place.currentTempC >= targetTempC) {
+    // Already there — nothing left to compute.
     return place;
   }
 
@@ -159,22 +196,50 @@ export function advanceHeatSeconds(
     (heatSource.thermalEfficiencyPercentRange.min + heatSource.thermalEfficiencyPercentRange.max) / 2 / 100;
   const deliveredPowerW = midPowerW * midEfficiency;
   const energyDeliveredJ = deliveredPowerW * elapsedSeconds;
-  const deltaT = energyDeliveredJ / (place.massKg * specificHeat);
-  const nextTempC = Math.min(place.currentTempC + deltaT, boilingPointC);
+  const deltaT = energyDeliveredJ / (place.massKg! * specificHeat);
+  const nextTempC = Math.min(place.currentTempC + deltaT, targetTempC);
 
   return { ...place, currentTempC: nextTempC };
 }
 
 /** Real, checkable state a robot's control loop would actually poll for —
- *  "is the water boiling yet" — rather than trusting a precomputed total
- *  duration blindly. Named to mirror `boil.json`'s own `verification`
- *  field's description ("water at or near 100°C, a visible rolling boil"),
- *  the same real-world check this function makes computable instead of
- *  only human-observable. */
+ *  "have we reached the target yet" — rather than trusting a precomputed
+ *  total duration blindly. General form of `isAtBoiling`. */
+export function isAtTargetTemp(place: PlaceState, targetTempC: number): boolean {
+  return place.currentTempC >= targetTempC;
+}
+
+/**
+ * Boiling-specific convenience wrapper over `advanceTempSeconds`, kept for
+ * every existing caller (`boil.json`/`simmer.json`'s use cases): resolves
+ * `targetTempC` from `contentsEntity.thermophysical.boilingPointC` — the
+ * one real case where the clamp target IS also a hard physical ceiling
+ * (latent heat of vaporization; see this file's top doc comment). Same
+ * external behavior as before the 2026-08-14 generalization.
+ */
+export function advanceHeatSeconds(
+  place: PlaceState,
+  heatSource: HeatSourceProfile,
+  elapsedSeconds: number,
+  contentsEntity: Entity
+): PlaceState {
+  assertPlaceMatchesEntity(place, contentsEntity);
+  const boilingPointC = contentsEntity.thermophysical?.boilingPointC;
+  if (boilingPointC === undefined) {
+    throw new Error(
+      `"${contentsEntity.id}" has no thermophysical.boilingPointC/specificHeatJPerKgK — cannot heat it without a ` +
+        `known ceiling to clamp against.`
+    );
+  }
+  return advanceTempSeconds(place, heatSource, elapsedSeconds, contentsEntity, boilingPointC);
+}
+
+/** Boiling-specific convenience wrapper over `isAtTargetTemp` — see
+ *  `advanceHeatSeconds`'s doc comment. */
 export function isAtBoiling(place: PlaceState, contentsEntity: Entity): boolean {
   const boilingPointC = contentsEntity.thermophysical?.boilingPointC;
   if (boilingPointC === undefined) {
     throw new Error(`"${contentsEntity.id}" has no thermophysical.boilingPointC to check against.`);
   }
-  return place.currentTempC >= boilingPointC;
+  return isAtTargetTemp(place, boilingPointC);
 }

@@ -50,6 +50,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Boil potato as a robot — quartered, real cited hold-time by piece size, place.ts/heat-source.ts reused for a second ingredient with zero code changes | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-potato-as-robot` |
 | Fry egg as a robot — oil heated to a real setpoint via place.ts's new target-temperature generalization, smoke-point safety rejection proven | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-as-robot` |
 | Fry with any vessel — pot correctly rejected, pan works, wok (never named by fry.json) also works | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-any-vessel` |
+| Boil water at real altitude (Madrid/Bogotá/La Paz) — real computed boiling point via ICAO+Antoine physics, composes with place.ts unchanged | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-at-altitude` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -753,6 +754,56 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       capability-test:boil-any-vessel` (`scripts/boil-with-any-deep-
       vessel.ts` — real data, all three cases: pan correctly still rejected,
       pot works, saucepan — an id `boil.json` never mentions — also works).
+- [x] **Triage of a third external report (`scientific_review_report.md`,
+      not committed — same treatment as the two prior reports), closed
+      2026-08-14.** Mostly confirmed existing correctness (A/A+ grades
+      throughout) rather than finding bugs — the genuinely actionable items
+      were in its own "Areas Needing Verification" section, triaged
+      individually:
+      - **Altitude/pressure — closed for real** (`src/altitude.ts`,
+        `atmosphericPressurePa`/`waterBoilingPointC`), named the "highest
+        priority" gap in the report and, independently, `water.json`'s own
+        citation note since this repo's first thermal-property entry. Real,
+        computed physics (ICAO Standard Atmosphere barometric formula +
+        water's own Antoine vapor-pressure equation), not a lookup table —
+        same "the actual textbook formula, not a hand-picked anchor"
+        standard `thermal.ts`'s D/z-value model already holds itself to.
+        Composes with `place.ts`'s `advanceTempSeconds`/`isAtTargetTemp`
+        with zero further changes (`scripts/boil-at-altitude.ts`) — a
+        fourth real reuse proof for that generalization (water/boiling,
+        oil/frying, potato, now altitude). Closes the REACH-boiling-
+        temperature half only; `EGG_BOIL_DONENESS`/`POTATO_BOIL_DONENESS`'s
+        hold-time ranges remain sea-level-only, named explicitly rather
+        than implied fixed.
+      - **Egg size adjustment — closed** (`egg-doneness.ts`'s
+        `EGG_SIZE_ADJUSTMENT_SECONDS`/`eggBoilDonenessRangeForSize`,
+        `boil.json`/`simmer.json`'s new `eggSize` parameter) — a real, cited
+        offset (~30s/size step, convergent consumer egg-timing guides)
+        layered on top of the existing large-egg-only table, not a second
+        competing one; `"large"` is an exact no-op, so every recipe
+        authored before this parameter existed is unaffected.
+      - **In-shell pasteurization citation — verified, NOT applied.**
+        Found real, peer-reviewed backing (Bermúdez-Aguirre & Niemira,
+        *Comprehensive Reviews in Food Science and Food Safety*, 2023:
+        "the standard pasteurization method for shell eggs is 57°C for
+        57.5 minutes") close to but not identical to
+        `egg_pasteurization_raw.json`'s existing 57°C/65min figure — see
+        `REFERENCES.md`'s "Discussed, not yet embedded" section for the
+        full finding, including a second peer-reviewed CFD study
+        corroborating that the existing 65min figure is conservative, not
+        unsafely short. Deliberately did NOT change the enforced
+        `heldSeconds` unilaterally — a real, safety-relevant threshold for
+        serving raw egg needs the repo owner's explicit sign-off before
+        being altered mid-review, not a silent "verification" that happens
+        to also change what's enforced. See `LEARNINGS.md` 2026-08-14.
+      - **Cold-start integration, carryover-cooking quantification,
+        turbulence quantification — correctly identified by the report
+        itself as real, larger, deferred work** ("would need temperature-
+        curve integration," "CFD or empirical correlation"), matching this
+        file's own existing stance on all three (`egg-doneness.ts`'s cold-
+        start gap, `shock.json`'s unquantified carryover note,
+        `simmer.json`'s unquantified turbulence note) — confirmed as still
+        correctly out of scope, not newly attempted.
 - [ ] Unit tests per forbidden-transition rule — genuinely still blocked, but
       now on the `INVALID_TRANSITIONS` matrix itself not existing (this
       phase's own next unchecked item), not on the test-runner gap.

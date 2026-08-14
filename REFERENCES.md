@@ -62,6 +62,28 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
 
 ## Physical constants & composition data
 
+- **ICAO Doc 7488 / US Standard Atmosphere 1976** — the standard
+  barometric-formula constants (sea-level pressure, temperature lapse
+  rate, molar mass of air) relating altitude to atmospheric pressure,
+  used in `src/altitude.ts`'s `atmosphericPressurePa`. Confidence:
+  `standard_reference` — the same standard atmosphere model aviation,
+  meteorology, and engineering reference tables are built on.
+- **NIST Chemistry WebBook — Antoine equation coefficients for water**
+  (A=8.07131, B=1730.63, C=233.426, valid 1–100°C) — water's own real
+  vapor-pressure-vs-temperature curve, used in `src/altitude.ts`'s
+  `waterBoilingPointC` (inverted to solve for boiling temperature at a
+  given pressure). Confidence: `standard_reference` — standard
+  coefficients originally from Antoine (1888), republished in essentially
+  every physical chemistry reference (e.g. Lange's Handbook of
+  Chemistry). Cross-checked against real-world figures in
+  `tests/altitude.test.ts` (Denver, 1609m, computes to ~94.7°C, matching
+  the commonly-cited ~95°C).
+- **Convergent consumer egg-timing guides with a size-adjustment chart**
+  (e.g. geteggtimer.com's small/medium/large/extra-large boiling-time
+  chart) — the ~30-second-per-size-step figure used in
+  `src/egg-doneness.ts`'s `EGG_SIZE_ADJUSTMENT_SECONDS`. Confidence:
+  `commonly_cited_unverified` — same tier and same class of source as
+  `EGG_BOIL_DONENESS` itself, not independently upgraded.
 - **USDA FoodData Central** (fdc.nal.usda.gov) — raw potato, whole egg, egg
   white, egg yolk, garlic, black pepper, and (closest match) chili flakes
   composition figures. Used across `data/entities/*.json`'s
@@ -199,6 +221,28 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   implement it. Listed for the same transparency reason as everything
   else: it genuinely informed this repo's design discussion, even though no
   code or data currently encodes it.
+- **Bermúdez-Aguirre & Niemira, "A review on egg pasteurization and
+  disinfection: Traditional and novel processing technologies,"
+  *Comprehensive Reviews in Food Science and Food Safety* (2023),
+  https://doi.org/10.1111/1541-4337.13088** — found 2026-08-14 while
+  independently verifying `egg_pasteurization_raw.json`'s existing
+  "commonly-cited, unverified" 57°C/65min figure, per an external
+  scientific review's request. States "the standard pasteurization method
+  for shell eggs is 57°C for 57.5 minutes" — a real, peer-reviewed figure
+  close to but not identical to this repo's existing one (57.5min vs.
+  65min). A separate peer-reviewed CFD study (Applied Sciences, MDPI,
+  2025, "Analysis of Shell Egg Pasteurization Using Computational Fluid
+  Dynamics") gives bracketing large-egg figures at 56°C (37.2min) and
+  58°C (29.1min) for a 5-log Salmonella reduction — both notably shorter
+  than 65min, corroborating that this repo's existing figure is
+  conservative, not unsafely short. Deliberately **not yet applied** to
+  `egg_pasteurization_raw.json`'s enforced `heldSeconds` — a real,
+  safety-relevant threshold change needs the repo owner's explicit
+  sign-off before altering an enforced value, not a unilateral update
+  mid-review; see `LEARNINGS.md` 2026-08-14 for the full reasoning.
+  Confidence: `standard_reference` for the Bermúdez-Aguirre figure itself
+  (peer-reviewed review article) — logged here, ahead of being embedded,
+  the same as the Di Lorenzo & Di Maio entry above.
 
 ## Simulation / robot-execution research
 

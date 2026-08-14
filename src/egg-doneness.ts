@@ -23,10 +23,13 @@ import { CitationSchema, type Citation } from "./ingredient.ts";
  *
  * ASSUMPTIONS THIS TABLE MAKES, STATED EXPLICITLY (egg size and start
  * temperature both meaningfully shift real timing, and neither is tracked
- * anywhere in this repo yet — `egg.json` has no size field at all):
+ * on `egg.json` itself as a size FIELD — no entity-level concept, only a
+ * per-call adjustment, see below):
  * - A "large" egg (~50-60g), the most common size these figures are given
- *   for in the source material below — a medium or XL egg would need a
- *   real adjustment this repo doesn't compute.
+ *   for in the source material below. `EGG_SIZE_ADJUSTMENT_SECONDS`/
+ *   `eggBoilDonenessRangeForSize` (added 2026-08-14) now compute a real,
+ *   cited offset for small/medium/extra_large instead of only ever
+ *   assuming large — see that function's own doc comment.
  * - Starting from refrigerator-cold (~4°C), not room temperature.
  * - The BOILING-WATER-START method specifically: the egg goes into ALREADY
  *   boiling water, and the timer starts at that moment — matching
@@ -98,4 +101,54 @@ export function eggBoilDonenessRange(yolkDoneness: "soft" | "medium" | "hard"): 
   const entry = EGG_BOIL_DONENESS.find((e) => e.yolkDoneness === yolkDoneness);
   if (!entry) throw new Error(`No EGG_BOIL_DONENESS entry for "${yolkDoneness}" — out of sync with boil.json's allowedValues`);
   return entry.durationSecondsRange;
+}
+
+/**
+ * Closes the "large egg only" assumption this file's own doc comment named
+ * from the start — added 2026-08-14 in response to an external scientific
+ * review naming egg-size adjustment as a concrete, tractable gap. `EGG_BOIL_
+ * DONENESS` above stays exactly as-is (still large-egg-based, still the
+ * primary table) — this is a real, cited OFFSET applied on top of it, the
+ * same "adjustment layered on a base table" shape `heat-source.ts`'s preheat
+ * time is layered on top of `EGG_BOIL_DONENESS`'s hold time, not a second,
+ * competing table.
+ *
+ * Real, convergent consumer cooking-guide figures (egg timing guides that
+ * publish a size-adjustment chart), corroborating each other: roughly 30
+ * seconds per size step relative to a large egg, larger eggs needing more
+ * time — physically consistent with `thermal.ts`'s own "heat has to
+ * penetrate to the center" reasoning, the same mechanism `thermalModel`'s
+ * validity condition already leans on. Confidence: `commonly_cited_
+ * unverified`, same tier as `EGG_BOIL_DONENESS` itself — this is the same
+ * class of source (consumer cooking-science guides), not independently
+ * upgraded.
+ *
+ * `extra_large`'s offset (+45s) is the midpoint of a commonly-cited 30-60s
+ * range, not independently pinned to one exact source figure — stated
+ * honestly as a rounded middle value, the same "round, plausible value
+ * within a commonly-cited range" convention `oil.json`'s density/smoke-
+ * point citations already use, rather than implying more precision than
+ * the source material actually gives for that one size.
+ */
+export const EGG_SIZE_ADJUSTMENT_SECONDS: Readonly<Record<"small" | "medium" | "large" | "extra_large", number>> = {
+  small: -60,
+  medium: -30,
+  large: 0, // the baseline EGG_BOIL_DONENESS itself already assumes
+  extra_large: 45,
+};
+
+/** `eggBoilDonenessRange`, adjusted for a real egg size instead of only
+ *  ever assuming "large". Composes the base range with the offset table
+ *  above rather than a second, separately-cited table — the offset is
+ *  applied to BOTH ends of the range, preserving the band's real width. */
+export function eggBoilDonenessRangeForSize(
+  yolkDoneness: "soft" | "medium" | "hard",
+  size: "small" | "medium" | "large" | "extra_large"
+): { min: number; max: number } {
+  const base = eggBoilDonenessRange(yolkDoneness);
+  const offset = EGG_SIZE_ADJUSTMENT_SECONDS[size];
+  if (offset === undefined) {
+    throw new Error(`No EGG_SIZE_ADJUSTMENT_SECONDS entry for "${size}" — out of sync with boil.json's eggSize allowedValues`);
+  }
+  return { min: base.min + offset, max: base.max + offset };
 }

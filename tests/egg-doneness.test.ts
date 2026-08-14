@@ -1,7 +1,13 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { EGG_BOIL_DONENESS, eggBoilDonenessRange, EggBoilDonenessSchema } from "../src/egg-doneness.ts";
+import {
+  EGG_BOIL_DONENESS,
+  eggBoilDonenessRange,
+  EggBoilDonenessSchema,
+  eggBoilDonenessRangeForSize,
+  EGG_SIZE_ADJUSTMENT_SECONDS,
+} from "../src/egg-doneness.ts";
 
 describe("EGG_BOIL_DONENESS", () => {
   test("has exactly one entry per boil.json yolkDoneness value, each schema-valid", () => {
@@ -31,5 +37,34 @@ describe("EGG_BOIL_DONENESS", () => {
     const soft = eggBoilDonenessRange("soft");
     const recipeChoiceSeconds = 390;
     assert.ok(recipeChoiceSeconds >= soft.min && recipeChoiceSeconds <= soft.max);
+  });
+});
+
+describe("eggBoilDonenessRangeForSize", () => {
+  test("'large' is an exact no-op — matches eggBoilDonenessRange unchanged", () => {
+    for (const yolkDoneness of ["soft", "medium", "hard"] as const) {
+      assert.deepEqual(eggBoilDonenessRangeForSize(yolkDoneness, "large"), eggBoilDonenessRange(yolkDoneness));
+    }
+  });
+
+  test("smaller eggs get a shorter range, larger eggs a longer one, real physical ordering", () => {
+    const small = eggBoilDonenessRangeForSize("medium", "small");
+    const medium = eggBoilDonenessRangeForSize("medium", "medium");
+    const large = eggBoilDonenessRangeForSize("medium", "large");
+    const xl = eggBoilDonenessRangeForSize("medium", "extra_large");
+    assert.ok(small.min < medium.min);
+    assert.ok(medium.min < large.min);
+    assert.ok(large.min < xl.min);
+  });
+
+  test("the offset is applied to both ends of the range, preserving its width", () => {
+    const base = eggBoilDonenessRange("hard");
+    const adjusted = eggBoilDonenessRangeForSize("hard", "small");
+    assert.equal(adjusted.max - adjusted.min, base.max - base.min);
+    assert.equal(adjusted.min, base.min + EGG_SIZE_ADJUSTMENT_SECONDS.small);
+  });
+
+  test("throws for an out-of-vocabulary size instead of returning undefined", () => {
+    assert.throws(() => eggBoilDonenessRangeForSize("medium", "jumbo" as any));
   });
 });

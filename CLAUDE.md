@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
-`heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`), `data/` has real entities/actions/recipes/CCPs/
+`heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`, `altitude.ts`), `data/` has real entities/actions/recipes/CCPs/
 heat-sources (potato, egg + its byproducts, garlic, alioli variants, gas/vitro/wood
 heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
-`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`/`potato-doneness.ts`,
-no `data/*.json` dependency),
+`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`/`potato-doneness.ts`/
+`altitude.ts`, no `data/*.json` dependency),
 `npm run validate` (schema + cross-reference check over the real `data/*.json`, PLUS
 (2026-08-14) an actual end-to-end simulation of every `data/recipes/*.json` via
 `recipe-runner.ts`'s `runRecipe` — not just static id cross-checking — the
@@ -117,6 +117,22 @@ America's Test Kitchen, not just gentler) — see that file's own doc
 comment for the full, deliberately-unresolved tension. `cut.json`'s
 `shape` enum also gained `halved`/`quartered` in this change (a real,
 previously-missing potato-boiling prep size, not potato-specific wiring).
+
+A fifth, still 2026-08-14: `src/altitude.ts` (`atmosphericPressurePa`,
+`waterBoilingPointC`) — real, computed altitude→boiling-point physics
+(ICAO Standard Atmosphere barometric formula + water's own Antoine
+vapor-pressure equation, not a lookup table), closing `water.json`'s
+long-standing "no altitude/pressure parameter anywhere" citation note,
+in direct response to an external scientific review naming it the
+highest-priority unaddressed gap. Composes with `place.ts`'s
+`advanceTempSeconds`/`isAtTargetTemp` with zero further changes — see
+`scripts/boil-at-altitude.ts`. Closes the REACH-boiling-temperature half
+only; `EGG_BOIL_DONENESS`/`POTATO_BOIL_DONENESS`'s hold-time ranges are
+still sea-level-only, named explicitly in that file's own doc comment.
+Same day, `egg-doneness.ts` gained `EGG_SIZE_ADJUSTMENT_SECONDS`/
+`eggBoilDonenessRangeForSize` (`boil.json`/`simmer.json`'s new `eggSize`
+parameter) — a real, cited offset on top of the existing large-egg-only
+table, not a second competing one.
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

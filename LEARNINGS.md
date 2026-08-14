@@ -1453,3 +1453,51 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   genuinely DIFFERENT and even opposite-looking real-world answer. Checked
   this explicitly before writing `pot.json`'s omission note, rather than
   assuming the prior BOIL case's answer (pot=yes) would just transfer.
+
+### Triaging a scientific review — real physics built, a safety number verified but not silently changed
+
+- **A report that's mostly A+/A grades is still worth reading closely —
+  its few "needs verification" items were more valuable than the whole
+  rest of the report's confirmation.** Most of `scientific_review_report.md`
+  restated what was already true and already documented (correct D/z-value
+  model, correct phase-change physics, correct FDA alignment) — genuinely
+  useful as independent confirmation, but not actionable. The actionable
+  signal was concentrated in one small "Areas Needing Verification"
+  section; finding it meant reading past a lot of justified praise to the
+  few paragraphs that actually named something to check or build.
+- **Implemented altitude with the same standard this repo already holds
+  itself to for thermal_death-time math: the real formula, not a
+  convenient anchor point** — barometric pressure (ICAO Standard
+  Atmosphere) composed with water's actual Antoine vapor-pressure
+  equation, both independently real and citable, rather than the simpler
+  "100 - altitude×0.00321" approximation also found during research. The
+  extra rigor paid for itself immediately: the computed value at sea level
+  came out to 99.997°C (not exactly 100, since Antoine is itself a curve
+  fit) and Denver computed to 94.66°C — both self-consistency-checkable
+  against real-world commonly-cited figures without needing to trust the
+  formula blindly.
+- **A real, safety-relevant number (in-shell pasteurization hold time) got
+  found, verified against a real peer-reviewed source, and DELIBERATELY
+  NOT applied — the correct action was surfacing the finding, not auto-
+  correcting the CCP.** The temptation, having found a specific,
+  real, peer-reviewed figure (57.5min) close to the existing "commonly
+  cited, unverified" one (65min), would be to just update `heldSeconds`
+  and upgrade the citation confidence in the same motion — the report
+  explicitly asked for exactly this verification. But this number gates
+  whether raw egg is safe to serve someone with no other mitigation (the
+  CCP's own note: "the request that motivated this file" was serving raw
+  egg to a child) — a hard-to-reverse, safety-relevant change belongs to
+  the repo owner's explicit decision, not something that happens as a
+  side effect of "use the knowledge in the report." Logged the finding in
+  full (`REFERENCES.md`'s "Discussed, not yet embedded" section, matching
+  the precedent that section already set for a real-but-unapplied source)
+  and left the enforced number untouched pending that decision.
+- **The altitude fix is the fourth real proof of `place.ts`'s
+  `advanceTempSeconds` generalization, not a coincidence worth letting
+  pass unremarked.** Water/boiling (original), oil/frying, potato (via
+  the existing `boilingPointC` path), and now an arbitrary computed target
+  temperature via `waterBoilingPointC` — all composed with the exact same
+  two functions, zero changes needed each time. A generalization that
+  keeps paying off on unrelated forcing cases is the actual evidence it
+  was the right abstraction, more convincing than any one of the
+  individual cases alone.

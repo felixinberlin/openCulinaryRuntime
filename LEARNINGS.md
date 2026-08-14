@@ -1339,3 +1339,54 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   built ad hoc for egg specifically — real composite-dish assembly (a
   `salad` entity, base ingredients like lettuce/mayo that don't exist yet)
   stays real, separate, deferred work.
+
+### `potato-doneness.ts` — the egg pattern reused for a second ingredient, proving the prior session's genericity claims for real
+
+- **`place.ts`/`heat-source.ts` needed ZERO changes to work for potato —
+  the actual proof that "the heat physics doesn't care what's in the
+  water" was true, not just asserted when built for egg.**
+  `scripts/boil-potato-as-a-robot.ts` reuses `pourInto`/`advanceHeatSeconds`/
+  `isAtBoiling` and `requiredToolCapabilities`'s `isDeepVessel` check
+  completely unmodified. Worth stating plainly: this is the actual payoff
+  of building `place.ts` as a standalone, ingredient-agnostic module in the
+  first place, rather than something coupled to egg specifically — a
+  second real forcing case confirming the earlier design choice, not
+  merely repeating it.
+- **A real, new physical finding this table surfaces that the egg table
+  never had to deal with: potato and egg disagree on which start method is
+  actually BETTER, not just gentler.** For egg, `boiling_start` is the
+  assumed default and `cold_start` is framed as a gentler alternative with
+  a real timing cost. For potato, America's Test Kitchen's own testing
+  found `cold_start` is objectively better on BOTH axes — more even
+  cooking AND less total time — genuinely the opposite framing. Named this
+  explicitly rather than silently reusing egg's `boiling_start`-is-the-
+  default framing for potato too, which would have quietly misrepresented
+  the real recommended technique. `POTATO_BOIL_DONENESS`'s ranges are
+  still scoped to `boiling_start` regardless (matching `durationSeconds`'
+  existing hold-time semantics) — a real, stated tension between what this
+  table computes and what real technique actually recommends, not resolved
+  either way.
+- **The three `pieceSize` ranges are honestly reported as overlapping,
+  unlike egg's cleanly-separated soft/medium/hard tiers — a real domain
+  difference, checked before writing the unit test, not assumed to match
+  the egg precedent by default.** Egg's table pins one size assumption
+  ("large"), so its three tiers vary by time alone and stay cleanly
+  ordered. Potato's three piece-size categories each still span a real
+  range of actual sizes (a small quartered new potato vs. a large
+  quartered russet), so a big `diced` piece and a small
+  `halved_or_quartered` piece can genuinely take about the same time.
+  Copying egg's "ranges are non-overlapping" test onto potato's table
+  without checking would have been a false assertion — checked the actual
+  numbers first, wrote a physically-honest "minimums are ordered" test
+  instead (`tests/potato-doneness.test.ts`).
+- **"Cut in blocks" (egg, prior entry) and "the size of potato" (this one)
+  turned out to share one real, previously-invisible gap: `cut.json`'s
+  `shape` enum had no "halved"/"quartered" values at all.** Egg's CUT gap
+  was "not wired to this entity"; potato's was different and easy to miss
+  because potato WAS already `isChoppable` — the actual gap was one level
+  deeper, in the shared action's own vocabulary, not in potato's wiring to
+  it. Found only because `POTATO_BOIL_DONENESS`'s `halved_or_quartered`
+  category needed a real corresponding CUT-produced state to attach to and
+  none existed — the same "a real number/state needed something to resolve
+  against, and nothing was there" shape as most of this session's other
+  closed gaps.

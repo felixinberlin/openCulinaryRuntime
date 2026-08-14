@@ -115,6 +115,23 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `data/actions/par-fry.json`'s `sourcesNote`/`restNote`/`thicknessNote`.
   Confidence: `commonly_cited_unverified` — a well-regarded food-science-literate
   source, not itself peer-reviewed.
+- **America's Test Kitchen, "Boiling Potatoes"** —
+  https://www.americastestkitchen.com/how_tos/5964-boiling-potatoes — the
+  size-banded whole-potato boiling times (2–2.5" diameter: 15–18 min) used
+  in `src/potato-doneness.ts`'s `POTATO_BOIL_DONENESS` "whole" entry, and
+  the cold-start-is-both-more-even-AND-faster finding cited in that file's
+  doc comment and `data/actions/boil.json`/`simmer.json`'s `pieceSizeNote`.
+  Confidence: `commonly_cited_unverified` — a professional test-kitchen
+  source, not independently re-verified against a primary source this
+  session.
+- **Convergent consumer cooking guides for cut-potato boiling times** (e.g.
+  A Couple Cooks, "How Long to Boil Potatoes for Potato Salad" — large
+  cubes/quarters 8–15min, diced/baby potatoes ~10min; cross-checked against
+  Key to My Lime's independent ~15–20min quartered figure) — used in
+  `potato-doneness.ts`'s "halved_or_quartered"/"diced" entries. Confidence:
+  `commonly_cited_unverified` — blended across multiple convergent
+  consumer sources, not one single authoritative test-kitchen figure the
+  way the "whole" entry is, reported as a wider range for that reason.
 - **MDPI, "Non-Destructive Evaluation of Physicochemical Properties for Egg
   Freshness: A Review" (2024)** —
   https://www.mdpi.com/2077-0472/14/11/2049 — and the albumen-viscosity study

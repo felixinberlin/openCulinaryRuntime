@@ -81,6 +81,19 @@
         "lowered_by_hand",
         "lowered_with_spoon"
       ]
+    },
+    {
+      "id": "pieceSize",
+      "names": {
+        "en": "Piece size",
+        "es": "Tamaño de la pieza"
+      },
+      "required": false,
+      "allowedValues": [
+        "whole",
+        "halved_or_quartered",
+        "diced"
+      ]
     }
   ],
   "outputs": {
@@ -98,7 +111,8 @@
     "heatSourceNote": "Same informational field and allowedValues as boil.json's heatSource, but the CONTROL CHALLENGE it names is more load-bearing here than for BOIL: holding water in an 85-96°C band without creeping back up to a rolling boil is exactly the scenario src/heat-source.ts's controlPrecision and manualPositioningRelevance fields were written to describe ('how precisely a cook can hold a target temperature/simmer once there' — that file's own top doc comment, written 2026-08-13 before this action existed). Concretely: vitro's real thermal lag (responseSpeed: 'slow') actually helps hold a stable simmer once dialed in; wood fire's coarse, highly_variable output (data/heat-sources/wood_fire.json) makes a stable simmer the hardest of the three to maintain by dial alone, which is precisely why manualPositioningRelevance is 'high' for wood — moving the pot to a cooler part of the fire is often the only real fine control available. Still not modeled numerically here (see heat-source.ts's own stated depth limit); named accurately rather than pretending SIMMER's own parameters already account for it.",
     "yolkDonenessNote": "Identical parameter/allowedValues to boil.json's, deliberately — a soft/medium/hard-boiled egg cooked at a gentle simmer instead of a rolling boil is still evaluated against the exact same src/egg-doneness.ts EGG_BOIL_DONENESS seconds-range table (that table's timings were derived assuming boiling_start, gently-simmering water in the first place — see boil.json's startMethodNote — not a rolling boil, so this is actually the MORE literally accurate technique for those numbers, not an approximation of them).",
     "haccpNote": "criticalControlPointsByAction.simmer on egg.json points at the identical 'egg_cooking' CCP boil/fry/poach already use — Salmonella kill-time depends on internal temperature and hold duration, not on how turbulently the water around it moved to get there, so reusing the same CCP is the physically correct choice, not a shortcut.",
-    "knownModelingGap": "waterTempC/heatSource here are still per-call parameters GUESSED on this one target instance, not read from any real, persistent state of the pot itself — this action doesn't actually know or enforce that the water is holding 85-96°C, only that the number a caller supplied falls in that band. Raised directly by the user while this action was being built: heat is really a property of the PLACE (the pot, shared by everything in it, rising/falling over real time), not a per-ingredient parameter — see ROADMAP.md's 'Heat as a shared, time-varying property of a PLACE' entry (Known-large, not yet started) and LEARNINGS.md 2026-08-13 for the full reasoning on why this is named and deferred, not built here."
+    "knownModelingGap": "waterTempC/heatSource here are still per-call parameters GUESSED on this one target instance, not read from any real, persistent state of the pot itself — this action doesn't actually know or enforce that the water is holding 85-96°C, only that the number a caller supplied falls in that band. Raised directly by the user while this action was being built: heat is really a property of the PLACE (the pot, shared by everything in it, rising/falling over real time), not a per-ingredient parameter — see ROADMAP.md's 'Heat as a shared, time-varying property of a PLACE' entry (Known-large, not yet started) and LEARNINGS.md 2026-08-13 for the full reasoning on why this is named and deferred, not built here.",
+    "pieceSizeNote": "Same parameter, same allowedValues, same src/potato-doneness.ts POTATO_BOIL_DONENESS table as boil.json's identically-named note — see that note for the full reasoning. Arguably the MORE relevant action for 'whole'/'halved_or_quartered' potato specifically, per whyPerTarget above: a rolling boil's turbulence is the real, commonly-cited cause of cracked skins on larger pieces, exactly what SIMMER exists to avoid — POTATO_BOIL_DONENESS's timings apply the same regardless of which verb reached the target temperature, per the same reasoning yolkDonenessNote/haccpNote above already establish for egg."
   },
   "verification": {
     "method": "visual",

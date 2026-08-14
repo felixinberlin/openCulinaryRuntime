@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
-`heat-source.ts`, `egg-doneness.ts`, `place.ts`), `data/` has real entities/actions/recipes/CCPs/
+`heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`), `data/` has real entities/actions/recipes/CCPs/
 heat-sources (potato, egg + its byproducts, garlic, alioli variants, gas/vitro/wood
 heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
-`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`, no `data/*.json`
-dependency),
+`engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`/`potato-doneness.ts`,
+no `data/*.json` dependency),
 `npm run validate` (schema + cross-reference check over the real `data/*.json`, PLUS
 (2026-08-14) an actual end-to-end simulation of every `data/recipes/*.json` via
 `recipe-runner.ts`'s `runRecipe` — not just static id cross-checking — the
@@ -101,6 +101,18 @@ consume it, and there is still no `FILL`/`PLACE` verb in `data/actions/*.json`
 entry for exactly what's closed vs. still open. Proven via
 `tests/place.test.ts` and `npm run capability-test:boil-as-robot`
 (`scripts/boil-egg-as-a-robot.ts`).
+
+A fourth, same day: `src/potato-doneness.ts` (`POTATO_BOIL_DONENESS`,
+`boil.json`/`simmer.json`'s `pieceSize` parameter) — the direct potato
+sibling of `egg-doneness.ts`, and the concrete proof that `place.ts`/
+`heat-source.ts` generalize across ingredients: `scripts/boil-potato-as-a-
+robot.ts` reuses both with zero code changes. Real finding worth knowing
+before touching this file: potato and egg disagree on which `startMethod`
+is actually recommended (cold-start is objectively better for potato per
+America's Test Kitchen, not just gentler) — see that file's own doc
+comment for the full, deliberately-unresolved tension. `cut.json`'s
+`shape` enum also gained `halved`/`quartered` in this change (a real,
+previously-missing potato-boiling prep size, not potato-specific wiring).
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

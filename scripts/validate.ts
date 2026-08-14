@@ -5,6 +5,7 @@ import { ActionSchema, type Action } from "../src/action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "../src/recipe.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "../src/thermal.ts";
 import { HeatSourceProfileSchema, type HeatSourceProfile } from "../src/heat-source.ts";
+import { runRecipe } from "../src/recipe-runner.ts";
 
 const root = join(import.meta.dirname, "..");
 
@@ -178,19 +179,35 @@ for (const recipe of recipes.items.values()) {
     if (!actions.items.has(step.actionId)) {
       fail(`recipes/${recipe.id}.json: sequence[${i}] references unknown action "${step.actionId}"`);
     }
-    // Only checks against initialInventory ids, not ids a prior step might
-    // spawn (e.g. potato_peel-1) — runner.ts assigns those at run time, so
-    // a step correctly targeting a spawned instance can't be verified
-    // statically here without simulating the whole run.
-    if (!knownInstanceIds.has(step.targetInstanceId)) {
-      console.log(
-        `NOTE recipes/${recipe.id}.json: sequence[${i}].targetInstanceId "${step.targetInstanceId}" isn't in initialInventory — assumed to be a spawned instance, not checked further.`
-      );
-    }
-    if (step.secondaryInstanceId && !knownInstanceIds.has(step.secondaryInstanceId)) {
-      console.log(
-        `NOTE recipes/${recipe.id}.json: sequence[${i}].secondaryInstanceId "${step.secondaryInstanceId}" isn't in initialInventory — assumed to be a spawned instance, not checked further.`
-      );
+    // A step referencing an id not in initialInventory isn't necessarily
+    // wrong here — it might be an instance a prior step spawns at runtime
+    // (e.g. potato_peel-1), which this static, per-field pass has no way to
+    // predict (runner.ts's spawnCounter only exists once the recipe
+    // actually runs). Left unflagged at this stage on purpose — the
+    // simulation pass below is what actually resolves it, one way or the
+    // other, instead of leaving "assumed to be spawned, not checked
+    // further" as the final word.
+  }
+}
+
+// Actual simulation, not just static reference-checking — closes exactly
+// the gap the comment above (and this whole loop, before this addition)
+// used to name and stop at: only running every recipe for real can confirm
+// a targetInstanceId/secondaryInstanceId/availableIngredientInstanceIds
+// reference that looked unresolved statically was in fact a legitimately
+// spawned instance, versus a genuine typo that only recipe-runner.ts's own
+// unknown-id checks (src/recipe-runner.ts, 2026-08-14 fix) can catch. A
+// recipe that errors at runtime is a real correctness bug, not a NOTE-level
+// concern — same severity as the schema/cross-reference checks above.
+if (entities.failed === 0 && actions.failed === 0 && ccps.failed === 0) {
+  for (const recipe of recipes.items.values()) {
+    const result = runRecipe(recipe, entities.items, actions.items, ccps.items);
+    if (result.errors.length > 0) {
+      for (const { step, message } of result.errors) {
+        fail(`recipes/${recipe.id}.json: sequence step "${step.actionId}" on "${step.targetInstanceId}" failed to run: ${message}`);
+      }
+    } else {
+      console.log(`OK   recipes/${recipe.id}.json simulated end-to-end, zero step errors (${recipe.sequence.length} steps)`);
     }
   }
 }

@@ -1220,3 +1220,37 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   separate addition with no forcing case yet. Recording it as known-and-
   deferred keeps the gap list honest without expanding scope past what was
   actually asked.
+
+### Triaging a pasted external bug report — verify before adopting, even the fixes
+
+- **An externally-generated review is a set of claims to check, not a to-do
+  list to execute.** Ran every checkable claim against the actual code
+  before acting on it, and found the report was right about the two real
+  bugs, wrong about one "dead code" claim (`src/query.ts` — actually used by
+  `scripts/ask.ts`), and its own suggested fix for the biggest issue didn't
+  actually work as written (`allowImportingTsExtensions: true` alone hits a
+  second error, `TS5096` — needs `noEmit` too). Treating "the report says
+  so" as sufficient to skip verification would have propagated a
+  wrong fix and a false claim into the codebase — the same standard this
+  repo already holds its own citations to (`REFERENCES.md`) applied to a
+  document instead of a source, for the same reason.
+- **Most of the report's 20 items were already known, already-fixed, or
+  already-named gaps this repo's own `ROADMAP.md`/`LEARNINGS.md` track —
+  worth recognizing as confirmation, not new information, rather than
+  re-documenting them a second time.** Inventory consumption, the forbidden-
+  transition matrix, storage-hazard CCPs, robot-safe parameter mappings,
+  composite dish assembly, unpredictable instance ids, recipe metadata
+  standardization — all pre-existing, named, open `ROADMAP.md` items. Tag
+  inheritance and CCP-gating-on-`durationSeconds` were pre-existing, already
+  FIXED — the report itself correctly marked them as such. Acting on a
+  report means triaging what's actually new/actionable inside it, not
+  executing every line item as if novel.
+- **The two real bugs it found were both genuine inconsistencies between one
+  piece of code and its own immediate neighbor, not deep design flaws** —
+  the same shape almost every real bug this whole project has found has
+  had: `tsc -p .` vs. `tsc -p . --noEmit` (one config, two commands, only
+  one path ever actually exercised); `targetInstanceId`'s loud-failure
+  check three lines above `availableIngredientInstanceIds`'s silent one, in
+  the SAME function. Consistency checking against a neighbor already proven
+  correct keeps finding real bugs in this codebase — worth remembering as a
+  review heuristic, not just a coincidence.

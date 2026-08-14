@@ -12,14 +12,17 @@ heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Comm
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
 `engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`, no `data/*.json`
 dependency),
-`npm run validate` (schema + cross-reference check over the real `data/*.json` — the
+`npm run validate` (schema + cross-reference check over the real `data/*.json`, PLUS
+(2026-08-14) an actual end-to-end simulation of every `data/recipes/*.json` via
+`recipe-runner.ts`'s `runRecipe` — not just static id cross-checking — the
 authoritative integration check), `npm run demo:<name>` (see `package.json` for the
-full list), `npm run recipe -- <id>`, `npx tsc -p . --noEmit` (typechecks `src`,
-`scripts`, AND `tests` — pre-existing `TS5097` import-extension noise across the repo
-is unrelated to any change; filter with `grep -v TS5097`). `npm test` and
-`validate.ts` are complementary, not alternatives (see `LEARNINGS.md` 2026-08-13) —
-run both, plus every demo and every recipe, after any change to `src/`, not just the
-new thing.
+full list), `npm run recipe -- <id>`, `npm run build` / `npx tsc -p . --noEmit`
+(typechecks `src`, `scripts`, AND `tests`; both are clean with zero errors as of
+2026-08-14's `tsconfig.json` fix — `noEmit`/`allowImportingTsExtensions` — no more
+`TS5097` noise to filter). `npm test` and `validate.ts` are complementary, not
+alternatives (see `LEARNINGS.md` 2026-08-13) — `validate.ts` now covers real
+recipe execution too, but still run both, plus every demo, after any change to
+`src/`, not just the new thing.
 
 **Before starting work, read `LEARNINGS.md`.** After learning something that would've
 saved time going in — a schema constraint, an engine gotcha, a design tradeoff and why

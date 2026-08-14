@@ -74,11 +74,32 @@ export function runRecipe(
       }
     }
 
-    const availableIngredientEntityIds = new Set(
-      step.availableIngredientInstanceIds
-        .map((id) => inventory.get(id)?.entityId)
-        .filter((id): id is string => id !== undefined)
-    );
+    // Same "unknown id -> loud step error" treatment targetInstanceId/
+    // secondaryInstanceId already get above, applied here for the identical
+    // reason — a typo'd/stale availableIngredientInstanceIds entry used to
+    // be silently dropped from the Set instead, which could mask a real
+    // authoring mistake in TWO ways: the step could still pass (if some
+    // OTHER listed instance happened to satisfy requiredIngredientCapabilities
+    // anyway, hiding that the intended one was never actually checked) or
+    // fail with a generic "no qualifying ingredient on hand" error that
+    // never named the actual typo as the cause. A stale reference to an
+    // instance id that was never declared/spawned is always an authoring
+    // bug, never a legitimate state — worth failing loudly every time, not
+    // only on the runs where it happens to matter.
+    const availableIngredientEntityIds = new Set<string>();
+    let hasUnknownIngredientInstance = false;
+    for (const id of step.availableIngredientInstanceIds) {
+      const ingredientInstance = inventory.get(id);
+      if (!ingredientInstance) {
+        errors.push({ step, message: `Unknown ingredient instance "${id}" in availableIngredientInstanceIds` });
+        hasUnknownIngredientInstance = true;
+        continue;
+      }
+      availableIngredientEntityIds.add(ingredientInstance.entityId);
+    }
+    if (hasUnknownIngredientInstance) {
+      continue;
+    }
 
     try {
       const result = applyAction(

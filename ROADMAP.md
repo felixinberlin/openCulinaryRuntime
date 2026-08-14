@@ -509,6 +509,62 @@ covered by what exists:**
       `data/*.json`) and the demo/recipe scripts remain the complementary
       integration layer — this closes the *unit*-test gap specifically, not
       a replacement for either.
+- [x] **`npm run build` actually builds — closed 2026-08-14.** A pasted
+      external bug report (`bugs_and_improvements.md`, not committed —
+      triaged, not archived) correctly identified `tsc -p .` as genuinely
+      broken (81 real `TS5097` errors, confirmed by actually running it, not
+      trusting the report), beyond the "pre-existing noise, filter with
+      `grep -v TS5097`" workaround this file used to document. Root cause
+      was real but the report's own suggested one-line fix
+      (`allowImportingTsExtensions: true` alone) doesn't work — TypeScript
+      requires `noEmit` (or `emitDeclarationOnly`) alongside it (`TS5096`),
+      verified by actually trying the report's fix before adopting it.
+      Since every script in this repo already runs via `tsx` (which
+      type-strips at runtime, never consumes `tsc`'s `dist/` output) and
+      nothing imports from `dist/` anywhere, `noEmit: true` is the honest
+      fix, not a compromise: `npm run build` becomes a real, zero-error
+      typecheck gate (what it was already being used for via `--noEmit` +
+      manual `grep` filtering), and the `TS5097` noise this file used to
+      tell readers to filter is gone entirely — nothing to filter anymore.
+      `outDir` removed from `tsconfig.json` as dead config now that nothing
+      emits there.
+- [x] **Silent unknown-ingredient-instance-id bug — closed 2026-08-14.**
+      Same bug report caught a real inconsistency in
+      `recipe-runner.ts`: `targetInstanceId`/`secondaryInstanceId` already
+      fail loudly (an `errors` entry, step skipped) when a step references
+      an instance id that doesn't exist, but `availableIngredientInstanceIds`
+      silently filtered out unresolvable ids instead of erroring — a
+      typo'd/stale id could either be masked entirely (if another listed
+      instance happened to also satisfy `requiredIngredientCapabilities`) or
+      surface only as a generic "no qualifying ingredient on hand" error
+      that never named the actual typo. Fixed to match the loud-failure
+      convention its own sibling checks already use, three doors down in
+      the same function. Verified this wasn't just a hypothetical: reran
+      every recipe after the fix (`npm run recipe -- <id>`, all 12) and
+      confirmed zero latent bugs were hiding behind it — the fix is
+      non-breaking, not just theoretically safer. New
+      `tests/recipe-runner.test.ts` (this module had zero unit coverage
+      before — a real, separate gap the bug report also named but only this
+      one fix's tests actually close, not a full audit of the module).
+- [x] **`validate.ts` now actually simulates every recipe end-to-end —
+      closed 2026-08-14.** The same bug report named this as a real gap
+      (`validate.ts` could only statically check ids against
+      `initialInventory`, and its own code comment already admitted a step
+      targeting a runtime-spawned instance id "can't be verified statically
+      here without simulating the whole run"). Closed for real, not worked
+      around further: `validate.ts` now calls `recipe-runner.ts`'s
+      `runRecipe` on every loaded recipe and fails (not just NOTEs) on any
+      step error — replacing the old "assumed to be a spawned instance, not
+      checked further" hand-wave with an actual pass/fail. Directly serves
+      this file's own "run every recipe after any change to `src/`"
+      mandate too — one command instead of a manual per-recipe loop.
+      **One claim in the bug report checked and found WRONG, worth naming
+      so this file doesn't repeat it**: it listed `src/query.ts` as
+      apparently-dead code. It isn't — `scripts/ask.ts` (`npm run ask`)
+      imports and uses it. Verified by grep before trusting the claim,
+      not after — the same discipline applied to every other item in that
+      report, which is why two of its suggested "fixes" got corrected
+      rather than applied as-written.
 - [ ] Lint/format config — none present (no eslint/oxlint/prettier config in
       the repo).
 - [x] `CLAUDE.md`'s "Repository state" — kept current as of this rewrite;

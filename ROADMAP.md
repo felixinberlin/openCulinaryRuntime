@@ -723,6 +723,29 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       `"washed"`) both updated to match — the latter now checks the
       `isWashable` capability instead, a strictly more correct check that
       no longer depends on how "washability" happens to be represented.
+- [x] **Byproducts can need their own reuse precondition, not just inherit
+      the parent's — closed 2026-08-15, same day, user-found.** Following
+      up the fix above, the user named the case it didn't cover: peeling a
+      dirty potato BEFORE washing it produces a dirty peel byproduct, and
+      washing the potato's flesh afterward can't retroactively clean it —
+      it's already a separate spawned instance (conservation of mass).
+      `potato_peel.json` had no `isWashable` capability and no
+      `possibleTags` at all, so it could neither inherit `"washed"` from a
+      pre-washed parent (via `engine.ts`'s existing 2026-08-12 byproduct-
+      tag-inheritance) nor be washed directly — reusing an unwashed peel
+      (fried into crisps, blended) had no safety check whatsoever. Fixed
+      by adding `isWashable`/`possibleTags: ["washed"]`/
+      `statePrerequisites: { fry: "washed", mix: "washed" }` to
+      `potato_peel.json` — composing entirely with mechanisms that already
+      existed (byproduct tag inheritance + the state-or-tag prerequisite
+      match from the fix directly above), not a new kind of check.
+      `scripts/reuse-potato-peel.ts` now proves both real cases side by
+      side (inherited-clean vs. spawned-dirty-needs-its-own-wash); two new
+      `tests/engine.test.ts` regressions lock in the behavior from
+      synthetic fixtures. Deliberately NOT a general answer to this
+      section's "Cross-contamination / hygiene knowledge" gap below
+      (equipment/surface reuse) — narrower: one spawned instance needing
+      its own already-expressible precondition satisfied before reuse.
 - [x] Conservation of mass/entities — `ActionOutputsSchema.destroysTarget` +
       `ExecutionResult.destroyed`, consumed by `recipe-runner.ts`. Scoped to
       this explicit per-action opt-in, not a general inventory-quantity

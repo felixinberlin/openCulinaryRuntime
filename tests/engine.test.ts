@@ -359,6 +359,74 @@ describe("applyAction — outputs & conservation of mass", () => {
     assert.deepEqual(shell.tags, []);
   });
 
+  test("a byproduct spawned from an UNwashed parent stays unwashed, and reuse requires washing it directly (2026-08-15, potato_peel real case)", () => {
+    // The exact real-world case a user named: peel a dirty potato, THEN
+    // wash it — the peel byproduct was already spawned by the time WASH
+    // runs, so washing the potato's flesh cannot retroactively clean it.
+    const potato = makeEntity({ id: "potato", producedByproducts: ["potato_peel"], capabilities: { isWashable: true } });
+    const potatoPeel = makeEntity({
+      id: "potato_peel",
+      possibleStates: ["raw", "fried"],
+      possibleTags: ["washed"],
+      statePrerequisites: { fry: "washed" },
+      capabilities: { isWashable: true, isFryable: true },
+    });
+    const entities = new Map([
+      ["potato", potato],
+      ["potato_peel", potatoPeel],
+    ]);
+    const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled", spawnsTargetByproducts: true } });
+    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
+    const fry = makeAction({ id: "fry", outputs: { transformedState: "fried" } });
+
+    // Peeled BEFORE washing — the spawned peel inherits nothing.
+    const peelResult = applyAction({ entityId: "potato", state: "raw", tags: [] }, peel, entities, NO_TOOLS);
+    const dirtyPeel = peelResult.spawned.find((s) => s.entityId === "potato_peel")!;
+    assert.deepEqual(dirtyPeel.tags, []);
+
+    // Washing the FLESH afterward doesn't touch the already-spawned peel —
+    // they're separate instances now (conservation of mass).
+    applyAction(peelResult.instance, wash, entities, NO_TOOLS);
+    assert.deepEqual(dirtyPeel.tags, []); // still untouched
+
+    // The still-dirty peel can't be reused yet.
+    assert.throws(
+      () => applyAction(dirtyPeel, fry, entities, NO_TOOLS),
+      /requires "potato_peel" to already be "washed"/
+    );
+
+    // Washing the peel directly is what actually satisfies it.
+    const washedPeel = applyAction(dirtyPeel, wash, entities, NO_TOOLS).instance;
+    const friedPeel = applyAction(washedPeel, fry, entities, NO_TOOLS).instance;
+    assert.equal(friedPeel.state, "fried");
+  });
+
+  test("a byproduct spawned from an ALREADY-washed parent inherits 'washed' and needs no extra step", () => {
+    const potato = makeEntity({ id: "potato", producedByproducts: ["potato_peel"], capabilities: { isWashable: true } });
+    const potatoPeel = makeEntity({
+      id: "potato_peel",
+      possibleStates: ["raw", "fried"],
+      possibleTags: ["washed"],
+      statePrerequisites: { fry: "washed" },
+      capabilities: { isWashable: true, isFryable: true },
+    });
+    const entities = new Map([
+      ["potato", potato],
+      ["potato_peel", potatoPeel],
+    ]);
+    const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled", spawnsTargetByproducts: true } });
+    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
+    const fry = makeAction({ id: "fry", outputs: { transformedState: "fried" } });
+
+    const washed = applyAction({ entityId: "potato", state: "raw", tags: [] }, wash, entities, NO_TOOLS).instance;
+    const peelResult = applyAction(washed, peel, entities, NO_TOOLS);
+    const cleanPeel = peelResult.spawned.find((s) => s.entityId === "potato_peel")!;
+    assert.deepEqual(cleanPeel.tags, ["washed"]);
+
+    const friedPeel = applyAction(cleanPeel, fry, entities, NO_TOOLS).instance;
+    assert.equal(friedPeel.state, "fried");
+  });
+
   test("destroysTarget marks the result destroyed, but still reports the pre-destruction instance for logging", () => {
     const egg = makeEntity({ id: "egg" });
     const entities = new Map([["egg", egg]]);

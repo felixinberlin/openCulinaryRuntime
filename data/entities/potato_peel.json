@@ -11,11 +11,17 @@
     "components": []
   },
   "possibleStates": ["raw", "fried", "blended"],
-  "allowedTransformations": ["fry", "mix"],
+  "possibleTags": ["washed"],
+  "allowedTransformations": ["wash", "fry", "mix"],
   "producedByproducts": [],
+  "statePrerequisites": {
+    "fry": "washed",
+    "mix": "washed"
+  },
   "capabilities": {
     "isFryable": true,
-    "isBlendable": true
+    "isBlendable": true,
+    "isWashable": true
   },
   "sensory": {
     "texture": ["thin", "fibrous"],
@@ -25,6 +31,7 @@
     "isWaste": true,
     "reusable": true,
     "producedBy": ["peel"],
-    "notes": "isWaste and reusable both hold: a byproduct stream with two reuse paths — fried into crisps, or blended in a mixer — rather than only ever discarded. Byproduct entity spawned when 'peel' is applied to potato.json (see EntitySchema.producedByproducts on potato)."
+    "notes": "isWaste and reusable both hold: a byproduct stream with two reuse paths — fried into crisps, or blended in a mixer — rather than only ever discarded. Byproduct entity spawned when 'peel' is applied to potato.json (see EntitySchema.producedByproducts on potato).",
+    "washedNote": "Added 2026-08-15, directly answering a user's real-world correction: if the parent potato was peeled BEFORE being washed, the peel that comes off is dirty (sand/soil), and washing the potato's FLESH afterward does nothing for it — it's already a separate, already-spawned instance by then (conservation of mass). isWashable/possibleTags['washed']/allowedTransformations['wash'] make the peel washable in its own right, and statePrerequisites.fry/mix: 'washed' now require it before reuse. This composes for free with engine.ts's existing byproduct-tag-inheritance (2026-08-12): if the PARENT was washed before PEEL fired, the spawned peel inherits the 'washed' tag automatically (see reuse-potato-peel.ts) and never needs washing again; if PEEL fired first, the peel spawns unwashed and must be washed directly before FRY/MIX will allow reusing it. Same mechanism potato.json's own cut/grate prerequisites use (engine.ts's 2026-08-15 state-or-tag match) — not a new kind of check, just the first non-potato entity to need it."
   }
 }

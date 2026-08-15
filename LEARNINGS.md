@@ -1683,3 +1683,42 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   A concrete instance of this repo's own standing practice (`ROADMAP.md`'s
   capability-test table): a claim about what the engine can represent is
   only real once it's actually been run, not merely reasoned about.
+- **The user's very next message found the real gap those four proofs
+  missed: "if you first peel and then wash, the peels stay dirty, they
+  have to be also washed if they are to be used."** Case 2 in
+  `potato-prep-variants.ts` proved the POTATO ends up fine either order —
+  it never checked the PEEL byproduct, which is a separate instance the
+  moment `PEEL` spawns it (conservation of mass). Checked directly rather
+  than assumed: `potato_peel.json` had NO `possibleTags` at all (so it
+  could never inherit `"washed"` from a pre-washed parent, even though
+  `engine.ts`'s byproduct-tag-inheritance mechanism — 2026-08-12 — already
+  existed and would have carried it automatically) and NO `isWashable`
+  capability (so `WASH` couldn't even be called on it directly — it would
+  have been rejected outright). A real, previously-silent gap: reusing a
+  peel from an unwashed-then-peeled potato (fried into crisps, blended)
+  was reachable in this engine with no safety check at all.
+- **Fixed by giving `potato_peel.json` `isWashable` + `possibleTags:
+  ["washed"]` + `statePrerequisites: { fry: "washed", mix: "washed" }`
+  — composing with mechanisms that already existed rather than building
+  a new one.** Tag inheritance (2026-08-12) now actually has something to
+  inherit; the state-or-tag `statePrerequisites` match (this same day,
+  earlier fix) is what makes `"washed"` enforceable on a `raw`/`fried`/
+  `blended` entity that never has a `"washed"` STATE. This is deliberately
+  NOT the same thing as `ROADMAP.md`'s still-unbuilt "cross-contamination
+  / hygiene knowledge" gap (danger to food from equipment/surface
+  reuse) — this is a much narrower, already-expressible case: one
+  specific spawned instance needing its own precondition satisfied before
+  reuse, the exact same shape `potato.json`'s own `cut`/`grate`
+  prerequisites already use.
+- **`scripts/reuse-potato-peel.ts` rewritten to prove both real cases
+  side by side** (Case A: washed-then-peeled, free inheritance, fries
+  immediately; Case B: peeled-then-washed, dirty peel, washing the FLESH
+  provably does nothing for the already-spawned peel, `FRY` correctly
+  rejected, washing the PEEL directly is what fixes it) — plus two new
+  `tests/engine.test.ts` regression tests built from synthetic fixtures
+  (not `data/*.json`) so the behavior is locked in independent of
+  `potato_peel.json`'s actual current shape. Second real proof in one
+  session that "prove it, don't just reason about it" catches gaps
+  reasoning alone didn't — the first was `potato-prep-variants.ts` two
+  entries above; this is the same discipline applied one layer deeper,
+  found by the user, not self-caught.

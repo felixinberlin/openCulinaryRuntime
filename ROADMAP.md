@@ -686,9 +686,13 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       (advisory only — does not make either parameter enforced), and a
       heuristic wash-before-peel/cut prep advisory. That last one is
       deliberately named as a heuristic, not a hygiene mechanism — running
-      it against `tortilla-de-patatas.json` immediately found a real,
-      previously-invisible gap (that canonical recipe never washes the
-      potato before peeling/cutting it), but this does NOT close the
+      it against every `data/recipes/*.json` found two real,
+      previously-invisible gaps, both fixed the same day:
+      `tortilla-de-patatas.json` and `tortilla-de-betanzos.json` both went
+      straight to PEEL on a raw potato, skipping the WASH step every other
+      potato recipe already includes (`salted-fried-potatoes.json`'s
+      wash/peel/cut order). Both now start with WASH; all 12 canonical
+      recipes report zero prep advisories. This does NOT close the
       "Common culinary knowledge coverage" section's larger, separately-
       scoped cross-contamination/hygiene gap below (danger to the FOOD
       from equipment/surface reuse) — that still needs a genuinely

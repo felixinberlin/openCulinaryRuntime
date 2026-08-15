@@ -27,6 +27,7 @@
   ],
   "availableTools": ["knife", "pan", "bowl"],
   "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
     {
@@ -60,7 +61,8 @@
     }
   ],
   "metadata": {
-    "notes": "The recipe ROADMAP.md's capability test named as blocked, now run end-to-end: PEEL/CUT/FRY the potato (low heat, long duration — soft-fried, deliberately not browned, real technique); CRACK/BEAT/SALT the egg; COMBINE merges the two fried-potato and beaten-egg instances into ONE new tortilla_mixture instance (both consumed — verify in the log: potato-1 and egg_cracked-3 are both gone from final inventory); FRY the mixture, FLIP it, FRY the other side. Onion-free (sin cebolla) — no onion entity exists in this vocabulary yet, and it's a legitimate traditional variant on its own, not a workaround.",
+    "notes": "The recipe ROADMAP.md's capability test named as blocked, now run end-to-end: WASH/PEEL/CUT/FRY the potato (low heat, long duration — soft-fried, deliberately not browned, real technique); CRACK/BEAT/SALT the egg; COMBINE merges the two fried-potato and beaten-egg instances into ONE new tortilla_mixture instance (both consumed — verify in the log: potato-1 and egg_cracked-3 are both gone from final inventory); FRY the mixture, FLIP it, FRY the other side. Onion-free (sin cebolla) — no onion entity exists in this vocabulary yet, and it's a legitimate traditional variant on its own, not a workaround.",
+    "washNote": "Added 2026-08-15: this recipe originally went straight to PEEL on a raw potato — mechanically valid (PEEL has no statePrerequisites entry at all) but skipped a real prep step every other potato recipe in this repo already includes (see salted-fried-potatoes.json's wash/peel/cut order). Found by scripts/validate-recipe.ts's new prepAdvisories heuristic (recipe-explain.ts) flagging it directly, not by manual re-read.",
     "instanceIdNote": "targetInstanceId 'egg_cracked-3'/'tortilla_mixture-4' aren't in initialInventory — they're ids CRACK/COMBINE spawn at runtime (recipe-runner.ts's spawnCounter), matching the same convention salted-fried-potatoes.json already uses for potato_peel-1. validate.ts logs a NOTE for these, not a failure — see that script's own comment on why spawned ids can't be verified statically."
   }
 }

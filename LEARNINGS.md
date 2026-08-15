@@ -1578,19 +1578,25 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   `egg-doneness.ts`'s own doc comment). Recognizing which parts already
   existed, rather than re-deriving them, is most of why this stayed a
   small, additive module (`recipe-explain.ts`) instead of a second engine.
-- **Running the new validator against a REAL canonical recipe
-  (`tortilla-de-patatas.json`) immediately surfaced a genuine, previously-
-  invisible gap**, not a synthetic test-fixture result: that recipe never
-  washes the potato before `PEEL`/`CUT`. Left unfixed deliberately — this
-  session's scope was building the validator, not auditing/editing every
-  existing recipe it can now flag things in, and the finding itself is
+- **Running the new validator against REAL canonical recipes immediately
+  surfaced a genuine, previously-invisible gap**, not a synthetic
+  test-fixture result: `tortilla-de-patatas.json` AND
+  `tortilla-de-betanzos.json` (checking every `data/recipes/*.json` file,
+  not just the one first tried, found the second instance of the same
+  gap) both went straight to PEEL on a raw potato, never washing it first.
+  Fixed the same day by adding a WASH step ahead of PEEL to both, matching
+  the wash/peel/cut order every other potato recipe already used
+  (`salted-fried-potatoes.json`) — a one-line-per-file change, re-verified
+  via `npm test`/`npm run validate`/re-running `validate-recipe` across
+  all 12 recipes (zero prep advisories left). The finding itself is still
   explicitly a HEURISTIC advisory, not a hygiene-safety claim (`ROADMAP.md`'s
   "Cross-contamination / hygiene knowledge" gap is real, separately scoped,
   and needs a genuinely different mechanism than "does a WASH step appear
-  before a PEEL/CUT step"). Worth recording as a real, concrete argument
-  FOR building this kind of pre-flight tool: it found something a human
-  reading the same recipe file had not caught across several previous
-  sessions of touching that exact file.
+  before a PEEL/CUT step") — but the missing step itself was real and
+  worth actually fixing, not just noting. Worth recording as a concrete
+  argument FOR building this kind of pre-flight tool: it found something a
+  human reading the same two recipe files had not caught across several
+  previous sessions of touching them.
 - **The timing-vs-doneness advisory deliberately does NOT duplicate HACCP
   CCP enforcement** — that stays exactly where it already was, inside
   `applyAction`/`runRecipe`, unchanged. The new check is a different,

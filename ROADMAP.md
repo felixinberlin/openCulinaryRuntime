@@ -841,45 +841,64 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       responsibility (capability/tool/state-prerequisite checks).
 - [x] **`INVALID_TRANSITIONS` forbidden-state-transition matrix — closed
       2026-08-15, the repo's own named "single largest unbuilt piece of
-      the original spec."** `ingredient.ts`'s `EntitySchema.invalidTransitions`
-      (state id -> the state ids this entity may never legally become from
-      there) + `engine.ts`'s `applyAction` check against the action's
-      actual COMPUTED next state (covers parameter-driven outputs like
-      CUT's `shape` for free, not just fixed `transformedState` actions).
-      Resolves this file's own long-open "Open dependencies" question —
-      literal global matrix (`CLAUDE_DEV_CTX.md`'s own shape) vs.
-      generalized from `statePrerequisites` — with a real, forced answer,
-      not a preference: **per-entity**, because a global map is actively
-      WRONG here, not just less general. `potato.json` forbids
-      `boiled -> peeled` (peel.json's own metadata has claimed "cannot
-      peel a potato that is already boiled" since this repo's first
-      commit, never enforced until now), while `egg.json`'s own
-      `statePrerequisites.peel: "boiled"` REQUIRES the exact opposite
-      order — a real egg is peeled AFTER boiling. Both are correct for
-      their own entity; a single global map keyed by bare state name
-      cannot express both at once. See `LEARNINGS.md` 2026-08-15 for the
-      full reasoning. Applied to three entities so far, each scoped to
-      what's actually true rather than padded to look complete:
-      `potato.json` (the full "can't un-cook/un-cut back to peeled" set,
-      deliberately EXCLUDING cutting a boiled potato — a real technique
-      already gated correctly by `cut.json`'s own `statePrerequisites` —
-      and excluding mashed->fried, the real potato-cake path), `egg.json`
-      (cut/fried/poached can't revert to peeled/boiled/raw), and
-      `egg_cracked.json` (fried/scrambled can't revert to any beaten
-      intensity). `scripts/validate.ts` gained a matching hard-fail check
-      (a key or forbidden-state value not in the entity's own
-      `possibleStates` — the same dead-reference standard
-      `producedByproducts`/`byproductsByAction` already hold themselves
-      to). Proven, not just typechecked: all 165 unit tests pass
-      (3 new, including the potato-vs-egg per-entity-necessity case
-      itself as an executable test, not just a claim), `npm run validate`
+      the original spec." Corrected the SAME day, same session, on direct
+      user correction — see below.** `ingredient.ts`'s
+      `EntitySchema.invalidTransitions` (state id -> the state ids this
+      entity may never legally become from there) + `engine.ts`'s
+      `applyAction` check against the action's actual COMPUTED next state
+      (covers parameter-driven outputs like CUT's `shape` for free, not
+      just fixed `transformedState` actions). Resolves this file's own
+      long-open "Open dependencies" question — literal global matrix
+      (`CLAUDE_DEV_CTX.md`'s own shape) vs. generalized from
+      `statePrerequisites` — with **per-entity** keying: state vocabulary
+      isn't portable across entities (same reasoning `statePrerequisites`
+      already commits to), and a near-miss found during development (see
+      correction below) is concrete evidence a global map is fragile in a
+      way per-entity keying isn't.
+      \
+      **The correction, worth recording in full rather than quietly
+      fixing**: the FIRST version of this closed item forbade potato from
+      ever going `boiled -> peeled`, following `CLAUDE_DEV_CTX.md`'s own
+      literal illustrative example ("cannot peel a potato that is already
+      boiled") — a claim this repo had carried uncritically in
+      `peel.json`'s metadata since its first commit, never actually
+      checked against real technique, and reused here without checking it
+      either. **It's factually wrong**: boil-in-jacket-then-peel is a
+      real, common technique (the standard method for many potato salad
+      recipes, and for jacket/new potatoes generally) — caught
+      immediately on direct user correction, the same session, the moment
+      the claim was finally enforced instead of just repeated in prose.
+      Corrected by removing every "X forbids reverting to peeled" entry
+      from `potato.json` rather than softening it. What survives, and is
+      genuinely defensible: `mashed` forbids reverting to any intact-piece
+      state (peeled/cut-shapes/boiled/par_fried/baked) — once puréed,
+      there's no discrete skin or shape left for PEEL/CUT/GRATE/BOIL/BAKE
+      to act on, a real structural fact, not a repeated-but-unverified
+      claim. Deliberately still excludes `mashed -> fried` (the real
+      potato-cake technique). `egg.json` (cut/fried/poached can't revert
+      to peeled/boiled/raw) and `egg_cracked.json` (fried/scrambled can't
+      revert to any beaten intensity) were not part of the error and are
+      unchanged. `peel.json`'s own metadata, `potato.json`'s top-level
+      `notes`, and this repo's `CLAUDE.md` (its "Physical feasibility
+      restrictions" bullet used the exact same wrong example) were all
+      corrected in the same change — see `LEARNINGS.md` 2026-08-15 for
+      the fuller "check real technique, don't just check the spec doc"
+      lesson.
+      \
+      `scripts/validate.ts` gained a matching hard-fail check (a key or
+      forbidden-state value not in the entity's own `possibleStates` —
+      the same dead-reference standard `producedByproducts`/
+      `byproductsByAction` already hold themselves to). Proven, not just
+      typechecked, both before AND after the correction: all 165 unit
+      tests pass (3, rewritten post-correction to use the mashed-potato
+      case instead of the retracted boiled/peeled one), `npm run validate`
       still simulates all 12 real recipes end-to-end with zero step
       errors, and the full demo/capability-test sweep is unaffected —
-      nothing here was already relying on a transition this now forbids.
-      **Still honestly scoped, not overclaimed**: only 3 of this repo's
-      ~15 ingredient entities have any `invalidTransitions` authored
-      (the field defaults to `{}`, so this is additive, opt-in coverage,
-      not a repo-wide audit) — garlic, oil, salt, water, and the
+      nothing here was ever relying on the incorrect rule, or on the
+      corrected one. **Still honestly scoped, not overclaimed**: only 3 of
+      this repo's ~15 ingredient entities have any `invalidTransitions`
+      authored (the field defaults to `{}`, so this is additive, opt-in
+      coverage, not a repo-wide audit) — garlic, oil, salt, water, and the
       alioli/tortilla composite entities have none yet, named here rather
       than implied covered.
 - [x] Requirement checks before a step executes (tool/entity present,
@@ -1308,6 +1327,10 @@ neither of which is defined anywhere in this repo — flagged, not assumed.
 - ~~Whether `INVALID_TRANSITIONS` should be a literal static matrix (as
   `CLAUDE_DEV_CTX.md` specifies) or generalized from the `statePrerequisites`
   pattern already in use~~ — **resolved 2026-08-15**: per-entity (see Phase
-  4's own now-closed entry above and `LEARNINGS.md` 2026-08-15) — potato and
-  egg need genuinely contradictory rules under the same bare state names,
-  which only per-entity keying can hold at once.
+  4's own now-closed entry above and `LEARNINGS.md` 2026-08-15) — state
+  vocabulary isn't portable across entities, and a real near-miss found
+  during development (potato's since-corrected first-draft rule directly
+  contradicted egg's genuinely-required boiled-before-peeled order, under
+  the same bare state name) is concrete proof a global map is fragile in
+  a way per-entity keying isn't, even though the corrected, shipped data
+  no longer has a live collision.

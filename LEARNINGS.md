@@ -2173,6 +2173,69 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   a valid recipe — checked that end-to-end path for real rather than
   stopping at "the generator's output matches the expected shape."
 
+### The `INVALID_TRANSITIONS` flagship example was factually wrong — caught the moment it was finally enforced
+
+- **"You cannot peel a potato that is already boiled" — `CLAUDE_DEV_CTX.md`'s
+  own literal example, repeated in `peel.json`'s metadata since this
+  repo's first commit — is wrong.** Boil-in-jacket-then-peel is a real,
+  common technique (the standard method behind many potato salad
+  recipes, and for jacket/new potatoes generally). The user caught this
+  directly, immediately after the `INVALID_TRANSITIONS` closure commit —
+  the first time this specific claim was ever actually ENFORCED rather
+  than just carried as prose. It had been sitting, unchecked, in three
+  separate places (the design spec, `peel.json`'s notes, `potato.json`'s
+  notes) for the entire life of this repo, cited approvingly by name in
+  this session's own earlier work as "the worked example" for exactly
+  this feature — and never once verified against real cooking technique.
+- **The exact failure mode this session's own discipline exists to
+  prevent, applied to itself.** `CLAUDE.md` requires every factual claim
+  in `data/*.json`/`src/*.ts` to trace to a real source
+  (`REFERENCES.md`); this claim traced only to another document's
+  illustrative code sample, never independently checked, and inherited
+  uncritically because it *sounded* plausible and matched a superficial
+  intuition ("boiled food is already cooked, why would you still need to
+  peel it") that doesn't survive contact with an actual, extremely common
+  technique. The same "check, don't assume" lesson this file already
+  recorded for the frying-science doc's fabricated bibliography and
+  `WORLD_MODEL_OPTIMIZATION.md`'s `COMBINE` claim — but this time the
+  wrong claim originated from the ORIGINAL design spec this whole repo is
+  built against, not an external document, which is exactly why it went
+  unchecked for longest: a spec doc reads as more authoritative than a
+  random externally-supplied report, and that's precisely backwards for
+  a domain-fact claim with no citation attached.
+- **Fixed by retraction, not by softening.** Every `potato.json`
+  `invalidTransitions` entry that forbade reverting to `"peeled"` was
+  removed outright, across every processed state (sliced/diced/.../
+  boiled/fried/baked), not narrowed to a hedge. What survived —
+  `mashed` forbidding reversion to any intact-piece state — is the one
+  entry that's structurally, not conventionally, true: a puréed potato
+  has no discrete skin or shape left for PEEL/CUT/GRATE/BOIL/BAKE to
+  meaningfully act on. That distinction (a real physical constraint vs.
+  a plausible-sounding but unverified process-order convention) is the
+  actual lesson: this session's earlier "narrow, provably correct, not
+  padded" framing for `invalidTransitions` was the right instinct, just
+  not applied skeptically enough to the ONE entry that was borrowed
+  wholesale from someone else's example instead of derived from this
+  repo's own already-cited technique sources.
+- **The per-entity-vs-global design justification (previous entry, same
+  file) survives the correction, but on adjusted evidence.** The
+  original "concrete proof" was potato's (wrong) `boiled -> peeled`
+  rule directly contradicting egg's real, required `boiled -> peeled`
+  order under the same bare state name. With potato's rule retracted,
+  today's shipped data no longer has a live collision — but the near-miss
+  itself, which genuinely happened during development before being
+  caught, is still real evidence that a single global map is fragile in
+  exactly the way per-entity keying isn't: it's not hard to imagine
+  authoring one entity's rule and unknowingly breaking another's under a
+  shared key, especially when — as just demonstrated — a rule can look
+  well-justified and still be wrong. Recorded as "a risk concretely
+  demonstrated, not a live contradiction," not overclaimed as still-true
+  today. See `ROADMAP.md`'s Phase 4 entry and `ingredient.ts`'s
+  `invalidTransitions` doc comment for the corrected framing, and
+  `tests/engine.test.ts` for the rewritten (mashed-potato,
+  and a labeled-synthetic per-entity-necessity) tests that replaced the
+  ones built on the retracted claim.
+
 ### A user-supplied `WORLD_MODEL_OPTIMIZATION.md` — mostly not new, and that was the useful finding
 
 - **Asked to read a doc "from Claude web" before finalizing the recipe-

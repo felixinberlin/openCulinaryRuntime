@@ -133,38 +133,51 @@ describe("applyAction — preconditions", () => {
     assert.equal(instance.state, "diced");
   });
 
-  test("invalidTransitions blocks a forbidden state transition (2026-08-15, ROADMAP.md Phase 4 — the potato-peel-after-boil case)", () => {
+  test("invalidTransitions blocks a forbidden state transition (2026-08-15, ROADMAP.md Phase 4 — mashed potato can't un-mash)", () => {
+    // Matches potato.json's real, corrected rule after 2026-08-15's fix:
+    // an EARLIER draft used "peeling a boiled potato" as the motivating
+    // case, following CLAUDE_DEV_CTX.md's own illustrative example — that
+    // claim turned out to be factually wrong (boil-in-jacket-then-peel is
+    // a real potato-salad technique, caught on direct user correction).
+    // "mashed can't become sliced/peeled/boiled again" is the genuinely
+    // defensible case that survived: once puréed, there's no discrete
+    // piece left for CUT/PEEL/BOIL to act on.
     const potato = makeEntity({
       id: "potato",
-      capabilities: { isPeelable: true },
-      invalidTransitions: { boiled: ["raw", "peeled"] },
+      capabilities: { isChoppable: true },
+      invalidTransitions: { mashed: ["sliced", "peeled"] },
     });
-    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+    const cut = makeAction({ id: "cut", requiredTargetCapability: "isChoppable", outputs: { transformedState: "sliced" } });
     const entities = new Map([["potato", potato]]);
 
-    // The named motivating case: nothing else in this schema stops peeling
-    // an already-boiled potato (PEEL has no statePrerequisites entry at
-    // all) — invalidTransitions is the mechanism that actually does.
+    // Nothing else in this schema stops this — CUT's statePrerequisites is
+    // about what's required BEFORE cutting, not what's forbidden given the
+    // CURRENT state — invalidTransitions is the mechanism that actually does.
     assert.throws(
-      () => applyAction({ entityId: "potato", state: "boiled", tags: [] }, peel, entities, NO_TOOLS),
-      /PEEL would move "potato" from "boiled" to "peeled", which is a forbidden transition/
+      () => applyAction({ entityId: "potato", state: "mashed", tags: [] }, cut, entities, NO_TOOLS),
+      /CUT would move "potato" from "mashed" to "sliced", which is a forbidden transition/
     );
 
-    // A potato that was never boiled is completely unaffected.
-    const result = applyAction({ entityId: "potato", state: "raw", tags: [] }, peel, entities, NO_TOOLS);
-    assert.equal(result.instance.state, "peeled");
+    // A potato that was never mashed is completely unaffected.
+    const result = applyAction({ entityId: "potato", state: "peeled", tags: [] }, cut, entities, NO_TOOLS);
+    assert.equal(result.instance.state, "sliced");
   });
 
-  test("invalidTransitions is keyed per entity, not global — potato and egg correctly disagree about boiled/peeled order", () => {
-    // The real reason ingredient.ts's invalidTransitions is scoped per
-    // entity rather than one shared map keyed by bare state name: potato
-    // forbids boiled -> peeled (peel before you boil), while egg's own
-    // statePrerequisites.peel REQUIRES the opposite order (boil before you
-    // peel) — a single global rule could not hold both correctly.
-    const potato = makeEntity({
+  test("invalidTransitions is keyed per entity, not global — demonstrates the exact risk a shared global map would carry", () => {
+    // Not a claim about the real data/*.json content (potato.json today
+    // has no rule keyed on "boiled" at all — see the correction above).
+    // This is a synthetic reproduction of a REAL near-miss found during
+    // development: the first, since-corrected draft of potato's rule
+    // forbade boiled -> peeled (wrong — a real technique), while egg's
+    // own statePrerequisites.peel genuinely REQUIRES exactly that boiled
+    // -> peeled order. Had invalidTransitions been one shared global map
+    // keyed by bare state name instead of per-entity, authoring either
+    // entity's rule would have silently clobbered the other's — this
+    // proves per-entity keying contains that failure mode.
+    const potatoWithWrongRule = makeEntity({
       id: "potato",
       capabilities: { isPeelable: true },
-      invalidTransitions: { boiled: ["peeled"] },
+      invalidTransitions: { boiled: ["peeled"] }, // synthetic stand-in for the retracted first draft
     });
     const egg = makeEntity({
       id: "egg",
@@ -173,7 +186,7 @@ describe("applyAction — preconditions", () => {
     });
     const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
     const entities = new Map([
-      ["potato", potato],
+      ["potato", potatoWithWrongRule],
       ["egg", egg],
     ]);
 
@@ -182,7 +195,8 @@ describe("applyAction — preconditions", () => {
       /forbidden transition/
     );
     // The exact same boiled -> peeled move is not just permitted for egg,
-    // it's the ONLY way to satisfy egg's own statePrerequisites.
+    // it's the ONLY way to satisfy egg's own statePrerequisites — proving
+    // both entities' rules are held independently, with zero cross-talk.
     const result = applyAction({ entityId: "egg", state: "boiled", tags: [] }, peel, entities, NO_TOOLS);
     assert.equal(result.instance.state, "peeled");
   });
@@ -191,15 +205,15 @@ describe("applyAction — preconditions", () => {
     const potato = makeEntity({
       id: "potato",
       capabilities: { isSeasonable: true },
-      invalidTransitions: { boiled: ["raw"] },
+      invalidTransitions: { mashed: ["raw"] },
     });
     const salt = makeAction({ id: "salt", requiredTargetCapability: "isSeasonable", outputs: { addsTag: "salted" } });
     const entities = new Map([["potato", potato]]);
 
-    // nextState stays "boiled" (unchanged) — never matches an entry that
-    // only lists "raw" as forbidden from "boiled".
-    const result = applyAction({ entityId: "potato", state: "boiled", tags: [] }, salt, entities, NO_TOOLS);
-    assert.deepEqual(result.instance, { entityId: "potato", state: "boiled", tags: ["salted"] });
+    // nextState stays "mashed" (unchanged) — never matches an entry that
+    // only lists "raw" as forbidden from "mashed".
+    const result = applyAction({ entityId: "potato", state: "mashed", tags: [] }, salt, entities, NO_TOOLS);
+    assert.deepEqual(result.instance, { entityId: "potato", state: "mashed", tags: ["salted"] });
   });
 
   test("requiredTargetCapability: missing vs. explicit false both block, distinguishably", () => {

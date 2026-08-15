@@ -15,11 +15,14 @@ import { requiredHoldSeconds, type CriticalControlPoint } from "./thermal.ts";
  * "shape"), `requiredIngredientCapabilities` (e.g. FRY needs some available
  * ingredient with isFryingMedium, like oil), and — closed 2026-08-15,
  * `Entity.invalidTransitions` (ingredient.ts) — arbitrary forbidden state
- * transitions in general (e.g. potato.json now genuinely stops peeling an
- * already-boiled potato; see that field's own doc comment for why it's
- * keyed per-entity rather than the one global matrix CLAUDE_DEV_CTX.md's
- * literal example shows). It also only checks that a qualifying ingredient
- * is *present*, not consume/decrement it — real quantity tracking belongs
+ * transitions in general (e.g. potato.json now genuinely stops mashed
+ * potato from reverting to a pre-mash state — see that field's own doc
+ * comment for why it's keyed per-entity rather than the one global matrix
+ * CLAUDE_DEV_CTX.md's literal example shows, AND for a real mistake this
+ * field caught in its own first draft, worth reading before trusting any
+ * single example in this codebase over checking real technique). It also
+ * only checks that a qualifying ingredient is *present*, not consume/
+ * decrement it — real quantity tracking belongs
  * to Phase 4's recipe-level inventory.
  *
  * `state` and `tags` are deliberately separate: `state` is the one

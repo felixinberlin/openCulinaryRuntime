@@ -350,23 +350,42 @@ export const EntitySchema = z.object({
    * repo's own named "single largest unbuilt piece of the original spec"
    * until 2026-08-15). Keyed by the state an instance is CURRENTLY in ->
    * the state ids it may never legally become FROM there, e.g.
-   * `potato.json`: `{ "boiled": ["raw", "peeled"] }` — "you cannot peel a
-   * potato that's already boiled," `peel.json`'s own metadata note since
-   * this repo's first commit, never actually enforced until this field.
+   * `potato.json`: `{ "mashed": ["peeled", "sliced", ..., "boiled"] }` —
+   * once puréed, there is no discrete skin or piece left for PEEL/CUT/
+   * GRATE/BOIL/BAKE to act on. A genuine physical fact, checked against
+   * real technique before being asserted — see the correction note below.
+   *
+   * **A real mistake, corrected the same day, worth keeping documented
+   * rather than erased**: the first version of this field followed
+   * `CLAUDE_DEV_CTX.md`'s own literal example too, uncritically —
+   * "cannot peel a potato that is already boiled" — and forbade every
+   * processed potato state from reverting to `"peeled"`. That claim is
+   * factually wrong: boil-in-jacket-then-peel is a real, common
+   * technique (many potato salad recipes, jacket/new potatoes), caught
+   * on direct user correction. This repo's own worked example, carried
+   * in `peel.json`'s metadata since the first commit, was never actually
+   * checked against real culinary technique until it was finally
+   * enforced — exactly the "proven, not asserted" failure this whole
+   * field exists to prevent, applied to itself. Fixed by removing every
+   * incorrect entry rather than softening it; see `potato.json`'s own
+   * `invalidTransitionsNote` and `LEARNINGS.md` 2026-08-15.
    *
    * Deliberately keyed PER ENTITY, not one shared global map — resolving
    * `ROADMAP.md`'s own "unresolved, worth deciding before building either"
    * open question. `CLAUDE_DEV_CTX.md`'s literal example is global (bare
-   * state names like "boiled"), but this repo's real data makes a global
-   * map actively wrong, not just less general: `potato.json` forbids
-   * `boiled -> peeled` (peel before you boil, per its own convention),
-   * while `egg.json`'s `statePrerequisites.peel: "boiled"` REQUIRES the
-   * exact opposite order (boil before you peel) — the two entities'
-   * correct rules directly contradict each other under the same bare
-   * state name. A global map cannot hold both; per-entity keying can,
-   * with zero conflict, because it's the same "state vocabulary isn't
-   * portable across entities" reasoning `statePrerequisites` above
-   * already commits to.
+   * state names like "boiled"), but a global map is fragile in a way
+   * per-entity keying isn't: the FIRST (wrong) draft of potato's rule —
+   * `boiled -> peeled` forbidden — directly contradicted `egg.json`'s own
+   * verified `statePrerequisites.peel: "boiled"` (egg genuinely does
+   * require boiling before peeling) under the identical bare state name.
+   * A global map cannot hold both a real rule and a wrong one without one
+   * silently overwriting the other; per-entity keying at least contains
+   * the damage to the entity that's actually wrong. The corrected data no
+   * longer has a live collision (potato's surviving rule is scoped to
+   * `"mashed"`, a state egg doesn't have), but the near-miss is a real,
+   * concrete demonstration of the risk a global map would carry — not a
+   * hypothetical. Same "state vocabulary isn't portable across entities"
+   * reasoning `statePrerequisites` above already commits to.
    *
    * Checked in `engine.ts`'s `applyAction` against the action's actual
    * COMPUTED next state (`transformedState` or `transformedStateFromParameter`
@@ -376,11 +395,7 @@ export const EntitySchema = z.object({
    * like `SALT`) can never trip this check, since its "next state" is
    * just the unchanged current one. Optional and defaults to `{}`, so
    * every entity file written before this field existed is completely
-   * unaffected. Some entries here (any list containing `"raw"`) are
-   * currently unreachable — no action's output ever resolves to `"raw"` —
-   * kept anyway for fidelity to `CLAUDE_DEV_CTX.md`'s own literal
-   * example, same "flag it, don't hide it" honesty as `place.ts`'s own
-   * similarly-unreachable "oil too cold to ever finish cooking" branch.
+   * unaffected.
    */
   invalidTransitions: z.record(z.string(), z.array(z.string())).default({}),
   /**

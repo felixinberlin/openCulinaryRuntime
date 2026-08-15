@@ -1166,6 +1166,19 @@ in ticket form; reviewed for accuracy against the code 2026-08-15.
 - [ ] Cooklang parser. Partial groundwork exists — every entity has a
       `cooklang: { canonicalToken, spiceLock }` field (`ajo`, `huevo`,
       `sal`, ...) — but nothing reads or writes actual `.cook` text yet.
+      **Design note added 2026-08-15, `AUTHORING.md` §2**: this is really
+      two separate problems, not one. Parsing Cooklang's own syntax
+      (`@ingredient{qty%unit}`, `#cookware{}`, `~{timer}`) is mechanical
+      and can be built whenever prioritized. Turning step PROSE ("fry the
+      potatoes until golden") into this repo's typed `actionId`/
+      parameter shape is NOT mechanical — that's the same free-text →
+      structured-intent translation `ENGINE_INVARIANTS.md` #10 already
+      scopes to an LLM/human proposing a draft, never asserting it as
+      valid. The real design payoff: that translator doesn't need its
+      own validation logic at all — it only needs to produce a first
+      (possibly incomplete/wrong) `RecipeScript` draft and hand it to the
+      existing `validate-recipe` loop (`AUTHORING.md` §1), which already
+      throws the real alarms needed to iterate a draft toward correct.
 - [ ] Cooklang scaling multipliers / spice-lock preservation.
 - [ ] Cooklang ⇄ OCR JSON round-trip tests.
 

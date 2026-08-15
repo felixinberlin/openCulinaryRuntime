@@ -42,10 +42,12 @@ npm test                 # unit suite (tests/*.test.ts) — synthetic fixtures
 npm run validate          # schema + cross-reference check over the real data/*.json
 npm run recipe -- <id>    # run a specific recipe, e.g. tortilla_de_patatas
 npm run validate-recipe -- <path>  # pre-flight + run an ARBITRARY recipe file, not just one already in data/recipes/
+npm run narrate-recipe -- <path> <out.md|.json>  # human-readable "read this recipe back to me" summary
 ```
 
 See `package.json` for the full list of `demo:*` and `capability-test:*`
-scripts.
+scripts. Writing a new recipe from scratch? See `AUTHORING.md` for the
+real, worked-example loop (and the honest answer on Cooklang).
 
 ## Documentation map
 
@@ -59,6 +61,7 @@ Read in roughly this order to get oriented:
 | `CLAUDE_DEV_CTX.md` | The original architecture blueprint/system-prompt this was built from. |
 | `CLAUDE.md` | Ground truth on how the plan diverged from what's actually built, file-by-file, plus repo commands and conventions. |
 | `ROADMAP.md` | Phased build plan and the capability-test table — which real dishes are provably makeable today. |
+| `AUTHORING.md` | How to actually write a new recipe from the command line — the real `validate-recipe` loop, a worked example, and the honest current state of Cooklang support (none, yet — and why). |
 | `LEARNINGS.md` | Dated log of schema constraints, engine gotchas, and design tradeoffs discovered along the way. |
 | `REFERENCES.md` | Bibliography — every safety threshold and technique claim traced to a real source. |
 | `SIMULATION_TARGETS.md` | Research comparing simulator/robot-execution targets (PDDL, VirtualHome, AI2-THOR, OmniGibson, RoboCasa) for eventually grounding this model in a simulated or robot-executed world. Not yet chosen. |

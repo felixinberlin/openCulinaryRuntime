@@ -875,15 +875,30 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       there's no discrete skin or shape left for PEEL/CUT/GRATE/BOIL/BAKE
       to act on, a real structural fact, not a repeated-but-unverified
       claim. Deliberately still excludes `mashed -> fried` (the real
-      potato-cake technique). `egg.json` (cut/fried/poached can't revert
-      to peeled/boiled/raw) and `egg_cracked.json` (fried/scrambled can't
-      revert to any beaten intensity) were not part of the error and are
-      unchanged. `peel.json`'s own metadata, `potato.json`'s top-level
-      `notes`, and this repo's `CLAUDE.md` (its "Physical feasibility
-      restrictions" bullet used the exact same wrong example) were all
-      corrected in the same change — see `LEARNINGS.md` 2026-08-15 for
-      the fuller "check real technique, don't just check the spec doc"
-      lesson.
+      potato-cake technique). `peel.json`'s own metadata, `potato.json`'s
+      top-level `notes`, and this repo's `CLAUDE.md` (its "Physical
+      feasibility restrictions" bullet used the exact same wrong example)
+      were all corrected in the same change — see `LEARNINGS.md`
+      2026-08-15 for the fuller "check real technique, don't just check
+      the spec doc" lesson.
+      \
+      **`egg.json`/`egg_cracked.json` were not part of the original
+      error, but were re-audited on request rather than assumed clean —
+      one entry narrowed as a result.** Checked against the strongest
+      real counter-technique that would matter here (a peeled hard-boiled
+      egg shallow-fried before going into a sauce — Indian/Southeast
+      Asian egg curry, the same move underlying Scotch eggs) and
+      confirmed `peeled -> fried` is correctly NOT forbidden. One entry
+      from the first draft — `sliced`/`diced`/`chopped` forbidding a
+      reversion to `boiled` — was retracted anyway: it rested on "no
+      counter-example found," the exact epistemic position that was wrong
+      for potato, not a structural guarantee (unlike `fried`/`poached`
+      forbidding `peeled`, which rests on a real structural fact — no
+      shell is ever in play for either preparation, so there's nothing to
+      peel). `egg_cracked.json`'s fried/scrambled-can't-revert-to-raw/
+      beaten rule is unchanged — genuine protein-coagulation
+      irreversibility, not a process-order assumption, the same category
+      of claim as potato's own surviving `mashed` rule.
       \
       `scripts/validate.ts` gained a matching hard-fail check (a key or
       forbidden-state value not in the entity's own `possibleStates` —

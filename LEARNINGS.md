@@ -2236,6 +2236,38 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   and a labeled-synthetic per-entity-necessity) tests that replaced the
   ones built on the retracted claim.
 
+### Re-auditing egg for the same mistake — a useful, generalizable check method, not just a one-off fix
+
+- **Asked directly to check `egg.json`/`egg_cracked.json` for the same
+  class of error.** The check that actually worked for potato wasn't
+  "read the rule and see if it sounds plausible" (that's exactly how the
+  wrong rule got authored in the first place) — it was "name the
+  single strongest real counter-technique this rule would need to
+  survive, then check specifically against that." For egg, the analogous
+  case to boil-then-peel is a peeled, hard-boiled egg shallow-fried
+  before going into a sauce — a real, well-known dish (Indian/Southeast
+  Asian egg curry; the same move underlies a Scotch egg's core).
+  Confirmed `peeled -> fried` was correctly NOT forbidden by the existing
+  rules — no repeat of the potato error.
+- **Found a genuine confidence gradient worth telling apart, not a binary
+  right/wrong.** `fried`/`poached` forbidding `peeled` rests on a
+  structural fact (neither preparation ever has a shell in play, so
+  there's nothing to peel) — the same solid category as potato's
+  surviving `mashed` rule and egg_cracked's coagulation-irreversibility
+  rule. `sliced`/`diced`/`chopped` forbidding `boiled`, by contrast,
+  rested only on "no counter-example found during an active search" —
+  structurally identical to the epistemic position that was WRONG for
+  the potato claim, even though no actual counter-example turned up this
+  time. Retracted anyway, on the principle that "I looked and couldn't
+  find one" is not the same strength of evidence as "there's no physical
+  substrate left for this to act on," and this session just demonstrated
+  the former can be wrong. Worth generalizing: when auditing a forbidden-
+  transition (or similarly totalizing) claim, sort the justification into
+  STRUCTURAL (survives) vs. UNVERIFIED-ABSENCE-OF-COUNTEREXAMPLE (retract
+  or flag), rather than treating "nothing found wrong on read-through" as
+  sufficient on its own — see `egg.json`'s own `invalidTransitionsNote`
+  for this classification applied directly to its own remaining data.
+
 ### A user-supplied `WORLD_MODEL_OPTIMIZATION.md` — mostly not new, and that was the useful finding
 
 - **Asked to read a doc "from Claude web" before finalizing the recipe-

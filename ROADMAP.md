@@ -359,6 +359,25 @@ proven runnable, not just asserted.
       provably never re-targeted — an exact instance of this session's
       repeated lesson that testing only the motivating example doesn't
       test the general claim.
+- [x] **`recipe-scaffold.ts` — the scaffold generator, closed 2026-08-15,
+      same day `AUTHORING.md` named it as a real gap.** `npm run
+      new-recipe -- <path.json> <entityId...>`. Writes a real
+      `initialInventory` (correct starting states straight from
+      `data/entities/*.json`, per-entity-type instance numbering matching
+      every existing recipe's own convention — potato-1/potato-2, not a
+      shared global counter, a real bug caught by a manual check and
+      locked in with a regression test) with empty `availableTools`/
+      `sequence`, and prints each entity's real capabilities to the
+      console. **Deliberately writes a file `RecipeScriptSchema` itself
+      calls invalid** (`sequence` requires at least one step) — running
+      `validate-recipe` against a fresh scaffold correctly says so; that
+      alarm IS the point, not a bug the generator should suppress, the
+      same "the validator's alarms are what guides a draft to correct"
+      framing `AUTHORING.md` §2 already committed to for the (still
+      unbuilt) Cooklang case. Verified end-to-end: scaffolded a real
+      recipe, hand-added one `FRY` step, ran `validate-recipe`, got a
+      clean pass — the full loop `AUTHORING.md` documents, actually run,
+      not just described.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

@@ -41,6 +41,7 @@ npm install
 npm test                 # unit suite (tests/*.test.ts) — synthetic fixtures
 npm run validate          # schema + cross-reference check over the real data/*.json
 npm run recipe -- <id>    # run a specific recipe, e.g. tortilla_de_patatas
+npm run new-recipe -- <path.json> <entityId...>  # scaffold a starting recipe file — see AUTHORING.md
 npm run validate-recipe -- <path>  # pre-flight + run an ARBITRARY recipe file, not just one already in data/recipes/
 npm run narrate-recipe -- <path> <out.md|.json>  # human-readable "read this recipe back to me" summary
 ```

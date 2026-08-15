@@ -2137,3 +2137,38 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   test (`tests/recipe-narrator.test.ts`, the COMBINE+FLIP case) locks
   in the fixed behavior independent of `tortilla-de-patatas.json`'s
   actual current contents.
+
+### `recipe-scaffold.ts` — a design decision made BEFORE writing it paid off immediately
+
+- **Building this was fast specifically because the hard design question
+  — "what does a scaffold even look like when the schema requires a
+  non-empty `sequence`" — was already resolved while writing
+  `AUTHORING.md` an hour earlier**, not discovered mid-implementation.
+  `RecipeScriptSchema`'s `sequence.min(1)`/`initialInventory.min(1)`
+  (`recipe.ts`) mean a truly empty scaffold can never be schema-valid —
+  the design decision (write an intentionally-incomplete file, let
+  `validate-recipe`'s own "sequence must contain at least 1 element" be
+  the first real, correct alarm, rather than inventing a placeholder step
+  that would just produce a different, less honest error) was made in
+  the doc, then just implemented. Worth naming as a pattern: writing the
+  user-facing doc FIRST surfaced the one real ambiguity a design would
+  have hit anyway, cheaper than hitting it in code.
+- **Manually running the tool immediately caught a real bug the design
+  didn't anticipate**: a naive `entityIds.map((id, index) => ...-${index
+  + 1})` produces `oil-2` for the second entity regardless of type,
+  because the counter was global, not per-entity — inconsistent with
+  every real `data/recipes/*.json` file, which numbers per entity type
+  independently (`egg-1`, `oil-1`, `salt-1` all coexist starting at 1).
+  Caught by literally reading the generated JSON, not by reasoning about
+  the code — the same "run it for real before trusting it" discipline
+  this whole session has repeated. Fixed with a per-entity counter map;
+  locked in with a dedicated regression test (two potatoes + one oil ->
+  `potato-1, oil-1, potato-2`) so it can't silently regress back to the
+  global-counter version.
+- **Verified the WHOLE loop, not just the new tool in isolation**:
+  scaffolded a real file, hand-added one real `FRY` step (as an actual
+  author would), ran `validate-recipe`, got a clean pass. The scaffold
+  generator's own correctness doesn't matter if the file it produces
+  can't actually be walked through the rest of `AUTHORING.md`'s loop to
+  a valid recipe — checked that end-to-end path for real rather than
+  stopping at "the generator's output matches the expected shape."

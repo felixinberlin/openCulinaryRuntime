@@ -18,15 +18,28 @@ works" and "you can just paste a recipe in prose or Cooklang."
    it doesn't and the recipe can't use it yet (see `ROADMAP.md`'s "far
    more staple ingredients" / "more common technique verbs" entries for
    what's still missing).
-2. **Write a `RecipeScript` JSON.** Same shape as any file in
-   `data/recipes/*.json` — copy one close to what you're making as a
-   starting template. Three parts: `initialInventory` (recipe-local
-   instance ids + entity ids + starting states), `availableTools`
-   (entity ids present for the whole recipe), `sequence` (ordered steps:
-   `actionId`, `targetInstanceId`, `params`,
-   `availableIngredientInstanceIds`, optional `secondaryInstanceId` for
-   `COMBINE`-shaped actions).
-3. **Run it**: `npm run validate-recipe -- <path-to-your-file.json>`.
+2. **Scaffold a starting file**:
+   `npm run new-recipe -- <path.json> <entityId1> [entityId2 ...]` — e.g.
+   `npm run new-recipe -- quick-fried-potatoes.json potato oil`. Writes a
+   real `initialInventory` (correct starting states, straight from the
+   entity files) plus empty `availableTools`/`sequence`, and prints each
+   entity's real capabilities and other possible states to the console —
+   exactly the browsing step 1 just described, done for you. The `id`/
+   `names.en` fields are derived from the filename, same convention every
+   `data/recipes/*.json` file already follows. **The written file is
+   intentionally NOT yet valid** — `RecipeScriptSchema` requires at least
+   one step, and a scaffold has none by definition; running
+   `validate-recipe` against it immediately says so, which is the correct
+   and expected first alarm, not a bug in the generator (see
+   `src/recipe-scaffold.ts`'s own doc comment). Skip this step and
+   hand-write the whole file if you'd rather start from an existing
+   recipe as a template instead — both are real, supported starting
+   points.
+3. **Fill in `sequence`.** Ordered steps: `actionId`, `targetInstanceId`,
+   `params`, `availableIngredientInstanceIds`, optional
+   `secondaryInstanceId` for `COMBINE`-shaped actions. Also fill in
+   `availableTools` (entity ids present for the whole recipe).
+4. **Run it**: `npm run validate-recipe -- <path-to-your-file.json>`.
    This does four things in order: schema-checks the file against
    `RecipeScriptSchema`; prints a pre-flight report (tools/ingredients
    needed vs. missing, with candidate fixes; timing-vs-doneness
@@ -35,17 +48,17 @@ works" and "you can just paste a recipe in prose or Cooklang."
    the one ground-truth execution, same engine every canonical recipe
    runs through); exits 0 only if the schema check and execution both
    succeeded.
-4. **Fix what it tells you, re-run, repeat.** The two sections answer
+5. **Fix what it tells you, re-run, repeat.** The two sections answer
    different questions — the pre-flight report is "what will this need
    and does anything look physically off," the execution log is "did it
    actually run." Read both; a clean exit code does not by itself mean
    "no advisories" (see the worked example below).
-5. **Once it's clean**, optionally get a readable summary:
+6. **Once it's clean**, optionally get a readable summary:
    `npm run narrate-recipe -- <path> summary.md` (or `summary.json`) —
    structure, what it needs, what the system inferred (which real
    instance satisfied which capability, tag inheritance), verbs used,
    elements created, stated active duration, final inventory.
-6. **To make it canonical**: move the file into `data/recipes/`, add a
+7. **To make it canonical**: move the file into `data/recipes/`, add a
    `metadata.notes` block explaining the real technique choices (every
    existing recipe has one — read a few for the convention), and run the
    full `npm run validate` — this re-checks it alongside every other
@@ -62,8 +75,29 @@ that a clean exit code and zero warnings are not the same claim.
 
 ### Worked example: the loop actually looping
 
-A small, deliberately imperfect draft, fixed over three real runs (every
-block below is actual `validate-recipe` output, not paraphrased).
+Real output throughout — nothing below is paraphrased. Start with the
+scaffold generator:
+
+```
+$ npm run new-recipe -- quick-fried-potatoes.json potato oil
+
+Wrote quick-fried-potatoes.json
+
+id: "quick_fried_potatoes"
+names.en: "Quick Fried Potatoes"
+
+Initial inventory (real entities, real starting states — check these against data/entities/*.json):
+  potato-1: Potato (potato), starting state "raw"
+    capabilities: isPeelable, isChoppable, isFryable, isBoilable, isWashable, isBakeable, isSeasonable, ...
+    other possible states: peeled, sliced, diced, julienne, chopped, minced, halved, quartered, ...
+  oil-1: Oil (oil), starting state "cold"
+    capabilities: isFryingMedium, isEmulsifier, isInfusable
+
+NOT yet a valid recipe — sequence is empty (RecipeScriptSchema requires at least one step) ...
+```
+
+Then fill in `availableTools`/`sequence` by hand — a small, deliberately
+imperfect first attempt, fixed over three more real runs.
 
 **v1** — wash/peel/cut/fry a diced potato, `oilTempC: 175`,
 `durationSeconds: 20`, `availableTools: ["knife"]`:
@@ -172,10 +206,10 @@ say**):
 
 ## 3. Named, not built — real gaps in today's loop
 
-- **No scaffold/starter-template generator.** Today, "write a
-  `RecipeScript`" means copying and editing an existing file by hand;
-  there's no `npm run new-recipe` producing a valid, empty skeleton to
-  fill in.
+~~No scaffold/starter-template generator~~ **closed 2026-08-15** —
+`npm run new-recipe` (§1 step 2, `src/recipe-scaffold.ts`), tested against
+the worked example above. Still open:
+
 - **No severity grading on `validate-recipe`'s findings.** Schema
   errors, `REJECTED` execution steps, CCP `WARNING`s, and purely
   informational advisories (timing/prep/fry-geometry) are all printed as

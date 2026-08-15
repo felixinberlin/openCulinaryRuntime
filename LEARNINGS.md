@@ -1785,3 +1785,57 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   instinct: a real number a planner could someday query belongs in a
   typed field with a citation, not only inside a `description` string a
   human has to read.
+
+### `heat-penetration.ts` — the deferred physics, closed the same day, and a real number that turned out surprisingly small
+
+- **The user came back with the exact mechanism that makes this real,
+  buildable physics rather than the fabricated-formula territory rejected
+  last pass**: hot oil browns the surface fast while the potato's low
+  thermal conductivity makes the CENTER lag — sometimes a deliberate
+  technique (thin cut + high heat = crispy outside/tender inside), not
+  just a risk. Unlike "geometry+temp+time+variety → texture" (no real
+  formula exists), "how long until the CENTER reaches a target
+  temperature, given thickness and the medium's real temperature" has an
+  actual textbook answer: Fourier's second law, the standard one-term
+  slab approximation. Asked whether to build it or just document the
+  principle; the user chose to actually build it.
+- **Reused this repo's own already-cited Choi & Okos (1986) model for
+  real, rather than adding a new, separately-recalled specific-heat
+  number** — `potato.json`'s `thermophysical` citation had named
+  Choi-Okos since before this session but admitted the model was never
+  actually run (density/conductivity were "recalled as being in the
+  right range," not computed). Found the actual published component
+  polynomial for carbohydrate specific heat, combined it with
+  `water.json`'s own already-cited 4186 J/(kg·K) for the water
+  component, mass-weighted by `potato.json`'s own tracked composition —
+  a real computation (3733.74 J/(kg·K), rounded to 3730), not a new
+  guess, and a genuine upgrade in rigor for that one field specifically
+  (density/conductivity stay as recalled figures, honestly still
+  uncomputed — this doesn't quietly upgrade their confidence too).
+- **The computed numbers turned out much smaller than expected — single-
+  digit to tens of seconds for a real 3-5mm slice to reach doneness at
+  the center — and that discrepancy against `crispy_french_fries.json`'s
+  real 180s fry time was itself worth investigating, not smoothing
+  over.** It's correct, not a bug: pure conductive heat penetration
+  through a few millimeters is genuinely fast. Real total fry time is
+  dominated by something this model doesn't touch at all — surface
+  moisture evaporation and crust formation, exactly what this repo's own
+  already-cited Kalogianni & Smith (2013) found ("most property change
+  happens in the first 1-2 minutes," "crust thickness plateaus despite
+  continued heat penetration"). Named this explicitly as the model's
+  third and most important honesty caveat (alongside the Bi→∞
+  simplification and the no-browning-kinetics limit) rather than either
+  hiding the small numbers or quietly adjusting the model to produce
+  numbers that "looked more like" a real recipe — the physics was
+  computed correctly; what needed fixing was the doc comment's honesty
+  about what question it actually answers.
+- **Third real, named honesty caveat in one module, not padding**: (1)
+  Bi→∞ (instant surface heating) makes this a lower bound, not an exact
+  prediction; (2) no browning/Maillard kinetics, so it cannot say
+  whether the outside actually burns, only how fast the center heats;
+  (3) pure conduction only, so its times are not comparable to real
+  total fry times without accounting for moisture/crust physics this
+  repo doesn't model. All three are real, distinct limitations found by
+  actually building and running the model, not hedging language added
+  defensively — the exact same discipline this repo has held to since
+  `EGG_BOIL_DONENESS`'s first assumptions block.

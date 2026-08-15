@@ -254,14 +254,43 @@ proven runnable, not just asserted.
       (~6-13mm, professional small-to-medium dice) is genuinely smaller
       than `potato-doneness.ts`'s own existing `diced` entry (~25mm,
       potato-salad/boiling-style) — `cut.json`'s single `diced` value
-      doesn't distinguish which a given recipe means. **Still explicitly
-      NOT done, deliberately deferred, not implied covered**: connecting
-      any of this geometry to actual heat-penetration time or predicted
-      texture — real heat-transfer physics (Fourier conduction through a
-      slice, needing potato's still-missing `specificHeatJPerKgK`) and
-      cited variety/starch-content data, both scoped out by the user's own
-      choice, not forgotten. Proven end-to-end: `npm run capability-
-      test:cut-shape-dimensions`.
+      doesn't distinguish which a given recipe means. Proven end-to-end:
+      `npm run capability-test:cut-shape-dimensions`.
+- [x] **Heat-penetration physics: how long the CENTER takes to reach
+      doneness, given thickness and oil temperature — closed 2026-08-15,
+      the deferred half of the entry directly above, same day.** The user
+      named the real mechanism directly: hot oil browns the surface fast
+      while the potato's low conductivity makes the center lag — a real,
+      sometimes-deliberate technique (thin+hot = crispy outside/tender
+      inside), not just a risk. Unlike "geometry+temp+time+variety →
+      texture" (rejected as not real science, entry above), "time for the
+      center to reach a target temperature" has an actual textbook
+      answer: `src/heat-penetration.ts` implements the standard one-term
+      approximation for 1D transient conduction in a slab (Fourier's
+      second law; Incropera & DeWitt). Closes the specific gap named
+      above: `potato.json` now has a real, computed
+      `specificHeatJPerKgK` (3730 J/(kg·K) — Choi & Okos's own published
+      carbohydrate-cp polynomial + `water.json`'s already-cited 4186
+      figure, mass-weighted by potato's own composition; density/
+      conductivity stay uncomputed recalled figures, not silently
+      upgraded alongside it). `POTATO_FORK_TENDER_CENTER_TEMP_C`
+      (96-99°C, ThermoWorks + Idaho Potato Commission) is the real
+      doneness target used. Three honesty caveats named explicitly in
+      the module's own doc comment, found by actually building and
+      running it: (1) Bi→∞ (instant surface heating) makes this a lower
+      bound, not exact; (2) no browning/Maillard kinetics — it cannot say
+      whether the outside actually burns, only how fast the center
+      heats; (3) **pure conduction only, so its computed times (seconds
+      to tens of seconds for a real 3-5mm slice) are far shorter than
+      real total fry times** (`crispy_french_fries.json`: 180s) — real
+      frying time is dominated by surface moisture evaporation/crust
+      formation (this repo's own cited Kalogianni & Smith), which this
+      module does not model at all. Answers "how fast does heat reach the
+      center," not "how long should I fry this." Proven end-to-end:
+      `npm run capability-test:potato-heat-penetration` (thin-vs-thick
+      slice, cool-vs-hot oil, four real combinations). Variety/starch-
+      content data remains the one piece still explicitly deferred from
+      the original three-part ask, not forgotten.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

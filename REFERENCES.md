@@ -234,6 +234,44 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   julienne have one). Confidence: `commonly_cited_unverified` — two
   independent consumer recipe sources, not a professional/peer-reviewed
   standard.
+- **Choi & Okos (1986) component specific-heat equations** — the
+  published polynomial correlations (cp as a function of temperature, per
+  food component: water/protein/fat/carbohydrate/fiber/ash) underlying
+  the SAME predictive model `potato.json`'s `thermophysical` citation
+  already names for density/conductivity. Added 2026-08-15 to actually
+  RUN the model for `specificHeatJPerKgK` (carbohydrate: cp = 1.5488 +
+  1.9625e-3·t − 5.9399e-6·t² kJ/(kg·K), t in °C), rather than continue
+  recalling a plausible-range value — see `potato.json`'s own updated
+  citation note for the full computation. Confidence: `standard_reference`
+  — the same tier as the density/conductivity citation this extends.
+- **Incropera & DeWitt, *Fundamentals of Heat and Mass Transfer*** — the
+  standard "one-term approximation" for 1D transient conduction in a
+  plane wall (slab), used in `src/heat-penetration.ts`. For Biot number
+  → ∞ (this repo's own explicitly-named simplification — see that file's
+  doc comment): λ₁ = π/2, A₁ = 4/π, valid for Fourier number > 0.2 —
+  confirmed via multiple independent academic sources 2026-08-15, and
+  exact/derivable values for this specific case, not a recalled table
+  lookup. Confidence: `standard_reference` — a standard, uncontroversial
+  heat-transfer-textbook method.
+- **ThermoWorks** (already this repo's own cited source for French fry
+  double-fry temperatures, `par-fry.json`'s `sourcesNote`) and the **Idaho
+  Potato Commission** — both converge on 96-99°C (205-210°F) internal
+  temperature for a fully cooked, fork-tender baked potato. Used in
+  `src/heat-penetration.ts`'s `POTATO_FORK_TENDER_CENTER_TEMP_C`.
+  Confidence: `commonly_cited_unverified` — checked via web search
+  2026-08-15, not independently re-verified against a peer-reviewed
+  primary source; measured for baked potato specifically, reused here
+  as a general doneness target since the underlying starch-gelatinization
+  chemistry doesn't depend on cooking method.
+- **Convergent food-science sources for potato starch gelatinization
+  ONSET temperature** (commonly cited in the 56-66°C range) — distinct
+  from and lower than the 96-99°C fork-tender figure above (texture
+  starts changing at onset, but isn't fully complete until well above
+  it). Named in `src/heat-penetration.ts`'s doc comment for context, not
+  used as the actual computation target. Confidence:
+  `commonly_cited_unverified` — checked via web search 2026-08-15,
+  blended across multiple convergent food-science sources rather than
+  one single primary study.
 - **Convergent consumer cooking guides for cut-potato boiling times** (e.g.
   A Couple Cooks, "How Long to Boil Potatoes for Potato Salad" — large
   cubes/quarters 8–15min, diced/baby potatoes ~10min; cross-checked against

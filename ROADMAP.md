@@ -340,6 +340,25 @@ proven runnable, not just asserted.
       one where the original author left it open-ended would be a real
       change to recipe behavior, not the same move as promoting an
       already-stated `heatLevel` to a number.
+- [x] **`recipe-narrator.ts` — a human-readable "read this recipe back to
+      me" document, closed 2026-08-15.** `npm run narrate-recipe -- <recipe>
+      <output.md|.json>`. Deliberately a presentation layer, not a new
+      source of truth — composes `recipe-explain.ts` (needs/advisories) and
+      `recipe-runner.ts` (actual execution), adding only per-step
+      capability RESOLUTION (which real instance satisfied a requirement,
+      not just whether one could) and a stated-vs-unstated duration tally
+      as genuinely new computation. First generated for `garlic-oil-
+      potatoes.json` (see that recipe's own `garlicpotatoinfo.md` in the
+      repo root), then re-run against `tortilla-de-patatas.json` as a
+      generality check — which caught a real bug before it shipped: a
+      `COMBINE`-spawned instance later re-targeted by `FLIP` was having
+      `FLIP`'s own `addsTag: "flipped"` misreported as conservation-of-mass
+      tag inheritance, when inheritance can only happen at spawn time.
+      Fixed by tracking whether a created instance is ever targeted again
+      anywhere in the sequence, only claiming "inherited" when it's
+      provably never re-targeted — an exact instance of this session's
+      repeated lesson that testing only the motivating example doesn't
+      test the general claim.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

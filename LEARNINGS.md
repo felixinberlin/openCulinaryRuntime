@@ -2098,3 +2098,42 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   first entity to actually use it for garlic), the same "shape enum is
   global, each entity opts in via its own possibleStates" pattern
   established when potato needed it.
+
+### `recipe-narrator.ts` — a presentation layer over existing modules, and a real bug testing against a second recipe caught
+
+- **Asked to "read" a recipe back — structure, needs, inferences, created
+  elements, verbs, timing — as a document. Correctly recognized as
+  composition, not a new source of truth**: `recipe-explain.ts`
+  (needs/advisories) and `recipe-runner.ts` (actual execution) already
+  compute almost everything asked for; this module's only genuinely new
+  computation is per-step capability RESOLUTION (which real instance
+  satisfied a requirement, not just whether one could) and a stated-vs-
+  unstated duration tally. Kept the module and the CLI script (`npm run
+  narrate-recipe -- <recipe> <output.md|.json>`) generic — built and
+  first tested against `garlic-oil-potatoes.json` specifically, but nothing
+  in it is tuned to that one recipe.
+- **Testing the generic function against a SECOND, more complex real
+  recipe (`tortilla-de-patatas.json`, with `COMBINE`/`FLIP`) — not just
+  the one it was built for — caught a real accuracy bug before it shipped**:
+  `tortilla_mixture-4`'s tag `"flipped"` (added by a `FLIP` step AFTER
+  the instance was spawned via `COMBINE`) was being reported as
+  conservation-of-mass "inherited," when it demonstrably wasn't — inherited
+  tags can only be present at spawn time, and `FLIP` runs two steps
+  later. The single-recipe test case (`garlic-oil-potatoes.json`, whose
+  only spawned instances — `potato_peel-1`, `garlic_peel-2` — are never
+  targeted again) couldn't have caught this: it has no case where a
+  spawned instance is later re-targeted, exactly this session's repeated
+  lesson that testing against only the motivating example is not the
+  same as testing the actual general claim.
+- **Fixed by tracking whether a created instance is EVER targeted again
+  anywhere in the sequence** (`everTargeted`, a simple set built while
+  already walking the sequence for other reasons) **— confidently
+  claiming "inherited" only when it's never re-targeted, always reporting
+  the real final tags regardless.** Not a perfect fix (a re-targeted
+  instance's tags might still be PARTLY inherited, partly added later,
+  and this can't distinguish which) but an honest, conservative one:
+  never claims a mechanism it can't verify, the same standard every
+  other honesty caveat this session has held to. A dedicated regression
+  test (`tests/recipe-narrator.test.ts`, the COMBINE+FLIP case) locks
+  in the fixed behavior independent of `tortilla-de-patatas.json`'s
+  actual current contents.

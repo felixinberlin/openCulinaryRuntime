@@ -206,9 +206,9 @@ describe("explainRecipe — timing advisories", () => {
 });
 
 describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", () => {
-  const potato = makeEntity({ id: "potato", possibleStates: ["raw", "washed", "peeled"] });
+  const potato = makeEntity({ id: "potato", possibleStates: ["raw", "peeled"], capabilities: { isWashable: true } });
   const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled" } });
-  const wash = makeAction({ id: "wash", outputs: { transformedState: "washed" } });
+  const wash = makeAction({ id: "wash", outputs: { addsTag: "washed" } });
   const entities = new Map([["potato", potato]]);
   const actions = new Map([
     ["peel", peel],
@@ -238,8 +238,8 @@ describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", (
     assert.deepEqual(report.prepAdvisories, []);
   });
 
-  test("an entity with no 'washed' possibleState is never flagged (nothing to wash toward)", () => {
-    const eggEntity = makeEntity({ id: "egg", possibleStates: ["raw", "peeled"] }); // no "washed" state
+  test("an entity with no isWashable capability is never flagged (nothing to wash toward)", () => {
+    const eggEntity = makeEntity({ id: "egg", possibleStates: ["raw", "peeled"] }); // no isWashable capability
     const localEntities = new Map([["egg", eggEntity]]);
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],

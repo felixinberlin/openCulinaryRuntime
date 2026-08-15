@@ -10,7 +10,9 @@ import { applyAction, type Instance } from "../src/engine.ts";
  *   1. Skin-on cuts (rustic wedges/fries) were IMPOSSIBLE — CUT hard-required
  *      "peeled". statePrerequisites now accepts an array of acceptable
  *      prior states (ingredient.ts), so potato.json's cut is ["washed",
- *      "peeled"] — either path is legal.
+ *      "peeled"] — either path is legal. ("washed" moved from a state to a
+ *      tag 2026-08-15 — engine.ts's check now matches either — see the
+ *      synthetic instance below, built with a tag rather than a state.)
  *   2. GRATE (hash browns/rösti) didn't exist at all — its own verb/tool
  *      (grater.json), not folded into CUT's shape enum (a grater and a
  *      knife are physically different mechanisms).
@@ -36,9 +38,9 @@ const bake = actions.get("bake")!;
 const fry = actions.get("fry")!;
 
 console.log("=== 1. Skin-on cut: washed (NOT peeled) potato can now be cut ===");
-const washed: Instance = { entityId: "potato", state: "washed", tags: [] };
+const washed: Instance = { entityId: "potato", state: "raw", tags: ["washed"] };
 const skinOnWedges = applyAction(washed, cut, entities, tools, { shape: "diced" }).instance;
-console.log(`  CUT (skin-on): "washed" -> "${skinOnWedges.state}" — rustic wedges/skin-on fries are now representable\n`);
+console.log(`  CUT (skin-on): "raw" (tags [washed]) -> "${skinOnWedges.state}" — rustic wedges/skin-on fries are now representable\n`);
 
 console.log("=== 2. Peeled path still works unchanged (backward compatible) ===");
 const peeled: Instance = { entityId: "potato", state: "peeled", tags: [] };
@@ -55,7 +57,7 @@ try {
 
 console.log("=== 4. GRATE — its own verb/tool, for hash browns/rösti ===");
 const grated = applyAction(washed, grate, entities, tools, {}).instance;
-console.log(`  GRATE: "washed" -> "${grated.state}"\n`);
+console.log(`  GRATE: "raw" (tags [washed]) -> "${grated.state}"\n`);
 
 console.log("=== 5. MASH — 'mashed' was a dead label until today; both real paths now work ===");
 const boiledPotato = applyAction(peeled, boil, entities, tools, { durationSeconds: "900" }, ingredients).instance;

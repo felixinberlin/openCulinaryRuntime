@@ -302,6 +302,22 @@ export const EntitySchema = z.object({
    * predecessor when either is genuinely valid. `engine.ts`'s check treats
    * a single string as a one-element set, so nothing about the single-value
    * case's behavior or error message changes.
+   *
+   * Each entry is checked against EITHER the target's current `state` OR
+   * its `tags` (`engine.ts`, added 2026-08-15) — not state alone. "washed"
+   * is the real case that forced this: it names an orthogonal, persistent
+   * FACT ("has this been washed at least once"), not a mutually-exclusive
+   * FORM the way "peeled"/"sliced"/"fried" are — you can wash a potato,
+   * then peel it, and it is still, physically, washed. Modeling "washed"
+   * as a `state` (WASH's old `outputs.transformedState`) meant PEEL
+   * silently overwrote that fact away, since `state` holds exactly one
+   * value. WASH now sets a TAG instead (`wash.json`'s `outputs.addsTag`,
+   * the same pattern SALT/PEPPER/etc. already use), and this field's
+   * entries are satisfied by a matching tag exactly as they are by a
+   * matching state — so `potato.json`'s `cut`/`grate`: `["washed",
+   * "peeled"]` still means what it always meant ("either is an acceptable
+   * predecessor"), now correctly regardless of what order they happened
+   * in, or whether both are true at once.
    */
   statePrerequisites: z.record(z.string(), z.union([z.string(), z.array(z.string())])).default({}),
   /**

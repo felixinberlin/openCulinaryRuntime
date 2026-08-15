@@ -11,14 +11,15 @@
     "ingredient"
   ],
   "outputs": {
-    "transformedState": "washed",
+    "addsTag": "washed",
     "spawnsTargetByproducts": false
   },
   "duration": "variable",
   "precision": "optional",
   "metadata": {
-    "notes": "No requiredTools: running water is treated as ambient rather than a tool entity for now. validTargetKinds is ingredient-only even though knife.json also asserts isWashable — a tool's 'clean' state doesn't map onto the same transformedState ('washed') as an ingredient's, so wiring WASH up to tools is left for later rather than forced to fit here.",
-    "retrySafeNote": "retrySafe: true — re-washing something already clean is harmless."
+    "notes": "No requiredTools: running water is treated as ambient rather than a tool entity for now. validTargetKinds is ingredient-only even though knife.json also asserts isWashable — a tool's 'clean' state doesn't map onto the same tag ('washed') as an ingredient's, so wiring WASH up to tools is left for later rather than forced to fit here.",
+    "addsTagNote": "Changed 2026-08-15 from outputs.transformedState: 'washed' to outputs.addsTag: 'washed' — a real modeling fix, not a rename. Being washed is an orthogonal, persistent FACT (like 'salted') that survives whatever FORM the ingredient takes next (raw, peeled, sliced, ...), not a mutually-exclusive state the way 'peeled'/'sliced'/'fried' are. The old transformedState shape meant WASH-then-PEEL silently lost the fact the ingredient had ever been washed, because `state` can only ever hold one value — engine.ts's statePrerequisites check now matches against tags as well as state specifically so potato.json's cut/grate: ['washed', 'peeled'] keeps meaning what it always meant. See ingredient.ts's statePrerequisites doc comment for the full reasoning.",
+    "retrySafeNote": "retrySafe: true — re-washing something already clean is harmless. Doubly true now that WASH is addsTag: engine.ts already guards addsTag against duplicates (same mechanism SALT/PEPPER/FLIP/etc. rely on), so washing before AND after another step (e.g. before peeling, then again after) is a real, legal, idempotent thing to do — not just harmless but genuinely supported, not merely tolerated."
   },
   "verification": {
     "method": "visual",

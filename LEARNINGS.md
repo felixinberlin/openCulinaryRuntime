@@ -1606,3 +1606,60 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   (a "soft" egg boiled for 700 seconds is not a HACCP violation — it's just
   not actually soft). Conflating the two would have quietly implied this
   new advisory carries safety weight it doesn't.
+
+### `WASH` was modeled wrong from the start — a user's real-world pushback found a genuine schema bug, not a data ordering preference
+
+- **The user pushed back on the wash/peel/cut fix above ("first you peel,
+  then you wash, then you cut") — checking it properly (real Spanish
+  tortilla sources genuinely disagree with each other on the order) led
+  to the actual, deeper finding: the disagreement about ORDER was
+  downstream of a real modeling bug, not just competing culinary opinions.**
+  `WASH`'s `outputs.transformedState: "washed"` treated "being washed" as
+  a mutually-exclusive FORM, the same category as "peeled"/"sliced"/
+  "fried" — but `state` (per `engine.ts`'s own doc comment) can only ever
+  hold ONE value at a time. That meant WASH-then-PEEL silently erased the
+  fact a potato had ever been washed the instant PEEL fired, and made
+  "wash after peeling" and "wash both before and after" both
+  *unrepresentable* in this engine even when a cook genuinely wants
+  exactly that (the user's own words: "I wash before and after if I want
+  to"). The order debate could never have been resolved by picking a
+  side — the schema itself couldn't hold the answer either way.
+- **The fix was recognizing "washed" belongs to the SAME category this
+  repo already has a mechanism for** — `tags`, not `state`. This repo's
+  own doc comment already drew the distinction precisely ("`state` is the
+  one mutually-exclusive form/cooking-method value... while `tags` holds
+  any number of orthogonal properties that coexist with whatever the
+  current state is") — `SALT`/`PEPPER`/`CHILI` already use exactly this
+  shape (`addsTag`, not `transformedState`) for the identical kind of
+  fact ("has this happened to the ingredient," independent of its current
+  form). `WASH` should have used `addsTag` from the day it was written;
+  it didn't, and nothing forced the question until a real user pushed on
+  a real ordering claim.
+- **`engine.ts`'s `statePrerequisites` check needed exactly one
+  generalization to keep working: match a tag as well as a state**, not a
+  new parallel mechanism. `potato.json`'s `cut`/`grate`:
+  `["washed", "peeled"]` already expressed "either predecessor is
+  acceptable" as an OR-set over strings — extending what counts as a
+  match (`instance.state === s || instance.tags.includes(s)`) instead of
+  inventing a second field kept the existing per-entity data completely
+  unchanged and kept the fix small (one check, `+1` line, thoroughly
+  commented) rather than a schema migration.
+- **Checked the actual blast radius rather than assuming it was
+  contained** (`grep`, not memory): exactly one entity (`potato.json`)
+  referenced `"washed"` as a state anywhere in `data/`. But three OTHER
+  places had quietly encoded the old, wrong assumption without meaning
+  to: `scripts/complete-potato.ts` hand-constructed a `state: "washed"`
+  `Instance` literal to demonstrate the OR-prerequisite (now demonstrates
+  the tag path instead — a strictly more honest demo, since nothing can
+  produce that state anymore); `recipe-explain.ts`'s brand-new
+  wash-heuristic (this same session, two turns earlier) checked
+  `possibleStates.includes("washed")` — would have silently stopped
+  firing the moment "washed" left `possibleStates`, a self-inflicted
+  regression in code not even an hour old if not caught; switched it to
+  checking the `isWashable` capability instead, which is both correct
+  AND no longer coupled to how "washability" happens to be represented.
+  **The general lesson: when a "state" turns out to actually be an
+  orthogonal fact, everything that pattern-matched on the OLD
+  representation (not just the schema/engine) is suspect, and grepping
+  for the literal string is cheaper than trusting recall of everywhere
+  it might be used.**

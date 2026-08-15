@@ -697,6 +697,32 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       scoped cross-contamination/hygiene gap below (danger to the FOOD
       from equipment/surface reuse) — that still needs a genuinely
       different mechanism, per that section's own note.
+- [x] **`state` vs. `tags` modeling fix for `WASH` — closed 2026-08-15,
+      found by a user correction, not self-discovered.** After the fix
+      above, the user pointed out the wash/peel/cut order itself wasn't
+      the only issue: `WASH`'s `outputs.transformedState: "washed"` meant
+      washing then peeling silently OVERWROTE the fact a potato had ever
+      been washed, since `state` (`engine.ts`'s own doc comment) holds
+      exactly one mutually-exclusive value — "washed" was never actually
+      a FORM the way "peeled"/"sliced"/"fried" are, it's an orthogonal,
+      persistent fact, same category as "salted". Fixed by moving `WASH`
+      to `outputs.addsTag: "washed"` (matching `SALT`/`PEPPER`'s existing
+      pattern) and extending `engine.ts`'s `statePrerequisites` check to
+      match a tag as well as a state — `potato.json`'s `cut`/`grate`:
+      `["washed", "peeled"]` needed no changes to keep meaning what it
+      always meant. Concretely enables what the user explicitly asked for:
+      washing before AND after peeling in the same recipe, order-
+      independent, `addsTag`'s existing duplicate guard making a repeat
+      `WASH` a legal no-op rather than an error. Real, non-trivial blast
+      radius, checked directly rather than assumed: only `potato.json`
+      referenced `"washed"` as a state anywhere in `data/`; `tests/engine.
+      test.ts` gained real coverage for both the tag-match path and the
+      wash-survives-peel case; `scripts/complete-potato.ts` (which
+      hand-constructed `state: "washed"` instances) and `recipe-explain.ts`'s
+      prep-advisory heuristic (which checked `possibleStates` for
+      `"washed"`) both updated to match — the latter now checks the
+      `isWashable` capability instead, a strictly more correct check that
+      no longer depends on how "washability" happens to be represented.
 - [x] Conservation of mass/entities — `ActionOutputsSchema.destroysTarget` +
       `ExecutionResult.destroyed`, consumed by `recipe-runner.ts`. Scoped to
       this explicit per-action opt-in, not a general inventory-quantity

@@ -66,6 +66,73 @@ describe("applyAction — preconditions", () => {
     );
   });
 
+  test("statePrerequisites entries also match a TAG, not just state (added 2026-08-15 — 'washed' is now a tag, not a state)", () => {
+    const potato = makeEntity({
+      id: "potato",
+      statePrerequisites: { cut: ["washed", "peeled"] },
+    });
+    const action = makeAction({ id: "cut", outputs: { transformedState: "diced" } });
+    const entities = new Map([["potato", potato]]);
+
+    // "peeled" as a real STATE still satisfies it (unchanged behavior).
+    const fromPeeledState = applyAction({ entityId: "potato", state: "peeled", tags: [] }, action, entities, NO_TOOLS);
+    assert.equal(fromPeeledState.instance.state, "diced");
+
+    // "washed" as a TAG — not the state — now satisfies it too: a raw,
+    // unpeeled potato that has been washed can be cut (skin-on), the exact
+    // real case that forced this. This is the whole point of the fix: a
+    // potato instance can carry "washed" as a fact independent of whatever
+    // its current state is.
+    const fromWashedTag = applyAction({ entityId: "potato", state: "raw", tags: ["washed"] }, action, entities, NO_TOOLS);
+    assert.equal(fromWashedTag.instance.state, "diced");
+
+    // Neither the state nor a tag satisfies it — still rejected, and the
+    // rejection message now also names the current tags for debuggability.
+    assert.throws(
+      () => applyAction({ entityId: "potato", state: "raw", tags: [] }, action, entities, NO_TOOLS),
+      /requires "potato" to already be "washed" or "peeled" \(currently "raw", tags \[\]\)/
+    );
+  });
+
+  test("wash's real fix: washing survives a later PEEL, unlike the old transformedState modeling", () => {
+    // The actual bug the 2026-08-15 fix addresses: WASH used to set
+    // outputs.transformedState (a mutually-exclusive state), so peeling
+    // AFTER washing silently lost the fact the potato had ever been
+    // washed. WASH now sets a tag (wash.json's outputs.addsTag) — applied
+    // directly here via applyAction with a WASH-shaped action, exactly
+    // like recipe-runner.ts would, rather than hand-constructing the tag.
+    const potato = makeEntity({
+      id: "potato",
+      statePrerequisites: { cut: ["washed", "peeled"] },
+      capabilities: { isWashable: true, isPeelable: true },
+    });
+    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
+    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+    const cut = makeAction({ id: "cut", outputs: { transformedState: "diced" } });
+    const entities = new Map([["potato", potato]]);
+
+    let instance: Instance = { entityId: "potato", state: "raw", tags: [] };
+    instance = applyAction(instance, wash, entities, NO_TOOLS).instance;
+    assert.deepEqual(instance, { entityId: "potato", state: "raw", tags: ["washed"] });
+
+    instance = applyAction(instance, peel, entities, NO_TOOLS).instance;
+    // The real fix, made concrete: state changed to "peeled", but the
+    // "washed" tag survived — under the old transformedState modeling,
+    // this instance's state would have become "peeled" with NO trace it
+    // had ever been washed.
+    assert.deepEqual(instance, { entityId: "potato", state: "peeled", tags: ["washed"] });
+
+    // Washing AGAIN after peeling — the user's literal ask ("I wash before
+    // and after if I want to") — is legal and a harmless no-op (addsTag's
+    // existing duplicate guard), not an error and not a double effect.
+    instance = applyAction(instance, wash, entities, NO_TOOLS).instance;
+    assert.deepEqual(instance, { entityId: "potato", state: "peeled", tags: ["washed"] });
+
+    // CUT still works — satisfied via the real "peeled" state this time.
+    instance = applyAction(instance, cut, entities, NO_TOOLS).instance;
+    assert.equal(instance.state, "diced");
+  });
+
   test("requiredTargetCapability: missing vs. explicit false both block, distinguishably", () => {
     const unasserted = makeEntity({ id: "rock" });
     const denied = makeEntity({ id: "bone", capabilities: { isPeelable: false } });

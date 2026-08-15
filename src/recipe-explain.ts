@@ -106,10 +106,17 @@ export function explainRecipe(
     } else if (action.verb === "PEEL" || action.verb === "CUT") {
       const targetEntityId = recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId;
       const entity = targetEntityId ? entities.get(targetEntityId) : undefined;
-      if (entity?.possibleStates.includes("washed") && !washedInstanceIds.has(step.targetInstanceId)) {
+      // Capability-based (isWashable), not state/tag-based — "washed" is a
+      // TAG (2026-08-15: see wash.json/ingredient.ts's statePrerequisites
+      // doc comment), so checking possibleTags would work too, but
+      // isWashable is the actual marker wash.json's own
+      // requiredTargetCapability checks, and doesn't depend on this
+      // heuristic staying in sync with exactly how "washability" happens
+      // to be represented elsewhere.
+      if (entity?.capabilities.isWashable === true && !washedInstanceIds.has(step.targetInstanceId)) {
         prepAdvisories.push(
           `${action.verb} on "${step.targetInstanceId}" (${entity.id}) happens before any WASH step on it — ` +
-            `"${entity.id}" has a "washed" state available; consider washing it first. (Heuristic advice only — ` +
+            `"${entity.id}" is washable; consider washing it first. (Heuristic advice only — ` +
             `not a hygiene/cross-contamination check, see ROADMAP.md.)`
         );
       }

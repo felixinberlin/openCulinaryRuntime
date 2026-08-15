@@ -166,10 +166,29 @@ export function applyAction(
     // statePrerequisites entry written before array values existed
     // (ingredient.ts's own doc comment) — only a genuinely multi-valued
     // entry (e.g. potato.json's cut: ["washed", "peeled"]) takes the OR path.
+    //
+    // Each allowed entry is checked against EITHER instance.state OR
+    // instance.tags (added 2026-08-15, potato.json's "cut"/"grate":
+    // ["washed", "peeled"] being the forcing case): "washed" used to be
+    // modeled as a STATE (WASH's outputs.transformedState), which meant
+    // washing a potato and then peeling it silently overwrote away the
+    // fact it had ever been washed — `state` is documented as the one
+    // mutually-exclusive value an instance holds, so "washed" and "peeled"
+    // could never both be true of the same instance at once even though
+    // physically they obviously can. WASH now sets a TAG instead (see
+    // wash.json), matching SALT/PEPPER/etc.'s existing addsTag pattern —
+    // an orthogonal fact that survives whatever state comes next. This
+    // check treating state-prerequisite entries as satisfiable by a
+    // matching tag, not just a matching state, is what keeps that
+    // precondition meaningful now that "washed" isn't a state value
+    // anymore; every entry that names an actual state (the overwhelming
+    // majority) is completely unaffected, since instance.state is still
+    // checked first/either way.
     const allowedPriorStates = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
-    if (!allowedPriorStates.includes(instance.state)) {
+    const satisfied = allowedPriorStates.includes(instance.state) || allowedPriorStates.some((s) => instance.tags.includes(s));
+    if (!satisfied) {
       throw new Error(
-        `${action.verb} requires "${target.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}").`
+        `${action.verb} requires "${target.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}", tags [${instance.tags}]).`
       );
     }
   }

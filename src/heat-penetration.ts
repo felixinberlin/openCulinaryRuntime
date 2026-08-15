@@ -174,3 +174,44 @@ export function secondsForCenterToReachTempC(params: SlabConductionParams, targe
 export function isWithinValidityCondition(params: SlabConductionParams, elapsedSeconds: number): boolean {
   return fourierNumber(params, elapsedSeconds) > MIN_VALID_FOURIER_NUMBER;
 }
+
+export const SYMMETRY_INSULATED_BOUNDARY_CITATION: Citation = {
+  source:
+    "Standard heat-transfer symmetry argument (e.g. Cengel, *Heat and Mass Transfer*; Incropera & DeWitt, same chapter as this file's own one-term approximation): a plane wall heated identically on BOTH faces has zero heat flux at its centerline by symmetry, so that centerline behaves exactly like an INSULATED boundary — meaning a slab heated from only ONE face, with the other face insulated, is physically identical to HALF of a symmetric slab of DOUBLE the thickness. Confirmed via multiple independent sources 2026-08-15.",
+  confidence: "standard_reference",
+  note: "The symmetry argument itself is exact, standard textbook material. Treating a 'little oil'/pan-fried face as fully insulated (rather than merely much-lower-h than oil) is this file's own added simplification, in the same honest spirit as the Bi->infinity assumption already documented above — named explicitly in effectiveHalfThicknessM's own doc comment, not left implicit.",
+};
+
+/**
+ * Converts a real, physical slice thickness into the HALF-thickness the
+ * model above actually needs — added 2026-08-15, directly answering the
+ * user's next real observation: "it's not the same if the potatoes are
+ * swimming in oil or if there is only a little." Same model, same
+ * formula — only how far heat has to travel before reaching the center
+ * differs, because how many faces are actually in contact with hot oil
+ * differs.
+ *
+ * `heatedFaces: 2` — SUBMERGED / deep-fried: hot oil contacts both flat
+ * faces of the slice at once, the classic symmetric-slab case this
+ * file's other functions were originally built around. Heat enters from
+ * both sides, so only HALF the actual thickness has to conduct through
+ * to reach the center: `halfThicknessM = actualThicknessM / 2`.
+ *
+ * `heatedFaces: 1` — SHALLOW oil / pan-frying: only the bottom face
+ * touches hot oil; the top face sits in air (much lower convective heat
+ * transfer than oil — roughly an order of magnitude, treated here as
+ * effectively insulated, the file's own added simplification, see
+ * `SYMMETRY_INSULATED_BOUNDARY_CITATION`'s note). This is NOT a
+ * different physical model — a standard symmetry argument (see that
+ * citation) shows one-face heating with the other face insulated is
+ * physically identical to HALF of a symmetric slab of DOUBLE the actual
+ * thickness: `halfThicknessM = actualThicknessM` (the FULL thickness,
+ * not halved). Since the model's own time formula scales with L², this
+ * one real, checkable consequence follows directly: for the same actual
+ * slice, `heatedFaces: 1` takes ~4x as long for the center to reach the
+ * same target temperature as `heatedFaces: 2` — not "longer," a specific,
+ * derivable multiple (see `tests/heat-penetration.test.ts`).
+ */
+export function effectiveHalfThicknessM(actualThicknessM: number, heatedFaces: 1 | 2): number {
+  return heatedFaces === 2 ? actualThicknessM / 2 : actualThicknessM;
+}

@@ -6,6 +6,7 @@ import {
   secondsForCenterToReachTempC,
   thermalDiffusivityM2PerS,
   isWithinValidityCondition,
+  effectiveHalfThicknessM,
   type SlabConductionParams,
 } from "../src/heat-penetration.ts";
 import { makeEntity } from "./helpers.ts";
@@ -88,5 +89,34 @@ describe("centerTempCAfterSeconds / secondsForCenterToReachTempC — the one-ter
         assert.ok(isWithinValidityCondition(p, seconds), `Fo <= 0.2 for halfThicknessM=${halfThicknessM}, surfaceTempC=${surfaceTempC}`);
       }
     }
+  });
+});
+
+describe("effectiveHalfThicknessM — submerged (both faces) vs. shallow oil (one face)", () => {
+  test("2 heated faces halves the actual thickness (the classic symmetric-slab case)", () => {
+    assert.equal(effectiveHalfThicknessM(0.003, 2), 0.0015);
+  });
+
+  test("1 heated face uses the FULL actual thickness (insulated-boundary/symmetry equivalence)", () => {
+    assert.equal(effectiveHalfThicknessM(0.003, 1), 0.003);
+  });
+
+  test("real, DERIVABLE consequence: for the same actual slice, 1 heated face takes ~4x as long as 2 to reach the same center target", () => {
+    // Not just "longer" — Fo = alpha*t/L^2 means doubling L (1 face vs 2)
+    // should take almost exactly 4x the time for the same theta, the
+    // concrete answer to "it's not the same if the potatoes are swimming
+    // in oil or if there is only a little."
+    const alpha = 0.5 / (1080 * 3730); // potato-like, matches the describe block above
+    const actualThicknessM = 0.003;
+    const base = { diffusivityM2PerS: alpha, initialTempC: 20, surfaceTempC: 175 };
+    const submerged: SlabConductionParams = { ...base, halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 2) };
+    const shallow: SlabConductionParams = { ...base, halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 1) };
+
+    const secondsSubmerged = secondsForCenterToReachTempC(submerged, 97);
+    const secondsShallow = secondsForCenterToReachTempC(shallow, 97);
+
+    assert.ok(secondsShallow > secondsSubmerged, "one heated face should always take longer than two, for the same actual thickness");
+    const ratio = secondsShallow / secondsSubmerged;
+    assert.ok(Math.abs(ratio - 4) < 1e-9, `expected almost exactly 4x (L doubled, Fo ~ L^2), got ${ratio}x`);
   });
 });

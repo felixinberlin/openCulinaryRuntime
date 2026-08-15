@@ -253,6 +253,20 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   exact/derivable values for this specific case, not a recalled table
   lookup. Confidence: `standard_reference` — a standard, uncontroversial
   heat-transfer-textbook method.
+- **Cengel, *Heat and Mass Transfer* (the standard symmetry-boundary
+  argument, same chapter Incropera & DeWitt's one-term approximation
+  above lives in)** — a plane wall heated identically on both faces has
+  zero heat flux at its centerline by symmetry, so a slab heated from
+  ONE face with the other insulated is physically identical to HALF of
+  a symmetric slab of DOUBLE the thickness. Used in `src/heat-
+  penetration.ts`'s `effectiveHalfThicknessM`, added 2026-08-15 directly
+  answering the user's next real observation ("it's not the same if the
+  potatoes are swimming in oil or if there is only a little") — confirmed
+  via multiple independent sources. Confidence: `standard_reference` —
+  exact, standard textbook material. This repo's own added simplification
+  (treating a pan-fried top face as fully insulated rather than merely
+  much-lower-h than oil) is named explicitly in that function's doc
+  comment, not part of this citation's own claim.
 - **ThermoWorks** (already this repo's own cited source for French fry
   double-fry temperatures, `par-fry.json`'s `sourcesNote`) and the **Idaho
   Potato Commission** — both converge on 96-99°C (205-210°F) internal

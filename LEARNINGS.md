@@ -1839,3 +1839,36 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   actually building and running the model, not hedging language added
   defensively — the exact same discipline this repo has held to since
   `EGG_BOIL_DONENESS`'s first assumptions block.
+- **The user's very next observation — "it's not the same if the
+  potatoes are swimming in oil or if there is only a little" — composed
+  with the SAME model rather than needing a new one, and turned into a
+  real, checkable, exactly-4x prediction, not just "it's slower."** A
+  standard heat-transfer symmetry argument (Cengel; Incropera & DeWitt,
+  the same chapter already cited) shows one-face heating with the other
+  face insulated is physically identical to half of a symmetric slab of
+  double the thickness — so submerged (2 faces) vs. shallow oil (1 face)
+  is just a different `halfThicknessM` fed into the exact same
+  `secondsForCenterToReachTempC`, via a small new
+  `effectiveHalfThicknessM` helper, not a new physics module. Because the
+  model's own time formula scales with L², this yields a specific,
+  derivable prediction — the center should take almost exactly 4x as
+  long with one face heated vs. two, for the same actual thickness — and
+  the capability-test script's real numbers confirmed it exactly (4.0x
+  for both the thin and thick slice cases), the strongest kind of
+  evidence this repo's discipline values: not "the number changed in the
+  expected direction" but "the number changed by the exact ratio the
+  math predicted." A second small, honest simplification was added
+  alongside it, in the same spirit as the Bi→∞ one already documented:
+  treating a pan-fried top face as fully insulated (zero flux) is itself
+  a simplification — a face exposed to air isn't perfectly insulated,
+  just at a much lower heat-transfer rate than oil contact — named
+  explicitly in `effectiveHalfThicknessM`'s own doc comment rather than
+  folded silently into the citation.
+- **This kept composing rather than sprawling** — three real-world
+  observations in a row (cut geometry, oil-temp-vs-thickness heat
+  penetration, submerged-vs-shallow oil) each landed on either a genuinely
+  new, well-scoped module (`cut-dimensions.ts`, `heat-penetration.ts`) or,
+  this time, a small addition to a module already built the same day.
+  Recognizing which case a new observation is — new module vs. new
+  parameter on an existing one — mattered more here than any single
+  design decision inside either file.

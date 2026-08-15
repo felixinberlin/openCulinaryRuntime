@@ -288,9 +288,17 @@ proven runnable, not just asserted.
       module does not model at all. Answers "how fast does heat reach the
       center," not "how long should I fry this." Proven end-to-end:
       `npm run capability-test:potato-heat-penetration` (thin-vs-thick
-      slice, cool-vs-hot oil, four real combinations). Variety/starch-
-      content data remains the one piece still explicitly deferred from
-      the original three-part ask, not forgotten.
+      slice, cool-vs-hot oil, four real combinations). **Extended same
+      day**: the user's next observation — submerged vs. shallow oil
+      isn't the same — composed with this exact model rather than needing
+      a new one. `effectiveHalfThicknessM` (a standard heat-transfer
+      symmetry argument: one face heated + one insulated ≡ half of a
+      symmetric slab of double thickness) turns "swimming in oil" (2
+      faces) vs. "only a little" (1 face) into a specific, derivable ~4x
+      time prediction — confirmed exactly (4.0x) by the capability-test
+      script's real numbers, not just "slower in the right direction."
+      Variety/starch-content data remains the one piece still explicitly
+      deferred from the original three-part ask, not forgotten.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

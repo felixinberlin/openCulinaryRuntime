@@ -4,6 +4,7 @@ import {
   thermalDiffusivityM2PerS,
   secondsForCenterToReachTempC,
   isWithinValidityCondition,
+  effectiveHalfThicknessM,
   POTATO_FORK_TENDER_CENTER_TEMP_C,
 } from "../src/heat-penetration.ts";
 import { cutShapeDimensionMm } from "../src/cut-dimensions.ts";
@@ -26,8 +27,13 @@ const targetC = (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTE
 const initialTempC = 20; // room temperature, stated assumption
 
 const sliceRange = cutShapeDimensionMm("sliced"); // cut-dimensions.ts's real, cited 3-5mm range
-const thinHalfThicknessM = sliceRange.min / 2 / 1000;
-const thickHalfThicknessM = sliceRange.max / 2 / 1000;
+const thinActualThicknessM = sliceRange.min / 1000;
+const thickActualThicknessM = sliceRange.max / 1000;
+// Everything below this point assumes submerged/deep-fried (heatedFaces:
+// 2) unless a section says otherwise — see the "swimming in oil vs. a
+// little" section near the end for the one-face comparison.
+const thinHalfThicknessM = effectiveHalfThicknessM(thinActualThicknessM, 2);
+const thickHalfThicknessM = effectiveHalfThicknessM(thickActualThicknessM, 2);
 
 console.log(`Target center temp: ${targetC}°C (midpoint of POTATO_FORK_TENDER_CENTER_TEMP_C)\n`);
 
@@ -53,6 +59,24 @@ console.log(
     "change how long the CENTER takes to reach doneness — the concrete reason a cook choosing high heat + thin " +
     "cut (fast center penetration, less time for the surface to over-brown) gets a different result than low " +
     "heat + thick cut (slow, even penetration), a real, deliberate technique choice, not always a mistake."
+);
+
+console.log("\n=== Swimming in oil (both faces) vs. only a little (one face) — same actual thickness, same oil temp ===\n");
+for (const [label, actualThicknessM] of [
+  [`thin (${sliceRange.min}mm)`, thinActualThicknessM],
+  [`thick (${sliceRange.max}mm)`, thickActualThicknessM],
+] as const) {
+  const submerged = { halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 2), diffusivityM2PerS: alpha, initialTempC, surfaceTempC: 175 };
+  const shallow = { halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 1), diffusivityM2PerS: alpha, initialTempC, surfaceTempC: 175 };
+  const secondsSubmerged = secondsForCenterToReachTempC(submerged, targetC);
+  const secondsShallow = secondsForCenterToReachTempC(shallow, targetC);
+  console.log(`  ${label}, submerged (deep-fried, both faces in oil): ${secondsSubmerged.toFixed(1)}s`);
+  console.log(`  ${label}, shallow oil (pan-fried, one face in oil):  ${secondsShallow.toFixed(1)}s (${(secondsShallow / secondsSubmerged).toFixed(1)}x longer)`);
+}
+console.log(
+  "\nSame slice, same oil temperature — only how many faces actually touch the oil changed, and the center " +
+    "takes ~4x longer with only one face exposed (heat has to travel through the FULL thickness instead of " +
+    "just half of it — a real, derivable consequence of the same physics, not a separately fit number)."
 );
 
 console.log(

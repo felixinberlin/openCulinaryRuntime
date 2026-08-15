@@ -6,7 +6,7 @@ import type { HeatSourceProfile } from "./heat-source.ts";
  * (pot/pan), not a per-action-call parameter on one ingredient" gap named in
  * `ROADMAP.md` (raised directly by the user while `SIMMER` was being built:
  * "heat is a function inside a place where many ingredients can live. it
- * increase and decrease in time.") and `LEARNINGS.md` 2026-08-13, which
+ * increase and decrease in time.") and `LEARNINGS_DOMAIN.md` 2026-08-13, which
  * scoped it as design-and-record, not implement — closed here, for real,
  * once a concrete forcing case existed ("what does a robot actually need to
  * boil an egg" — see `scripts/boil-egg-as-a-robot.ts`).

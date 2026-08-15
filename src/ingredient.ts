@@ -238,7 +238,7 @@ export type CooklangInterop = z.infer<typeof CooklangInteropSchema>;
  *
  * Deliberately NOT wired into engine.ts/recipe-runner.ts's execution path:
  * ingredients are still never consumed/decremented (engine.ts's own doc
- * comment; LEARNINGS.md 2026-08-12) — this records how much of an instance
+ * comment; LEARNINGS_ENGINE.md 2026-08-12) — this records how much of an instance
  * exists/was used, for a human or a future real inventory system to read;
  * it does not make `applyAction` quantity-aware. Also not wired to any
  * recipe-scaling engine: `CooklangInteropSchema.spiceLock` above already
@@ -368,7 +368,7 @@ export const EntitySchema = z.object({
    * enforced — exactly the "proven, not asserted" failure this whole
    * field exists to prevent, applied to itself. Fixed by removing every
    * incorrect entry rather than softening it; see `potato.json`'s own
-   * `invalidTransitionsNote` and `LEARNINGS.md` 2026-08-15.
+   * `invalidTransitionsNote` and `LEARNINGS_PROCESS.md` 2026-08-15.
    *
    * Deliberately keyed PER ENTITY, not one shared global map — resolving
    * `ROADMAP.md`'s own "unresolved, worth deciding before building either"

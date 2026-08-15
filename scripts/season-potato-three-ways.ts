@@ -6,7 +6,7 @@ import { applyAction, type Instance } from "../src/engine.ts";
  * Capability test for the 2026-08-13 seasoning generalization: proves SALT/
  * PEPPER/CHILI actually run end-to-end against the same fried potato, not
  * just that the JSON files individually validate. Same "attempt a real
- * dish, watch it fail where it actually fails" method LEARNINGS.md/
+ * dish, watch it fail where it actually fails" method LEARNINGS_PROCESS.md/
  * ROADMAP.md already establish for capability tests generally.
  */
 

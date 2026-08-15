@@ -66,7 +66,7 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   65min carries real safety margin, not that it's unsafely short —
   `heldSeconds` deliberately KEPT at 65min after this check, not tightened
   to the peer-reviewed figure (see `egg_pasteurization_raw.json`'s
-  `metadata.independentVerificationNote` and `LEARNINGS.md` 2026-08-14 for
+  `metadata.independentVerificationNote` and `LEARNINGS_PROCESS.md` 2026-08-14 for
   the full reasoning). Confidence for the Bermúdez-Aguirre figure itself:
   `standard_reference` (peer-reviewed review article) — the repo's own
   enforced value stays at the more conservative `commonly_cited_unverified`

@@ -139,7 +139,7 @@ for (const action of actions.items.values()) {
     }
   }
   // Same dead-capability shape the last session's verb audit went looking
-  // for by hand (LEARNINGS.md, "audit for dead capabilities") — a
+  // for by hand (LEARNINGS_ENGINE.md, "audit for dead capabilities") — a
   // requiredToolCapabilities entry that no loaded tool entity ever asserts
   // true would make this action permanently unexecutable no matter what a
   // caller has on hand, the tool-side mirror of requiredTools referencing

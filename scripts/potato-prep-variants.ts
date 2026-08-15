@@ -4,7 +4,7 @@ import { applyAction, type Instance } from "../src/engine.ts";
 
 /**
  * Capability test proving four genuinely different real potato-prep
- * variants a user named after the 2026-08-15 WASH-as-tag fix (LEARNINGS.md
+ * variants a user named after the 2026-08-15 WASH-as-tag fix (LEARNINGS_ENGINE.md
  * same date): "some people wash before [peeling], the important thing is
  * to take the sand/dirt out... if you peel the dirty potato with sand, you
  * need to wash it after... some recipes don't peel at all, just wash, cut,

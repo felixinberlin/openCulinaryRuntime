@@ -7,7 +7,7 @@ import { applyAction, type Instance } from "../src/engine.ts";
  * trying and failing, that the vocabulary couldn't make a tortilla de
  * patatas: two real components (fried potato, beaten egg) were makeable,
  * but nothing combined two instances into one, and no FLIP verb existed.
- * See ROADMAP.md's capability-test table and LEARNINGS.md's 2026-08-12
+ * See ROADMAP.md's capability-test table and LEARNINGS_PROCESS.md's 2026-08-12
  * entry for the original findings.
  *
  * Both gaps are now closed (data/actions/combine.json, data/actions/

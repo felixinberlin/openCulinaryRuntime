@@ -33,7 +33,7 @@ describe("EGG_BOIL_DONENESS", () => {
   test("cross-check against the real recipe: soft-boiled-egg.json's chosen 390s falls inside the 'soft' range", () => {
     // Not a coincidence to preserve silently — a real consistency check
     // between this table (added 2026-08-13) and a recipe authored before
-    // it existed (LEARNINGS.md 2026-08-12's soft-boiled-egg.json).
+    // it existed (LEARNINGS_DOMAIN.md 2026-08-13's soft-boiled-egg.json).
     const soft = eggBoilDonenessRange("soft");
     const recipeChoiceSeconds = 390;
     assert.ok(recipeChoiceSeconds >= soft.min && recipeChoiceSeconds <= soft.max);

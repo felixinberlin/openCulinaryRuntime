@@ -63,7 +63,7 @@ Read in roughly this order to get oriented:
 | `CLAUDE.md` | Ground truth on how the plan diverged from what's actually built, file-by-file, plus repo commands and conventions. |
 | `ROADMAP.md` | Phased build plan and the capability-test table — which real dishes are provably makeable today. |
 | `AUTHORING.md` | How to actually write a new recipe from the command line — the real `validate-recipe` loop, a worked example, and the honest current state of Cooklang support (none, yet — and why). |
-| `LEARNINGS.md` | Dated log of schema constraints, engine gotchas, and design tradeoffs discovered along the way. |
+| `LEARNINGS.md` | Index into the dated learnings log — split 2026-08-15 into `LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`, `LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md` (schema/engine gotchas, food-science/technique tradeoffs, CLI-tooling notes, and working-method/verification lessons, respectively) once the single file passed ~2,300 lines. |
 | `REFERENCES.md` | Bibliography — every safety threshold and technique claim traced to a real source. |
 | `SIMULATION_TARGETS.md` | Research comparing simulator/robot-execution targets (PDDL, VirtualHome, AI2-THOR, OmniGibson, RoboCasa) for eventually grounding this model in a simulated or robot-executed world. Not yet chosen. |
 | `masideas.md` | The raw original brainstorm notes `CONCEPT.md` and `ENGINE_INVARIANTS.md` were written up from. |

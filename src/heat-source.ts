@@ -67,7 +67,7 @@ import { CitationSchema } from "./ingredient.ts";
  * and `boil.json` still take `waterTempC`/`heatLevel` as a per-call guess on
  * one target instance, not a read of any real, shared, ongoing state. See
  * `ROADMAP.md`'s "Heat as a shared, time-varying property of a PLACE" entry
- * and `LEARNINGS.md` 2026-08-13 for the full reasoning on why this is
+ * and `LEARNINGS_DOMAIN.md` 2026-08-13 for the full reasoning on why this is
  * recorded, not built, for now.
  */
 export const HeatSourceProfileSchema = z.object({

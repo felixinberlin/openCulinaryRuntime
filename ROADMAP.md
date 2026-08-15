@@ -153,7 +153,7 @@ proven runnable, not just asserted.
 - [x] A real schema-integrity check that was previously silent: `addsTag`
       actions were never cross-checked against the target entity's own
       `possibleTags` — `scripts/validate.ts` now flags this (NOTE-level,
-      proven to fire — see `LEARNINGS.md` 2026-08-13).
+      proven to fire — see `LEARNINGS_DOMAIN.md` 2026-08-13).
 - [x] **Heat provider physics (gas/vitro/wood) + egg-boiling doneness
       timing** — closed 2026-08-13, `src/heat-source.ts` (`HeatSourceProfileSchema`,
       `estimatedPreheatSeconds`; `data/heat-sources/gas.json`, `vitro.json`,
@@ -399,7 +399,7 @@ proven runnable, not just asserted.
          white-edge-crisping). Informational only, same depth limit as every
          parameter here. Verified directly (not via a dedicated capability-
          test script, since nothing here is state-determining or newly
-         enforced beyond an allowedValues/tag check) — see `LEARNINGS.md`
+         enforced beyond an allowedValues/tag check) — see `LEARNINGS_DOMAIN.md`
          2026-08-13.
       A third thread in the same message — "transformations usually take
       time... states can change" — was real too but structural, not a data
@@ -425,7 +425,7 @@ proven runnable, not just asserted.
          `shape` enum as a sixth value — a box grater's friction-shredding
          is physically nothing like a knife's slicing motion, and the first
          draft of this fix made exactly that mistake before being caught
-         and corrected (see `LEARNINGS.md` 2026-08-13).
+         and corrected (see `LEARNINGS_DOMAIN.md` 2026-08-13).
       3. **`MASH` didn't exist at all** — the single most glaring gap: every
          `potato.json` since the first commit has listed `"mashed"` in
          `possibleStates` while `metadata.notes` said outright "mash isn't
@@ -444,7 +444,7 @@ proven runnable, not just asserted.
       crinkle cuts, twice-baked potato structure (hollow-and-refill), and
       the real alkaline (baking-soda) parboil-roughening technique (Kenji
       López-Alt's actual best method, cited in conversation) all remain
-      open too — see this session's chat log / `LEARNINGS.md` for why each
+      open too — see this session's chat log / `LEARNINGS_DOMAIN.md` for why each
       was scoped out rather than attempted. Proven end-to-end: `npm run
       capability-test:complete-potato`.
 - [x] **"Oma boils an egg"** — closed 2026-08-13, `scripts/oma-boils-an-egg.ts`.
@@ -530,7 +530,7 @@ covered by what exists:**
       models danger to the FOOD from equipment/surface reuse (same knife for
       raw egg then a ready-to-eat ingredient; a cutting board not washed
       between uses). `CriticalControlPointSchema` is thermal-only by design
-      (see `LEARNINGS.md` 2026-08-12) — this would need a genuinely different
+      (see `LEARNINGS_DOMAIN.md` 2026-08-12) — this would need a genuinely different
       mechanism, not a stretched CCP.
 - [ ] **Far more staple ingredients/entities.** Still no flour, milk/cheese,
       onion, herbs, sugar, vinegar/acid, or any protein besides egg. The
@@ -541,7 +541,7 @@ covered by what exists:**
       `requiredIngredientCapabilities` check was already substitutable —
       zero engine changes needed) and a first dairy entity (`butter.json`,
       plain/unclarified only) — see `scripts/fry-with-different-fats.ts`
-      (`npm run capability-test:fry-different-fats`) and `LEARNINGS.md`
+      (`npm run capability-test:fry-different-fats`) and `LEARNINGS_DOMAIN.md`
       2026-08-15. Butter's genuinely-lower smoke point (175°C, milk solids
       browning before the fat smokes) is correctly caught by `place.ts`'s
       existing safety check at `crispy_french_fries.json`'s 191°C
@@ -600,7 +600,7 @@ covered by what exists:**
       state — a real, structural addition to `engine.ts`'s current
       one-target-instance-at-a-time `applyAction` shape, not a data-only
       fix. Deliberately named and left unbuilt rather than started
-      speculatively — see `LEARNINGS.md` 2026-08-13 for the full reasoning
+      speculatively — see `LEARNINGS_DOMAIN.md` 2026-08-13 for the full reasoning
       on why this is scoped as design-and-record, not implement, for now.
       **The PHYSICS half closed 2026-08-14** (`src/place.ts`, `PlaceState` +
       `pourInto`/`advanceHeatSeconds`/`isAtBoiling`), once a concrete
@@ -705,7 +705,7 @@ covered by what exists:**
       distinguishing from that inaccurate framing.
 - [ ] **Storage/shelf-life common knowledge** (partially, deliberately
       out-of-scope already for one case — `infuse.json`'s garlic-in-oil
-      botulism note, `LEARNINGS.md` 2026-08-12 — but nothing general exists:
+      botulism note, `LEARNINGS_DOMAIN.md` 2026-08-12 — but nothing general exists:
       no "how long is this safe/good for" anywhere).
 - [ ] **Yield/waste factors** (edible-portion %, e.g. how much of a potato's
       mass a peel actually is) — `producedByproducts` records WHAT spawns,
@@ -790,7 +790,7 @@ covered by what exists:**
 ## Phase 1 — Core entity & ingestion models (`src/ingredient.ts`)
 - [x] `EntitySchema` — ingredients vs. tools, capabilities, states, tags,
       `byproductsByAction`, `criticalControlPointsByAction` (both added
-      beyond the original spec, out of necessity — see `LEARNINGS.md`
+      beyond the original spec, out of necessity — see `LEARNINGS_ENGINE.md`
       2026-08-12).
 - [x] `RecipeIngredientSchema` — closed 2026-08-13 as `QuantitySchema`
       (`src/ingredient.ts`) + `RecipeInstanceSchema.quantity` (`recipe.ts`),
@@ -878,7 +878,7 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       potato-cake technique). `peel.json`'s own metadata, `potato.json`'s
       top-level `notes`, and this repo's `CLAUDE.md` (its "Physical
       feasibility restrictions" bullet used the exact same wrong example)
-      were all corrected in the same change — see `LEARNINGS.md`
+      were all corrected in the same change — see `LEARNINGS_PROCESS.md`
       2026-08-15 for the fuller "check real technique, don't just check
       the spec doc" lesson.
       \
@@ -1138,7 +1138,7 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
         (`egg_pasteurization_raw.json`'s `metadata.
         independentVerificationNote`, `REFERENCES.md`) to record the real
         verification that happened, without silently tightening a food-
-        safety threshold as a side effect of it. See `LEARNINGS.md`
+        safety threshold as a side effect of it. See `LEARNINGS_PROCESS.md`
         2026-08-14.
       - **Cold-start integration, carryover-cooking quantification,
         turbulence quantification — correctly identified by the report
@@ -1342,7 +1342,7 @@ neither of which is defined anywhere in this repo — flagged, not assumed.
 - ~~Whether `INVALID_TRANSITIONS` should be a literal static matrix (as
   `CLAUDE_DEV_CTX.md` specifies) or generalized from the `statePrerequisites`
   pattern already in use~~ — **resolved 2026-08-15**: per-entity (see Phase
-  4's own now-closed entry above and `LEARNINGS.md` 2026-08-15) — state
+  4's own now-closed entry above and `LEARNINGS_ENGINE.md` 2026-08-15) — state
   vocabulary isn't portable across entities, and a real near-miss found
   during development (potato's since-corrected first-draft rule directly
   contradicted egg's genuinely-required boiled-before-peeled order, under

@@ -20,16 +20,20 @@ full list), `npm run recipe -- <id>`, `npm run build` / `npx tsc -p . --noEmit`
 (typechecks `src`, `scripts`, AND `tests`; both are clean with zero errors as of
 2026-08-14's `tsconfig.json` fix — `noEmit`/`allowImportingTsExtensions` — no more
 `TS5097` noise to filter). `npm test` and `validate.ts` are complementary, not
-alternatives (see `LEARNINGS.md` 2026-08-13) — `validate.ts` now covers real
+alternatives (see `LEARNINGS_ENGINE.md` 2026-08-13) — `validate.ts` now covers real
 recipe execution too, but still run both, plus every demo, after any change to
 `src/`, not just the new thing.
 
-**Before starting work, read `LEARNINGS.md`.** After learning something that would've
-saved time going in — a schema constraint, an engine gotcha, a design tradeoff and why
-— append a dated entry there. Don't just re-derive the same surprise next session, and
-don't let this section (or any other doc here) go stale the way this one just did:
-when the repo's real shape changes, update the doc that describes it in the same
-change, not "later."
+**Before starting work, read `LEARNINGS.md`** — split 2026-08-15 into 4 theme files
+once it passed ~2,300 lines (`LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`,
+`LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md`; `LEARNINGS.md` itself is now a short
+index — start there, it says which file(s) match what you're touching). After
+learning something that would've saved time going in — a schema constraint, an
+engine gotcha, a design tradeoff and why — append a dated entry to the theme file it
+actually belongs to. Don't just re-derive the same surprise next session, and don't
+let this section (or any other doc here) go stale the way this one just did: when the
+repo's real shape changes, update the doc that describes it in the same change, not
+"later."
 
 **Every factual claim in `data/*.json`/`src/*.ts` (a safety threshold, a physical
 constant, a technique claim) must trace to a real source, logged in
@@ -52,7 +56,7 @@ add it to `REFERENCES.md` in the same change, same discipline as `LEARNINGS.md` 
 ### Simulation rules that any engine code must enforce
 
 - **Conservation of mass/entities** — executing a step (e.g. "separate") destroys the parent entity in the inventory and spawns disjoint child entities in its place (e.g. "egg_yolk" + "egg_white").
-- **Physical feasibility restrictions** — block state transitions that are physically impossible (e.g. can't "chop" something "mashed" or "liquid" — there's no discrete piece left for a knife to act on). See the `INVALID_TRANSITIONS` map in the reference engine below for the canonical forbidden-transition table shape — **but note its own literal example ("can't peel something already boiled") is factually wrong**, caught 2026-08-15 on direct user correction (boil-in-jacket-then-peel is a real, common potato technique) after being carried uncritically since this repo's first commit; see `ROADMAP.md` Phase 4 / `LEARNINGS.md` 2026-08-15 for what's actually implemented and checked instead (`ingredient.ts`'s `invalidTransitions`, per entity).
+- **Physical feasibility restrictions** — block state transitions that are physically impossible (e.g. can't "chop" something "mashed" or "liquid" — there's no discrete piece left for a knife to act on). See the `INVALID_TRANSITIONS` map in the reference engine below for the canonical forbidden-transition table shape — **but note its own literal example ("can't peel something already boiled") is factually wrong**, caught 2026-08-15 on direct user correction (boil-in-jacket-then-peel is a real, common potato technique) after being carried uncritically since this repo's first commit; see `ROADMAP.md` Phase 4 / `LEARNINGS_PROCESS.md` 2026-08-15 for what's actually implemented and checked instead (`ingredient.ts`'s `invalidTransitions`, per entity).
 - **HACCP critical control points** — thermal steps must enforce food-safety thresholds (e.g. minimum internal temperature of 135°F held for at least 15 seconds).
 - **Cooklang interoperability** — Cooklang is the primary human-writable authoring format. Preserve backward compatibility with its scaling multipliers and spice locks (quantities prefixed with `=` do not scale linearly).
 - **Schema.org is a lossy export target** — Schema.org JSON-LD is a flat target for search-engine indexing only. Conversions from rich, nested OCR JSON to Schema.org must be one-directional (lossless OCR → lossy Schema.org), not treated as a round-trippable source of truth.
@@ -69,7 +73,7 @@ listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 | `recipe-step.ts` — `EntityStateSchema`, `CriticalControlPointSchema`, `MechanicalActionSchema` | Split across `src/engine.ts` (`Instance` ≈ `EntityStateSchema`), `src/action.ts` (`Action`/`ActionOutputsSchema` ≈ `MechanicalAction`), `src/thermal.ts` (`CriticalControlPointSchema`, built as named) | No single `recipe-step.ts` — the concept fragmented across three files as the engine grew organically |
 | `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
 | `nutrition-extension.ts` | Not built | |
-| `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS.md` 2026-08-15 |
+| `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS_ENGINE.md` 2026-08-15 |
 | `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | Not built | `cooklang` fields exist on entities (`canonicalToken`, `spiceLock`) but nothing reads/writes actual Cooklang text yet |
 
 `src/registry.ts` (loading `data/*.json` by directory into typed `Map`s) also isn't
@@ -86,7 +90,7 @@ data, e.g. "how long to boil water on a wood fire vs. gas") and
 to understand it" gap at the reference-data layer). Both are CCP-shaped (their own
 top-level `data/` collection + schema + `registry.ts` loader, mirroring
 `thermal.ts`/`data/ccps/`) rather than fields grafted onto `EntitySchema` — see
-`LEARNINGS.md` 2026-08-13 for why, and `ROADMAP.md`'s "Common culinary knowledge
+`LEARNINGS_DOMAIN.md` 2026-08-13 for why, and `ROADMAP.md`'s "Common culinary knowledge
 coverage" section for the surrounding context this was built under.
 
 A third such file, added 2026-08-14: `src/place.ts` (`PlaceState` +
@@ -100,7 +104,7 @@ as a pure function of elapsed simulated time, reusing `estimatedPreheatSeconds`'
 energy-balance approximation. Same standalone-module-before-engine-wiring
 precedent as `heat-source.ts`/`egg-doneness.ts`: `applyAction` does not
 consume it, and there is still no `FILL`/`PLACE` verb in `data/actions/*.json`
-— see `LEARNINGS.md` 2026-08-14 and `ROADMAP.md`'s same-dated update to that
+— see `LEARNINGS_ENGINE.md` 2026-08-14 and `ROADMAP.md`'s same-dated update to that
 entry for exactly what's closed vs. still open. Proven via
 `tests/place.test.ts` and `npm run capability-test:boil-as-robot`/
 `capability-test:fry-as-robot` (`scripts/boil-egg-as-a-robot.ts`/

@@ -9,7 +9,7 @@ import { applyAction, type Instance, type ExecutionResult } from "../src/engine.
  * produces a dirty peel, and washing the potato's FLESH afterward does
  * nothing for it — by then it's a separate, already-spawned instance
  * (conservation of mass). See potato_peel.json's washedNote and
- * LEARNINGS.md 2026-08-15 for the full reasoning; this script is the proof.
+ * LEARNINGS_ENGINE.md 2026-08-15 for the full reasoning; this script is the proof.
  */
 
 const root = join(import.meta.dirname, "..");

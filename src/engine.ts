@@ -42,7 +42,7 @@ import { requiredHoldSeconds, type CriticalControlPoint } from "./thermal.ts";
  *
  * `secondaryInstance` / `ExecutionResult.secondaryDestroyed` (ROADMAP.md
  * Phase 4, "multi-instance composition" — added once the tortilla
- * capability test proved it necessary, see LEARNINGS.md 2026-08-12): a
+ * capability test proved it necessary, see LEARNINGS_PROCESS.md 2026-08-12): a
  * COMBINE-shaped action (`action.requiredSecondaryCapability` set) merges a
  * SECOND instance into the result, not just the primary target — e.g. fried
  * potato + beaten egg -> tortilla_mixture. Both the primary target and

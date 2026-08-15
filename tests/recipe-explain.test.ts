@@ -249,3 +249,115 @@ describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", (
     assert.deepEqual(report.prepAdvisories, []);
   });
 });
+
+describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-penetration.ts composition)", () => {
+  // Real potato-like thermophysical values (matches potato.json's own
+  // actual numbers, not hardcoded to that exact file's contents).
+  const potato = makeEntity({
+    id: "potato",
+    thermophysical: { thermalConductivityWPerMK: 0.5, densityKgPerM3: 1080, specificHeatJPerKgK: 3730 },
+    physicalDimensions: { typicalDiameterCm: { min: 5, max: 6.35 } },
+  });
+  const cut = makeAction({
+    id: "cut",
+    parameters: [{ id: "shape", allowedValues: ["sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered"] }],
+    outputs: { transformedStateFromParameter: "shape" },
+  });
+  const fry = makeAction({
+    id: "fry",
+    parameters: [
+      { id: "oilTempC", numericRange: { unit: "celsius", min: 0, max: 300 } },
+      { id: "durationSeconds", numericRange: { unit: "seconds", min: 0, max: 3600 } },
+      { id: "topCookingMethod", allowedValues: ["untouched", "basted", "covered", "flipped"], required: false },
+    ],
+    outputs: { transformedState: "fried" },
+  });
+  const entities = new Map([["potato", potato]]);
+  const actions = new Map([
+    ["cut", cut],
+    ["fry", fry],
+  ]);
+
+  function friedPotatoRecipe(shape: string, oilTempC: string, durationSeconds: string, topCookingMethod?: string) {
+    return makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
+      sequence: [
+        { actionId: "cut", targetInstanceId: "potato-1", params: { shape }, availableIngredientInstanceIds: [] },
+        {
+          actionId: "fry",
+          targetInstanceId: "potato-1",
+          params: topCookingMethod ? { oilTempC, durationSeconds, topCookingMethod } : { oilTempC, durationSeconds },
+          availableIngredientInstanceIds: [],
+        },
+      ],
+    });
+  }
+
+  test("duration below even the fastest real case fires a strong advisory", () => {
+    const report = explainRecipe(friedPotatoRecipe("diced", "175", "3"), entities, actions);
+    const hit = report.timingAdvisories.find((a) => a.includes("FASTEST real"));
+    assert.ok(hit, `expected a FASTEST-case advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.match(hit!, /"diced" piece/);
+  });
+
+  test("duration inside the genuinely uncertain window fires a distinctly-worded advisory", () => {
+    // diced (6.35-12.7mm): fastest (2 faces, thin) and slowest (1 face,
+    // thick) cases are far apart at 175C — pick a duration in between.
+    const report = explainRecipe(friedPotatoRecipe("diced", "175", "40"), entities, actions);
+    const hit = report.timingAdvisories.find((a) => a.includes("UNCERTAIN"));
+    assert.ok(hit, `expected an UNCERTAIN-range advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+  });
+
+  test("duration comfortably above the slowest real case does NOT fire", () => {
+    const report = explainRecipe(friedPotatoRecipe("diced", "175", "600"), entities, actions);
+    assert.deepEqual(report.timingAdvisories, []);
+  });
+
+  test("topCookingMethod: basted narrows the window to one heated face, distinguishable from the no-signal case", () => {
+    const noSignal = explainRecipe(friedPotatoRecipe("diced", "175", "3"), entities, actions);
+    const basted = explainRecipe(friedPotatoRecipe("diced", "175", "3", "basted"), entities, actions);
+    const noSignalHit = noSignal.timingAdvisories.find((a) => a.includes("FASTEST real"))!;
+    const bastedHit = basted.timingAdvisories.find((a) => a.includes("FASTEST real"))!;
+    assert.match(noSignalHit, /oil coverage not stated — both submerged and shallow considered/);
+    assert.match(bastedHit, /topCookingMethod: "basted" \(one face in oil\)/);
+  });
+
+  test("oilTempC at or below the fork-tender target fires a distinct, real 'can never reach it' advisory", () => {
+    const report = explainRecipe(friedPotatoRecipe("sliced", "80", "600"), entities, actions);
+    const hit = report.timingAdvisories.find((a) => a.includes("can NEVER reach doneness"));
+    assert.ok(hit, `expected the unreachable-target advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+  });
+
+  test("an entity with incomplete thermophysical data is silently skipped, not an error", () => {
+    const undercooked = makeEntity({ id: "garlic" }); // no thermophysical block at all
+    const localEntities = new Map([["garlic", undercooked]]);
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "garlic-1", entityId: "garlic", state: "raw", tags: [] }],
+      sequence: [
+        { actionId: "cut", targetInstanceId: "garlic-1", params: { shape: "sliced" }, availableIngredientInstanceIds: [] },
+        {
+          actionId: "fry",
+          targetInstanceId: "garlic-1",
+          params: { oilTempC: "175", durationSeconds: "3" },
+          availableIngredientInstanceIds: [],
+        },
+      ],
+    });
+    assert.doesNotThrow(() => explainRecipe(recipe, localEntities, actions));
+    // Also correctly produces no advisory — the doneness target
+    // (POTATO_FORK_TENDER_CENTER_TEMP_C) is potato-specific by name, so
+    // even a fully-specified non-potato entity is out of scope, gated
+    // explicitly rather than silently assumed to apply.
+    const report = explainRecipe(recipe, localEntities, actions);
+    assert.deepEqual(report.timingAdvisories, []);
+  });
+
+  test("halved/quartered derive from the entity's own physicalDimensions, not cut-dimensions.ts", () => {
+    // 5-6.35cm diameter halved -> 25-31.75mm largest dimension, comfortably
+    // thick enough that 3s should still fire the FASTEST-case advisory.
+    const report = explainRecipe(friedPotatoRecipe("halved", "175", "3"), entities, actions);
+    const hit = report.timingAdvisories.find((a) => a.includes("FASTEST real"));
+    assert.ok(hit, `expected a FASTEST-case advisory for "halved", got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.match(hit!, /"halved" piece/);
+  });
+});

@@ -1950,3 +1950,64 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   final report — the user was told directly, since it changes how much
   the document as a WHOLE should be trusted going forward, not just
   which specific numbers got left out of this repo.
+
+### Wiring `cut-dimensions.ts` + `heat-penetration.ts` into `recipe-explain.ts` — a gap the repo had already named itself
+
+- **`crispy_french_fries.json`'s own `shapeConnectionNote` had already
+  named this exact gap, unprompted, days before this session built the
+  two pieces needed to close it**: "nothing connects CUT's shape state to
+  PAR_FRY's/FRY's own durationSeconds... a schema-valid but real-world-
+  wrong result... and nothing here would catch it." Worth noticing
+  explicitly — this wasn't a novel idea, it was picking up a thread this
+  repo had already tied off with a flag rather than a fix.
+- **"Be flexible with measures" resolved into a real design choice, not a
+  vague instruction to soften**: checked directly (not assumed) that no
+  recipe today states how much oil is used, and neither `fry.json` nor
+  `par-fry.json` has an oil-quantity parameter — so whether a slice heats
+  from one face (shallow oil) or two (submerged) is genuinely unknown
+  most of the time. Computing both and reporting the resulting [fastest,
+  slowest] time window — rather than guessing one default — is what
+  "flexible" turned into concretely: three real outcomes (below the
+  fastest case = likely undercooked; inside the window = genuinely
+  uncertain, said as such; above the slowest = clean), not a single
+  false-precision verdict. `fry.json`'s own `topCookingMethod`
+  (`basted`/`covered`/`untouched`) is a real, already-existing signal
+  that narrows the window when a recipe actually sets it — composing
+  with data that already existed rather than adding a new parameter.
+- **Verified the mechanism against the real recipe it was built to agree
+  with, not just synthetic fixtures**: `crispy_french_fries.json`'s
+  julienne/163°C/270s/191°C/180s pipeline produces ZERO advisories —
+  independently confirmed by hand-computing the actual seconds (163°C:
+  8.5-34.2s; 191°C: 7.1-28.3s, both ranges comfortably below the recipe's
+  own 270s/180s) before trusting the silence. A real, computed
+  confirmation that the citation this recipe was built from (Kalogianni &
+  Smith/Thermoworks) and the independently-built physics agree — not
+  circular, since the physics module was never tuned to match this
+  recipe's numbers, it was built from a completely different textbook
+  method (Fourier conduction) and food-science figure (Choi-Okos cp,
+  ThermoWorks/Idaho Potato Commission doneness temp).
+- **A parallel to the earlier `egg_cooking`/`BOIL` finding, found the
+  same way — by actually trying to construct the failing case, not by
+  reasoning it should work**: the new "oilTempC too low to ever reach
+  doneness" advisory fires correctly, but `fry.json`'s own `oilTempC`
+  floor (120°C) and `par-fry.json`'s (145°C) are BOTH already comfortably
+  above the potato doneness target (96-99°C) — meaning that branch is
+  effectively unreachable via any schema-valid FRY/PAR_FRY recipe today,
+  the same shape of "the CCP/advisory can never actually fire given the
+  parameter's own range" gap found earlier this session for `BOIL`. Kept
+  the check anyway (recipe-explain.ts doesn't itself enforce
+  `numericRange`, so it's still reachable at the pre-flight layer even
+  though `runRecipe` would separately reject the same malformed input for
+  a different reason) — but named the limited real-world reach honestly
+  rather than let a passing test imply more coverage than exists.
+- **Checking which real recipes the new advisory actually covers today
+  surfaced something else worth knowing, not assumed**: of this repo's
+  potato-frying recipes, only `crispy_french_fries.json` uses the real
+  `oilTempC` parameter — `salted-fried-potatoes.json`,
+  `garlic-oil-potatoes.json`, `tortilla-de-patatas.json`, and
+  `tortilla-de-betanzos.json` all still use the older, vaguer `heatLevel`
+  enum instead. The new check correctly and silently skips all four (no
+  real number, no real check possible) — not a false negative, but a
+  concrete, honest measure of how much of this repo's own data the new
+  mechanism actually reaches right now, worth recording rather than
+  letting "wired in" imply "covers everything."

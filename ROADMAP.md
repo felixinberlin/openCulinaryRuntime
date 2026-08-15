@@ -299,6 +299,36 @@ proven runnable, not just asserted.
       script's real numbers, not just "slower in the right direction."
       Variety/starch-content data remains the one piece still explicitly
       deferred from the original three-part ask, not forgotten.
+- [x] **`cut-dimensions.ts` + `heat-penetration.ts` wired into
+      `recipe-explain.ts` — closed 2026-08-15, same day.** Closes the gap
+      `crispy_french_fries.json`'s own `shapeConnectionNote` named
+      unprompted before either module existed: "nothing connects CUT's
+      shape state to FRY's/PAR_FRY's durationSeconds... a schema-valid
+      but real-world-wrong result... and nothing here would catch it." A
+      new fry-timing-vs-geometry check in `explainRecipe` composes both
+      modules — real cited shape dimensions + real heat-conduction
+      physics — into a pre-flight advisory. Deliberately RANGE-based per
+      the user's explicit ask ("be flexible with measures"): no recipe
+      today states how much oil is used, so whether a slice heats from
+      one or two faces is genuinely unknown most of the time — computed
+      for BOTH and reported as a [fastest, slowest] window rather than
+      one false-precision number; `fry.json`'s own `topCookingMethod`
+      narrows it when a recipe actually sets it. Verified against the
+      real recipe it was built to agree with, not just synthetic fixtures:
+      `crispy_french_fries.json`'s julienne/163°C/191°C pipeline produces
+      zero advisories, independently confirmed by hand-computing the
+      actual seconds first. Two honest limits found and recorded, not
+      hidden: the new "oil too cold to ever finish cooking" branch is
+      effectively unreachable via any schema-valid recipe today (both
+      `fry.json`'s 120°C and `par-fry.json`'s 145°C floors already sit
+      above the potato doneness target — the same shape of gap as
+      `egg_cooking`'s CCP being unreachable via `BOIL`'s own 60s floor,
+      found earlier this session); and only `crispy_french_fries.json`
+      itself currently uses the real `oilTempC` parameter this check
+      needs — `salted-fried-potatoes.json`/`garlic-oil-potatoes.json`/
+      `tortilla-de-patatas.json`/`tortilla-de-betanzos.json` still use
+      the older `heatLevel` enum, so the new check correctly and silently
+      doesn't reach them yet, not a false negative.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

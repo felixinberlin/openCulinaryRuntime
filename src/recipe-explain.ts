@@ -3,6 +3,13 @@ import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import { eggBoilDonenessRangeForSize } from "./egg-doneness.ts";
 import { potatoBoilDonenessRange } from "./potato-doneness.ts";
+import { cutShapeDimensionMm, halvedOrQuarteredDimensionMm } from "./cut-dimensions.ts";
+import {
+  thermalDiffusivityM2PerS,
+  effectiveHalfThicknessM,
+  secondsForCenterToReachTempC,
+  POTATO_FORK_TENDER_CENTER_TEMP_C,
+} from "./heat-penetration.ts";
 
 /**
  * A pre-flight, read-only report over a `RecipeScript` — computed WITHOUT
@@ -37,6 +44,14 @@ import { potatoBoilDonenessRange } from "./potato-doneness.ts";
  *    and needs a genuinely different mechanism than this — this check
  *    does not claim to close it, only to notice the one narrow, concrete
  *    case of "you're about to cut into a raw, unwashed vegetable."
+ * 4. A fry-timing-vs-geometry check (added 2026-08-15), composing
+ *    `cut-dimensions.ts`'s real shape dimensions with `heat-
+ *    penetration.ts`'s real heat-conduction physics — closes the exact
+ *    gap `crispy_french_fries.json`'s own `shapeConnectionNote` named
+ *    unprompted before either module existed. Deliberately RANGE-based
+ *    (fastest vs. slowest real case), not a false-precision single
+ *    verdict — see the check's own inline comment for why (no recipe
+ *    today states how much oil is used).
  */
 
 export interface ToolReport {
@@ -93,6 +108,14 @@ export function explainRecipe(
   // same id space `recipe-runner.ts`'s inventory uses.
   const washedInstanceIds = new Set<string>();
 
+  // Tracks, per recipe-local instance id, the most recent CUT shape
+  // applied to it — for the fry-timing-vs-geometry check below. A
+  // COMBINE step spawns a genuinely new instance id (e.g. tortilla_
+  // mixture-4) with no entry here, which is correct: that instance isn't
+  // "sliced potato" in the geometric sense anymore, so the check below
+  // naturally skips it rather than needing special-case handling.
+  const shapeByInstanceId = new Map<string, string>();
+
   for (const step of recipe.sequence) {
     const action = actions.get(step.actionId);
     if (!action) continue; // unknown action ids are runRecipe's job to reject, not this report's
@@ -104,6 +127,9 @@ export function explainRecipe(
     if (action.verb === "WASH") {
       washedInstanceIds.add(step.targetInstanceId);
     } else if (action.verb === "PEEL" || action.verb === "CUT") {
+      if (action.verb === "CUT" && step.params["shape"]) {
+        shapeByInstanceId.set(step.targetInstanceId, step.params["shape"]);
+      }
       const targetEntityId = recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId;
       const entity = targetEntityId ? entities.get(targetEntityId) : undefined;
       // Capability-based (isWashable), not state/tag-based — "washed" is a
@@ -154,6 +180,102 @@ export function explainRecipe(
             `${action.verb} on "${step.targetInstanceId}": durationSeconds ${seconds}s is outside POTATO_BOIL_DONENESS's ` +
               `"${pieceSize}" range (${min}-${max}s) — double-check this is the duration you meant.`
           );
+        }
+      }
+    }
+
+    // Fry-timing-vs-geometry check: composes cut-dimensions.ts's real
+    // shape dimensions with heat-penetration.ts's real heat-conduction
+    // physics — closes the exact gap crispy_french_fries.json's own
+    // shapeConnectionNote named before either module existed ("nothing
+    // connects CUT's shape state to FRY's/PAR_FRY's durationSeconds").
+    // Deliberately RANGE-based, not a single verdict: no recipe today
+    // states how much oil is used, so whether a slice is heated from one
+    // face (shallow oil) or two (submerged) is genuinely unknown most of
+    // the time — computed for BOTH and reported as the resulting time
+    // window, not guessed as one default. fry.json's own
+    // topCookingMethod ("basted"/"covered"/"untouched" — all imply the
+    // top face isn't submerged) is a real signal, used to narrow the
+    // window to one face when a recipe actually sets it. Scoped to only
+    // entities with COMPLETE thermophysical data (today: potato only) —
+    // capability-based on data completeness via the try/catch below, not
+    // hardcoded to one entity id, so this applies automatically the day
+    // a second entity gains full thermophysical data. The doneness
+    // TARGET temperature is potato-specific by name
+    // (POTATO_FORK_TENDER_CENTER_TEMP_C) — the one piece that doesn't
+    // yet generalize, gated explicitly rather than silently assumed.
+    if ((action.verb === "FRY" || action.verb === "PAR_FRY") && durationRaw !== undefined && step.params["oilTempC"] !== undefined) {
+      const shape = shapeByInstanceId.get(step.targetInstanceId);
+      const targetEntityId = recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId;
+      const entity = targetEntityId ? entities.get(targetEntityId) : undefined;
+      const oilTempC = Number(step.params["oilTempC"]);
+      const fryDurationSeconds = Number(durationRaw);
+
+      if (shape && entity && targetEntityId === "potato" && !Number.isNaN(oilTempC) && !Number.isNaN(fryDurationSeconds)) {
+        try {
+          const diffusivity = thermalDiffusivityM2PerS(entity);
+          let dimensionMm: { min: number; max: number } | undefined;
+          if (shape === "sliced" || shape === "diced" || shape === "julienne" || shape === "chopped" || shape === "minced") {
+            dimensionMm = cutShapeDimensionMm(shape);
+          } else if ((shape === "halved" || shape === "quartered") && entity.physicalDimensions?.typicalDiameterCm) {
+            dimensionMm = halvedOrQuarteredDimensionMm(entity.physicalDimensions.typicalDiameterCm, shape === "halved" ? 2 : 4);
+          }
+
+          if (dimensionMm) {
+            const targetC = (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTER_TEMP_C.max) / 2;
+            const initialTempC = 20; // room temperature, stated assumption — same as scripts/potato-heat-penetration.ts
+
+            const topCookingMethod = step.params["topCookingMethod"];
+            const oneFaceOnly = topCookingMethod === "basted" || topCookingMethod === "covered" || topCookingMethod === "untouched";
+            const faceCounts: (1 | 2)[] = oneFaceOnly ? [1] : [1, 2];
+
+            let fastestSeconds: number | undefined;
+            let slowestSeconds: number | undefined;
+            for (const faceCount of faceCounts) {
+              for (const thicknessMm of [dimensionMm.min, dimensionMm.max]) {
+                const halfThicknessM = effectiveHalfThicknessM(thicknessMm / 1000, faceCount);
+                const t = secondsForCenterToReachTempC(
+                  { halfThicknessM, diffusivityM2PerS: diffusivity, initialTempC, surfaceTempC: oilTempC },
+                  targetC
+                );
+                if (fastestSeconds === undefined || t < fastestSeconds) fastestSeconds = t;
+                if (slowestSeconds === undefined || t > slowestSeconds) slowestSeconds = t;
+              }
+            }
+
+            if (fastestSeconds !== undefined && slowestSeconds !== undefined) {
+              const coverageNote = oneFaceOnly
+                ? `topCookingMethod: "${topCookingMethod}" (one face in oil)`
+                : "oil coverage not stated — both submerged and shallow considered";
+              if (fryDurationSeconds < fastestSeconds) {
+                timingAdvisories.push(
+                  `${action.verb} on "${step.targetInstanceId}": durationSeconds ${fryDurationSeconds}s is below even the FASTEST real ` +
+                    `case (${fastestSeconds.toFixed(1)}s) for a "${shape}" piece (${dimensionMm.min}-${dimensionMm.max}mm) in ${oilTempC}°C oil ` +
+                    `to reach a fork-tender center — very likely undercooked. (${coverageNote}; pure heat-conduction estimate, see heat-penetration.ts.)`
+                );
+              } else if (fryDurationSeconds < slowestSeconds) {
+                timingAdvisories.push(
+                  `${action.verb} on "${step.targetInstanceId}": durationSeconds ${fryDurationSeconds}s is within a genuinely UNCERTAIN ` +
+                    `range (${fastestSeconds.toFixed(1)}-${slowestSeconds.toFixed(1)}s) for a "${shape}" piece in ${oilTempC}°C oil to reach a ` +
+                    `fork-tender center — could be done or not depending on the exact thickness/oil coverage. (${coverageNote}.)`
+                );
+              }
+            }
+          }
+        } catch (err) {
+          // thermalDiffusivityM2PerS throws for incomplete thermophysical
+          // data — not applicable, skip silently, same "informational,
+          // not forced" convention as the rest of this module.
+          // secondsForCenterToReachTempC also throws when oilTempC itself
+          // can never reach the target (e.g. at or below it) — that ONE
+          // specific case is worth surfacing, not swallowing.
+          if (err instanceof Error && err.message.includes("can never reach it")) {
+            timingAdvisories.push(
+              `${action.verb} on "${step.targetInstanceId}": oilTempC ${step.params["oilTempC"]}°C is at or below the fork-tender target ` +
+                `(${POTATO_FORK_TENDER_CENTER_TEMP_C.min}-${POTATO_FORK_TENDER_CENTER_TEMP_C.max}°C) — the center can NEVER reach doneness by ` +
+                `conduction alone at this oil temperature, no matter how long it fries.`
+            );
+          }
         }
       }
     }

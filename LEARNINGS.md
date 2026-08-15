@@ -2204,3 +2204,47 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   mechanism inaccurately, not fabricating a source), but the fix is the
   same: check, don't assume, and correct in place rather than pass the
   inaccuracy along.
+
+### `INVALID_TRANSITIONS` — the "global vs. per-entity" question resolved by finding a real contradiction, not by preference
+
+- **`ROADMAP.md` had flagged this as "unresolved, worth deciding before
+  building either" since 2026-08-14. It turned out not to be a judgment
+  call at all once the actual data was checked**: `CLAUDE_DEV_CTX.md`'s
+  own literal `INVALID_TRANSITIONS` example is a single global map keyed
+  by bare state name (`{ boiled: ['raw', 'peeled'], ... }`). Trying to
+  write that map against this repo's real two motivating entities
+  surfaced a direct contradiction: `potato.json`'s own long-standing
+  convention (`peel.json`'s metadata has said "cannot peel a potato that
+  is already boiled" since this repo's first commit) needs
+  `boiled -> peeled` FORBIDDEN, while `egg.json`'s own
+  `statePrerequisites.peel: "boiled"` has required that exact same
+  transition — boil first, THEN peel — since before this session. Same
+  bare state names (`"boiled"`, `"peeled"`), opposite correct rules. A
+  single global map literally cannot hold both; whichever entity's rule
+  was authored second would silently overwrite the first. Keying
+  `invalidTransitions` per entity (`ingredient.ts`) isn't a weaker,
+  hedged compromise between the two ROADMAP options — it's the only one
+  of the two that's actually correct, once real data is checked instead
+  of designed from the spec doc alone. Worth naming as a pattern this
+  session repeated more than once (the frying-science doc's fabricated
+  bibliography, `WORLD_MODEL_OPTIMIZATION.md`'s `COMBINE` claim, now
+  this): an unresolved design question phrased as "which of these two
+  do we prefer" is often actually answerable by building the smallest
+  real test case for each option and seeing which one breaks — cheaper
+  than debating it in the abstract, and it produced a citable, reusable
+  finding (this entry) instead of just a decision.
+- **The check doubled as a real, if narrow, audit tool**: writing
+  `potato.json`'s `invalidTransitions` required re-deriving which
+  transitions are ACTUALLY forbidden vs. merely unusual — e.g. cutting a
+  boiled potato (potato salad) is a real technique and deliberately NOT
+  forbidden, and frying an already-mashed potato (potato cakes) is
+  explicitly named elsewhere in this file as a real, celebrated
+  technique — both had to be checked against ROADMAP.md's own prior
+  entries before writing the forbidden list, not just pattern-matched
+  from `CLAUDE_DEV_CTX.md`'s illustrative example. Getting this wrong in
+  either direction (forbidding a real technique, or failing to forbid an
+  impossible one) would have been a silent regression against every
+  existing recipe — caught instead by re-running `npm run validate`
+  (all 12 real recipes still simulate end-to-end with zero step errors)
+  and the full demo/capability-test sweep before considering this done,
+  not just by reasoning about the JSON in isolation.

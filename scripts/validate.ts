@@ -75,6 +75,22 @@ for (const entity of entities.items.values()) {
       );
     }
   }
+  // invalidTransitions (ingredient.ts, closed 2026-08-15 — ROADMAP.md Phase
+  // 4's INVALID_TRANSITIONS) references bare state ids on both sides, not
+  // an action/entity id — unlike addsTag above, there's no legitimate
+  // asymmetry that would make a reference to a state this entity never
+  // lists a false positive, so this is a hard fail, the same standard
+  // producedByproducts/byproductsByAction below hold themselves to.
+  for (const [fromState, forbidden] of Object.entries(entity.invalidTransitions)) {
+    if (!entity.possibleStates.includes(fromState)) {
+      fail(`entities/${entity.id}.json: invalidTransitions references unknown state "${fromState}" (not in possibleStates) as a key`);
+    }
+    for (const toState of forbidden) {
+      if (!entity.possibleStates.includes(toState)) {
+        fail(`entities/${entity.id}.json: invalidTransitions["${fromState}"] references unknown state "${toState}" (not in possibleStates)`);
+      }
+    }
+  }
   for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
     if (!actions.items.has(actionId)) {
       fail(`entities/${entity.id}.json: byproductsByAction references unknown action "${actionId}"`);

@@ -6,18 +6,21 @@ import { requiredHoldSeconds, type CriticalControlPoint } from "./thermal.ts";
  * Minimal execution engine — applies one canonical Action to one instance.
  *
  * This is a stepping stone toward ROADMAP.md Phase 4's full
- * `OcrValidationEngine` (a full INVALID_TRANSITIONS forbidden-transition
- * matrix, HACCP, an ordered recipe sequence). It checks: the target
- * entity's capability, required tools being on hand, `Entity.statePrerequisites`
- * (a narrower per-action "must already be in this state first" precondition,
- * e.g. potato.json: cut requires "peeled"), the action's declared
- * `parameters` (e.g. CUT's "shape"), and — new — `requiredIngredientCapabilities`
- * (e.g. FRY needs some available ingredient with isFryingMedium, like oil).
- * It does NOT yet check arbitrary forbidden state transitions in general
- * (e.g. nothing here stops peeling an already-boiled potato) — that needs
- * the fuller transition table Phase 4 will add. It also only checks that a
- * qualifying ingredient is *present*, not consume/decrement it — real
- * quantity tracking belongs to Phase 4's recipe-level inventory.
+ * `OcrValidationEngine` (HACCP, an ordered recipe sequence — still not a
+ * dedicated class here, `applyAction` covers the same ground as a plain
+ * function). It checks: the target entity's capability, required tools
+ * being on hand, `Entity.statePrerequisites` (a narrower per-action "must
+ * already be in this state first" precondition, e.g. potato.json: cut
+ * requires "peeled"), the action's declared `parameters` (e.g. CUT's
+ * "shape"), `requiredIngredientCapabilities` (e.g. FRY needs some available
+ * ingredient with isFryingMedium, like oil), and — closed 2026-08-15,
+ * `Entity.invalidTransitions` (ingredient.ts) — arbitrary forbidden state
+ * transitions in general (e.g. potato.json now genuinely stops peeling an
+ * already-boiled potato; see that field's own doc comment for why it's
+ * keyed per-entity rather than the one global matrix CLAUDE_DEV_CTX.md's
+ * literal example shows). It also only checks that a qualifying ingredient
+ * is *present*, not consume/decrement it — real quantity tracking belongs
+ * to Phase 4's recipe-level inventory.
  *
  * `state` and `tags` are deliberately separate: `state` is the one
  * mutually-exclusive form/cooking-method value (raw/washed/.../boiled/
@@ -296,6 +299,21 @@ export function applyAction(
       );
     }
     nextState = value;
+  }
+
+  // Forbidden-transition check (ROADMAP.md Phase 4, ingredient.ts's
+  // invalidTransitions doc comment for the full reasoning) — runs against
+  // the COMPUTED nextState above, not the action id, so it also catches a
+  // parameter-driven output (CUT's shape). A no-op transition (nextState
+  // === instance.state, e.g. an addsTag-only action like SALT) can never
+  // trip this, since no author would list a state as forbidden from
+  // itself. Deliberately checked here, after every precondition above has
+  // already passed — this is a distinct concern (is the RESULT physically
+  // sane) from "may this action even start," not a replacement for it.
+  if (target.invalidTransitions[instance.state]?.includes(nextState)) {
+    throw new Error(
+      `${action.verb} would move "${target.id}" from "${instance.state}" to "${nextState}", which is a forbidden transition for this entity (see invalidTransitions).`
+    );
   }
 
   let nextTags = instance.tags;

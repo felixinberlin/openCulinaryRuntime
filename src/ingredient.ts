@@ -345,6 +345,45 @@ export const EntitySchema = z.object({
    */
   statePrerequisites: z.record(z.string(), z.union([z.string(), z.array(z.string())])).default({}),
   /**
+   * Per-entity forbidden state transitions (ROADMAP.md Phase 4 —
+   * `CLAUDE_DEV_CTX.md`'s `OcrValidationEngine.INVALID_TRANSITIONS`, the
+   * repo's own named "single largest unbuilt piece of the original spec"
+   * until 2026-08-15). Keyed by the state an instance is CURRENTLY in ->
+   * the state ids it may never legally become FROM there, e.g.
+   * `potato.json`: `{ "boiled": ["raw", "peeled"] }` — "you cannot peel a
+   * potato that's already boiled," `peel.json`'s own metadata note since
+   * this repo's first commit, never actually enforced until this field.
+   *
+   * Deliberately keyed PER ENTITY, not one shared global map — resolving
+   * `ROADMAP.md`'s own "unresolved, worth deciding before building either"
+   * open question. `CLAUDE_DEV_CTX.md`'s literal example is global (bare
+   * state names like "boiled"), but this repo's real data makes a global
+   * map actively wrong, not just less general: `potato.json` forbids
+   * `boiled -> peeled` (peel before you boil, per its own convention),
+   * while `egg.json`'s `statePrerequisites.peel: "boiled"` REQUIRES the
+   * exact opposite order (boil before you peel) — the two entities'
+   * correct rules directly contradict each other under the same bare
+   * state name. A global map cannot hold both; per-entity keying can,
+   * with zero conflict, because it's the same "state vocabulary isn't
+   * portable across entities" reasoning `statePrerequisites` above
+   * already commits to.
+   *
+   * Checked in `engine.ts`'s `applyAction` against the action's actual
+   * COMPUTED next state (`transformedState` or `transformedStateFromParameter`
+   * resolved), not the action id — so a parameter-driven output (e.g.
+   * `CUT`'s `shape`) is covered without per-action authoring, and an
+   * action that doesn't change `state` at all (an `addsTag`-only action
+   * like `SALT`) can never trip this check, since its "next state" is
+   * just the unchanged current one. Optional and defaults to `{}`, so
+   * every entity file written before this field existed is completely
+   * unaffected. Some entries here (any list containing `"raw"`) are
+   * currently unreachable — no action's output ever resolves to `"raw"` —
+   * kept anyway for fidelity to `CLAUDE_DEV_CTX.md`'s own literal
+   * example, same "flag it, don't hide it" honesty as `place.ts`'s own
+   * similarly-unreachable "oil too cold to ever finish cooking" branch.
+   */
+  invalidTransitions: z.record(z.string(), z.array(z.string())).default({}),
+  /**
    * Entity ids this entity may spawn when consumed (CONCEPT.md §9). This is
    * the fallback list any `spawnsTargetByproducts` action uses when it has
    * no more specific entry in `byproductsByAction` below — correct as long

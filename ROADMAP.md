@@ -839,13 +839,49 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
 - [ ] `OcrValidationEngine` class as a named class — `engine.ts`'s
       `applyAction` is a plain function covering most of the same
       responsibility (capability/tool/state-prerequisite checks).
-- [ ] **`INVALID_TRANSITIONS` forbidden-state-transition matrix — still the
-      single largest unbuilt piece of the original spec.** Nothing today
-      stops e.g. peeling an already-boiled potato in general; only the
-      specific `statePrerequisites` pairs authored per-entity (peel-before-
-      cut, boiled-before-peel-egg, ...) are enforced. A real matrix would
-      generalize this instead of requiring every forbidden pair to be
-      individually authored.
+- [x] **`INVALID_TRANSITIONS` forbidden-state-transition matrix — closed
+      2026-08-15, the repo's own named "single largest unbuilt piece of
+      the original spec."** `ingredient.ts`'s `EntitySchema.invalidTransitions`
+      (state id -> the state ids this entity may never legally become from
+      there) + `engine.ts`'s `applyAction` check against the action's
+      actual COMPUTED next state (covers parameter-driven outputs like
+      CUT's `shape` for free, not just fixed `transformedState` actions).
+      Resolves this file's own long-open "Open dependencies" question —
+      literal global matrix (`CLAUDE_DEV_CTX.md`'s own shape) vs.
+      generalized from `statePrerequisites` — with a real, forced answer,
+      not a preference: **per-entity**, because a global map is actively
+      WRONG here, not just less general. `potato.json` forbids
+      `boiled -> peeled` (peel.json's own metadata has claimed "cannot
+      peel a potato that is already boiled" since this repo's first
+      commit, never enforced until now), while `egg.json`'s own
+      `statePrerequisites.peel: "boiled"` REQUIRES the exact opposite
+      order — a real egg is peeled AFTER boiling. Both are correct for
+      their own entity; a single global map keyed by bare state name
+      cannot express both at once. See `LEARNINGS.md` 2026-08-15 for the
+      full reasoning. Applied to three entities so far, each scoped to
+      what's actually true rather than padded to look complete:
+      `potato.json` (the full "can't un-cook/un-cut back to peeled" set,
+      deliberately EXCLUDING cutting a boiled potato — a real technique
+      already gated correctly by `cut.json`'s own `statePrerequisites` —
+      and excluding mashed->fried, the real potato-cake path), `egg.json`
+      (cut/fried/poached can't revert to peeled/boiled/raw), and
+      `egg_cracked.json` (fried/scrambled can't revert to any beaten
+      intensity). `scripts/validate.ts` gained a matching hard-fail check
+      (a key or forbidden-state value not in the entity's own
+      `possibleStates` — the same dead-reference standard
+      `producedByproducts`/`byproductsByAction` already hold themselves
+      to). Proven, not just typechecked: all 165 unit tests pass
+      (3 new, including the potato-vs-egg per-entity-necessity case
+      itself as an executable test, not just a claim), `npm run validate`
+      still simulates all 12 real recipes end-to-end with zero step
+      errors, and the full demo/capability-test sweep is unaffected —
+      nothing here was already relying on a transition this now forbids.
+      **Still honestly scoped, not overclaimed**: only 3 of this repo's
+      ~15 ingredient entities have any `invalidTransitions` authored
+      (the field defaults to `{}`, so this is additive, opt-in coverage,
+      not a repo-wide audit) — garlic, oil, salt, water, and the
+      alioli/tortilla composite entities have none yet, named here rather
+      than implied covered.
 - [x] Requirement checks before a step executes (tool/entity present,
       required state, required capabilities, parameter validity).
 - [x] **CLI pre-flight recipe validator for an ARBITRARY recipe file — closed
@@ -1269,6 +1305,9 @@ neither of which is defined anywhere in this repo — flagged, not assumed.
 - Community backend/auth service (Phase 8) — still undefined.
 - The real shape of multi-instance composition (Phase 4's new top item) —
   a design decision, not just an implementation task.
-- Whether `INVALID_TRANSITIONS` should be a literal static matrix (as
+- ~~Whether `INVALID_TRANSITIONS` should be a literal static matrix (as
   `CLAUDE_DEV_CTX.md` specifies) or generalized from the `statePrerequisites`
-  pattern already in use — unresolved, worth deciding before building either.
+  pattern already in use~~ — **resolved 2026-08-15**: per-entity (see Phase
+  4's own now-closed entry above and `LEARNINGS.md` 2026-08-15) — potato and
+  egg need genuinely contradictory rules under the same bare state names,
+  which only per-entity keying can hold at once.

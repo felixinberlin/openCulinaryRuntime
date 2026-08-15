@@ -28,6 +28,10 @@
   "statePrerequisites": {
     "fold": "fried"
   },
+  "invalidTransitions": {
+    "fried": ["raw", "lightly_beaten", "beaten", "well_beaten"],
+    "scrambled": ["raw", "lightly_beaten", "beaten", "well_beaten"]
+  },
   "producedByproducts": [],
   "criticalControlPointsByAction": {
     "fry": "egg_cooking",
@@ -58,6 +62,7 @@
     "flipNote": "isFlippable added for the plain/French omelette case (FLIP an already-frying egg_cracked to cook its second side) — cheap, directly reuses data/actions/flip.json as-is, no new machinery needed beyond what tortilla_mixture.json already required.",
     "combineNote": "isCombinableAddition: the secondary instance data/actions/combine.json consumes (poured over already-fried potato — see potato.json's combineNote). No statePrerequisite enforcing 'must be beaten first': engine.ts's statePrerequisites only supports one exact required state string, and 'lightly_beaten' OR 'beaten' OR 'well_beaten' should all be valid real inputs — expressing 'any of these three' isn't something the current mechanism can do, so this is left as a real-world expectation, not an enforced one.",
     "seasoningNote": "pepper/chili added 2026-08-13 alongside salt — see potato.json's identical seasoningNote.",
+    "invalidTransitionsNote": "Closed 2026-08-15, ROADMAP.md Phase 4 — once fried or scrambled, cannot revert to raw or any beaten intensity: you cannot un-cook a set curd back into liquid egg. Deliberately does NOT forbid fried <-> scrambled cross-transitions in either direction — unlike un-cooking, nothing here asserts that's physically impossible (just an unusual thing to do), so it's left unenforced rather than guessed at.",
     "foldNote": "isFoldable + statePrerequisites.fold: 'fried' — the classical French omelette's rolled/folded shape, applied AFTER frying (data/actions/fold.json), not before. The Spanish tortilla francesa reading of this same entity (FRY, agitation: undisturbed, fully_set) simply never calls FOLD — both are equally valid, equally supported outcomes of the same starting entity; which one a request means is resolved upstream, not by this schema. See fry.json's internalTextureNote and data/recipes/tortilla-francesa.json / french-omelette.json."
   }
 }

@@ -27,28 +27,31 @@
   ],
   "availableTools": ["knife", "pan"],
   "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
     { "actionId": "peel", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": [] },
-    { "actionId": "cut", "targetInstanceId": "garlic-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "garlic-1", "params": { "shape": "halved" }, "availableIngredientInstanceIds": [] },
     {
       "actionId": "fry",
       "targetInstanceId": "garlic-1",
-      "params": { "heatLevel": "medium", "durationSeconds": "400", "doneness": "brown" },
+      "params": { "heatLevel": "medium", "durationSeconds": "240", "doneness": "brown" },
       "availableIngredientInstanceIds": ["oil-1"]
     },
     {
       "actionId": "infuse",
       "targetInstanceId": "oil-1",
-      "params": { "heatLevel": "medium", "durationSeconds": "400" },
+      "params": { "heatLevel": "medium", "durationSeconds": "240" },
       "availableIngredientInstanceIds": ["garlic-1"]
     },
-    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
-    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
-    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
     { "actionId": "fry", "targetInstanceId": "potato-1", "params": { "heatLevel": "medium" }, "availableIngredientInstanceIds": ["oil-1"] },
     { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
   ],
   "metadata": {
-    "notes": "Two products from one pan of oil, in order: (1) garlic-1 sliced and fried until doneness:'brown' — see fry.json's donenessNote for why that's informational, not a distinct enforced state; still ends in state 'fried', same as any other fried garlic. (2) oil-1 then INFUSEd (garlic-1 as the available ingredient, not consumed — engine.ts only checks ingredient presence, never decrements it, so the same garlic-1 instance that just finished frying is exactly what satisfies INFUSE's isAromaticSource requirement) — oil-1 gains tag 'garlic_infused' without losing its own state. (3) The SAME oil-1 instance is then reused as potato-1's frying medium two steps later — proving 'the oil, now flavored, is used to cook something else' is already fully supported: nothing here consumes/removes oil-1 from availableIngredientInstanceIds' pool between steps.",
+    "notes": "Two products from one pan of oil, in order: (1) garlic-1 halved and fried until doneness:'brown' — see fry.json's donenessNote for why that's informational, not a distinct enforced state; still ends in state 'fried', same as any other fried garlic. (2) oil-1 then INFUSEd (garlic-1 as the available ingredient, not consumed — engine.ts only checks ingredient presence, never decrements it, so the same garlic-1 instance that just finished frying is exactly what satisfies INFUSE's isAromaticSource requirement) — oil-1 gains tag 'garlic_infused' without losing its own state. (3) The SAME oil-1 instance is then reused as potato-1's frying medium immediately after — proving 'the oil, now flavored, is used to cook something else' is already fully supported: nothing here consumes/removes oil-1 from availableIngredientInstanceIds' pool between steps.",
+    "sequenceOrderNote": "Reordered 2026-08-15, directly answering a user's real technique: cut the garlic (small pieces or halves), fry in abundant oil until brown, take it out carefully WITHOUT letting it rest in the hot oil (burnt garlic turns bitter), then fry the potatoes in the still-hot oil right away. The original sequence fried garlic FIRST, then spent three more steps (WASH/PEEL/CUT) prepping the potato while garlic sat in the hot oil the whole time — the exact mistake the real technique warns against, never noticed because nothing in this repo modeled elapsed idle time. Potato prep now happens FIRST, so garlic goes into the oil last and FRY potato-1 is the very next step after it finishes — no idle steps between 'garlic done' and 'potato in,' the closest this can get to 'take it out and fry the potato right away' without a real elapsed-time model.",
+    "removalNote": "What this reordering does NOT do, named honestly: this repo has no verb for 'physically remove this instance from the vessel.' garlic-1 still sits in the final inventory, unconsumed, 'in' the same oil-1 the whole time in the model's own terms — the real technique's instruction to take it OUT is represented here only as 'minimize the steps where it could still be absorbing heat while nothing productive happens,' not as an actual removal action. The closest existing precedent for a similar unbuilt gap is par-fry.json's restNote (no REST verb) — this is a different but related missing verb (call it REMOVE/TAKE_OUT), not built here, flagged rather than faked.",
+    "durationCitationNote": "durationSeconds for FRY/INFUSE reduced 2026-08-15 from 400s (6.7min) to 240s (4min) — checked directly against real sources (e.g. inspiredtaste.net/56390/fried-garlic, \"cook until it turns a pale golden color, 3 to 5 minutes,\" medium heat) after the user's own note that burnt garlic is a real risk here: 400s sat past the top of the commonly-cited 3-5 minute range, and multiple sources explicitly warn to remove garlic a bit EARLY since it keeps darkening from residual heat after being taken out — independent confirmation of the same carryover-cooking mechanism this repo's shock.json already names for eggs. 240s is this range's midpoint, not its own new number invented for this recipe.",
     "garlicReuseNote": "garlic-1 is never targeted again after frying — it just sits in the final inventory at state 'fried', unconsumed and available, exactly matching 'you can reuse the cooked garlic somehow (salad)'. What this recipe does NOT do is model actually assembling it into a salad: this engine has no mechanic for combining multiple finished instances into a new composite dish (EntitySchema.structure.composite/components exists but nothing populates or consumes it yet), and no salad-base entities (lettuce, tomato, ...) exist in data/entities/ yet either. Representing 'salad' honestly would need a real new ASSEMBLE-style action, not something this recipe should fake by, say, spawning a hollow 'salad' entity that's really just garlic wearing a different id. Left as a genuine open extension rather than built here."
   }
 }

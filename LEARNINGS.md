@@ -2047,3 +2047,54 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   steps that previously had no real number to check at all. Recorded the
   actual computed range in each recipe's own new `oilTempCNote`, not
   just "this should be fine."
+
+### `garlic-oil-potatoes.json` — a user's real technique found a real bug this repo's own tooling had no way to catch
+
+- **The user described the actual technique: cut garlic small/halved, fry
+  in abundant oil until brown, remove it carefully WITHOUT letting it
+  rest in the hot oil (burnt garlic turns bitter), then fry the potatoes
+  in the still-hot oil right away.** Comparing that against the existing
+  recipe's own sequence surfaced a real bug, not a style preference: the
+  original order fried garlic FIRST, then spent three more steps (WASH/
+  PEEL/CUT) prepping the potato while garlic sat in the hot oil the
+  entire time — the EXACT mistake the real technique warns against. No
+  test, no schema check, nothing in this repo had ever caught it,
+  because nothing here models elapsed idle time at all — a recipe that
+  runs with zero errors can still encode a real cooking mistake in its
+  STEP ORDER, a category of bug none of this session's other checks
+  (timing-vs-doneness, tool/ingredient capability, prep heuristics) were
+  built to catch. Fixed by reordering: all potato prep now happens
+  BEFORE garlic ever touches the oil, so garlic goes in last and `FRY
+  potato-1` is the very next step after it finishes — no idle steps
+  between "garlic done" and "potato in."
+- **Named the real limit of that fix rather than let it look complete**:
+  this repo has no verb for "physically remove this instance from the
+  vessel" — garlic-1 still sits in the final inventory, "in" the same
+  oil the whole time in the model's own terms. The reorder is the
+  closest available fix given that constraint (minimize the steps where
+  nothing productive happens while garlic could still be absorbing
+  carryover heat), not a real removal action — recorded explicitly as
+  `removalNote`, a new missing-verb gap (REMOVE/TAKE_OUT) distinct from
+  but related to the already-named missing REST verb.
+- **Checking the actual duration, not just the sequence, found a second
+  real bug the user's warning made worth looking for**: 400s (6.7min)
+  for browning garlic exceeds real cited guidance (3-5 minutes,
+  Inspired Taste, checked via direct lookup) — independent sources
+  explicitly warn to remove garlic a bit EARLY since carryover heat keeps
+  darkening it after removal, the same mechanism named above. 400s
+  wasn't just "past the ideal window," it was long enough to plausibly
+  BE the actual cause of "burnt, bad-tasting garlic" on its own, before
+  the sequencing bug is even considered. Reduced to 240s, the cited
+  range's own midpoint, not a new number invented for this recipe.
+- **"Small pieces or halves" resolved to `halved`, not `chopped`
+  (already a valid state) — a real, deliberate choice, not an arbitrary
+  pick between two options the user said were equally fine.** The user's
+  own stated reason for the whole fix — being able to take the garlic
+  OUT of the oil — only works cleanly with large, easy-to-retrieve
+  pieces; a fine chop scatters through oil and can't realistically be
+  fully removed by hand or spoon. `halved` needed adding to
+  `garlic.json`'s own `possibleStates` first (it already existed
+  globally as a `cut.json` shape value, added for potato — this is the
+  first entity to actually use it for garlic), the same "shape enum is
+  global, each entity opts in via its own possibleStates" pattern
+  established when potato needed it.

@@ -513,7 +513,19 @@ covered by what exists:**
       see "Common culinary knowledge coverage" below. Still open: `WHISK`,
       `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `REST` (post-cook carryover
       exists narrowly for egg via `SHOCK`, not generally), `KNEAD`,
-      `STRAIN`/`DRAIN`.
+      `STRAIN`/`DRAIN`. **New name added 2026-08-15, found via a real
+      recipe bug**: `REMOVE`/`TAKE_OUT` — "physically take this instance
+      out of the vessel it's cooking in." `garlic-oil-potatoes.json`'s
+      original step order fried garlic, then left it sitting in the hot
+      oil through three more (unrelated) potato-prep steps — precisely
+      the real mistake a user's own described technique warns against
+      ("don't let it rest in the oil, burnt garlic tastes bad"), never
+      caught because nothing in this repo models elapsed idle time OR has
+      a verb for removing something from a shared vessel. Worked around
+      via step reordering (potato prep moved before garlic ever touches
+      the oil, so `FRY` potato is the step immediately after garlic
+      finishes) — a real improvement, but not the same thing as an actual
+      removal action; the gap itself is still open.
 - [ ] **Heat as a shared, time-varying property of a PLACE (pot/pan), not a
       per-action-call parameter on one ingredient.** Raised directly by the
       user while `SIMMER` was being built: "heat is a function inside a

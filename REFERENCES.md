@@ -196,6 +196,19 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `data/actions/par-fry.json`'s `sourcesNote`/`restNote`/`thicknessNote`.
   Confidence: `commonly_cited_unverified` — a well-regarded food-science-literate
   source, not itself peer-reviewed.
+- **Inspired Taste, "Easy Crispy Fried Garlic Recipe"** —
+  https://www.inspiredtaste.net/56390/fried-garlic/ — "cook until it turns
+  a pale golden color, 3 to 5 minutes" at medium heat, with garlic
+  continuing to darken from residual heat after being removed from the
+  oil (independent confirmation of the same carryover-cooking mechanism
+  `shock.json` already names for eggs). Used in
+  `data/recipes/garlic-oil-potatoes.json`'s `durationCitationNote` —
+  240s (the range's midpoint) replaces that recipe's original 400s,
+  which sat past the top of this cited range. Verified via direct lookup
+  2026-08-15. Confidence: `commonly_cited_unverified` — a consumer
+  recipe source, cross-checked against several other convergent sources
+  in the same search, not independently re-verified against a
+  professional/peer-reviewed standard.
 - **America's Test Kitchen, "Boiling Potatoes"** —
   https://www.americastestkitchen.com/how_tos/5964-boiling-potatoes — the
   size-banded whole-potato boiling times (2–2.5" diameter: 15–18 min) used

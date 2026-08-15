@@ -79,6 +79,30 @@ export const CompositionSchema = z
 export type Composition = z.infer<typeof CompositionSchema>;
 
 /**
+ * Real, cited physical SIZE — added 2026-08-15, directly answering "what
+ * diameter is a potato" the same way `composition`/`thermophysical` already
+ * answer "what's the density/conductivity": a structured, cited field
+ * instead of a number buried in `metadata.notes` or a `description` string.
+ * `potato-doneness.ts`'s own `whole` entry cited America's Test Kitchen's
+ * "2-2.5 inch diameter" figure as prose ONLY before this field existed —
+ * this promotes that same figure to a real field rather than inventing a
+ * new number, and that file now points here instead of duplicating it.
+ *
+ * Deliberately narrow: ONE typical-size fact (`typicalDiameterCm`), not a
+ * general geometry schema — `src/cut-dimensions.ts` (same day) is the
+ * sibling piece giving CUT's `shape` parameter its own real, cited
+ * dimensions; the two are separate concerns (an entity's own natural size
+ * vs. how a knife cut divides it) kept in separate files on purpose.
+ */
+export const PhysicalDimensionsSchema = z
+  .object({
+    typicalDiameterCm: z.object({ min: z.number().positive(), max: z.number().positive() }),
+    citation: CitationSchema.optional(),
+  })
+  .partial();
+export type PhysicalDimensions = z.infer<typeof PhysicalDimensionsSchema>;
+
+/**
  * Thermophysical properties driving thermal simulation
  * (Culinary_Informatics_Research_Plan.pdf §2: thermal conductivity, density, ...).
  */
@@ -348,6 +372,7 @@ export const EntitySchema = z.object({
    */
   criticalControlPointsByAction: z.record(z.string(), z.string()).default({}),
   capabilities: CapabilitiesSchema.default({}),
+  physicalDimensions: PhysicalDimensionsSchema.optional(),
   thermophysical: ThermophysicalPropertiesSchema.optional(),
   sensory: SensoryPropertiesSchema.optional(),
   cooklang: CooklangInteropSchema.optional(),

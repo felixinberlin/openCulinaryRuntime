@@ -106,7 +106,10 @@ export const POTATO_BOIL_DONENESS: readonly PotatoBoilDoneness[] = [
   {
     pieceSize: "whole",
     durationSecondsRange: { min: 900, max: 1080 },
-    description: "Whole, unpeeled, ~2-2.5 inches (5-6cm) diameter — the classic 'boil then peel' or potato-for-mash starting point.",
+    // Diameter figure lives on potato.json's own physicalDimensions.
+    // typicalDiameterCm now (added 2026-08-15) — same ATK citation, no
+    // longer duplicated independently here.
+    description: "Whole, unpeeled, potato.json's own typicalDiameterCm — the classic 'boil then peel' or potato-for-mash starting point.",
     citation: ATK_CITATION,
   },
 ];

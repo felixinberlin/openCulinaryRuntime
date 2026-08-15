@@ -1722,3 +1722,66 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   reasoning alone didn't — the first was `potato-prep-variants.ts` two
   entries above; this is the same discipline applied one layer deeper,
   found by the user, not self-caught.
+
+### Real cut-shape geometry (`cut-dimensions.ts`) — refusing to fabricate the part that isn't real science
+
+- **The user asked for cut geometry + oil temperature + cook time,
+  connected to texture, for tortilla de patatas — "measured and mathed."
+  The right answer wasn't "build it," it was "check whether that math
+  actually exists first."** This repo's own already-cited Kalogianni &
+  Smith (2013) paper (`REFERENCES.md`, cited 2026-08-13 for `fry.json`/
+  `par-fry.json`) found frying is a genuinely nonlinear, coupled
+  heat/moisture-transport process — crust thickness plateaus despite
+  continued heat penetration, water loss and oil uptake aren't simply
+  linked. A clean formula unifying variety + geometry + oil temp + time
+  → texture is not something real food science has reduced to one
+  equation. Building one anyway would have been exactly the "false
+  precision" `scientific_review_report.md` specifically praised this
+  repo for rejecting — the temptation here wasn't a stray shortcut, it
+  was the entire shape of what was asked for.
+- **Presented the honest scope options rather than either silently
+  building the fabricated version or silently building a smaller thing
+  without saying why — the user chose the smallest, geometry-only
+  slice, explicitly deferring the heat-penetration physics and variety/
+  starch data.** Matches this session's now-repeated pattern (the
+  pasteurization citation, the Kenji egg-doneness "inconclusive, don't
+  silently apply" case): when a request implies a specific number or
+  formula that isn't actually verifiable/real, the right move is
+  surfacing that as a decision, not picking a side unasked.
+- **Third instance of the same reference-table playbook
+  (`egg-doneness.ts`, `potato-doneness.ts`, now `cut-dimensions.ts`) —
+  proof the pattern generalizes cleanly a third time, not a coincidence
+  worth letting pass unremarked** (same observation this repo already
+  made about `place.ts`'s `advanceTempSeconds` generalizing four times).
+  An existing categorical action parameter (`cut.json`'s `shape`) gets
+  real, cited numeric meaning via a standalone module, zero changes to
+  the action's own schema or to `engine.ts` — the established shape for
+  "give a label real meaning without inventing new enforcement."
+- **Two real sources were checked via direct lookup, not assumed, and
+  the checking itself surfaced two real facts worth keeping**: (1)
+  Wikipedia's own "List of culinary knife cuts" gives NO numeric
+  standard for "mincing" or "chopped" — confirmed by fetching the page
+  directly, not inferred from absence in a search summary. Both entries
+  in `cut-dimensions.ts` are honestly flagged as unsourced best-effort
+  approximations, distinctly worded from the sourced entries, rather
+  than presented at the same confidence. (2) Fetching two real tortilla
+  de patatas recipes directly (The Mediterranean Dish: "1/8-inch-thick
+  slices"; Spanish Sabores: "about 5 mm thick") gave a genuine,
+  independently-converging 3-5mm range — stronger grounding than the
+  aggregated web-search summary alone would have supported.
+- **A real, previously-undocumented tension surfaced and was named
+  rather than quietly resolved**: `cut-dimensions.ts`'s own "diced"
+  entry (professional small-to-medium dice, ~6-13mm) and
+  `potato-doneness.ts`'s existing "diced" entry (~25mm, potato-salad/
+  boiling-style) are genuinely different real dice sizes for different
+  purposes — `cut.json`'s single `diced` enum value doesn't distinguish
+  which one a given recipe means. Neither number is wrong; picking one
+  and silently discarding the other would have been.
+- **`potato.json`'s `physicalDimensions.typicalDiameterCm` (new field,
+  promoted from prose already cited in `potato-doneness.ts`) is a small,
+  concrete step toward this repo's still-unbuilt `DomainFact` idea**
+  (`architecture_phase4_ticket.md`/`ROADMAP.md` Phase 4.5 — structured,
+  queryable facts instead of only prose) — not that schema, but the same
+  instinct: a real number a planner could someday query belongs in a
+  typed field with a citation, not only inside a `description` string a
+  human has to read.

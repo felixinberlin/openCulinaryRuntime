@@ -35,6 +35,7 @@
     "capability-test:boil-at-altitude": "tsx scripts/boil-at-altitude.ts",
     "capability-test:fry-different-fats": "tsx scripts/fry-with-different-fats.ts",
     "capability-test:potato-prep-variants": "tsx scripts/potato-prep-variants.ts",
+    "capability-test:cut-shape-dimensions": "tsx scripts/cut-shape-dimensions.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "ask": "tsx scripts/ask.ts",

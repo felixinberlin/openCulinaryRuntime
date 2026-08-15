@@ -202,9 +202,38 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   in `src/potato-doneness.ts`'s `POTATO_BOIL_DONENESS` "whole" entry, and
   the cold-start-is-both-more-even-AND-faster finding cited in that file's
   doc comment and `data/actions/boil.json`/`simmer.json`'s `pieceSizeNote`.
-  Confidence: `commonly_cited_unverified` — a professional test-kitchen
-  source, not independently re-verified against a primary source this
-  session.
+  Also the source for `data/entities/potato.json`'s `physicalDimensions.
+  typicalDiameterCm` (added 2026-08-15 — the same 2-2.5" figure, promoted
+  from prose to a real structured field; `potato-doneness.ts`'s "whole"
+  entry now points here instead of duplicating the number). Confidence:
+  `commonly_cited_unverified` — a professional test-kitchen source, not
+  independently re-verified against a primary source this session.
+- **Wikipedia, "List of culinary knife cuts"** —
+  https://en.wikipedia.org/wiki/List_of_culinary_knife_cuts — standard
+  professional knife-cut size definitions (julienne, fine julienne,
+  brunoise, small/medium/large dice), aggregating culinary-school-taught
+  standards (e.g. Escoffier School of Culinary Arts). Used in `src/cut-
+  dimensions.ts`'s `CUT_SHAPE_DIMENSIONS` "diced"/"julienne" entries.
+  Checked via direct lookup 2026-08-15; explicitly gives NO measurement
+  for "mincing" ("very finely divided into uniform pieces" only) and no
+  entry at all for "chopped" — those two entries in `cut-dimensions.ts`
+  are honest best-effort approximations from general usage, not sourced
+  from this citation, and are flagged with a distinctly worded note
+  rather than presented at the same confidence. Confidence:
+  `commonly_cited_unverified` — a standard, widely-referenced culinary
+  aggregation, not a primary/peer-reviewed source.
+- **Convergent tortilla de patatas recipe sources for potato slice
+  thickness** — The Mediterranean Dish
+  (https://www.themediterraneandish.com/spanish-tortilla-recipe/):
+  "1/8-inch-thick slices" (~3.2mm); Spanish Sabores
+  (https://spanishsabores.com/best-spanish-omelet-recipe/): "about 5 mm
+  thick." Both checked via direct lookup 2026-08-15. Used in `cut-
+  dimensions.ts`'s "sliced" entry (3-5mm) — deliberately scoped to this
+  specific dish's technique, not a universal "sliced" standard (no such
+  standard exists in professional knife-cut taxonomy the way dice/
+  julienne have one). Confidence: `commonly_cited_unverified` — two
+  independent consumer recipe sources, not a professional/peer-reviewed
+  standard.
 - **Convergent consumer cooking guides for cut-potato boiling times** (e.g.
   A Couple Cooks, "How Long to Boil Potatoes for Potato Salad" — large
   cubes/quarters 8–15min, diced/baby potatoes ~10min; cross-checked against

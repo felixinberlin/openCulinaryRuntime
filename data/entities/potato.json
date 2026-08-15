@@ -54,6 +54,14 @@
       "note": "This repo has not run potato's actual composition through the Choi-Okos model to re-derive these numbers — they're recalled as being in the right range for a starchy tuber, not computed from it here."
     }
   },
+  "physicalDimensions": {
+    "typicalDiameterCm": { "min": 5, "max": 6.35 },
+    "citation": {
+      "source": "America's Test Kitchen, \"Boiling Potatoes\" (americastestkitchen.com/how_tos/5964-boiling-potatoes) — the same size-banded figure (2-2.5 inch diameter) already cited in src/potato-doneness.ts's 'whole' entry, promoted here to a real structured field 2026-08-15 instead of living only as prose.",
+      "confidence": "commonly_cited_unverified",
+      "note": "A professional test-kitchen source, not independently re-verified against a primary/regulatory source. Same figure potato-doneness.ts's own 'whole' entry already used — this field is the single source of truth for it now; that file's description/doc comment point here rather than repeating the number independently."
+    }
+  },
   "sensory": {
     "taste": ["neutral"],
     "texture": ["firm", "starchy"],

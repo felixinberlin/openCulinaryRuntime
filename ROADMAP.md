@@ -229,6 +229,39 @@ proven runnable, not just asserted.
          rest between stages is still a real, named, unbuilt gap
          (`par-fry.json`'s `restNote`) — this repo has no `REST` verb yet.
          Proven end-to-end: `npm run capability-test:double-fry`.
+- [x] **CUT's `shape` given real, cited numeric dimensions — closed
+      2026-08-15, raised directly by the user for tortilla de patatas
+      ("how you cut the potatoes... changes the texture... a thin slice
+      is about X diameter and X radio, and so on").** The full ask —
+      cut geometry + oil temperature + cook time, connected to texture,
+      "measured and mathed" — does NOT have a real answer as one formula:
+      Kalogianni & Smith (cited above, this exact section) already found
+      frying is a nonlinear, coupled process, not something a clean
+      equation resolves. Presented the honest options; the user chose the
+      smallest real slice: geometry only, no fabricated texture formula.
+      `src/cut-dimensions.ts` — third instance of the `egg-doneness.ts`/
+      `potato-doneness.ts` playbook (existing categorical parameter, real
+      cited numeric meaning, zero `engine.ts` changes) — gives `sliced`/
+      `diced`/`julienne`/`chopped`/`minced` real millimeter ranges, two
+      checked via direct lookup this session (Wikipedia's "List of
+      culinary knife cuts" for dice/julienne; two independent tortilla de
+      patatas recipes for slice thickness, converging on 3-5mm).
+      `halved`/`quartered` derive arithmetically from `potato.json`'s new
+      `physicalDimensions.typicalDiameterCm` field (the America's Test
+      Kitchen figure, promoted from prose to a real structured field) —
+      not independently cited, since halving a potato isn't a knife-cut
+      standard. A real, named tension NOT resolved: this table's `diced`
+      (~6-13mm, professional small-to-medium dice) is genuinely smaller
+      than `potato-doneness.ts`'s own existing `diced` entry (~25mm,
+      potato-salad/boiling-style) — `cut.json`'s single `diced` value
+      doesn't distinguish which a given recipe means. **Still explicitly
+      NOT done, deliberately deferred, not implied covered**: connecting
+      any of this geometry to actual heat-penetration time or predicted
+      texture — real heat-transfer physics (Fourier conduction through a
+      slice, needing potato's still-missing `specificHeatJPerKgK`) and
+      cited variety/starch-content data, both scoped out by the user's own
+      choice, not forgotten. Proven end-to-end: `npm run capability-
+      test:cut-shape-dimensions`.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

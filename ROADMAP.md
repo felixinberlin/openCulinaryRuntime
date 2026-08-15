@@ -668,6 +668,31 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       individually authored.
 - [x] Requirement checks before a step executes (tool/entity present,
       required state, required capabilities, parameter validity).
+- [x] **CLI pre-flight recipe validator for an ARBITRARY recipe file — closed
+      2026-08-15.** `src/recipe-explain.ts`'s `explainRecipe` +
+      `scripts/validate-recipe.ts` (`npm run validate-recipe -- <path>`).
+      Direct groundwork for a planned separate "recipe creator" frontend
+      project that will submit new, externally-authored recipes against
+      this repo's rules — this is that validation logic proven out on the
+      command line first. Not a new engine mechanism: `runRecipe`/
+      `applyAction` already enforce everything safety/correctness-relevant
+      (tools, capabilities, state prerequisites, HACCP). What's new is
+      framing that ground truth for a human/frontend BEFORE execution: a
+      whole-sequence tools/ingredients needed-vs-declared-vs-missing
+      summary (previously only surfaced as a runtime rejection on the
+      first step that hit it), a timing-vs-doneness sanity check between
+      `durationSeconds` and the `yolkDoneness`/`pieceSize` informational
+      parameters against `EGG_BOIL_DONENESS`/`POTATO_BOIL_DONENESS`
+      (advisory only — does not make either parameter enforced), and a
+      heuristic wash-before-peel/cut prep advisory. That last one is
+      deliberately named as a heuristic, not a hygiene mechanism — running
+      it against `tortilla-de-patatas.json` immediately found a real,
+      previously-invisible gap (that canonical recipe never washes the
+      potato before peeling/cutting it), but this does NOT close the
+      "Common culinary knowledge coverage" section's larger, separately-
+      scoped cross-contamination/hygiene gap below (danger to the FOOD
+      from equipment/surface reuse) — that still needs a genuinely
+      different mechanism, per that section's own note.
 - [x] Conservation of mass/entities — `ActionOutputsSchema.destroysTarget` +
       `ExecutionResult.destroyed`, consumed by `recipe-runner.ts`. Scoped to
       this explicit per-action opt-in, not a general inventory-quantity

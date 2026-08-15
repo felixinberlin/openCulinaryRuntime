@@ -41,6 +41,7 @@ npm install
 npm test                 # unit suite (tests/*.test.ts) — synthetic fixtures
 npm run validate          # schema + cross-reference check over the real data/*.json
 npm run recipe -- <id>    # run a specific recipe, e.g. tortilla_de_patatas
+npm run validate-recipe -- <path>  # pre-flight + run an ARBITRARY recipe file, not just one already in data/recipes/
 ```
 
 See `package.json` for the full list of `demo:*` and `capability-test:*`

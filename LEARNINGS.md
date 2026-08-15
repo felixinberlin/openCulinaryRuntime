@@ -1557,3 +1557,46 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   gap (dairy) — deliberately scoped to plain whole butter only, not
   clarified butter/ghee or milk/cheese, which remain real, named,
   unbuilt gaps.
+
+### `recipe-explain.ts`/`validate-recipe.ts` — a CLI recipe validator is mostly a framing problem, not a new engine
+
+- **The user's stated goal was a future, separate "recipe creator" frontend
+  that validates against this repo's rules — and the actual engine work for
+  that already existed.** `engine.ts`'s `applyAction` (tools, capabilities,
+  state prerequisites, HACCP CCP thresholds) and `recipe-runner.ts`'s
+  `runRecipe` (walks a whole `RecipeScript`, collects errors without
+  halting) already ARE the rule-driven validator — proven by every existing
+  demo/capability-test script. What was actually missing, confirmed by
+  reading both files in full rather than assumed, was narrower than "build
+  a validator": (1) nothing accepted an arbitrary file path, only a
+  `data/recipes/` id; (2) nothing summarized a whole recipe's tool/
+  ingredient needs UPFRONT — a missing tool only ever surfaced as a runtime
+  rejection on the first step that hit it; (3) nothing cross-checked the
+  informational `yolkDoneness`/`pieceSize` parameters against the actual
+  `durationSeconds` supplied, since `applyAction` deliberately never reads
+  them together (they're documented hints, not enforced values — see
+  `egg-doneness.ts`'s own doc comment). Recognizing which parts already
+  existed, rather than re-deriving them, is most of why this stayed a
+  small, additive module (`recipe-explain.ts`) instead of a second engine.
+- **Running the new validator against a REAL canonical recipe
+  (`tortilla-de-patatas.json`) immediately surfaced a genuine, previously-
+  invisible gap**, not a synthetic test-fixture result: that recipe never
+  washes the potato before `PEEL`/`CUT`. Left unfixed deliberately — this
+  session's scope was building the validator, not auditing/editing every
+  existing recipe it can now flag things in, and the finding itself is
+  explicitly a HEURISTIC advisory, not a hygiene-safety claim (`ROADMAP.md`'s
+  "Cross-contamination / hygiene knowledge" gap is real, separately scoped,
+  and needs a genuinely different mechanism than "does a WASH step appear
+  before a PEEL/CUT step"). Worth recording as a real, concrete argument
+  FOR building this kind of pre-flight tool: it found something a human
+  reading the same recipe file had not caught across several previous
+  sessions of touching that exact file.
+- **The timing-vs-doneness advisory deliberately does NOT duplicate HACCP
+  CCP enforcement** — that stays exactly where it already was, inside
+  `applyAction`/`runRecipe`, unchanged. The new check is a different,
+  narrower thing: comparing one INFORMATIONAL parameter against another
+  (`yolkDoneness` vs. `durationSeconds`), something no safety mechanism
+  was ever responsible for and that plain `runRecipe` would silently pass
+  (a "soft" egg boiled for 700 seconds is not a HACCP violation — it's just
+  not actually soft). Conflating the two would have quietly implied this
+  new advisory carries safety weight it doesn't.

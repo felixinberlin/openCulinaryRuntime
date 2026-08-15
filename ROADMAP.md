@@ -324,11 +324,22 @@ proven runnable, not just asserted.
       above the potato doneness target — the same shape of gap as
       `egg_cooking`'s CCP being unreachable via `BOIL`'s own 60s floor,
       found earlier this session); and only `crispy_french_fries.json`
-      itself currently uses the real `oilTempC` parameter this check
-      needs — `salted-fried-potatoes.json`/`garlic-oil-potatoes.json`/
-      `tortilla-de-patatas.json`/`tortilla-de-betanzos.json` still use
-      the older `heatLevel` enum, so the new check correctly and silently
-      doesn't reach them yet, not a false negative.
+      itself currently used the real `oilTempC` parameter this check
+      needs — the other four potato-frying recipes still used the older
+      `heatLevel` enum, so the new check correctly and silently didn't
+      reach them yet, not a false negative. **Partially closed same
+      day:** `tortilla-de-patatas.json`/`tortilla-de-betanzos.json` both
+      already committed to a real `heatLevel: "low"` + `durationSeconds`
+      pair, so adding `oilTempC: "135"` (the midpoint of `fry.json`'s own
+      already-cited McGee "low" band, 120-150°C — no new citation needed)
+      was pure enrichment, not a behavior change; checked directly, both
+      recipes' durations (900s/480s) comfortably clear the real computed
+      time (10.0-111.2s). `salted-fried-potatoes.json`/`garlic-oil-
+      potatoes.json` deliberately left uncovered — both are missing
+      `durationSeconds` entirely on the potato `FRY` step, and inventing
+      one where the original author left it open-ended would be a real
+      change to recipe behavior, not the same move as promoting an
+      already-stated `heatLevel` to a number.
 - [x] **Egg freshness (shape when fried) + FRY top-cooking technique** —
       closed 2026-08-13, raised directly by the user ("getting the perfect
       egg shape in the pan, throwing the heated oil OVER the egg yolk").

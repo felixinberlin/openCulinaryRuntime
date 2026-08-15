@@ -2011,3 +2011,39 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   concrete, honest measure of how much of this repo's own data the new
   mechanism actually reaches right now, worth recording rather than
   letting "wired in" imply "covers everything."
+
+### Closing the coverage gap just found — 2 of 4, not all 4, and why
+
+- **Given an open "you choose," picked the most direct continuation of
+  the work just finished — actually reaching the two named-uncovered
+  recipes — rather than starting something new.** Looked closer before
+  editing, though: `salted-fried-potatoes.json`'s potato `FRY` step has
+  EMPTY params (no `heatLevel`, no `durationSeconds` at all), and
+  `garlic-oil-potatoes.json`'s has `heatLevel` but still no
+  `durationSeconds`. Adding `oilTempC` alone to either wouldn't activate
+  anything — the new check requires both `oilTempC` AND
+  `durationSeconds`. Inventing a `durationSeconds` where the original
+  author left the step open-ended would be a real, consequential edit to
+  recipe BEHAVIOR (a specific cook time is real information, not just
+  added precision on an existing one), not the same kind of move as
+  promoting an already-stated `heatLevel` to a real number. Left both
+  recipes alone — 2 of 4, not 4 of 4, and the reason is a real
+  distinction, not half-finished work.
+- **`tortilla-de-patatas.json`/`tortilla-de-betanzos.json` both already
+  had `heatLevel: "low"` AND a committed `durationSeconds` — adding
+  `oilTempC: "135"` there is pure enrichment, no behavior change.**
+  Needed no new research: `fry.json`'s own `parameterNotes` already cites
+  a real source (Harold McGee, *On Food and Cooking*) mapping
+  `heatLevel: "low"` to a 120-150°C pan-surface band — 135 is that
+  band's own midpoint, matching this repo's standing "round,
+  representative value within an already-cited range" convention rather
+  than treating this as a new fact needing its own citation.
+- **Checked the result directly rather than trusting the silence
+  (same discipline as the previous commit's `crispy_french_fries.json`
+  verification)**: at 135°C, a real `"sliced"` potato's center reaches
+  fork-tender in 10.0-111.2s depending on exact thickness/oil coverage —
+  both recipes' actual durations (900s, 480s) sit comfortably above
+  that, and `validate-recipe` now reports zero timing advisories for
+  steps that previously had no real number to check at all. Recorded the
+  actual computed range in each recipe's own new `oilTempCNote`, not
+  just "this should be fine."

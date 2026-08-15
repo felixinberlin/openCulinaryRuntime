@@ -147,6 +147,31 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   representative values within real cited ranges, not independently
   re-measured or read from one single primary source this session, matching
   this same file's density citation immediately above.
+- **Refined sunflower oil smoke point** (added 2026-08-14, `sunflower_oil.
+  json`'s `thermophysical.smokePointC`, the second `isFryingMedium` entity
+  proving `fry.json`'s `requiredIngredientCapabilities` check is genuinely
+  substitutable) — commonly-cited range ~227–232°C (440–450°F), notably
+  higher than `oil.json`'s olive oil (200°C). `densityKgPerM3`/
+  `specificHeatJPerKgK` reuse `oil.json`'s own values (same order-of-
+  magnitude triglyceride oil; no independently-sourced sunflower-specific
+  figure found for either this session). Confidence:
+  `commonly_cited_unverified`.
+- **WFLO (World Food Logistics Organization) Commodity Storage Manual,
+  Butter data sheet** (added 2026-08-14, `butter.json`'s `composition` and
+  `thermophysical` blocks) — density (~911 kg/m³), thermal conductivity
+  (~0.20 W/(m·K)), specific heat (commonly cited 2.0–2.4 kJ/(kg·K) range
+  for whole/unclarified butter above freezing; 2100 J/(kg·K) used, a round
+  value within that range, higher than a pure oil because of butter's real
+  ~18% water content), and composition (water/protein/fat per 100g).
+  Smoke point (175°C, ~350°F) is whole butter's commonly-cited figure —
+  genuinely lower than either oil entity above, because butter's milk
+  solids (protein/lactose, absent from a pure oil) brown and char before
+  the fat itself would smoke; this repo's `advanceTempSeconds` correctly
+  rejects heating butter toward `crispy_french_fries.json`'s 191°C
+  finishing-fry target on exactly this ground (`scripts/fry-with-
+  different-fats.ts`). Confidence: `commonly_cited_unverified` — this
+  repo has not looked up the primary WFLO document directly, same
+  caveat as `potato.json`/`garlic.json`.
 - **U.S. Department of Energy consumer cooktop-efficiency guidance** and
   commonly-cited consumer appliance spec figures — used in
   `data/heat-sources/gas.json`/`vitro.json`'s `citation` for typical

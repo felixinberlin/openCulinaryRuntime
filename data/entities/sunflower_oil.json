@@ -1,0 +1,42 @@
+{
+  "id": "sunflower_oil",
+  "kind": "ingredient",
+  "names": {
+    "en": "Sunflower oil",
+    "es": "Aceite de girasol"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["cold", "hot"],
+  "possibleTags": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isFryingMedium": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 920,
+    "specificHeatJPerKgK": 1970,
+    "smokePointC": 230,
+    "citation": {
+      "source": "Refined sunflower oil's commonly-cited smoke point is ~227-232°C (440-450°F) — notably higher than oil.json's olive oil (200°C), the real reason it's the more common choice for higher-heat/deep-frying in practice, including in Spain (often cheaper and more heat-tolerant than olive oil for this specific use, even though olive oil remains the default for lower-heat cooking and flavor). densityKgPerM3/specificHeatJPerKgK reuse oil.json's own values/reasoning (same order-of-magnitude triglyceride oil, no independently-sourced sunflower-specific figure found for either this session) — see oil.json's own citation for the 'roughly half of water's specific heat' heuristic this also relies on.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Added 2026-08-14, directly answering 'what changes if I fry with a different oil' — the concrete second entity proving requiredIngredientCapabilities' isFryingMedium check was already substitutable (unlike requiredTools' pre-2026-08-14 exact-id problem, this mechanism never needed a fix, only a second real entity to prove it)."
+    }
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["liquid"],
+    "color": "yellow"
+  },
+  "cooklang": {
+    "canonicalToken": "aceite de girasol",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Second real frying-medium entity, added specifically to prove data/actions/fry.json's requiredIngredientCapabilities: ['isFryingMedium'] check is genuinely substitutable, not implicitly hardcoded to oil.json (olive oil) the way requiredTools was for pot/pan before the 2026-08-14 requiredToolCapabilities fix. See scripts/fry-with-different-fats.ts for FRY actually executing with this entity as the ingredient, and for the real consequence of its HIGHER smoke point vs. olive oil: more thermal headroom at FRY's upper oilTempC range (191°C, crispy_french_fries.json's finishing fry) than olive oil's own 200°C ceiling leaves."
+  }
+}

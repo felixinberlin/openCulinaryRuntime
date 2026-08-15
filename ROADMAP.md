@@ -383,10 +383,21 @@ covered by what exists:**
       between uses). `CriticalControlPointSchema` is thermal-only by design
       (see `LEARNINGS.md` 2026-08-12) — this would need a genuinely different
       mechanism, not a stretched CCP.
-- [ ] **Far more staple ingredients/entities.** No flour, dairy (milk/butter/
-      cheese), onion, herbs, sugar, vinegar/acid, or any protein besides egg.
-      The vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
-      chemistry) is disproportionate to its ingredient BREADTH right now.
+- [ ] **Far more staple ingredients/entities.** Still no flour, milk/cheese,
+      onion, herbs, sugar, vinegar/acid, or any protein besides egg. The
+      vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
+      chemistry) remains disproportionate to its ingredient BREADTH.
+      **Partial progress 2026-08-14/15:** a second `isFryingMedium` entity
+      (`sunflower_oil.json`, proving `fry.json`'s
+      `requiredIngredientCapabilities` check was already substitutable —
+      zero engine changes needed) and a first dairy entity (`butter.json`,
+      plain/unclarified only) — see `scripts/fry-with-different-fats.ts`
+      (`npm run capability-test:fry-different-fats`) and `LEARNINGS.md`
+      2026-08-15. Butter's genuinely-lower smoke point (175°C, milk solids
+      browning before the fat smokes) is correctly caught by `place.ts`'s
+      existing safety check at `crispy_french_fries.json`'s 191°C
+      finishing-fry target. Clarified butter/ghee, brown butter, and milk/
+      cheese as their own entities remain real, unbuilt gaps.
 - [ ] **More common technique verbs.** ~~`SIMMER`~~ **closed 2026-08-13** —
       see "Common culinary knowledge coverage" below. Still open: `WHISK`,
       `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `REST` (post-cook carryover

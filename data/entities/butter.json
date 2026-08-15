@@ -1,0 +1,59 @@
+{
+  "id": "butter",
+  "kind": "ingredient",
+  "names": {
+    "en": "Butter",
+    "es": "Mantequilla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 17.94,
+      "protein_g": 0.85,
+      "fat_g": 81.11
+    },
+    "citation": {
+      "source": "WFLO (World Food Logistics Organization) Commodity Storage Manual — Butter, thermal/composition data sheet — commonly-cited composition figures for whole (not clarified) butter.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same caveat as potato.json/garlic.json: this repo has not looked up the primary WFLO document directly to confirm the exact current figures."
+    }
+  },
+  "possibleStates": ["cold", "hot"],
+  "possibleTags": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isFryingMedium": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 911,
+    "thermalConductivityWPerMK": 0.20,
+    "specificHeatJPerKgK": 2100,
+    "smokePointC": 175,
+    "citation": {
+      "source": "Same WFLO Commodity Storage Manual data sheet as composition above: density ~911 kg/m³, thermal conductivity ~0.20 W/(m·K), specific heat commonly cited in the 2.0-2.4 kJ/(kg·K) range for whole (unclarified) butter above freezing — 2100 J/(kg·K) is a round value within that range, HIGHER than oil.json's 1970 (olive oil) specifically because butter's real ~18% water content (composition above) pulls its blended specific heat up toward water's own 4186, unlike a pure fat. smokePointC (175°C, ~350°F) is whole butter's commonly-cited smoke point — genuinely different from, and much lower than, oil.json's olive oil (200°C) or sunflower_oil.json's refined sunflower oil (230°C): butter's real milk solids (protein/lactose, not present in a pure oil) brown and then char at a LOWER temperature than the fat itself would smoke, which is the actual mechanism, not a weaker version of the same physics — see clarifiedButterNote below.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Density/conductivity/specific-heat figures recalled as typical published values for whole butter, not independently re-derived from the primary WFLO document this session — same discipline as this repo's other Choi-Okos-style thermophysical citations."
+    }
+  },
+  "sensory": {
+    "taste": ["umami"],
+    "texture": ["solid", "creamy"],
+    "color": "yellow"
+  },
+  "cooklang": {
+    "canonicalToken": "mantequilla",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Added 2026-08-14, directly answering 'what changes if I fry with butter instead of oil' — genuinely NOT just 'oil with different numbers': isFryingMedium: true makes it a real, mechanically-valid substitute for oil.json wherever data/actions/fry.json's requiredIngredientCapabilities is checked (that check was already capability-based, not id-based — nothing needed fixing there, unlike requiredTools before 2026-08-14's requiredToolCapabilities work), but the REAL physical consequences are qualitatively different, not just quantitatively — see the notes below for what this entity does and does NOT capture.",
+    "lowerSmokePointNote": "The one consequence this repo CAN actually compute and enforce today: butter's 175°C smoke point is well below FRY's own oilTempC range (120-200°C) and specifically below crispy_french_fries.json's 191°C finishing-fry target — src/place.ts's advanceTempSeconds (built 2026-08-14 for exactly this kind of safety ceiling) correctly REJECTS heating this entity toward 191°C, the same real mechanism that already protects against an unsafe olive-oil target, now proven against a second, more restrictive real ceiling — see scripts/fry-with-different-fats.ts. This is the honest, mechanical reason butter is traditionally used for lower-heat sautéing/basting (fry.json's topCookingMethod: 'basted' is a real butter-basting technique in professional kitchens), not deep-frying: it isn't a style preference this repo can only describe, it's a real, computable temperature ceiling.",
+    "waterContentNote": "Butter is ~18% water (composition above), NOT a pure fat like oil.json/sunflower_oil.json — real butter, heated, visibly foams/sizzles for an initial period as that water evaporates before it behaves like a clear, quiet fat the way oil does from the first moment. This repo's heat-capacity model (place.ts) treats every ingredient as one uniform mass with one specific heat value — it does NOT model a phase-separated foaming stage, latent heat of the water fraction evaporating, or the resulting real mass loss. Named honestly as a real, unmodeled refinement (the same category of gap `place.ts`'s own doc comment already names for evaporative mass loss in a long boil), not silently assumed away.",
+    "clarifiedButterNote": "A real, commonly-cited technique this repo does NOT represent: clarifying butter (separating out the water and milk solids, leaving pure butterfat) raises the usable smoke point dramatically (~230-252°C for clarified butter/ghee — comparable to or higher than sunflower_oil.json), specifically BECAUSE it removes the milk solids that would otherwise brown/char first. No CLARIFY action or separate clarified-butter entity exists — named as a real, out-of-scope gap rather than built speculatively, the same discipline as every other named-not-built technique in this vocabulary (e.g. egg.json's crackPreventionNote's air-cell-piercing technique).",
+    "brownButterNote": "Also unmodeled: 'beurre noisette' (brown butter) — deliberately heating butter until its milk solids toast to a golden-brown, nutty-smelling stage just short of burning, a real, intentional, named technique (not a mistake to avoid), similar in spirit to fry.json's donenessNote for browned garlic. No distinct browned/toasted state or doneness parameter exists for butter — 'hot' is as far as this entity's possibleStates goes. Named rather than silently unsupported."
+  }
+}

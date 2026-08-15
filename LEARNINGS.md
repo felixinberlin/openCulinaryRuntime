@@ -1506,3 +1506,54 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   keeps paying off on unrelated forcing cases is the actual evidence it
   was the right abstraction, more convincing than any one of the
   individual cases alone.
+
+## 2026-08-15
+
+### Fry-fat generalization (`butter.json`, `sunflower_oil.json`) — finishing and closing out work that was already written
+
+- **The code/data was already correct and complete from 2026-08-14 (a prior
+  session); what was actually missing was the repo's own closing
+  discipline** — `npm test`/`npm run validate`/`npx tsc --noEmit`/every
+  `demo:`/`capability-test:` script had never been re-run against it, and
+  neither `REFERENCES.md` nor this file had an entry. All of that ran clean
+  on the first pass (99/99 tests, 74/74 files valid including full
+  recipe-runner simulation, zero type errors, 25/25 demo scripts). The
+  lesson isn't about a bug found — there wasn't one — it's that "the code
+  looks done" and "the change is closed out" are different claims, and
+  this repo's own stated standard (`CLAUDE.md`: run both test suites plus
+  every demo after any change, cite every fact in `REFERENCES.md`) is what
+  actually catches the gap between them, not a read-through.
+- **Two fat entities, not a parameter on one, because the real answer to
+  "what changes if I fry with butter" is qualitatively different, not
+  quantitatively.** `sunflower_oil.json` is mechanically identical to
+  `oil.json` in every way that matters to the engine (same
+  `isFryingMedium` capability, same order-of-magnitude thermophysical
+  shape) — it exists purely to prove `fry.json`'s
+  `requiredIngredientCapabilities` check was already substitutable, the
+  same way `sunflower_oil` vs. `oil` differ only in `smokePointC` (230°C
+  vs. 200°C) and get correctly different fry-temperature headroom for
+  it. `butter.json` is a genuinely different case: real ~18% water content
+  (unmodeled foaming-evaporation phase, named not built), a *lower* smoke
+  point than either oil (175°C — milk solids browning/charring before the
+  fat itself would smoke, a different physical mechanism, not a weaker
+  version of the same one) that `advanceTempSeconds`'s existing safety
+  check correctly rejects at `crispy_french_fries.json`'s real 191°C
+  finishing-fry target, and named-not-built adjacent techniques (clarified
+  butter/ghee raising the usable smoke point by removing the milk solids;
+  brown butter/beurre noisette as an intentional doneness stage). Modeling
+  butter as "oil with a different number" would have been actively wrong,
+  not just less thorough — it would have hidden the one thing that makes
+  butter behave differently in a real kitchen.
+- **Zero `src/` changes were needed to add a third and fourth fat entity —
+  further, unplanned confirmation that `requiredIngredientCapabilities`
+  (capability-based) and `place.ts`'s `advanceTempSeconds`/smoke-point
+  check (entity-property-based, not fat-type-based) were both already the
+  right generalization**, the same shape of payoff `place.ts`'s other
+  four forcing cases already demonstrated (see 2026-08-14 entries above).
+  Butter forces exactly the case those functions were built to handle
+  generally (an arbitrary `smokePointC` ceiling) despite never having been
+  written with butter specifically in mind.
+- Closes part of `ROADMAP.md`'s long-open "far more staple ingredients"
+  gap (dairy) — deliberately scoped to plain whole butter only, not
+  clarified butter/ghee or milk/cheese, which remain real, named,
+  unbuilt gaps.

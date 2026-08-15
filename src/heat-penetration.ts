@@ -47,12 +47,18 @@ import type { Citation, Entity } from "./ingredient.ts";
  *    to reach a target temperature. It does NOT model browning/Maillard
  *    reaction kinetics at the surface, so it cannot say whether the
  *    outside actually "burns" by that point — only how long the center
- *    takes. Comparing that time against a real surface-browning-kinetics
- *    figure (which doesn't exist anywhere in this repo) is a further,
- *    deliberately deferred step, not attempted here. Matches this
- *    session's standing refusal to fabricate a "texture" output
- *    (`cut-dimensions.ts`'s own doc comment) — this file computes real
- *    TIME, not texture.
+ *    takes. `MAILLARD_REACTION_ONSET_TEMP_C` below (added 2026-08-15,
+ *    checked against multiple independent sources) names the real
+ *    temperature ABOVE which browning becomes chemically possible at
+ *    all — a genuine, small step toward the deferred gap, not the whole
+ *    thing: knowing the onset TEMPERATURE says nothing about the
+ *    RATE/TIME browning actually takes once above it, which is what
+ *    would be needed to compare against this file's own center-doneness
+ *    times and answer "does the outside burn before the inside is
+ *    done." That comparison remains a further, deliberately deferred
+ *    step, not attempted here. Matches this session's standing refusal
+ *    to fabricate a "texture" output (`cut-dimensions.ts`'s own doc
+ *    comment) — this file computes real TIME, not texture.
  * 3. THE COMPUTED TIMES ARE SHORT — SECONDS TO TENS OF SECONDS FOR A REAL
  *    3-5MM SLICE — AND THAT IS CORRECT, NOT A BUG, BUT EASY TO MISREAD.
  *    A 3mm slice (1.5mm half-thickness) in 175°C oil reaches a 97°C
@@ -98,6 +104,21 @@ export const POTATO_DONENESS_TEMP_CITATION: Citation = {
     "ThermoWorks (already this repo's own cited source for French fry temps, par-fry.json) and the Idaho Potato Commission both converge on 96-99C (205-210F) internal temperature for a fully cooked, fork-tender baked potato. Distinct from starch gelatinization ONSET, commonly cited across food-science sources at 56-66C — texture starts changing there, but full tenderness needs the higher figure.",
   confidence: "commonly_cited_unverified",
   note: "Checked via web search 2026-08-15, not independently re-verified against a peer-reviewed primary source. Measured for baked potato specifically; used here as a general doneness target since the underlying starch-gelatinization chemistry doesn't depend on cooking method.",
+};
+
+/** The real temperature ABOVE which the Maillard reaction — the chemistry
+ *  behind browning/crust flavor at a fried surface — becomes possible at
+ *  all. NOT a kinetics model: this says nothing about how fast browning
+ *  proceeds once above it, only that it cannot proceed at all below it.
+ *  See this file's own doc comment (caveat 2) for exactly what this
+ *  does and doesn't close. */
+export const MAILLARD_REACTION_ONSET_TEMP_C = 140;
+
+export const MAILLARD_REACTION_ONSET_CITATION: Citation = {
+  source:
+    "Multiple independent food-science sources converge on ~140C (280F) as the onset of the Maillard reaction under normal cooking conditions — the reaction proceeds slowly from ~115-130C, accelerates sharply from ~140C, peaks in efficiency around 165-200C, and above ~180-190C other processes (pyrolysis/charring) take over.",
+  confidence: "commonly_cited_unverified",
+  note: "Checked via web search 2026-08-15 (a user-supplied document raised the same figure independently, but that document has no traceable bibliography — not itself treated as a source; this citation is from directly checking multiple independent food-science summaries, which converged closely). Not independently re-verified against a peer-reviewed primary source.",
 };
 
 /** Thermal diffusivity (alpha = k / (rho * cp), m^2/s) from an entity's

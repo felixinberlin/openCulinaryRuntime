@@ -286,6 +286,31 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `commonly_cited_unverified` — checked via web search 2026-08-15,
   blended across multiple convergent food-science sources rather than
   one single primary study.
+- **Convergent food-science sources for the Maillard reaction's onset
+  temperature** (~140°C — slow from ~115-130°C, accelerating sharply
+  from 140°C, peaking 165-200°C, charring/pyrolysis above ~180-190°C) —
+  used in `src/heat-penetration.ts`'s `MAILLARD_REACTION_ONSET_TEMP_C`.
+  Raised by a user-supplied document (`frying-potatoes-science.md`) that
+  itself has no traceable bibliography (bracketed citation numbers with
+  no reference list included) — NOT treated as a source; this citation
+  is from independently checking multiple food-science summaries
+  directly, which converged closely on the same figure. Confidence:
+  `commonly_cited_unverified` — checked via web search 2026-08-15, not
+  independently re-verified against a peer-reviewed primary source.
+- **Cold-oil-start frying technique** (raw, dry potato pieces placed
+  directly into cold oil, heated gradually, rather than added to
+  already-hot oil) — a real, multiple-source-corroborated technique for
+  reducing oil absorption (Tasting Table; consistent with general food-
+  science reasoning about moisture loss vs. oil uptake timing). Used in
+  `data/actions/fry.json`'s `coldOilStartNote`. Deliberately reported
+  WITHOUT a specific percentage: the user-supplied document claimed a
+  "38% reduction"; an independent web search initially surfaced an
+  unattributed "13%" figure that did NOT survive checking the actual
+  cited article directly (the number wasn't in it — confirmed via direct
+  fetch 2026-08-15). Neither held up, so this repo states the technique
+  qualitatively only. Confidence: `commonly_cited_unverified` — real and
+  corroborated as a technique, but with no reliable specific number
+  found.
 - **Convergent consumer cooking guides for cut-potato boiling times** (e.g.
   A Couple Cooks, "How Long to Boil Potatoes for Potato Salad" — large
   cubes/quarters 8–15min, diced/baby potatoes ~10min; cross-checked against

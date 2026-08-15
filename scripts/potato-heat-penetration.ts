@@ -6,6 +6,7 @@ import {
   isWithinValidityCondition,
   effectiveHalfThicknessM,
   POTATO_FORK_TENDER_CENTER_TEMP_C,
+  MAILLARD_REACTION_ONSET_TEMP_C,
 } from "../src/heat-penetration.ts";
 import { cutShapeDimensionMm } from "../src/cut-dimensions.ts";
 
@@ -51,8 +52,17 @@ console.log("\n=== Same thickness (thin, 3mm), different oil temp ===\n");
 for (const surfaceTempC of [120, 165, 191, 200] as const) {
   const params = { halfThicknessM: thinHalfThicknessM, diffusivityM2PerS: alpha, initialTempC, surfaceTempC };
   const seconds = secondsForCenterToReachTempC(params, targetC);
-  console.log(`  ${surfaceTempC}°C oil: ${seconds.toFixed(1)}s (Fo>0.2 valid: ${isWithinValidityCondition(params, seconds)})`);
+  const browningPossible = surfaceTempC >= MAILLARD_REACTION_ONSET_TEMP_C;
+  console.log(
+    `  ${surfaceTempC}°C oil: ${seconds.toFixed(1)}s (Fo>0.2 valid: ${isWithinValidityCondition(params, seconds)}) — ` +
+      `${browningPossible ? "above" : "below"} Maillard onset (${MAILLARD_REACTION_ONSET_TEMP_C}°C): browning ${browningPossible ? "chemically possible" : "NOT possible at this oil temp"}`
+  );
 }
+console.log(
+  "\n(Only the ONSET temperature, not a kinetics model — this says nothing about how fast browning happens once " +
+    "above it, only whether it can happen at all. 120°C oil literally cannot brown a potato's surface no matter " +
+    "how long it fries — a real, checkable reason low-heat cooking stays pale.)"
+);
 
 console.log(
   "\nThe real mechanism, now computed rather than just described: hotter oil and/or a thicker slice both " +

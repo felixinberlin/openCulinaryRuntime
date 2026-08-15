@@ -1,0 +1,40 @@
+{
+  "id": "acid",
+  "verb": "ACID",
+  "names": {
+    "en": "Add acid",
+    "es": "Añadir ácido"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isSeasonable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isAcid"],
+  "parameters": [
+    {
+      "id": "timing",
+      "names": {
+        "en": "Timing relative to cooking",
+        "es": "Momento respecto a la cocción"
+      },
+      "required": false,
+      "allowedValues": ["before_cooking", "during_cooking", "after_cooking"]
+    }
+  ],
+  "outputs": {
+    "addsTag": "acidified",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "metadata": {
+    "notes": "The fourth SALT-shaped seasoning verb — closed 2026-08-15, triaged from a user-supplied Reddit thread (olddocs/reddit-thread-1mo4tj8.md) naming 'Salt, Fat, Acid, Heat' as the single most-repeated organizing idea for cooking without recipes; Salt/Fat/Heat were already real, structural parts of this vocabulary, Acid had nothing until vinegar.json/this action. Same shape as salt.json/pepper.json/chili.json on purpose (outputs.addsTag not transformedState, same requiredTargetCapability, same timing parameter), deliberately NOT generalized into one parameter-driven SEASON verb, for the identical already-documented reason those three weren't (see pepper.json's notes — ActionOutputsSchema.addsTag has no addsTagFromParameter counterpart, and requiredIngredientCapabilities only checks presence, never identifies WHICH instance satisfied it). Acid's flavor role is chemically and perceptually distinct from salt's (osmosis/browning), pepper's (piperine pungency), and chili's (capsaicin pungency) — see src/flavor-balance.ts for the real, cited counterbalance data (acid perceptually cutting through richness, and its own sourness mutually suppressing/being suppressed by sweetness) this action's real-world effect actually traces to. Wired to potato.json/egg.json/egg_cracked.json only — the exact same footprint pepper.json/chili.json already have, not garlic.json — matching their own established 'capable, not forced into an existing dish that wasn't asked to have it' discipline rather than a new decision.",
+    "timingNote": "Acid's real technique timing differs from salt's and from pepper/chili's aromatic-degradation concern: acid added too early to a long-simmering dish has more time to dull chlorophyll in green vegetables (a real, commonly-cited effect — acid accelerates the conversion of bright green chlorophyll to dull olive-green pheophytin) and can prevent a good sear/Maillard browning if splashed onto food before it hits a hot pan (the same 'moisture blocks browning until it's driven off' physics u/BattleHall's toaster explanation in the triaged Reddit thread names, generalized). Acid added at the very end (a finishing squeeze of citrus, a splash of vinegar off the heat) is the far more common real technique for the 'brightening'/richness-cutting effect this verb primarily exists to represent. Purely informational here, same limits as every other timing-style parameter in this vocabulary — this records what was asked for, it does not make the target's outcome depend on it."
+  },
+  "verification": {
+    "method": "manual_confirmation",
+    "description": "No reliable sensor check for 'properly acidified' in this vocabulary — taste isn't modeled at all",
+    "confidence": "low"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

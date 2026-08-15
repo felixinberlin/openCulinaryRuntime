@@ -1,0 +1,47 @@
+{
+  "id": "vinegar",
+  "kind": "ingredient",
+  "names": {
+    "en": "Vinegar",
+    "es": "Vinagre"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 95
+    },
+    "citation": {
+      "source": "FDA Compliance Policy Guide Sec. 525.825, \"Vinegar, Definitions\" — the regulatory floor of not less than 4 grams acetic acid per 100 mL; commercial white/distilled vinegar is commonly sold at 5% acidity (5g acetic acid / 100mL), a round, plausible value within/just above that floor, matching this repo's existing 'round, plausible value within a commonly-cited range' convention (see oil.json's density citation).",
+      "confidence": "standard_reference",
+      "note": "water_g (95) is the arithmetic remainder at 5% acidity (100 - 5), not an independently looked-up USDA FoodData Central water-content figure the way potato.json/egg.json's water_g values are — vinegar's own composition is essentially fully described by its acid concentration, so this repo treats the FDA acidity standard as the primary, checkable source rather than a food-composition table."
+    }
+  },
+  "possibleStates": ["raw"],
+  "possibleTags": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isAcid": true,
+    "isSeasoning": true
+  },
+  "sensory": {
+    "taste": ["sour"],
+    "aroma": ["pungent"],
+    "texture": ["liquid"],
+    "color": "clear"
+  },
+  "cooklang": {
+    "canonicalToken": "vinagre",
+    "spiceLock": false
+  },
+  "metadata": {
+    "commonName": "white/distilled vinegar",
+    "notes": "The first ACID entity in this repo — closed 2026-08-15, triaged from a user-supplied Reddit thread (olddocs/reddit-thread-1mo4tj8.md) whose single most-repeated idea was Samin Nosrat's 'Salt, Fat, Acid, Heat' framework. This repo already had Salt (salt.json), Fat (oil.json), and Heat (place.ts/heat-source.ts) as real, structural parts of the vocabulary; Acid had zero representation until this file — see ROADMAP.md's 'Far more staple ingredients/entities' entry for the full reasoning on why this was prioritized ahead of the other still-missing staples (flour, onion, herbs, sugar, ...). isAcid (new capability) satisfies data/actions/acid.json's requiredIngredientCapabilities, the fourth SALT-shaped seasoning verb alongside SALT/PEPPER/CHILI, deliberately not generalized into one SEASON verb for the same already-documented reason those three weren't (see pepper.json's notes). No thermophysical block, same reasoning black_pepper.json's own notes give for omitting one: nothing in this vocabulary heats or boils vinegar to a phase-change point yet (no CCP, no thermal-model use, no place.ts consumer) — a density/conductivity figure would be an unused placeholder, not a real need.",
+    "flavorBalanceNote": "src/flavor-balance.ts's FLAVOR_COUNTERBALANCES gives this entity's real culinary ROLE a structured, cited, queryable form — acid perceptually cutting through/balancing richness (a real, widely-applied technique: a squeeze of citrus on a rich dish, vinegar deglazing a pan's fond) — rather than leaving it as prose here alone. See that file's own doc comment for the full citation and its honestly-stated confidence tier (weaker than the sweet/sour and salt/bitter pairs it also records).",
+    "crackContainmentCrossRef": "egg.json's own crackContainmentNote already discusses vinegar's role in a DIFFERENT, still-deliberately-unbuilt mechanism (vinegar/acid added to boiling water speeding coagulation of a leaking cracked egg white, sealing the crack) — a real technique, but not a seasoning/flavor role, and not something ACID (this entity's actual wired verb, targeting a food entity directly) represents. That gap stays open for the same reason stated there: it would need water.json to accept an additive for a non-seasoning reason, a genuinely different mechanism than isSeasonable/ACID."
+  }
+}

@@ -874,3 +874,60 @@ was made. Don't rewrite or delete old entries — append.
   actual computed range in each recipe's own new `oilTempCNote`, not
   just "this should be fine."
 
+### `vinegar.json`/`acid.json`/`flavor-balance.ts` — the fourth seasoning verb, and taste-interaction data this repo never had
+
+- **Vinegar, not citrus, as the first ACID entity — a real, deliberate
+  choice, not the only valid one.** Citrus (lemon/lime juice) is at
+  least as common a real acid source, but modeling it honestly would
+  pull in juicing/zesting sub-mechanics this repo has no verbs for yet
+  (unlike vinegar, which is used directly, shelf-stable, no prep step).
+  Vinegar is also the cleaner match to this repo's own established
+  "one generic entity for the common case" convention (`salt.json`,
+  `oil.json` are both generic, not `table_salt.json`/`olive_oil.json` —
+  the specific-variant entities like `sunflower_oil.json` came SECOND,
+  once a real substitution case existed). Citrus as a second acid entity
+  is a real, deferred gap, not implied covered.
+- **`ACID` mirrors `SALT`/`PEPPER`/`CHILI` exactly, on purpose, not out
+  of laziness.** The `SEASON`-generalization gap
+  (`addsTagFromParameter` not existing, `requiredIngredientCapabilities`
+  not identifying WHICH instance satisfied it) was already named and
+  deferred twice before this session; a fourth manually-duplicated verb
+  is the same honest "engine work stays paused" answer as the third,
+  not a new decision needing re-litigation. Wired to the exact same 3
+  entities `PEPPER`/`CHILI` already reach (`potato`/`egg`/`egg_cracked`,
+  not `garlic`) for the same reason — matching an existing footprint
+  isn't a new judgment call, it's just consistency.
+- **The real new piece wasn't the verb, it was `flavor-balance.ts` — and
+  writing it honestly required inventing exactly one new concept
+  (`"richness"`) while resisting inventing more.** `SensoryPropertiesSchema
+  .taste` (ingredient.ts) classifies what a taste an INGREDIENT has;
+  nothing anywhere recorded how tastes INTERACT. The temptation once
+  building that was to also model saltiness-vs-sweetness, umami-vs-
+  everything, etc. — resisted, because the Reddit thread that motivated
+  this only ever named three specific pairs (Kempeth's comment,
+  specifically), and this session's own very recent `invalidTransitions`
+  correction (same day) is a fresh, direct lesson in what happens when a
+  plausible-sounding generalization gets asserted without a real,
+  checked case behind each specific claim. Three cited pairs, not a
+  speculative matrix of all 7×7 taste combinations.
+- **Verifying the claims turned up a real confidence gradient, not
+  uniform certainty — and the gradient itself is honestly the more
+  interesting finding.** Sweet/sour and salt/bitter both trace to real,
+  peer-reviewed, DOI-bearing psychophysics studies, found by searching
+  the MECHANISM ("sodium suppresses bitterness taste receptor study"),
+  not the Reddit comment's wording, and confirmed by direct lookup of
+  the actual paper text. Acid-cuts-richness — the most-repeated claim in
+  the source thread, and the one this whole addition was built to
+  represent — turned out to be the WEAKEST-sourced of the three: real,
+  widely-applied, plausible mouthfeel-science mechanism, but the
+  strongest primary source found (a 2025 *Comprehensive Reviews in Food
+  Science and Food Safety* review) sat behind a paywall, so it's logged
+  at `commonly_cited_unverified` rather than claimed as `standard_
+  reference` to match the other two. Also found, and recorded rather
+  than hidden, a real limit on the salt/bitter pair itself: Breslin &
+  Beauchamp's own data shows it's compound-dependent (some bitter
+  compounds suppressed over 70%, others essentially unaffected) — a
+  "realWorldCaveat" field exists in the schema specifically so a fact
+  like this has somewhere honest to live instead of being smoothed into
+  a flat, over-general claim.
+

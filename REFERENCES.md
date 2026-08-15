@@ -177,6 +177,15 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `data/heat-sources/gas.json`/`vitro.json`'s `citation` for typical
   burner/hob power and thermal-efficiency ranges. Confidence:
   `commonly_cited_unverified`.
+- **FDA Compliance Policy Guide Sec. 525.825, "Vinegar, Definitions"** —
+  https://www.fda.gov/media/71937/download — the regulatory floor of not
+  less than 4 grams acetic acid per 100 mL; commercial white/distilled
+  vinegar is commonly sold at 5% acidity. Used in `vinegar.json`'s
+  `composition` (`water_g: 95`, the arithmetic remainder at 5% acidity,
+  not an independently looked-up food-composition figure — vinegar's
+  composition is essentially fully described by its acid concentration).
+  Confidence: `standard_reference` (a real government regulatory
+  document).
 
 ## Culinary technique & food science literature
 
@@ -368,6 +377,42 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   rupture). Used in `data/entities/garlic.json`'s `flavorChemistryNote`.
   Confidence: `commonly_cited_unverified` — recalled as well-established
   biochemistry, not re-verified against the text directly this session.
+- **Mao, Tian, Qin & Chen, "Sensory sweetness and sourness interactive
+  response of sucrose-citric acid mixture based on synergy and
+  antagonism," *npj Science of Food* 6:33 (2022)** —
+  doi:10.1038/s41538-022-00148-0 — a real, controlled psychophysics study:
+  citric acid raises sucrose's detection threshold and reduces sensitivity
+  to sweetness changes, and sucrose raises citric acid's detection
+  threshold, a mutual-suppression mechanism. Used in
+  `src/flavor-balance.ts`'s `sweet_sour_mutual` entry. Confidence:
+  `standard_reference` — verified via direct lookup this session, not
+  recalled.
+- **Breslin & Beauchamp, "Suppression of bitterness by sodium: variation
+  among bitter taste stimuli," *Chemical Senses* 20(6):609-623 (1995)** —
+  doi:10.1093/chemse/20.6.609 — the classic, foundational study on sodium
+  suppressing perceived bitterness, found to be compound-dependent (some
+  bitter compounds suppressed >70%, others barely at all), not universal.
+  Used in `src/flavor-balance.ts`'s `salt_suppresses_bitter` entry
+  (including its `realWorldCaveat`). Confidence: `standard_reference` —
+  verified via direct lookup this session, not recalled. A 2013 follow-up
+  study (Keast lab, published in *Chemosensory Perception*) — found via
+  the same lookup, not independently re-verified — additionally found the
+  effect on bitter vegetables specifically correlates with how bitter a
+  taster already found the plain vegetable.
+- **Samin Nosrat, *Salt Fat Acid Heat* (Simon & Schuster, 2017)** — the
+  book's own central thesis, and the single most-recommended resource
+  across the triaged Reddit thread (`olddocs/reddit-thread-1mo4tj8.md`)
+  this repo's `vinegar.json`/`acid.json`/`flavor-balance.ts` trace to.
+  Used in `src/flavor-balance.ts`'s `acid_cuts_richness` entry.
+  Confidence: `commonly_cited_unverified` — a real, widely-cited culinary
+  source, not a peer-reviewed psychophysics study the way the two entries
+  above are; deliberately logged at this weaker tier rather than
+  overstating its evidentiary weight. Corroborated, not verified directly
+  (paywalled this session), by Wolinska-Kennard et al., "Mouthfeel of
+  Food and Beverages: A Comprehensive Review of Physiology, Biochemistry,
+  and Key Sensory Compounds," *Comprehensive Reviews in Food Science and
+  Food Safety* (2025) — the same journal this repo already cites for
+  Bermúdez-Aguirre & Niemira's egg-pasteurization review.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

@@ -503,6 +503,68 @@ proven runnable, not just asserted.
       padded just to make every array non-empty. Proven end-to-end: `npm
       run capability-test:dissolve-salt`; full suite re-run for the `BEAT`
       change.
+- [x] **Acid — the fourth "Salt, Fat, Acid, Heat" pillar, and real, cited
+      flavor-counterbalance data — closed 2026-08-15, triaged from a
+      user-supplied Reddit thread** (r/Cooking, "Engineer brain struggling
+      with cooking," 760 upvotes, 219 comments, moved to `olddocs/reddit-
+      thread-1mo4tj8.md` after triage — see the "Far more staple
+      ingredients/entities" entry above for the full triage reasoning and
+      `LEARNINGS_PROCESS.md` 2026-08-15 for the methodology). Two real,
+      separately-scoped pieces:
+      1. **`vinegar.json`** — the first ACID entity in this repo, and
+         `data/actions/acid.json` (`ACID`, the fourth SALT-shaped
+         seasoning verb, same `addsTag`/`isSeasonable`/timing-parameter
+         shape as `SALT`/`PEPPER`/`CHILI`, deliberately not generalized
+         into one `SEASON` verb for the same already-documented reason
+         those three weren't). Wired to `potato.json`/`egg.json`/
+         `egg_cracked.json` only — the exact existing `PEPPER`/`CHILI`
+         footprint, not `garlic.json` — matching their own established
+         "capable, not forced into an existing dish" discipline rather
+         than a new decision. Composition (`water_g: 95`) cited to the
+         FDA's own Compliance Policy Guide Sec. 525.825 vinegar
+         definition (≥4g acetic acid/100mL; commercial product commonly
+         sold at 5%), not a food-composition table — vinegar's
+         composition is essentially fully described by its acid
+         concentration. No `thermophysical` block, same reasoning
+         `black_pepper.json` already gives for omitting one: nothing
+         here heats/boils vinegar to a phase-change point, so a density
+         figure would be an unused placeholder.
+      2. **`src/flavor-balance.ts`** — `FLAVOR_COUNTERBALANCES`, real,
+         cited data on how tastes perceptually interact, a genuinely new
+         piece of domain knowledge this repo had never represented at
+         all (`SensoryPropertiesSchema.taste` records what a taste IS
+         per-ingredient, never how one taste affects another). Three
+         pairs, at two different honestly-stated confidence tiers, not
+         uniform certainty: sweet↔sour mutual suppression and
+         salt→bitter suppression are each backed by a real, peer-
+         reviewed primary study with a DOI, verified via direct lookup
+         this session (Mao et al. 2022, *npj Science of Food*; Breslin &
+         Beauchamp 1995, *Chemical Senses*) — the salt/bitter pair's own
+         real limit (compound-dependent, not universal — some bitter
+         compounds suppressed >70%, others barely at all) is recorded
+         as an honest `realWorldCaveat`, not smoothed over. Acid cutting
+         through richness is logged at the weaker `commonly_cited_
+         unverified` tier on purpose — real, widely-applied technique
+         with a plausible mouthfeel-science mechanism (contraction vs.
+         coating sensations), but the strongest lead for a primary
+         source sat behind a paywall this session and was correctly not
+         claimed as verified. `richness` itself is a deliberately named,
+         narrowly-scoped exception to the taste-only model (mouthfeel,
+         not one of the five basic tastes) — the same reasoning
+         `pungent`'s 2026-08-13 addition already established for a
+         different real sensory channel, not folded into `bitter` or
+         added to `SensoryPropertiesSchema.taste` itself.
+      Proven end-to-end, not just schema-valid: `npm run
+      capability-test:season-with-acid`
+      (`scripts/season-with-acid.ts`) — `ACID` runs against a real fried
+      potato, correctly rejects a non-acid ingredient the same way `SALT`
+      rejects `black_pepper`, all four seasoning verbs compose on one
+      instance, and `counterbalancesInvolving` answers a real query
+      ("this is too bitter" → salt) from real data, not prose. 8 new
+      unit tests (`tests/flavor-balance.test.ts`); full suite (173
+      tests), `npm run validate` (all 12 real recipes, zero step
+      errors), `tsc --noEmit`, and the full demo/capability-test sweep
+      all clean.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
@@ -547,6 +609,27 @@ covered by what exists:**
       existing safety check at `crispy_french_fries.json`'s 191°C
       finishing-fry target. Clarified butter/ghee, brown butter, and milk/
       cheese as their own entities remain real, unbuilt gaps.
+      **Triaged 2026-08-15 against a user-supplied Reddit thread**
+      (r/Cooking, "Engineer brain struggling with cooking," 760 upvotes,
+      219 comments — copy-pasted into the repo, moved to
+      `olddocs/reddit-thread-1mo4tj8.md` after triage, same discipline as
+      the other external reports) — mostly book/YouTube recommendations
+      with nothing actionable, but the single most-repeated organizing
+      idea across dozens of independent commenters was Samin Nosrat's
+      "Salt, Fat, Acid, Heat" framework. Checked against what this repo
+      already has: Salt (`salt.json`), Fat (`oil.json`), and Heat
+      (`place.ts`/`heat-source.ts`) are all real, structural, first-class
+      parts of this vocabulary — **Acid has zero representation**, not
+      even as an entry in this bullet's own ingredient list until this
+      sentence. Not "one more ingredient among many" the way flour/onion/
+      herbs are — the thread's own repeated framing (and this repo's own
+      existing salt/fat/heat coverage) makes it the missing fourth pillar,
+      re-prioritized above the others in this list. **Closed 2026-08-15,
+      same day**: see this section's own new "Acid — the fourth 'Salt,
+      Fat, Acid, Heat' pillar" entry above (in this file's own read
+      order — the closed-items list this bullet lives under is appended
+      to, so the new entry sits earlier on the page despite landing
+      later in the session).
 - [ ] **More common technique verbs.** ~~`SIMMER`~~ **closed 2026-08-13** —
       see "Common culinary knowledge coverage" below. Still open: `WHISK`,
       `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `REST` (post-cook carryover
@@ -1032,6 +1115,25 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       (`attempt-tortilla.ts` → `combine.json`/`flip.json` is the worked
       example), not pre-building speculatively. Next candidate dish should
       drive whatever's added next.
+      **Named more precisely 2026-08-15, from a user-supplied Reddit
+      thread's real-world pattern (`olddocs/reddit-thread-1mo4tj8.md`,
+      triaged then moved — see "Far more staple ingredients/entities"
+      above for the same thread's other finding)**: "plating" isn't
+      actually a sibling of `FLIP` in the way this entry originally
+      assumed. Multiple independent commenters described "component
+      cooking" / "3 things on a plate" (cook a protein, a starch, a
+      vegetable separately; serve together) as the actual default mental
+      model non-recipe cooks use — and this repo's `COMBINE` mechanism
+      (closed 2026-08-12) is structurally the wrong shape for it:
+      `combinesInto` fuses exactly two instances into ONE new substance
+      (fried potato + beaten egg → `tortilla_mixture`), a real mass-
+      conservation transformation. Serving three independently-finished,
+      unmerged instances on one plate is a different, softer composition
+      primitive — nothing destroys or transforms, nothing new is spawned,
+      the three instances just become "done and co-located." Still
+      correctly unbuilt (no forcing recipe has needed it yet, per this
+      entry's own stated discipline), but now named as its own real gap
+      rather than conflated with `FLIP`'s class of thing.
 - [x] Unit tests per HACCP threshold — closed 2026-08-13 alongside Phase 0's
       test-runner gap; see `tests/engine.test.ts`'s "HACCP / CCP enforcement"
       suite (gating on `durationSeconds` presence, advisory-vs-hard-reject,
@@ -1174,6 +1276,31 @@ breakdown (planner.ts/goal.ts/domain-model.ts/domain-facts.ts/robot-executor.ts,
 M1-M5, acceptance criteria, risk table) elaborating this exact section. Despite
 its filename, it is NOT a separate "Phase 4" — it's this Phase 4.5, written up
 in ticket form; reviewed for accuracy against the code 2026-08-15.
+
+**External validation, not new scope, added 2026-08-15** (same Reddit
+thread as "Far more staple ingredients/entities" and "Compound/named
+physical-manipulation actions" above — `olddocs/reddit-thread-1mo4tj8.md`):
+two independent real-world confirmations that this phase's shape is the
+right one, worth recording alongside it rather than re-deriving later.
+(1) One commenter's whole reply is, unprompted, a parametrized recipe
+template — "season+sauté a protein → sauté aromatics → deglaze → reduce
+with fat = sauce," then explicitly: swap the protein/liquid/fat and the
+SAME four steps produce chicken parmesan, a pork chop in cream gravy, or
+a red-wine steak reduction. That's a slot-filling template over this
+repo's own action-precondition/effect graph, described independently by
+someone with no knowledge of this repo — real evidence a template layer
+over `RecipeScript` (not a from-scratch design) is the natural shape for
+`RecipeIntentSchema`, not just this repo's own preference. (2) A second
+commenter's husband coordinated a multi-course meal by hand-building a
+timing spreadsheet so every dish finished together — a real, concrete
+forcing case for the closed-loop scheduling half of this phase, and for
+`Instance.inProgressAction` (the design note already logged under
+"Common culinary knowledge coverage"'s "Heat as a shared, time-varying
+property of a PLACE" entry) specifically. Neither changes this phase's
+scope or its "not started" status — recorded because a real, independent
+source landing on the same shape is worth more than an internal design
+doc alone, the same standard this repo already holds itself to for
+domain facts.
 - [ ] `RecipeIntentSchema` (or similar) — goals/constraints/acceptable-states/
       tolerance/victory-conditions, replacing hand-authored `RecipeScript` as
       the AUTHORING format. `RecipeScriptSchema` itself doesn't go away — it

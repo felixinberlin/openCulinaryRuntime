@@ -775,3 +775,56 @@ was made. Don't rewrite or delete old entries — append.
   same: check, don't assume, and correct in place rather than pass the
   inaccuracy along.
 
+### A Reddit thread (r/Cooking, 219 comments) — mostly noise, three real findings survived a filter
+
+- **Asked to "study" a copy-pasted 219-comment thread and extract good
+  ideas — the actual useful work was filtering, not reading.** The vast
+  majority of the thread is book/YouTube-channel recommendations (Kenji,
+  Alton Brown, Salt Fat Acid Heat, ...) repeated dozens of times —
+  correctly not worth logging individually. The filter that worked:
+  ignore anything that's just "read this book," look specifically for
+  comments describing a STRUCTURE (a decision rule, a template, a
+  mechanism) rather than a resource — the same "extract the checkable
+  claim, not the vibe" discipline already applied to the frying-science
+  doc and `WORLD_MODEL_OPTIMIZATION.md`.
+- **The single most-repeated idea (Salt/Fat/Acid/Heat) turned out to be
+  actionable specifically BECAUSE this repo already has 3 of the 4
+  pillars built.** Checking the claim against the actual repo state
+  (`grep`-verified, not assumed) is what turned "cooking is about salt,
+  fat, acid, heat" from a vague truism into a precise, prioritizable gap:
+  Salt/Fat/Heat are real, structural, first-class parts of this
+  vocabulary already; Acid had literally zero representation, not even
+  in `ROADMAP.md`'s own "still missing" ingredient list's phrasing before
+  this session. The thread didn't teach this repo anything about cooking
+  it didn't already half-know — it supplied the prioritization signal
+  that Acid specifically, not "one more ingredient among several," was
+  the honest next move.
+- **Verified the specific counterbalance claims against real sensory-
+  science literature before writing them into `data/*.json`, not just
+  the Reddit comment that named them** — same standard as every other
+  factual claim this repo makes. Two of the three pairs named
+  (sweetness/sourness mutual suppression; salt suppressing bitterness)
+  have real, checkable, peer-reviewed primary sources with DOIs (Mao et
+  al. 2022, *npj Science of Food*; Breslin & Beauchamp 1995, *Chemical
+  Senses*) — found by searching the mechanism, not the Reddit comment's
+  wording, and confirmed via direct lookup of the actual paper text, not
+  a search-engine summary alone. The third (acid "cutting through"
+  richness/fat) has real culinary-science characterization but no
+  primary psychophysics study as clean as the other two turned up in
+  this pass — logged at the weaker `commonly_cited_unverified` tier
+  rather than overstating its evidentiary weight to match the other two.
+  See `REFERENCES.md` and `src/flavor-balance.ts`'s own doc comment for
+  the full citations.
+- **Two other findings (a `PLATE`/component-cooking composition
+  primitive distinct from `COMBINE`; external validation for Phase 4.5's
+  template/scheduling shape) were logged directly into `ROADMAP.md`
+  rather than repeated here** — same pattern as the `WORLD_MODEL_
+  OPTIMIZATION.md` triage: a finding that answers or extends a named gap
+  belongs next to that gap, not floating in a separate log a future
+  session has to remember to cross-reference.
+- **The source document itself moved to `olddocs/reddit-thread-
+  1mo4tj8.md` after triage** — same convention as every other externally
+  -supplied document this session (`bugs_and_improvements.md`,
+  `scientific_review_report.md`, `WORLD_MODEL_OPTIMIZATION.md`): kept for
+  provenance, not left cluttering the repo root.
+

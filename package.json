@@ -20,6 +20,7 @@
     "demo:egg-pasteurization": "tsx scripts/egg-pasteurization.ts",
     "capability-test:tortilla": "tsx scripts/attempt-tortilla.ts",
     "capability-test:season-potato": "tsx scripts/season-potato-three-ways.ts",
+    "capability-test:season-with-acid": "tsx scripts/season-with-acid.ts",
     "capability-test:boil-egg-heat-sources": "tsx scripts/boil-egg-heat-sources.ts",
     "capability-test:simmer": "tsx scripts/simmer-vs-boil.ts",
     "capability-test:double-fry": "tsx scripts/double-fry-potato.ts",

@@ -1663,3 +1663,23 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   representation (not just the schema/engine) is suspect, and grepping
   for the literal string is cheaper than trusting recall of everywhere
   it might be used.**
+- **The user then named four real, distinct potato-prep variants in one
+  message (wash-then-peel; peel-a-dirty-potato-then-wash; skin-on
+  wash-cut-fry, never peeled; whole unpeeled wash-then-bake) — worth
+  actually running all four, not just agreeing they sounded plausible.**
+  Every potato recipe already in `data/recipes/*.json` happens to peel,
+  so none of these four had ever been exercised end-to-end before, only
+  argued to be mechanically possible from reading the schema. Built
+  `scripts/potato-prep-variants.ts` (`npm run capability-test:potato-
+  prep-variants`) and ran all four for real via `applyAction` — all four
+  work, confirming the tag-based fix generalizes rather than only
+  covering the one case it was written for. Case 2 (peel-then-wash) is
+  the interesting confirmation-not-just-repetition: `CUT` there is
+  satisfied via the real `"peeled"` STATE, not the `"washed"` tag at
+  all — the tag fix wasn't even load-bearing for that specific case, but
+  washing after peeling is still the physically correct move for a dirty
+  potato (removing sand the peeler dragged across the exposed flesh),
+  and is now representable without losing anything either way it's done.
+  A concrete instance of this repo's own standing practice (`ROADMAP.md`'s
+  capability-test table): a claim about what the engine can represent is
+  only real once it's actually been run, not merely reasoned about.

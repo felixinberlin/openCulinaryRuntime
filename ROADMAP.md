@@ -829,6 +829,12 @@ Resolves `CONCEPT.md`'s long-flagged fork (see that file's updated top note and
 §12): the world is primary, a recipe is one layer of intent on top of it. Not
 started — a real proposal, scoped honestly as substantial separate work, not
 implied to be a small addition.
+
+See also: `architecture_phase4_ticket.md` (2026-08-14) — a detailed milestone
+breakdown (planner.ts/goal.ts/domain-model.ts/domain-facts.ts/robot-executor.ts,
+M1-M5, acceptance criteria, risk table) elaborating this exact section. Despite
+its filename, it is NOT a separate "Phase 4" — it's this Phase 4.5, written up
+in ticket form; reviewed for accuracy against the code 2026-08-15.
 - [ ] `RecipeIntentSchema` (or similar) — goals/constraints/acceptable-states/
       tolerance/victory-conditions, replacing hand-authored `RecipeScript` as
       the AUTHORING format. `RecipeScriptSchema` itself doesn't go away — it

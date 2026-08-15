@@ -57,7 +57,7 @@ Read in roughly this order to get oriented:
 | File | What it is |
 |---|---|
 | `CONCEPT.md` | The founding outline — "Grandma First, Machine Deep." Working title *Tortilla World*. |
-| `WORLD_MODEL.md` | Resolves `CONCEPT.md`'s flagged design fork: the world (event-sourced, continuously transforming) is primary; a recipe is one layer of intent on top. |
+| `olddocs/WORLD_MODEL.md` | Resolves `CONCEPT.md`'s flagged design fork: the world (event-sourced, continuously transforming) is primary; a recipe is one layer of intent on top. |
 | `ENGINE_INVARIANTS.md` | What must never break, regardless of implementation track — read this before generating code. |
 | `CLAUDE_DEV_CTX.md` | The original architecture blueprint/system-prompt this was built from. |
 | `CLAUDE.md` | Ground truth on how the plan diverged from what's actually built, file-by-file, plus repo commands and conventions. |
@@ -66,6 +66,7 @@ Read in roughly this order to get oriented:
 | `LEARNINGS.md` | Index into the dated learnings log — split 2026-08-15 into `LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`, `LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md` (schema/engine gotchas, food-science/technique tradeoffs, CLI-tooling notes, and working-method/verification lessons, respectively) once the single file passed ~2,300 lines. |
 | `REFERENCES.md` | Bibliography — every safety threshold and technique claim traced to a real source. |
 | `SIMULATION_TARGETS.md` | Research comparing simulator/robot-execution targets (PDDL, VirtualHome, AI2-THOR, OmniGibson, RoboCasa) for eventually grounding this model in a simulated or robot-executed world. Not yet chosen. |
+| `PORTING_TO_PYTHON.md` | Tips for a Python rewrite, mined from every doc and code comment here — the engine-design decisions worth preserving deliberately, the real bugs already found and fixed once (don't re-discover them), and a file-by-file `src/*.ts` map. |
 | `masideas.md` | The raw original brainstorm notes `CONCEPT.md` and `ENGINE_INVARIANTS.md` were written up from. |
 
 `CLAUDE.md` also scopes three not-yet-started satellite projects (a Python

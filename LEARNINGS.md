@@ -2172,3 +2172,35 @@ you'd known it going in. Don't rewrite or delete old entries — append.
   can't actually be walked through the rest of `AUTHORING.md`'s loop to
   a valid recipe — checked that end-to-end path for real rather than
   stopping at "the generator's output matches the expected shape."
+
+### A user-supplied `WORLD_MODEL_OPTIMIZATION.md` — mostly not new, and that was the useful finding
+
+- **Asked to read a doc "from Claude web" before finalizing the recipe-
+  player plan — most of its nine proposed extensions turned out to
+  already be tracked somewhere in this repo, not new information.**
+  Inventory consumption and forbidden state transitions are `ROADMAP.md`
+  Phase 4 items already (the latter already called "the single largest
+  unbuilt piece of the original spec"); alternative actions/substitution
+  is already in `architecture_phase4_ticket.md`'s proposed `Action`
+  extensions, a ticket still sitting at its own unreached Approval Gate
+  1. Cross-checking against the actual repo state rather than treating
+  a fresh-looking doc as fresh information was the right first move —
+  the same discipline as every other externally-supplied document this
+  session (the frying-science doc, the bugs/best-practices reports).
+- **One real, useful, genuinely new piece survived the check**: a
+  concrete mechanism (`Instance.inProgressAction`) for the "co-located
+  instances sharing PLACE state" gap `ROADMAP.md` has named since
+  2026-08-14 but never given a specific shape to. Logged directly into
+  that `ROADMAP.md` entry rather than a new file, so it's found
+  alongside the gap it answers, not floating separately.
+- **One real factual inaccuracy in the doc, worth correcting rather than
+  silently ignoring**: it claims `COMBINE` "doesn't verify inputs exist
+  and are in the right state" — real, tested, capability-verified two-
+  input composition has existed since 2026-08-12. An externally-supplied
+  document being mostly right doesn't mean every claim in it survives
+  checking against the actual code, the same lesson the frying-science
+  document's fabricated bibliography taught more sharply a few turns
+  earlier — this time the error was smaller (describing an existing
+  mechanism inaccurately, not fabricating a source), but the fix is the
+  same: check, don't assume, and correct in place rather than pass the
+  inaccuracy along.

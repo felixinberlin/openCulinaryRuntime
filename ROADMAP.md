@@ -684,6 +684,25 @@ covered by what exists:**
       closing this gap for real needs the SAME structural addition as the
       place/heat gap above (continuous or at least multi-checkpoint time
       within one action), not a second, separate mechanism.
+      **Design input added 2026-08-15**, from a user-supplied
+      `WORLD_MODEL_OPTIMIZATION.md` read before scoping the (separate,
+      smaller) recipe-player work below: a concrete mechanism for the
+      "instances co-located in one tool instance sharing its state" gap
+      named above — `Instance.inProgressAction: { actionId, startedAt,
+      durationSeconds, estimatedCompletion }`, letting an instance be
+      queried as "still cooking" mid-action rather than treating every
+      action as instantaneous. Worth keeping as a real design input for
+      whenever this phase is actually scoped, alongside that doc's
+      `toolLockBehavior` idea (a tool held exclusively for a duration,
+      e.g. "can't fry two things in the same pan at once") — neither
+      built now, both real and specific enough to be more useful than
+      re-deriving the same shape of mechanism from scratch later. That
+      doc's separate claim that `COMBINE` "doesn't verify inputs" is
+      inaccurate against what's actually built (`combine.json`, closed
+      2026-08-12 — real two-input composition with capability
+      verification); its actual proposal (3+ input assembly, not just
+      two) is a different, real, still-unbuilt extension worth
+      distinguishing from that inaccurate framing.
 - [ ] **Storage/shelf-life common knowledge** (partially, deliberately
       out-of-scope already for one case — `infuse.json`'s garlic-in-oil
       botulism note, `LEARNINGS.md` 2026-08-12 — but nothing general exists:

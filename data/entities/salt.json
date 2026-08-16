@@ -21,6 +21,7 @@
       "note": "Found and fixed 2026-08-12: the previous value (38758mg) was off by 1.49% from the exact stoichiometric figure — checked while adding citations generally, not flagged before. This is the one composition figure in this repo that's exactly derivable rather than an empirical/approximate figure, since table salt is essentially pure NaCl by definition."
     }
   },
+  "allergens": [],
   "possibleStates": ["dry", "wet", "dissolved"],
   "allowedTransformations": ["dissolve"],
   "statePrerequisites": {

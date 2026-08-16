@@ -602,13 +602,35 @@ proven runnable, not just asserted.
 
 **Known-large, not yet started — flagged so the gap is visible, not implied
 covered by what exists:**
-- [ ] **Allergens.** Nothing in `EntitySchema` records allergen information at
-      all (egg is a major allergen; nothing currently says so). Arguably the
-      single highest-priority gap against this repo's own stated mission
-      (`ROADMAP.md`'s "Why this exists" — cooking unattended for someone who's
-      relying on the system): a system that can't say "this dish contains
-      egg" is more dangerous by omission than one that's merely incomplete on
-      technique.
+- [x] **Allergens — closed 2026-08-16.** `ingredient.ts`'s `AllergenSchema`
+      (the FDA "Big 9": milk/egg/fish/crustacean_shellfish/tree_nuts/
+      peanuts/wheat/soybeans/sesame — FALCPA 2004 + the FASTER Act's 2023
+      sesame addition) + `EntitySchema.allergens`, populated across every
+      real ingredient (`egg`/`egg_cracked`/`egg_yolk`/`egg_white`: `["egg"]`;
+      `butter`: `["milk"]`; everything else: `[]`, a real audited claim, not
+      an unfilled default). `egg_shell` deliberately carries NONE despite
+      being egg's own byproduct — it's discarded, not eaten, and has none of
+      the actual allergenic proteins, a real distinction from the parts
+      that ARE eaten. `scripts/validate.ts` hard-fails any composite entity
+      (a `COMBINE` result) whose `allergens` isn't a superset of its
+      components' — the exact "silently dropped on the way into a combined
+      dish" failure this gap named as the risk, caught mechanically, not by
+      review. Surfaced where it actually matters: `explainRecipe`'s new
+      `allergenSummary` (computed from `initialInventory` alone — provably
+      complete, not approximate, given the composite superset check above),
+      printed prominently in `validate-recipe`'s pre-flight report and as
+      its own `## Allergens` section in `narrate-recipe`'s output, ahead of
+      tools/ingredients. Proven against every real recipe in this repo via
+      `npm run capability-test:allergens`. Deliberately does NOT close: a
+      consumer-facing "reject any recipe containing X" CONSTRAINT (this is
+      DECLARATION only, not enforcement — a real, further, separate gap);
+      the EU's wider 14-allergen list (`AllergenSchema`'s own doc comment
+      names this explicitly, chosen against for citation-family consistency
+      with this repo's existing FDA/FALCPA-sourced CCP machinery, not
+      because the EU list is less correct for this repo's Spanish/EU-
+      leaning dishes). Cross-contamination/hygiene (below) remains a
+      SEPARATE, deliberately un-conflated gap — this closes what a dish's
+      own ingredients contain, not what a shared knife/board might transfer.
 - [ ] **Cross-contamination / hygiene knowledge.** `HazardSchema` models
       danger to the PERSON performing an action (a blade, hot oil); nothing
       models danger to the FOOD from equipment/surface reuse (same knife for

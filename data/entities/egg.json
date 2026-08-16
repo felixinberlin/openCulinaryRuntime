@@ -23,6 +23,7 @@
       "note": "Same caveat as potato.json/garlic.json: this repo has not looked up the exact current FDC entry to confirm the precise values against it."
     }
   },
+  "allergens": ["egg"],
   "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "burned", "overcooked"],
   "possibleTags": ["salted", "peppered", "chili_seasoned", "acidified", "pasteurized", "shocked", "fresh", "aged"],
   "allowedTransformations": ["boil", "simmer", "fry", "peel", "salt", "pepper", "chili", "acid", "separate", "crack", "poach", "pasteurize", "shock", "cut"],

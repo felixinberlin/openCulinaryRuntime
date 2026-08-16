@@ -169,6 +169,48 @@ for (const entity of entities.items.values()) {
       fail(`entities/${entity.id}.json: criticalControlPointsByAction["${actionId}"] references unknown CCP "${ccpId}"`);
     }
   }
+  // structure.components (ingredient.ts's StructureSchema) was never
+  // actually cross-referenced against real entity ids until this check,
+  // added 2026-08-16 alongside the allergen-superset check right below it
+  // (which needs to look each component up to be meaningful at all — a
+  // bogus component id silently skipped would defeat the point of that
+  // check). A genuinely separate, pre-existing gap, closed here because it
+  // was found in passing, not because it was the point of this change.
+  if (entity.structure.composite) {
+    for (const componentId of entity.structure.components) {
+      if (!entities.items.has(componentId)) {
+        fail(`entities/${entity.id}.json: structure.components references unknown entity "${componentId}"`);
+      }
+    }
+  }
+  // Allergens (ingredient.ts's AllergenSchema, ROADMAP.md's "Allergens" gap
+  // — named there as "arguably the single highest-priority gap against
+  // this repo's own stated mission"). A composite entity silently missing
+  // an allergen one of its own components carries is exactly the "more
+  // dangerous by omission" failure that gap warns about — a hard fail,
+  // not a NOTE, the same severity this file already gives a wrong
+  // typicalYieldFractionOfParent.ofParentEntityId reference. Checked one
+  // level deep only (each component's OWN allergens, not a recursive walk
+  // through a component that's itself composite) — every composite entity
+  // in this repo as of 2026-08-16 is built from non-composite components,
+  // so one level is sufficient today; a real, named limit if that changes.
+  if (entity.structure.composite) {
+    const missing = new Set<string>();
+    for (const componentId of entity.structure.components) {
+      const component = entities.items.get(componentId);
+      if (!component) continue; // already reported by the structure.components check above
+      for (const allergen of component.allergens) {
+        if (!entity.allergens.includes(allergen)) missing.add(allergen);
+      }
+    }
+    if (missing.size > 0) {
+      fail(
+        `entities/${entity.id}.json: is composite of [${entity.structure.components.join(", ")}] but its own ` +
+          `allergens is missing ${[...missing].join(", ")}, carried by at least one component — a composite ` +
+          `entity's allergens must be a superset of its components' allergens.`
+      );
+    }
+  }
   // Soft prompts, not failures — both found real gaps by being asked
   // explicitly (tortilla_mixture.json had a cooking capability and zero CCP
   // wiring until asked about tortilla de Betanzos; several entities had

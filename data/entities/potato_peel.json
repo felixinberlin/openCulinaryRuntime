@@ -10,6 +10,7 @@
     "composite": false,
     "components": []
   },
+  "allergens": [],
   "possibleStates": ["raw", "fried", "blended"],
   "possibleTags": ["washed"],
   "allowedTransformations": ["wash", "fry", "mix"],

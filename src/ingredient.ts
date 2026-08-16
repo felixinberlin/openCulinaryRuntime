@@ -116,6 +116,42 @@ export const CompositionSchema = z
 export type Composition = z.infer<typeof CompositionSchema>;
 
 /**
+ * The FDA's 9 major food allergens — FALCPA (2004: milk, egg, fish,
+ * crustacean_shellfish, tree_nuts, peanuts, wheat, soybeans) + the FASTER
+ * Act (2021, effective 2023-01-01: sesame, the 9th). Added 2026-08-16,
+ * directly closing ROADMAP.md's own "Allergens" entry, named there as
+ * "arguably the single highest-priority gap against this repo's own
+ * stated mission" — a system meant to eventually cook unattended for
+ * someone relying on it that can't say "this dish contains egg" is more
+ * dangerous by omission than one that's merely incomplete on technique.
+ *
+ * A closed enum, not a free string: an allergen list only protects anyone
+ * if it's checkable against a fixed, real regulatory vocabulary, not
+ * whatever string an entity author happened to type. Deliberately the
+ * FDA's "Big 9," not the EU's wider 14-item list (Regulation (EU)
+ * 1169/2011 Annex II — adds celery, mustard, sulphites, lupin, molluscs,
+ * and gluten-containing cereals generally rather than wheat specifically)
+ * even though this repo's culinary content is Spanish/EU-leaning
+ * throughout (tortilla de patatas, `es` names everywhere) — chosen for
+ * consistency with the FDA/FALCPA sourcing this repo's CCP machinery
+ * (`thermal.ts`, `data/ccps/*.json`) already cites, not because the FDA
+ * list is more correct for this repo's actual dishes. The EU list is a
+ * real, named, NOT-yet-modeled gap, not silently assumed covered.
+ */
+export const AllergenSchema = z.enum([
+  "milk",
+  "egg",
+  "fish",
+  "crustacean_shellfish",
+  "tree_nuts",
+  "peanuts",
+  "wheat",
+  "soybeans",
+  "sesame",
+]);
+export type Allergen = z.infer<typeof AllergenSchema>;
+
+/**
  * Real, cited physical SIZE — added 2026-08-15, directly answering "what
  * diameter is a potato" the same way `composition`/`thermophysical` already
  * answer "what's the density/conductivity": a structured, cited field
@@ -333,6 +369,24 @@ export const EntitySchema = z.object({
   aggregationState: AggregationStateSchema,
   structure: StructureSchema,
   composition: CompositionSchema.optional(),
+  /**
+   * FDA "Big 9" major allergens this entity itself carries — see
+   * `AllergenSchema`'s own doc comment for the citation and why this list,
+   * not the EU's wider one. Defaults to an empty array, and an empty array
+   * IS a real, meaningful, audited claim ("checked, carries none of the
+   * Big 9"), not just an unfilled field — same discipline `HazardSchema`
+   * already holds itself to for actions. Meaningful only for `kind:
+   * "ingredient"` entities; `kind: "tool"` entities are left at the
+   * default unaudited, since "does this knife carry milk protein" isn't a
+   * real question this field is meant to answer (that's the separate,
+   * NOT-yet-built cross-contamination/hygiene gap — see `ROADMAP.md`).
+   * For a `structure.composite: true` entity, `scripts/validate.ts` hard-
+   * fails if this array is missing an allergen any of its own
+   * `structure.components` carries — a composite silently dropping an
+   * allergen one of its real ingredients has is exactly the "more
+   * dangerous by omission" failure this field exists to prevent.
+   */
+  allergens: z.array(AllergenSchema).default([]),
   /** State ids this entity can be found in (CONCEPT.md §8). Mutually
    *  exclusive at any moment — an instance has exactly one. */
   possibleStates: z.array(z.string()).default([]),

@@ -10,6 +10,7 @@
     "composite": true,
     "components": ["potato", "onion", "egg"]
   },
+  "allergens": ["egg"],
   "possibleStates": ["raw", "fried", "burned", "overcooked"],
   "possibleTags": ["flipped", "salted", "rested"],
   "allowedTransformations": ["fry", "flip", "rest"],

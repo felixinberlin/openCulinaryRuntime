@@ -10,6 +10,7 @@
     "composite": false,
     "components": []
   },
+  "allergens": [],
   "possibleStates": ["cold", "boiling"],
   "allowedTransformations": [],
   "producedByproducts": [],

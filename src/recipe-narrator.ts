@@ -92,6 +92,12 @@ export interface RecipeNarration {
   stepsWithUnstatedDuration: string[];
   timingAdvisories: string[];
   prepAdvisories: string[];
+  /** `explainRecipe`'s `allergenSummary` — the FDA "Big 9" allergens this
+   *  dish's `initialInventory` carries (`ingredient.ts`'s `AllergenSchema`,
+   *  `ROADMAP.md`'s "Allergens" gap). Surfaced here, not just in
+   *  `RecipeExplanation`, so a narrated/read-back recipe says "this dish
+   *  contains egg" the same way it already says what tools it needs. */
+  allergenSummary: string[];
   runErrors: string[];
   ranCleanly: boolean;
 }
@@ -219,6 +225,7 @@ export function narrateRecipe(
     stepsWithUnstatedDuration,
     timingAdvisories: explanation.timingAdvisories,
     prepAdvisories: explanation.prepAdvisories,
+    allergenSummary: explanation.allergenSummary,
     runErrors: result.errors.map((e) => `${e.step.actionId} on ${e.step.targetInstanceId}: ${e.message}`),
     ranCleanly: result.errors.length === 0,
   };
@@ -234,6 +241,15 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
   p(`# ${n.nameEn}`);
   p();
   p(`Recipe id: \`${n.id}\` — ${n.stepCount} steps, ${n.verbsUsed.length} distinct verbs used.`);
+  p();
+
+  p(`## Allergens`);
+  p();
+  p(
+    n.allergenSummary.length > 0
+      ? `⚠️ Contains: **${n.allergenSummary.join(", ")}** (FDA "Big 9" — \`ingredient.ts\`'s \`AllergenSchema\`).`
+      : `None of the FDA "Big 9" major allergens (\`ingredient.ts\`'s \`AllergenSchema\`) are declared on any \`initialInventory\` ingredient.`
+  );
   p();
 
   p(`## Structure — initial inventory`);

@@ -22,6 +22,7 @@
       "note": "Same caveat as potato.json/egg.json — not checked against the exact current FDC entry; garlic composition also varies meaningfully by cultivar and curing/storage time."
     }
   },
+  "allergens": [],
   "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "coarse", "fine_paste", "emulsified", "burned", "overcooked"],
   "possibleTags": ["salted"],
   "allowedTransformations": ["peel", "cut", "boil", "fry", "bake", "salt", "crush", "emulsify"],

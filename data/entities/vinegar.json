@@ -20,6 +20,7 @@
       "note": "water_g (95) is the arithmetic remainder at 5% acidity (100 - 5), not an independently looked-up USDA FoodData Central water-content figure the way potato.json/egg.json's water_g values are — vinegar's own composition is essentially fully described by its acid concentration, so this repo treats the FDA acidity standard as the primary, checkable source rather than a food-composition table."
     }
   },
+  "allergens": [],
   "possibleStates": ["raw"],
   "possibleTags": [],
   "allowedTransformations": [],

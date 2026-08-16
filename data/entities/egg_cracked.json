@@ -22,6 +22,7 @@
       "confidence": "standard_reference"
     }
   },
+  "allergens": ["egg"],
   "possibleStates": ["raw", "lightly_beaten", "beaten", "well_beaten", "fried", "scrambled"],
   "possibleTags": ["salted", "peppered", "chili_seasoned", "acidified", "flipped", "folded"],
   "allowedTransformations": ["beat", "fry", "scramble", "salt", "pepper", "chili", "acid", "flip", "combine", "fold"],

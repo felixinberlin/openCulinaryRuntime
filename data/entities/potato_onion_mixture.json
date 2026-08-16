@@ -10,6 +10,7 @@
     "composite": true,
     "components": ["potato", "onion"]
   },
+  "allergens": [],
   "possibleStates": ["raw", "fried", "burned", "overcooked"],
   "possibleTags": ["salted"],
   "allowedTransformations": ["fry", "combine_con_cebolla"],

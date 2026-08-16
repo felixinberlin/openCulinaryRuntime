@@ -1,4 +1,4 @@
-import { type Entity, isTerminalState } from "./ingredient.ts";
+import { type Entity, type Allergen, isTerminalState } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
@@ -111,6 +111,25 @@ export interface RecipeExplanation {
    * scoping `actionKinds` itself uses.
    */
   executionBounds: { stepIndex: number; actionId: string; targetInstanceId: string; bound: ExecutionBound }[];
+  /**
+   * Every allergen (`ingredient.ts`'s `AllergenSchema`, the FDA "Big 9")
+   * any `initialInventory` entity carries, deduplicated and sorted —
+   * `ROADMAP.md`'s "Allergens" gap, named there as "arguably the single
+   * highest-priority gap against this repo's own stated mission": a
+   * system meant to eventually cook unattended for someone relying on it
+   * should be able to say "this dish contains egg" without a human
+   * re-deriving it by reading every entity file by hand.
+   *
+   * Computed from `recipe.initialInventory` alone — sufficient despite
+   * this module's execution-free design (see the top doc comment):
+   * `scripts/validate.ts` hard-fails any composite entity (a `COMBINE`
+   * result, e.g. `tortilla_mixture`) whose own `allergens` isn't already a
+   * superset of its `structure.components`' allergens, so nothing spawned
+   * mid-recipe can introduce an allergen absent from the starting
+   * ingredients — the union over `initialInventory` is already complete,
+   * not an approximation of it.
+   */
+  allergenSummary: Allergen[];
 }
 
 function candidatesForCapability(entities: Map<string, Entity>, capability: string, kind?: Entity["kind"]): string[] {
@@ -379,6 +398,14 @@ export function explainRecipe(
     .filter((cap) => ![...initialInventoryEntityIds].some((id) => entities.get(id)?.capabilities[cap] === true))
     .map((capability) => ({ capability, candidates: candidatesForCapability(entities, capability) }));
 
+  const allergenSet = new Set<Allergen>();
+  for (const item of recipe.initialInventory) {
+    const entity = entities.get(item.entityId);
+    if (!entity) continue;
+    for (const allergen of entity.allergens) allergenSet.add(allergen);
+  }
+  const allergenSummary = [...allergenSet].sort();
+
   return {
     tools: { needed: [...toolsNeeded], missing: missingTools, missingCapabilities: missingToolCapabilities },
     ingredients: { needed: [...ingredientCapsNeeded], missing: missingIngredientCapabilities },
@@ -386,5 +413,6 @@ export function explainRecipe(
     prepAdvisories,
     actionKinds,
     executionBounds,
+    allergenSummary,
   };
 }

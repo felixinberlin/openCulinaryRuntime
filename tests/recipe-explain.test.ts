@@ -540,3 +540,48 @@ describe("explainRecipe — executionBounds", () => {
     assert.equal(withMap.executionBounds[0].bound.minSafeHoldSeconds, 15);
   });
 });
+
+// allergenSummary — 2026-08-16, ROADMAP.md's "Allergens" gap.
+describe("explainRecipe — allergenSummary", () => {
+  const potato = makeEntity({ id: "potato", allergens: [] });
+  const egg = makeEntity({ id: "egg", allergens: ["egg"] });
+  const butter = makeEntity({ id: "butter", allergens: ["milk"] });
+  const entities = new Map([
+    ["potato", potato],
+    ["egg", egg],
+    ["butter", butter],
+  ]);
+  const actions = new Map();
+  const ccps = new Map();
+
+  test("empty when no initialInventory entity carries a tracked allergen", () => {
+    const recipe = makeRecipe({ initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }] });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, []);
+  });
+
+  test("reports a single allergen carried by one ingredient", () => {
+    const recipe = makeRecipe({
+      initialInventory: [
+        { id: "potato-1", entityId: "potato", state: "raw", tags: [] },
+        { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+      ],
+    });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, ["egg"]);
+  });
+
+  test("unions allergens across multiple ingredients, deduplicated and sorted", () => {
+    const recipe = makeRecipe({
+      initialInventory: [
+        { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+        { id: "egg-2", entityId: "egg", state: "raw", tags: [] }, // same allergen twice — must not duplicate
+        { id: "butter-1", entityId: "butter", state: "cold", tags: [] },
+      ],
+    });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, ["egg", "milk"]);
+  });
+
+  test("an initialInventory entityId not present in the entities map is silently skipped, not thrown", () => {
+    const recipe = makeRecipe({ initialInventory: [{ id: "x-1", entityId: "unknown_entity", state: "raw", tags: [] }] });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, []);
+  });
+});

@@ -1109,3 +1109,59 @@ was made. Don't rewrite or delete old entries — append.
   narrowly "for tortilla only" would have left the par-fry gap open for
   no real reason, and building it "for par-fry only" earlier would have
   missed the tortilla case entirely.
+
+### Allergens — a closed enum forces a real choice a free string would have let slide
+
+- **Picking the FDA's "Big 9" over the EU's wider 14-allergen list was a
+  real, deliberate tension, not an obvious default** — this repo's actual
+  recipe content is Spanish/EU-leaning throughout (tortilla de patatas,
+  `es` names on every entity), which would argue for the EU list (adds
+  celery, mustard, sulphites, lupin, molluscs, and gluten-containing
+  cereals generally rather than wheat specifically). Chose the FDA list
+  anyway, for a different, also-real reason: this repo's existing CCP/
+  HACCP machinery (`thermal.ts`, `data/ccps/*.json`) is ALREADY sourced
+  to FDA/USDA regulatory text throughout — introducing a second, EU-based
+  regulatory citation family for one field would have made "which
+  jurisdiction's rules does this repo actually follow" a real, newly
+  ambiguous question, worse than picking either list consistently. Named
+  explicitly in `AllergenSchema`'s own doc comment rather than silently
+  picked — a reader who assumes "EU dishes -> EU allergen list" without
+  reading that comment would draw a reasonable but wrong conclusion.
+- **A closed `z.enum`, not an open string field, was the actual design
+  decision that mattered here** — `CapabilitiesSchema`'s own precedent
+  (`.catchall(z.boolean())`, deliberately open, CONCEPT.md §15 "Unknown
+  Knowledge") was right there as an easy template to copy, and would have
+  been WRONG for this field specifically: a capability that's
+  misspelled/inconsistent just means one substitutability check silently
+  fails somewhere; an allergen that's misspelled/inconsistent means a real
+  "contains X" claim silently doesn't match across entities, exactly the
+  failure mode this field exists to prevent. Worth stating as a general
+  principle, not just a one-off choice: "should this vocabulary be open or
+  closed" doesn't have one repo-wide answer — it depends on whether an
+  inconsistent entry fails loud (open is fine) or fails silent-and-unsafe
+  (closed is required).
+- **The composite-entity superset check (`scripts/validate.ts`) is
+  deliberately a HARD FAIL, not a NOTE** — every other pattern this file
+  matches (`checkYieldFractions`'s sum-check, the cooking-capability-vs-CCP
+  check) uses a soft NOTE for a plausible-but-unconfirmed gap. Allergens
+  don't get that treatment: `ROADMAP.md`'s own framing ("more dangerous by
+  omission") is specifically about a SILENT gap being worse than a visible
+  one, so leaving this as an easily-ignored NOTE would have reproduced the
+  exact failure mode the feature exists to prevent, just one layer up (a
+  human confirming "yes I saw the NOTE and chose to ignore it" is still a
+  human who might not). Proven to actually fire, not just written and
+  assumed correct — see this session's own verification (temporarily
+  cleared `tortilla_mixture.json`'s `allergens`, confirmed the exact FAIL
+  line, restored via `Edit` rather than `git checkout`, learning
+  `LEARNINGS_PROCESS.md`'s earlier `potato_peel.json` data-loss mistake).
+- **`egg_shell.json` carrying NO allergen, despite being egg's own
+  byproduct, is the one real place "is this a byproduct of X" and "does
+  this itself carry X's allergen" genuinely diverge** — every other
+  byproduct entity in this repo (`potato_peel`, `garlic_peel`,
+  `onion_peel`) was already allergen-free regardless, so this distinction
+  was invisible until egg's byproducts specifically forced it. Worth
+  generalizing: a future protein/allergen-bearing entity's byproducts
+  need this same question asked individually (does the byproduct still
+  contain the allergenic material, or was it separated out), not answered
+  by a blanket "byproducts inherit the parent's allergens" rule, which
+  would have been wrong here.

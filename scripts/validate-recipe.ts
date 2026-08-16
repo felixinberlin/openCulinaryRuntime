@@ -65,6 +65,12 @@ console.log(`=== Pre-flight report: "${recipe.names.en}" ===\n`);
 
 const explanation = explainRecipe(recipe, entities, actions, ccps, result.spawnedEntityIds);
 
+console.log(
+  `Allergens (FDA "Big 9" — ingredient.ts's AllergenSchema, ROADMAP.md's "Allergens" gap): ${
+    explanation.allergenSummary.join(", ") || "(none of the tracked 9)"
+  }`
+);
+
 console.log(`Tools needed:  ${explanation.tools.needed.join(", ") || "(none)"}`);
 console.log(`Tools declared (availableTools): ${recipe.availableTools.join(", ") || "(none)"}`);
 if (explanation.tools.missing.length > 0) {

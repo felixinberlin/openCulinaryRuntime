@@ -22,6 +22,7 @@
       "note": "Lower confidence tier than potato.json/garlic.json/black_pepper.json's citations on purpose: 'chili flakes' is not one botanically precise ingredient the way NaCl or a specific vegetable is — commercial products sold as chili/red pepper flakes are made from many different Capsicum cultivars/blends with genuinely different composition and heat, so this figure is a representative stand-in, not a value for A specific product."
     }
   },
+  "allergens": [],
   "possibleStates": ["dry"],
   "possibleTags": [],
   "allowedTransformations": [],

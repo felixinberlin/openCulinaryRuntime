@@ -13,6 +13,7 @@
   "composition": {
     "chemicalFormula": "CaCO3"
   },
+  "allergens": [],
   "possibleStates": ["raw"],
   "allowedTransformations": [],
   "producedByproducts": [],
@@ -36,6 +37,7 @@
     "isWaste": true,
     "reusable": false,
     "producedBy": ["peel", "separate"],
-    "notes": "The one byproduct common to both of egg.json's spawning actions — PEEL (shell off a boiled egg) and SEPARATE (cracking a raw egg) — hence it's egg.json's flat producedByproducts fallback, with byproductsByAction only overriding SEPARATE to add egg_yolk + egg_white on top. Unlike potato_peel.json, marked non-reusable: no fry/mix-equivalent reuse path modeled for it."
+    "notes": "The one byproduct common to both of egg.json's spawning actions — PEEL (shell off a boiled egg) and SEPARATE (cracking a raw egg) — hence it's egg.json's flat producedByproducts fallback, with byproductsByAction only overriding SEPARATE to add egg_yolk + egg_white on top. Unlike potato_peel.json, marked non-reusable: no fry/mix-equivalent reuse path modeled for it.",
+    "allergensNote": "Added 2026-08-16 (ROADMAP.md's 'Allergens' gap). Deliberately empty, not inherited from egg.json: the shell (chemicalFormula CaCO3 above) is discarded, never eaten, and carries none of the actual allergenic proteins (ovalbumin/ovomucoid etc., present in the white/yolk) — 'this is a byproduct OF an allergen-containing entity' and 'this itself carries the allergen' are genuinely different questions, and this is the one entity in the egg family where they diverge. Contrast egg_cracked.json/egg_yolk.json/egg_white.json, which DO inherit 'egg' — they're the parts actually eaten."
   }
 }

@@ -23,6 +23,7 @@
       "note": "Same caveat as potato.json/garlic.json — not checked against the exact current FDC entry; onion composition also varies by variety (yellow/white/red/sweet) and storage time, same as garlic's cultivar caveat."
     }
   },
+  "allergens": [],
   "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "burned", "overcooked"],
   "possibleTags": ["salted"],
   "allowedTransformations": ["peel", "cut", "grate", "boil", "fry", "bake", "caramelize", "salt", "combine_potato_onion"],

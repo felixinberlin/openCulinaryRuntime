@@ -7,6 +7,7 @@ import {
   StructureSchema,
   QuantitySchema,
   YieldFractionSchema,
+  AllergenSchema,
   isTerminalState,
 } from "../src/ingredient.ts";
 import { makeEntity } from "./helpers.ts";
@@ -73,6 +74,29 @@ describe("YieldFractionSchema", () => {
 
   test("requires a citation and ofParentEntityId — not silently optional", () => {
     assert.throws(() => YieldFractionSchema.parse({ min: 0.1, max: 0.2 }));
+  });
+});
+
+// AllergenSchema — 2026-08-16, ROADMAP.md's "Allergens" gap.
+describe("AllergenSchema", () => {
+  test("accepts every one of the FDA's 'Big 9'", () => {
+    for (const a of ["milk", "egg", "fish", "crustacean_shellfish", "tree_nuts", "peanuts", "wheat", "soybeans", "sesame"]) {
+      assert.doesNotThrow(() => AllergenSchema.parse(a));
+    }
+  });
+
+  test("rejects an unrecognized string — not an open vocabulary like capabilities", () => {
+    assert.throws(() => AllergenSchema.parse("gluten"));
+    assert.throws(() => AllergenSchema.parse("celery")); // real EU allergen, deliberately not in this repo's FDA-based list
+  });
+
+  test("EntitySchema.allergens defaults to an empty array, and an empty array is a valid, real claim", () => {
+    const e = makeEntity({ id: "water" });
+    assert.deepEqual(e.allergens, []);
+  });
+
+  test("EntitySchema.allergens rejects a value outside the enum", () => {
+    assert.throws(() => makeEntity({ id: "mystery", allergens: ["gluten"] as any }));
   });
 });
 

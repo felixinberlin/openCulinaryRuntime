@@ -22,6 +22,7 @@
       "note": "Same caveat as potato.json/garlic.json — this repo has not looked up the exact current FDC entry/ID to confirm the precise values."
     }
   },
+  "allergens": [],
   "possibleStates": ["whole", "cracked", "ground"],
   "possibleTags": [],
   "allowedTransformations": ["crush"],

@@ -22,6 +22,7 @@
       "note": "Same caveat as egg.json — not checked against the exact current FDC entry."
     }
   },
+  "allergens": ["egg"],
   "possibleStates": ["raw", "blended"],
   "possibleTags": ["pasteurized"],
   "allowedTransformations": ["mix", "pasteurize"],

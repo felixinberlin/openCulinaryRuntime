@@ -77,6 +77,19 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   Implemented as `requiredHoldSeconds` in `src/thermal.ts`, with its own
   stated validity condition (product must reach medium temperature quickly
   — thin/liquid/well-mixed, no insulating barrier).
+- **Food Allergen Labeling and Consumer Protection Act (FALCPA), 2004** —
+  named 8 major food allergens (milk, egg, fish, crustacean shellfish, tree
+  nuts, peanuts, wheat, soybeans) — and the **Food Allergy Safety,
+  Treatment, Education, and Research (FASTER) Act, signed 2021-04-23,
+  effective 2023-01-01** — added sesame as the 9th. Together, the FDA's
+  "Big 9." Used in `src/ingredient.ts`'s `AllergenSchema`/
+  `EntitySchema.allergens` (added 2026-08-16, `ROADMAP.md`'s "Allergens"
+  gap). Confidence: `standard_reference` — real, checkable U.S. federal
+  law, verified via direct lookup 2026-08-16 (FDA's own published FASTER
+  Act summary), not recalled. The EU's wider 14-allergen list (Regulation
+  (EU) 1169/2011 Annex II) is a real, cited, deliberately NOT-modeled
+  alternative — see `AllergenSchema`'s own doc comment for why the FDA
+  list was chosen instead, despite this repo's Spanish/EU-leaning dishes.
 
 ## Physical constants & composition data
 

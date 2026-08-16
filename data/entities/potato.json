@@ -21,6 +21,7 @@
       "note": "Figures are in the range USDA FoodData Central publishes for raw potato — this repo has not looked up the exact current FDC entry/ID to confirm the precise values, and potato composition genuinely varies by cultivar (see garlic.json's cultivar note for the same caveat on a different crop)."
     }
   },
+  "allergens": [],
   "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "par_fried", "fried", "baked", "mashed", "burned", "overcooked"],
   "possibleTags": ["washed", "salted", "peppered", "chili_seasoned", "acidified", "rested"],
   "allowedTransformations": ["wash", "peel", "cut", "grate", "boil", "simmer", "par_fry", "fry", "bake", "mash", "salt", "pepper", "chili", "acid", "combine", "combine_potato_onion", "rest"],

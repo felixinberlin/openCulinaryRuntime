@@ -696,3 +696,89 @@ was made. Don't rewrite or delete old entries — append.
   physically honest comparison — "hot enough or hotter" is what actually
   matters for frying, unlike BOIL's "must have reached the one specific
   temperature water can't exceed while still liquid."
+
+### `actionKind: "instantaneous" | "continuous"` — auditing all 32 actions found the model's real one-shot boundary
+
+- **A user-supplied paper read (`PAPER_NOTES_2608.04768.md`, analyzing Song
+  et al., arXiv:2608.04768) named a distinction this repo had already been
+  working around, unnamed, in two places — worth recording as a pattern:
+  independently-arrived-at convergent structure is a strong signal to
+  formalize a concept, not just a nice-to-have citation.** `place.ts`'s own
+  top doc comment (2026-08-14) already argued `advanceTempSeconds` is a
+  continuous elapsed-time process that `applyAction`'s one-shot
+  instantaneous-transition shape doesn't fit — that's WHY today's earlier
+  PLACE-wiring work (`fill`/`place_in`/`heat_place`) landed as new handling
+  in `recipe-runner.ts`, not inside `applyAction` itself. The paper reaches
+  the identical split from the hardware side, describing generated robot
+  control code as `Step(Pulse, Await(Enter))` vs. `Step(Continuous,
+  Until(Condition)) with Timeout(...)`. Neither this repo nor that paper
+  borrowed the idea from the other; two independent derivations meeting in
+  the middle is real evidence the split is structural, not a local
+  modeling artifact of either system.
+- **The audit ("classify all 32 actions individually, do not batch-assign
+  by pattern match") surfaced something more useful than a clean
+  taxonomy: most of this repo's non-thermal mechanical verbs are LESS
+  physically honest than the cooking verbs, not more.** Of the 10 actions
+  that looked genuinely ambiguous going in, 9 resolved to `continuous` —
+  meaning the paper's test (does it evolve over time toward an observable
+  termination condition) and the engine's test (does `applyAction` model
+  elapsed time at all) DISAGREED for nearly every one of them, and every
+  disagreement was resolved toward the paper's test (the physical truth),
+  per the ticket's explicit rule. The full list, with the specific
+  reasoning that made each one land where it did (`actionKindNote` in each
+  file has the complete version):
+  - **`beat`** — the paper's own literal worked example. "Beat until
+    uniform" is real stirring with a real visual termination; `applyAction`
+    fires the instant preconditions pass. Textbook disagreement.
+  - **`mix`**, **`emulsify`** — same shape as `beat`, both genuinely
+    continuous processes (`emulsify` the clearest of all: `oilAdditionRate`
+    AND `durationSeconds` both exist specifically because oil is added
+    gradually WHILE whisking continues).
+  - **`scramble`** — combines the paper's two continuous examples
+    (heating AND stirring) at once; unsurprising once named, since
+    `SCRAMBLE` was originally split from `FRY` specifically for its
+    continuous agitation.
+  - **`mash`**, **`crush`**, **`grate`** — all three are repeated
+    mechanical actions toward an open-ended TEXTURE/FINENESS THRESHOLD
+    ("no intact pieces remain," "resistance drops to near-zero," "no
+    intact slices remaining") — a real accumulating process, the same
+    shape as stirring, not a fixed predetermined count of motions.
+  - **`dissolve`** — a real, passive, elapsed-time diffusion process
+    (crystals don't dissolve instantly) with a real observable
+    termination — continuous, but a genuinely distinct AMBIENT sub-case
+    (nobody is actively driving it) worth naming rather than blurring
+    into the actively-agitated cases above.
+  - **`shock`** — named directly in `PAPER_NOTES_2608.04768.md` as the
+    "mirror case" of `beat`: thermally time-dependent cooling in reality
+    (the reverse of `heat_place`'s warming), one-shot (`addsTag` only) in
+    the model.
+  - **`cut`** — the one ambiguous action that, once actually examined, was
+    NOT a real disagreement: both tests agree `instantaneous`. It looks
+    like `mash`/`grate` (repeated tool strokes) but is genuinely different
+    — cutting targets a FIXED, predetermined shape via a bounded number of
+    strokes, not an open-ended "keep going until X" threshold. Worth
+    recording as its own finding: an action can survive careful
+    re-examination as NOT ambiguous after all, and the reasoning for why
+    it isn't (the bounded-target-vs-open-threshold distinction) is more
+    useful than the classification alone — it's what makes `grate`'s own
+    classification defensible too, by contrast.
+- **The correspondence check (every `manual_confirmation`-verified action
+  should be `instantaneous`; every `thermal`-verified action should be
+  `continuous`) held for all 32 with zero violations, once `shock` was
+  correctly classified `continuous`** — worth recording precisely because
+  it's a clean result: `scripts/validate.ts` now checks this automatically
+  going forward (a soft `NOTE`, not a hard fail — a future action could
+  have a real reason to break the pattern) so this isn't just a
+  point-in-time finding.
+- **This field changes zero engine behavior.** Every action still executes
+  as one atomic `applyAction` call regardless of `actionKind` — the field
+  is classification and an honest-gap inventory, surfaced in
+  `recipe-explain.ts`'s pre-flight report (`npm run validate-recipe`) for
+  visibility, not wired into `runRecipe`'s dispatch. That's a deliberate,
+  smaller scope than it might look — `place.ts`'s `advanceTempSeconds`/
+  `heat_place` remain the ONLY place this repo's actual behavior matches
+  `continuous`; every other `continuous`-classified action (`boil`,
+  `fry`, `beat`, `mash`, ...) is still executed as a single instantaneous
+  state transition today. The field makes that gap nameable and greppable
+  ("which actions claim to be continuous but aren't modeled that way yet"
+  is now a real query against `data/actions/*.json`), not closed.

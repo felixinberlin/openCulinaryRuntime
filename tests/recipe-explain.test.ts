@@ -361,3 +361,63 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     assert.match(hit!, /"halved" piece/);
   });
 });
+
+// actionKinds — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 1. Display-only:
+// does not affect any other report section or runRecipe's own behavior.
+describe("explainRecipe — actionKinds", () => {
+  const water = makeEntity({ id: "water", capabilities: { isBoilingMedium: true } });
+  const egg = makeEntity({ id: "egg", capabilities: { isBoilable: true } });
+  const boil = makeAction({
+    id: "boil",
+    actionKind: "continuous",
+    requiredIngredientCapabilities: ["isBoilingMedium"],
+    outputs: { transformedState: "boiled" },
+  });
+  const salt = makeAction({ id: "salt", actionKind: "instantaneous", outputs: { addsTag: "salted" } });
+  const undated = makeAction({ id: "undated", outputs: {} }); // no actionKind set at all
+  const entities = new Map([
+    ["water", water],
+    ["egg", egg],
+  ]);
+  const actions = new Map([
+    ["boil", boil],
+    ["salt", salt],
+    ["undated", undated],
+  ]);
+
+  test("reports each step's actionKind, in sequence order, aligned with stepIndex", () => {
+    const recipe = makeRecipe({
+      initialInventory: [
+        { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+        { id: "water-1", entityId: "water", state: "cold", tags: [] },
+      ],
+      sequence: [
+        { actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: ["water-1"] },
+        { actionId: "salt", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] },
+      ],
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.deepEqual(report.actionKinds, [
+      { stepIndex: 0, actionId: "boil", actionKind: "continuous" },
+      { stepIndex: 1, actionId: "salt", actionKind: "instantaneous" },
+    ]);
+  });
+
+  test("an action with no actionKind set at all reports null, not a silent guess", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
+      sequence: [{ actionId: "undated", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.deepEqual(report.actionKinds, [{ stepIndex: 0, actionId: "undated", actionKind: null }]);
+  });
+
+  test("an unknown actionId is skipped (runRecipe's job to reject, not this report's)", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
+      sequence: [{ actionId: "nonexistent", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.deepEqual(report.actionKinds, []);
+  });
+});

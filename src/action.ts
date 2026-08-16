@@ -253,6 +253,75 @@ export const ActionSchema = z.object({
   outputs: ActionOutputsSchema,
   duration: z.enum(["fixed", "variable"]).default("variable"),
   precision: z.enum(["required", "optional"]).default("optional"),
+  /**
+   * Is this verb a one-off operation (instantaneous) or one that evolves
+   * over real elapsed time and terminates on an observable condition
+   * (continuous)? Added 2026-08-16 in direct response to Song, Huang, Sun,
+   * Tian, Wang & Li, "Embedding Large Language Models into Flow Controls,"
+   * arXiv:2608.04768 (2026) — see `PAPER_NOTES_2608.04768.md` TICKET 1,
+   * `REFERENCES.md`. That paper's generated control code renders the
+   * identical split independently, from the hardware side, as
+   * `Step(Pulse, Await(Enter))` vs. `Step(Continuous, Until(Condition))
+   * with Timeout(...)`: "Instantaneous actions correspond to one-off
+   * operations whose completion cannot be reliably sensed, such as
+   * ignition or ingredient addition, and are executed once before
+   * proceeding. Continuous actions correspond to operations that evolve
+   * over time, such as stirring or heating, and are expressed using
+   * explicit do–until constructs." Two independent derivations of the same
+   * distinction (this repo's own `place.ts`/`recipe-runner.ts` split
+   * arrived here first, unnamed, from the simulation side — see
+   * `place.ts`'s own top doc comment) is a real signal this is structure,
+   * not a local modeling artifact — see `LEARNINGS_ENGINE.md` 2026-08-16.
+   *
+   * TWO DISCRIMINATORS, WHICH CAN GENUINELY DISAGREE — every `data/actions/
+   * *.json` file's own `metadata.actionKindNote` states which was applied
+   * and why, per-action, not by pattern-matching a category:
+   * - The paper's test: does the action have an observable sensory
+   *   termination condition it evolves toward, or is it fire-and-forget?
+   * - This engine's test: does the action's effect actually depend on
+   *   elapsed time or a `PlaceState` temperature in `applyAction`/
+   *   `recipe-runner.ts` today?
+   * Where they disagree (e.g. BEAT: continuous by the paper's test — real
+   * stirring, a real visual until-uniform termination — but `applyAction`
+   * fires its effect the instant preconditions pass, with no elapsed-time
+   * term at all, so instantaneous by the engine's test), this field is set
+   * by the PAPER's test — the physical truth — not the engine's current
+   * (admittedly narrower) behavior. That makes every such entry a real,
+   * honest, searchable inventory of exactly where this engine's one-shot
+   * `applyAction` model still departs from physical reality, which is more
+   * valuable than a classification that always agrees with what's already
+   * built.
+   *
+   * ADJACENT TO BUT NOT THE SAME QUESTION AS `duration` ABOVE: `variable`
+   * means "how long this takes is not fixed"; `continuous` means "the
+   * effect accumulates over elapsed time and terminates on a condition."
+   * `cut` is `duration: "variable"` (a potato's size affects how long
+   * cutting takes) AND `actionKind: "instantaneous"` (a bounded, discrete
+   * number of tool-strokes toward a FIXED target shape, not an open-ended
+   * do-until threshold — see `cut.json`'s own note for the direct contrast
+   * against `mash`/`grate`, which look similarly repeated/mechanical but
+   * are genuinely different). Keep both fields; do not overload `duration`
+   * or attempt to derive one from the other.
+   *
+   * Optional, not defaulted — a missing value means "not yet audited,"
+   * the same precedent `retrySafe` sets in its own doc comment below. A
+   * silent wrong default here (e.g. defaulting to "instantaneous," which
+   * matches `applyAction`'s actual current behavior for every action) would
+   * be worse than an absent field: it would quietly assert every future
+   * verb is physically one-shot, foreclosing exactly the honest-gap
+   * inventory this field exists to build. Every action in this repo has
+   * been individually classified as of 2026-08-16 (`LEARNINGS_ENGINE.md`
+   * same date) — but do not assume that stays true for a NEW action added
+   * later without checking.
+   *
+   * Does NOT change `applyAction`'s semantics at all — every action still
+   * executes as one instantaneous state transition regardless of this
+   * field's value; see `recipe-runner.ts`'s own top doc comment for the one
+   * place (`heat_place`, and the opt-in `params.placeId` check on
+   * `boil`/`simmer`/`fry`) where the engine's ACTUAL behavior already
+   * matches `continuous`, and everywhere else where it does not yet.
+   */
+  actionKind: z.enum(["instantaneous", "continuous"]).optional(),
   /** How a machine would confirm this action's effect actually happened —
    *  see VerificationCriterionSchema's doc comment. Optional (existing
    *  actions predate this field), but every action added or touched from

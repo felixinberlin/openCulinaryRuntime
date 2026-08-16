@@ -18,9 +18,11 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "The worked example from CONCEPT.md §5 ('World Layer understands PEEL, requires: knife, creates: peeled potato, potato peel'). Byproducts are read from the target entity's producedByproducts, not hardcoded here — see ActionOutputsSchema. CORRECTED 2026-08-15: this note used to also cite CLAUDE_DEV_CTX.md's 'you cannot peel a potato that is already boiled' as a real constraint — that claim is factually wrong (boil-in-jacket-then-peel is a real, common technique, e.g. for potato salad), caught on direct user correction the same day ingredient.ts's invalidTransitions was built to enforce it. Never actually enforced against that specific claim; see potato.json's invalidTransitionsNote for what IS enforced instead.",
-    "retrySafeNote": "retrySafe: FALSE — a real, concrete finding, not a cautious default. PEEL neither destroysTarget nor has a statePrerequisite blocking re-running it on an already-peeled target: a blind retry after an interruption would spawn a SECOND potato_peel/egg_shell byproduct instance that doesn't physically exist — you cannot peel a potato twice and get two peels. A robot's fault-recovery layer must check current state before retrying PEEL specifically, not just re-issue the last step."
+    "retrySafeNote": "retrySafe: FALSE — a real, concrete finding, not a cautious default. PEEL neither destroysTarget nor has a statePrerequisite blocking re-running it on an already-peeled target: a blind retry after an interruption would spawn a SECOND potato_peel/egg_shell byproduct instance that doesn't physically exist — you cannot peel a potato twice and get two peels. A robot's fault-recovery layer must check current state before retrying PEEL specifically, not just re-issue the last step.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off act as currently modeled (no elapsed-time/PlaceState dependence, no do-until termination); both discriminators agree."
   },
   "verification": {
     "method": "visual",

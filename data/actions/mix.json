@@ -19,9 +19,11 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "continuous",
   "metadata": {
     "notes": "One of CONCEPT.md §10's Event System verbs (PICK_UP, DROP, CUT, MOVE, HEAT, WAIT, MIX). potato_peel.json is the first entity to declare isBlendable — a second reuse path alongside FRY (data/actions/fry.json): peels can be fried into crisps or put in a mixer instead of being discarded.",
-    "retrySafeNote": "retrySafe: true — further mixing an already-blended target is physically continuous, not a discrete duplication risk."
+    "retrySafeNote": "retrySafe: true — further mixing an already-blended target is physically continuous, not a discrete duplication risk.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same shape of disagreement as beat.json — visual, until-texture-uniform termination (verification.description: 'no distinct unblended chunks remaining') is a real do-until process by the paper's test, matching 'stirring' closely. DISAGREES with the engine's test (applyAction is one-shot, no duration parameter exists at all). Classified continuous per TICKET 1's rule."
   },
   "verification": {
     "method": "visual",

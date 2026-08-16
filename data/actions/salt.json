@@ -34,10 +34,12 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "Uses outputs.addsTag, not transformedState: a boiled potato that gets salted is still boiled, just also salted now — the two coexist, unlike boiled vs. fried which are mutually exclusive states. requiredIngredientCapabilities: isSaltySeasoning (renamed from the generic isSeasoning 2026-08-13, when pepper.json/chili.json were added as sibling seasoning verbs — see salt.json entity's capabilityNote for why generic isSeasoning would have silently accepted pepper/chili flakes as satisfying this check once they also declared it).",
     "timingNote": "Salting before vs. during vs. after cooking is NOT the same outcome chemically, and this parameter does not pretend it is: salting BEFORE a fry draws surface moisture out via osmosis ahead of time (less oil spatter, drier surface, faster/more even Maillard browning) but also gives salt time to diffuse into the flesh, not just sit on top; salting AFTER is purely a surface seasoning with zero effect on the cook itself; DURING sits somewhere between the two depending on when exactly. Added informational-only, same limits and same reasoning as fry.json's heatLevel/doneness/agitation (see that file's parameterNotes): outputs.addsTag stays a flat boolean-ish tag regardless of timing — there is no moisture/osmosis simulation here, and no distinct 'salted_before_cook' vs 'salted_after_cook' state. This records WHAT was asked for/done, for provenance and recipe-authoring clarity; it does not feed back into FRY's outcome (doneness, edgeStyle, verification) at all, even though in reality it should. A real fix would need FRY itself to read a moisture/salting-history signal — out of scope here, flagged rather than silently implied to already work.",
-    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect."
+    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): verification.method is already manual_confirmation — precisely the paper's own instantaneous class ('completion cannot be reliably sensed, such as ignition or ingredient addition'). Both discriminators agree; no disagreement to record."
   },
   "verification": {
     "method": "manual_confirmation",

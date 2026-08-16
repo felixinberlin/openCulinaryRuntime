@@ -5,9 +5,13 @@
     "en": "Bake",
     "es": "Hornear"
   },
-  "requiredTools": ["oven"],
+  "requiredTools": [
+    "oven"
+  ],
   "requiredTargetCapability": "isBakeable",
-  "validTargetKinds": ["ingredient"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "requiredIngredientCapabilities": [],
   "parameters": [],
   "outputs": {
@@ -16,9 +20,11 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "continuous",
   "metadata": {
     "notes": "Dry heat: unlike FRY/BOIL, no medium ingredient is required at all — requiredIngredientCapabilities is deliberately empty, not just satisfied by something ambient.",
-    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but re-baking an already-done target risks drying it out/overcooking, same culinary caveat as fry.json/boil.json's cooking actions."
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — but re-baking an already-done target risks drying it out/overcooking, same culinary caveat as fry.json/boil.json's cooking actions.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, in an oven rather than a liquid/oil medium — a real, elapsed-time thermal process. No place.ts/oven wiring exists at all yet (oven.json has no thermophysical data) — applyAction executes it atomically today, an honest gap this field makes explicit rather than hides."
   },
   "verification": {
     "method": "thermal",
@@ -26,7 +32,11 @@
     "confidence": "low"
   },
   "hazards": [
-    { "type": "hot_surface", "severity": "high", "note": "Oven cavity and bakeware — sustained high-temperature contact burn risk, worse than a stovetop pan (larger hot surface, less visibility of what's inside)" }
+    {
+      "type": "hot_surface",
+      "severity": "high",
+      "note": "Oven cavity and bakeware — sustained high-temperature contact burn risk, worse than a stovetop pan (larger hot surface, less visibility of what's inside)"
+    }
   ],
   "retrySafe": true
 }

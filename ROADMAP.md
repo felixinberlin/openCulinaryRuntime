@@ -1113,6 +1113,39 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       scoped cross-contamination/hygiene gap below (danger to the FOOD
       from equipment/surface reuse) — that still needs a genuinely
       different mechanism, per that section's own note.
+- [x] **`actionKind: "instantaneous" | "continuous"` — closed 2026-08-16,
+      directly implementing TICKET 1 of a user-supplied paper read
+      (`PAPER_NOTES_2608.04768.md`, analyzing Song, Huang, Sun, Tian, Wang
+      & Li, arXiv:2608.04768 — see `REFERENCES.md`).** Names, in
+      `action.ts`'s schema, a distinction this repo had already been
+      working around unnamed: `place.ts`/`recipe-runner.ts`'s split
+      between one-shot `applyAction` and the elapsed-time `HEAT_PLACE` tick
+      loop (`ROADMAP.md`'s "Heat as a shared, time-varying property of a
+      PLACE" entry, closed earlier the same day) IS this same distinction,
+      arrived at independently from the simulation side; the paper
+      reaches it from the hardware side (`Step(Pulse, Await(Enter))` vs.
+      `Step(Continuous, Until(Condition)) with Timeout(...)`). All 32
+      `data/actions/*.json` individually classified and audited (not
+      pattern-matched) with a `metadata.actionKindNote` each — 9 actions
+      resolved to `continuous` specifically because the paper's test
+      (real, elapsed-time process with an observable termination) and the
+      engine's test (does `applyAction` model elapsed time) genuinely
+      DISAGREED, and the disagreement was recorded rather than smoothed
+      over (`beat`, `mix`, `scramble`, `mash`, `crush`, `emulsify`,
+      `dissolve`, `grate`, `shock` — full reasoning in
+      `LEARNINGS_ENGINE.md` 2026-08-16). Changes ZERO engine behavior —
+      `applyAction` still executes every action atomically regardless of
+      this field; it's surfaced read-only in `recipe-explain.ts`'s
+      pre-flight report (`npm run validate-recipe`) and cross-checked
+      (soft `NOTE`, not a hard fail) in `scripts/validate.ts` against each
+      action's own `verification.method` (every `manual_confirmation`
+      action should be `instantaneous`, every `thermal` action should be
+      `continuous` — held for all 32 with zero violations). The honest
+      takeaway, not overstated: this field is a real, searchable INVENTORY
+      of where this engine's one-shot model departs from physical reality
+      (most of this vocabulary's mixing/mechanical verbs, now nameable),
+      not a fix for any of them — `heat_place` remains the only action
+      where `continuous` is already matched by real engine behavior.
 - [x] **`state` vs. `tags` modeling fix for `WASH` — closed 2026-08-15,
       found by a user correction, not self-discovered.** After the fix
       above, the user pointed out the wash/peel/cut order itself wasn't

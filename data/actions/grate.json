@@ -18,10 +18,12 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "continuous",
   "metadata": {
     "notes": "Added 2026-08-13, deliberately its own verb/tool rather than a sixth value on CUT's 'shape' parameter — a box grater shreds by friction against a grating surface, physically nothing like a knife's slicing motion CUT models (data/entities/grater.json's own notes). Fixed transformedState (not transformedStateFromParameter, unlike CUT/CRUSH) since GRATE only ever produces one shape here — no 'coarse vs. fine' grate distinction is modeled, unlike CRUSH's fineness parameter, a real depth limit named rather than silently implied absent.",
     "hashBrownsNote": "The real reason this verb exists: hash browns and rösti both start from grated (not sliced/diced) potato — a genuinely different piece shape with a different cooking behavior (much more exposed surface area, cooks fast, binds into a cake via its own released starch rather than staying separate pieces). See potato.json's gratedNote for the rinsed-vs-unrinsed technique distinction this schema does not model.",
-    "retrySafeNote": "retrySafe: true — re-grating already-grated potato is physically continuous, not a discrete duplication risk, same reasoning as CUT's/MASH's identical flag."
+    "retrySafeNote": "retrySafe: true — re-grating already-grated potato is physically continuous, not a discrete duplication risk, same reasoning as CUT's/MASH's identical flag.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): unlike cut.json, GRATE is a real do-until process — you keep drawing the potato across the grater until NOTHING WHOLE REMAINS (verification.description), an open-ended threshold, not a fixed predetermined stroke count producing one specific target shape. Same accumulating-process shape as mash.json/crush.json. DISAGREES with the engine's test (applyAction one-shot). Classified continuous per TICKET 1's rule — see cut.json's own note for the contrast this pair makes explicit."
   },
   "verification": {
     "method": "visual",

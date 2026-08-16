@@ -65,4 +65,16 @@ describe("ActionSchema", () => {
     assert.deepEqual(a.hazards, []);
     assert.deepEqual(a.validTargetKinds, ["ingredient"]);
   });
+
+  // actionKind — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 1.
+  test("actionKind is optional and undefined by default — a missing value means 'not yet audited', not a silent default", () => {
+    const a = ActionSchema.parse({ ...base, names: { en: "Peel" } });
+    assert.equal(a.actionKind, undefined);
+  });
+
+  test("actionKind accepts 'instantaneous' or 'continuous', rejects anything else", () => {
+    assert.doesNotThrow(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "instantaneous" }));
+    assert.doesNotThrow(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "continuous" }));
+    assert.throws(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "variable" }));
+  });
 });

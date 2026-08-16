@@ -6,30 +6,51 @@
     "es": "Colocar en"
   },
   "requiredTools": [],
-  "requiredToolCapabilities": ["isVessel"],
-  "validTargetKinds": ["ingredient"],
+  "requiredToolCapabilities": [
+    "isVessel"
+  ],
+  "validTargetKinds": [
+    "ingredient"
+  ],
   "parameters": [
     {
       "id": "placeId",
-      "names": { "en": "Place id", "es": "Id del lugar" },
+      "names": {
+        "en": "Place id",
+        "es": "Id del lugar"
+      },
       "required": true,
-      "allowedValues": ["pot-1", "pot-2", "pan-1", "pan-2"]
+      "allowedValues": [
+        "pot-1",
+        "pot-2",
+        "pan-1",
+        "pan-2"
+      ]
     },
     {
       "id": "placementMethod",
-      "names": { "en": "Placement method", "es": "Método de colocación" },
+      "names": {
+        "en": "Placement method",
+        "es": "Método de colocación"
+      },
       "required": false,
-      "allowedValues": ["dropped", "lowered_by_hand", "lowered_with_spoon"]
+      "allowedValues": [
+        "dropped",
+        "lowered_by_hand",
+        "lowered_with_spoon"
+      ]
     }
   ],
   "outputs": {},
   "duration": "fixed",
   "precision": "required",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "Added 2026-08-16, alongside fill.json/heat_place.json — the second half of ROADMAP.md's 'no FILL/PLACE verb' gap. Deliberately does NOT transform the placed instance's own state/tags (outputs: {} — no transformedState) — being physically located in a place is orthogonal to being cooked; a later BOIL/SIMMER/FRY step against the same instance still does the actual cooking transition, exactly as it did before this action existed. What this DOES do, handled specially by src/recipe-runner.ts (not via engine.ts's applyAction): record co-location in a runner-local placeContents map, the concrete mechanism behind boil.json/simmer.json's own 'two ingredients in the same pot share one heat' gap.",
     "placementMethodNote": "Same parameter/allowedValues as boil.json's/simmer.json's identically-named placementMethod (see those files' own placementMethodNote for the full three-mechanism crack-risk reasoning) — promoted here to the action that actually models the physical moment of entry into the vessel, rather than being informational-only on the LATER cooking action. boil.json/simmer.json keep their own placementMethod parameter unchanged for recipes that don't use PLACE_IN at all — this isn't a replacement, it's the same real fact recordable at the more physically accurate step for recipes that DO use places.",
     "sequencingNote": "PLACE_IN before HEAT_PLACE vs. HEAT_PLACE before PLACE_IN is now literally boil.json's startMethod distinction (cold_start vs. boiling_start) made expressible as real step ORDER for the first time, not just an informational parameter string — see scripts/ for a capability test proving both orders against the identical place/heat mechanism.",
-    "toolCapabilityNote": "requiredToolCapabilities generalized from [isDeepVessel] to [isVessel] 2026-08-16, the same day, once FRY's oil-into-a-pan case needed it: PLACE_IN's own physical requirement is only 'this vessel actually holds something to be placed into,' not 'is it deep enough to submerge food' (that's BOIL/SIMMER's own concern, unrelated to PLACE_IN itself) — see pot.json's isVesselNote."
+    "toolCapabilityNote": "requiredToolCapabilities generalized from [isDeepVessel] to [isVessel] 2026-08-16, the same day, once FRY's oil-into-a-pan case needed it: PLACE_IN's own physical requirement is only 'this vessel actually holds something to be placed into,' not 'is it deep enough to submerge food' (that's BOIL/SIMMER's own concern, unrelated to PLACE_IN itself) — see pot.json's isVesselNote.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off placement (src/recipe-runner.ts's handlePlaceIn runs once) — the paper's own 'ingredient addition' example. Both discriminators agree."
   },
   "verification": {
     "method": "visual",

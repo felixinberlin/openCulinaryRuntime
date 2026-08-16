@@ -429,6 +429,35 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   else: it genuinely informed this repo's design discussion, even though no
   code or data currently encodes it.
 
+## Robotic / automated cooking systems
+
+Kept separate from every section above on purpose (per this section's own
+first entry) — this is systems/robotics literature, not food-safety or
+physics, and citing it here rather than mixed into those sections avoids
+it ever being mistaken for a safety citation.
+
+- **Song, Huang, Sun, Tian, Wang & Li, "Embedding Large Language Models
+  into Flow Controls: An Agentic Framework for Adaptive and Trustworthy
+  Automated Cooking"** — arXiv:2608.04768 (cs.CV), August 2026 —
+  https://arxiv.org/abs/2608.04768. A physical wok-robot system: LLM-driven
+  recipe generation staged into explicit flow-control code over a fixed
+  atomic-action library, executed under closed-loop multimodal sensing.
+  Read in full 2026-08-16 against this repo's actual HEAD (not just the
+  abstract) — see `PAPER_NOTES_2608.04768.md` for the complete
+  implementation-ticket analysis this citation supports. Cited for: the
+  **instantaneous/continuous action split** (`action.ts`'s `actionKind`
+  field, `data/actions/*.json`'s `actionKindNote` on all 32 actions,
+  `LEARNINGS_ENGINE.md` 2026-08-16) — this repo's own `place.ts`/
+  `recipe-runner.ts` had already arrived at the identical split
+  independently, unnamed, from the simulation side; this paper reaches it
+  from the hardware side, real convergent evidence rather than a borrowed
+  framework. Confidence: `commonly_cited_unverified` — a preprint, not
+  peer-reviewed; see `PAPER_NOTES_2608.04768.md` §6 for specific,
+  independently-checked reasons for caution about OTHER claims in this
+  same paper (a real arithmetic looseness in its reported percentage
+  improvements; an introduced-but-never-computed dataset-quality metric)
+  that this repo does not rely on and should not be read as endorsing.
+
 ## Simulation / robot-execution research
 
 Full comparison and sourcing already lives in `SIMULATION_TARGETS.md` —

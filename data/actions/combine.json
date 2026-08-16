@@ -21,11 +21,13 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "The first COMBINE-shaped action in this repo — engine.ts's requiredSecondaryCapability/secondaryInstance and ActionOutputsSchema.combinesInto (action.ts) were built specifically to make this possible, after ROADMAP.md's tortilla capability test proved no verb could merge two separate instances into one (see LEARNINGS.md 2026-08-12). Target (isCombinableBase, e.g. fried potato — already in the bowl/pan) + secondary (isCombinableAddition, e.g. beaten salted egg — poured over it) are BOTH consumed; one new tortilla_mixture instance is spawned in their place, same conservation-of-mass shape destroysTarget already uses, just for two instances at once.",
     "scopeNote": "requiredTargetCapability/requiredSecondaryCapability/combinesInto are all FIXED on this one action definition — this is one specific, named combination (potato + egg -> tortilla_mixture), not a generic 'merge any two isCombinable things' verb. That's a deliberate scope decision, not an oversight: making the result entity a runtime parameter (rather than fixed per action) would need a real pair -> result lookup system, a bigger design decision ROADMAP.md explicitly left open rather than resolving speculatively here. A future second use case (e.g. combining bread + filling for a sandwich) would define its own action the same way SCRAMBLE/POACH/EMULSIFY/INFUSE were each their own verb rather than parameterizing FRY further.",
     "toolNote": "requiredTools: ['bowl'] — pour the beaten egg over the fried potato in a bowl before returning the mixture to the pan, matching real technique and reusing the same tool BEAT already established rather than inventing a new one.",
-    "retrySafeNote": "retrySafe: true — but not because it's silently idempotent: destroysTarget means the target instance is already gone from inventory after a first success, so a blind retry fails loudly ('Unknown target instance') instead of duplicating anything."
+    "retrySafeNote": "retrySafe: true — but not because it's silently idempotent: destroysTarget means the target instance is already gone from inventory after a first success, so a blind retry fails loudly ('Unknown target instance') instead of duplicating anything.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off assembly of two instances into one (the paper's own 'ingredient addition' example, generalized to two ingredients merging); both discriminators agree."
   },
   "verification": {
     "method": "visual",

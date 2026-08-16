@@ -76,12 +76,27 @@ export interface IngredientReport {
   missing: { capability: string; candidates: string[] }[];
 }
 
+/** One `recipe.sequence` step's `actionKind` (action.ts, 2026-08-16,
+ *  PAPER_NOTES_2608.04768.md TICKET 1), surfaced here for visibility only —
+ *  per that ticket's own scoping, this does NOT change `runRecipe`'s
+ *  dispatch behavior at all; `null` means the referenced action predates
+ *  auditing and hasn't been classified (see `validate.ts`'s matching NOTE
+ *  check for the same "unaudited, not silently defaulted" signal). */
+export interface StepActionKind {
+  stepIndex: number;
+  actionId: string;
+  actionKind: "instantaneous" | "continuous" | null;
+}
+
 export interface RecipeExplanation {
   tools: ToolReport;
   ingredients: IngredientReport;
   /** Advisory strings — never errors, only guidance. */
   timingAdvisories: string[];
   prepAdvisories: string[];
+  /** actionKind for every step, in sequence order — see StepActionKind's
+   *  own doc comment for why this is display-only. */
+  actionKinds: StepActionKind[];
 }
 
 function candidatesForCapability(entities: Map<string, Entity>, capability: string, kind?: Entity["kind"]): string[] {
@@ -116,9 +131,13 @@ export function explainRecipe(
   // naturally skips it rather than needing special-case handling.
   const shapeByInstanceId = new Map<string, string>();
 
-  for (const step of recipe.sequence) {
+  const actionKinds: StepActionKind[] = [];
+
+  for (const [stepIndex, step] of recipe.sequence.entries()) {
     const action = actions.get(step.actionId);
     if (!action) continue; // unknown action ids are runRecipe's job to reject, not this report's
+
+    actionKinds.push({ stepIndex, actionId: step.actionId, actionKind: action.actionKind ?? null });
 
     for (const toolId of action.requiredTools) toolsNeeded.add(toolId);
     for (const cap of action.requiredToolCapabilities) toolCapsNeeded.add(cap);
@@ -302,5 +321,6 @@ export function explainRecipe(
     ingredients: { needed: [...ingredientCapsNeeded], missing: missingIngredientCapabilities },
     timingAdvisories,
     prepAdvisories,
+    actionKinds,
   };
 }

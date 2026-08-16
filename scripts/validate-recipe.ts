@@ -67,6 +67,13 @@ for (const { capability, candidates } of explanation.tools.missingCapabilities) 
   );
 }
 
+console.log(
+  "\nStep actionKind (instantaneous | continuous | unaudited — action.ts, PAPER_NOTES_2608.04768.md TICKET 1):"
+);
+for (const { stepIndex, actionId, actionKind } of explanation.actionKinds) {
+  console.log(`  [${stepIndex}] ${actionId}: ${actionKind ?? "unaudited"}`);
+}
+
 console.log(`\nIngredient capabilities needed: ${explanation.ingredients.needed.join(", ") || "(none)"}`);
 for (const { capability, candidates } of explanation.ingredients.missing) {
   console.log(

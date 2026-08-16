@@ -62,11 +62,13 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "continuous",
   "metadata": {
     "notes": "Cracked straight into barely-simmering water in a pan — the shallow-water technique (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell in a pot. requiredTools is 'pan', not 'pot': poaching is standardly done in a wide shallow pan, unlike in-shell boiling. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor.",
     "parameterNotes": "waterTempC's 70-100°C range deliberately excludes a full rolling boil as the intended target (100°C is the max only because water can't physically exceed it at sea-level pressure, not because it's recommended) — standard technique keeps poaching water at a bare simmer, ~85-95°C: a rolling boil's turbulence tears the white apart and can shatter the yolk. None of the parameters are state-determining. See egg.json's criticalControlPointsByAction for durationSeconds' actual safety-threshold check.",
     "yolkDonenessNote": "A poached egg is arguably ordered by yolk doneness even more consistently than a fried one — 'poached egg' alone usually implies runny by default in most kitchens. Same parameter, same allowedValues, same non-enforcement caveat as fry.json's yolkDonenessNote — added here rather than invented separately so the two actions stay directly comparable for this axis.",
-    "retrySafeNote": "retrySafe: true at the DATA/INVENTORY level only (no duplication, no engine error) — NOT a claim that repeating it is culinarily harmless. Re-running this on an already-finished result risks overcooking/over-working the actual dish, a real physical risk this schema-level flag can't and shouldn't paper over."
+    "retrySafeNote": "retrySafe: true at the DATA/INVENTORY level only (no duplication, no engine error) — NOT a claim that repeating it is culinarily harmless. Re-running this on an already-finished result risks overcooking/over-working the actual dish, a real physical risk this schema-level flag can't and shouldn't paper over.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process, matching the paper's 'heating' example. Not yet wired to place.ts/HEAT_PLACE (see ROADMAP.md) — applyAction executes it atomically today, an honest gap."
   },
   "verification": {
     "method": "visual",

@@ -161,6 +161,32 @@ for (const action of actions.items.values()) {
   if (action.retrySafe === undefined) {
     console.log(`NOTE actions/${action.id}.json: retrySafe not audited — is blindly re-running this after an interruption safe?`);
   }
+  // actionKind (action.ts, 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 1) —
+  // same "flag unaudited, don't fail" treatment as verification/retrySafe
+  // above, so a NEW action added later without classifying it is visible,
+  // not silently missed.
+  if (action.actionKind === undefined) {
+    console.log(`NOTE actions/${action.id}.json: actionKind not audited — one-off (instantaneous) or elapsed-time/do-until (continuous)?`);
+  } else {
+    // Soft correspondence check (TICKET 1 step 3): every manual_confirmation
+    // action is precisely the paper's "cannot be reliably sensed" class, and
+    // every thermal-verified action is a real elapsed-time heating/cooling
+    // process — a NOTE here means the two fields were set inconsistently,
+    // worth a human's attention, not necessarily wrong (a future action
+    // could have a real reason to break the pattern).
+    if (action.verification?.method === "manual_confirmation" && action.actionKind !== "instantaneous") {
+      console.log(
+        `NOTE actions/${action.id}.json: verification.method is manual_confirmation (the paper's own "cannot be reliably ` +
+          `sensed" class) but actionKind is "${action.actionKind}", not "instantaneous" — confirm this is deliberate.`
+      );
+    }
+    if (action.verification?.method === "thermal" && action.actionKind !== "continuous") {
+      console.log(
+        `NOTE actions/${action.id}.json: verification.method is thermal (a real elapsed-time heating/cooling process) but ` +
+          `actionKind is "${action.actionKind}", not "continuous" — confirm this is deliberate.`
+      );
+    }
+  }
 }
 
 for (const recipe of recipes.items.values()) {

@@ -20,9 +20,11 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "addsTag 'folded', mirroring FLIP's addsTag: 'flipped' and SALT's precedent — the classical French omelette's defining shape step (rolled/folded into an oval with a spatula, off or just at the end of heat), distinct from FRY itself. Not the Spanish tortilla francesa's usual presentation (typically served flat, unfolded) — see fry.json's internalTextureNote for that disambiguation. requiredTools 'pan' only, same as FLIP's toolAndTechniqueGap reasoning: doesn't gate on a specific utensil (spatula) since none is modeled as a distinct tool entity.",
-    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect."
+    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a bounded, discrete number of folding motions producing a fixed geometric result (like cut.json's shape target), not an open-ended do-until threshold; both discriminators agree."
   },
   "verification": {
     "method": "visual",

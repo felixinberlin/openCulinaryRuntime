@@ -34,9 +34,11 @@
   },
   "duration": "variable",
   "precision": "optional",
+  "actionKind": "instantaneous",
   "metadata": {
     "notes": "Third instance of the same SALT-shaped seasoning verb (see pepper.json's notes for why this stays a separate verb rather than one generalized SEASON action). verb: 'CHILI' rather than a single standard English cooking verb — 'to chili' isn't idiomatic the way 'to salt'/'to pepper' are — kept as a plain, consistent action id/verb pair anyway (this schema's verb field is a stable machine token, not required to be a dictionary verb; see names.en for the actual human-readable phrase).",
-    "timingNote": "Capsaicin (chili's heat compound) is fat/oil-soluble and fairly heat-stable compared to pepper's aromatic terpenes — chili added early to a step that includes oil (e.g. frying) has time to actually infuse its heat through the dish (the same isAromaticSource/INFUSE mechanism garlic-oil-potatoes.json already uses, just not yet wired for chili — see garlicReuseNote-style open-extension pattern), while chili added at the very end reads as more of a surface garnish. Purely informational here, same limits as every other timing-style parameter in this vocabulary."
+    "timingNote": "Capsaicin (chili's heat compound) is fat/oil-soluble and fairly heat-stable compared to pepper's aromatic terpenes — chili added early to a step that includes oil (e.g. frying) has time to actually infuse its heat through the dish (the same isAromaticSource/INFUSE mechanism garlic-oil-potatoes.json already uses, just not yet wired for chili — see garlicReuseNote-style open-extension pattern), while chili added at the very end reads as more of a surface garnish. Purely informational here, same limits as every other timing-style parameter in this vocabulary.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as salt.json — manual_confirmation verification matches the paper's instantaneous class exactly; both discriminators agree."
   },
   "verification": {
     "method": "manual_confirmation",

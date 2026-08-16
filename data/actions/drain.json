@@ -1,0 +1,54 @@
+{
+  "id": "drain",
+  "verb": "DRAIN",
+  "names": {
+    "en": "Drain",
+    "es": "Escurrir"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isDrainable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "parameters": [
+    {
+      "id": "method",
+      "names": {
+        "en": "Method",
+        "es": "Método"
+      },
+      "required": false,
+      "allowedValues": [
+        "wire_rack",
+        "paper_towel",
+        "colander_shake"
+      ]
+    }
+  ],
+  "outputs": {
+    "addsTag": "drained",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "Added 2026-08-16, closing a real, previously-missing step: crispy-french-fries.json and salted-fried-potatoes.json both went straight from FRY to SALT with nothing removing the clinging surface oil in between — real technique always drains fried food before seasoning (salt doesn't adhere well to an oily surface, and excess oil is unappetizing left on). REMOVE's own removalMethod parameter (data/actions/remove.json) already names 'poured_out'/'strainer_drain' as real draining techniques, but REMOVE only fires against an instance currently tracked inside a PLACE (recipe-runner.ts's placeContents) — most recipes in this vocabulary, including both forcing cases here, don't use the FILL/PLACE_IN/HEAT_PLACE machinery at all, so a PLACE-dependent verb would be unreachable for them. DRAIN is deliberately standalone, like REST — works on any isDrainable instance regardless of whether a place is involved.",
+    "methodNote": "Two genuinely different techniques with a REAL, cited outcome difference, not just presentation preference: 'wire_rack' (elevated over a tray, air circulates on all sides, oil drips away) preserves crispness — draining on flat 'paper_towel' instead traps steam against the food's underside (limited surface area for oil to actually leave, and once the towel saturates the food sits in a shallow pool of its own drained oil), producing a real, commonly-observed soggy-bottom result the wire-rack method avoids. See REFERENCES.md — multiple convergent consumer food-science sources corroborate the STEAM-TRAPPING mechanism; a specific 'X% oil reduction' figure was found during research but not used here, being an isolated, unsourced number from a low-confidence source, not corroborated elsewhere. 'colander_shake' is the bulk, coarser equivalent (a whole batch shaken in a colander/strainer at once) rather than individual-piece technique — informational only, same non-enforcement depth as every other categorical parameter in this vocabulary.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a bounded, discrete act (lift and shake, or set down on a rack/towel) — the same class as PEEL/CUT, not an open-ended do-until process like REST. Real elapsed draining time varies (seconds to a couple of minutes) but the ACT itself is a one-off, not a continuously-monitored threshold.",
+    "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates, so re-running this after an interruption is a silent no-op, not a double effect, the same reasoning INFUSE/REST already document for their own addsTag outputs."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "No pooling or visible sheen of oil remains on the surface or underneath the piece",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "hot_oil",
+      "severity": "low",
+      "note": "The food is already out of the oil by this point (a real hazard REMOVE/PLACE_IN already declare), but hot oil still clings to and drips from a just-fried piece while transferring it to a rack or towel — a real, lower-severity residual version of the same hazard, not a new one."
+    }
+  ],
+  "retrySafe": true
+}

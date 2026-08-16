@@ -325,6 +325,22 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
 
 ## Culinary technique & food science literature
 
+- **Convergent consumer food-science sources on draining fried food**
+  (Food Republic, "The Simple Mistake Everyone Makes When Draining Fried
+  Food"; Tasting Table; and others independently checked) — draining on
+  flat paper towels traps steam against the food's underside (limited
+  surface area for oil to actually leave, and once the towel saturates
+  the food sits in a shallow pool of its own drained oil), producing a
+  real, commonly-observed soggy result; a wire rack elevated over a tray
+  allows air circulation on all sides and avoids it. Used in
+  `data/actions/drain.json`'s `methodNote` (added 2026-08-16, closing a
+  real gap — `crispy-french-fries.json`/`salted-fried-potatoes.json` both
+  went straight from FRY to SALT with no draining step at all).
+  Confidence: `commonly_cited_unverified` — multiple convergent consumer
+  sources corroborate the steam-trapping MECHANISM; a specific "X% oil
+  reduction" figure was also found during research and deliberately NOT
+  used, being an isolated, unsourced number from a single low-confidence
+  source, not corroborated elsewhere.
 - **Binner, Jardine & Renard, "Cell wall modifications during cooking of
   potatoes and sweet potatoes," *Journal of the Science of Food and
   Agriculture* 80(2):216-218 (2000)** — peer-reviewed: cooking

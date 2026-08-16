@@ -30,9 +30,11 @@
     { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
     { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
     { "actionId": "fry", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": ["oil-1"] },
+    { "actionId": "drain", "targetInstanceId": "potato-1", "params": { "method": "wire_rack" }, "availableIngredientInstanceIds": [] },
     { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
   ],
   "metadata": {
-    "notes": "First concrete RecipeScript in the repo, tying together everything built incrementally: wash/peel/cut/fry/salt verbs, potato/oil/salt entities. The potato-1 that gets peeled also spawns a potato_peel-N instance (from PEEL's spawnsTargetByproducts) that this recipe doesn't do anything further with — it just sits in the final inventory, same as real leftover peel would."
+    "notes": "First concrete RecipeScript in the repo, tying together everything built incrementally: wash/peel/cut/fry/salt verbs, potato/oil/salt entities. The potato-1 that gets peeled also spawns a potato_peel-N instance (from PEEL's spawnsTargetByproducts) that this recipe doesn't do anything further with — it just sits in the final inventory, same as real leftover peel would.",
+    "drainNote": "Added 2026-08-16, a real, previously-missing step: this recipe went straight from FRY to SALT with nothing removing surface oil first — real technique always drains before seasoning. See data/actions/drain.json and potato.json's own drainedTagNote."
   }
 }

@@ -728,8 +728,27 @@ covered by what exists:**
       cooking effect the rest actually causes — named honestly in
       `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
       deliberately-scoped-out deeper alternative, not silently implied
-      closed. Still open: `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `KNEAD`,
-      `STRAIN`/`DRAIN`.
+      closed. Still open: `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `KNEAD`.
+      **`DRAIN` closed 2026-08-16** (`data/actions/drain.json`) — resolves
+      the "does `REMOVE`'s own `strainer_drain`/`poured_out`
+      `removalMethod` values already cover this" question this same entry
+      raised earlier: no, not for most recipes — `REMOVE` only fires
+      against an instance tracked inside a `PLACE`
+      (`recipe-runner.ts`'s `placeContents`), and most recipes in this
+      vocabulary (including both real forcing cases here) don't use the
+      `FILL`/`PLACE_IN`/`HEAT_PLACE` machinery at all. Built standalone
+      instead, like `REST` — works on any `isDrainable` instance
+      regardless of whether a place is involved. Closes a real, previously
+      -missing step in TWO existing recipes: `crispy-french-fries.json`
+      and `salted-fried-potatoes.json` both went straight from `FRY` to
+      `SALT` with nothing removing clinging surface oil first — real
+      technique always drains before seasoning. `method: 'wire_rack'`
+      (both recipes) vs. `'paper_towel'` is a real, cited distinction, not
+      presentation preference (`REFERENCES.md`) — flat paper towels trap
+      steam against the food and produce a real, commonly-observed soggy
+      result a wire rack avoids, directly relevant to
+      `crispy-french-fries.json`'s whole point. Confirmed in the real run
+      log, not just asserted (`npm run recipe -- crispy_french_fries`).
       **`WHISK` closed 2026-08-16** (`data/actions/whisk.json`), closing
       `egg_white.json`'s own long-standing `todo` note ("whipping to
       stiff peaks specifically isn't modeled"). One parameter-driven verb

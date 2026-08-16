@@ -1310,3 +1310,37 @@ was made. Don't rewrite or delete old entries — append.
   the model CAN produce correctly is a real, useful, honest answer in its
   own right — worth keeping as a named pattern for future cases where the
   exact computation is out of reach but real bounds aren't.
+
+### DRAIN — checking whether an EXISTING mechanism already covers a need before building a new one, and finding it doesn't
+
+- **`REMOVE`'s own `removalMethod` parameter already named
+  `'strainer_drain'`/`'poured_out'` as real draining techniques — the
+  right first question was whether that meant DRAIN was already closed,
+  not whether it needed building.** Checking concretely (not just
+  reading the parameter's own prose) revealed it wasn't: `REMOVE` is a
+  PLACE-shaped verb, only reachable for an instance `recipe-runner.ts`
+  is actually tracking inside `placeContents` — and most real recipes in
+  this vocabulary, including the two that actually needed draining,
+  don't use the `FILL`/`PLACE_IN`/`HEAT_PLACE` machinery at all. A
+  parameter value NAMING a real technique isn't the same as the
+  mechanism actually being REACHABLE for the cases that need it — worth
+  checking the reachability question explicitly, not just whether the
+  right words already existed somewhere in the schema.
+- **Built as a standalone verb instead, deliberately mirroring `REST`'s
+  precedent rather than `REMOVE`'s** — the general lesson: when a new
+  need resembles an existing mechanism but that mechanism has a
+  precondition (here, "must be place-tracked") the new need doesn't
+  actually share, the right move is a second, simpler mechanism with the
+  SAME output shape (`addsTag`) but without the shared precondition, not
+  forcing every recipe to adopt place-tracking just to reach one
+  otherwise-unrelated verb.
+- **The two recipes that needed this were found by asking "which real
+  recipes go straight from FRY to SALT" — a concrete, checkable
+  question — not by auditing every recipe file by hand.** Both
+  `crispy-french-fries.json` and `salted-fried-potatoes.json` had the
+  identical, real, previously-invisible gap; `crispy-french-fries.json`
+  additionally needed a DELIBERATE parameter choice (`wire_rack`, not
+  `paper_towel`) because its whole reason for existing (a double-fry
+  precision demo) would have been undermined by the wrong drain method —
+  the fix wasn't just "add the missing step," it was "add the missing
+  step consistently with what each specific recipe is actually for."

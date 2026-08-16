@@ -1115,3 +1115,46 @@ was made. Don't rewrite or delete old entries — append.
   separate named preparation) vs. genuinely different named preparations
   (onion: yes — nobody calls caramelized onions merely "fried onions").
 
+### `WHISK` — a one-way progression in TWO directions, and a gap found by building something adjacent to it
+
+- **Egg-white whisking is one-way in a direction potato's own
+  invalidTransitions audits never had to consider: BACKWARD WITHIN the
+  same progression, not just back to the start.** Every prior
+  `invalidTransitions` entry in this repo forbids reverting to an EARLIER
+  named state (mashed potato can't become peeled again; fried egg can't
+  become raw again) — a single "point of no return." Egg-white peak
+  stages are the first case where the whole SEQUENCE is one-way: stiff
+  peaks can't revert to firm, firm can't revert to soft, not just none of
+  them can revert to raw. Checked directly, not assumed from the
+  raw-only pattern: real whisking sources describe the underlying
+  mechanism (denatured protein aggregating at the air-water interface)
+  as the same one-way event repeating at each stage, not a special rule
+  for the first one — worth naming as a real structural DIFFERENCE from
+  every prior `invalidTransitions` shape in this vocabulary, not a minor
+  variant of it.
+- **Deciding whether `over_whisked` should ALSO forbid `blended` (MIX's
+  own, unrelated pre-existing outcome state) was a real, deliberate
+  terminality choice, not an oversight caught only by running
+  `isTerminalState` and seeing `false`.** The instinct to leave it open
+  ("maybe you could blend a broken white into something else") had no
+  actual source behind it — every source checked describes over-whisked
+  egg white as collapsed, grainy, and watery with no rescue technique
+  named at all, for ANY subsequent action, not just further whisking.
+  Forbidding `blended` too was the correct, sourced choice, not a
+  convenience to make `isTerminalState` return `true` — the test running
+  `false` first is what surfaced the question, but the citation is what
+  actually answered it.
+- **Building `WHISK` surfaced a real, pre-existing gap in `egg_white.json`
+  that had nothing to do with whisking itself**: the entity already
+  carried a `'pasteurized'` possible tag and a note explaining why raw
+  whipped white (royal icing, uncooked meringue) needs it, but was never
+  actually wired to `PASTEURIZE`/`isPasteurizable` — its sibling
+  `egg_yolk.json` had the real wiring, `egg_white.json` only had the
+  tag and the intent. The same "a field exists, a note explains why it
+  should matter, but nothing actually reads/writes it" shape this
+  session's other sessions have caught before (`salt.json`'s dead
+  `isDissolvable` declaration, `pan.json`'s unreachable hot/cold states) —
+  found here not by an audit, but because a genuinely new, adjacent use
+  case (raw whipped white as an ingredient someone would actually want
+  pasteurized) made the gap concrete instead of hypothetical.
+

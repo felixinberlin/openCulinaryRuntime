@@ -728,8 +728,28 @@ covered by what exists:**
       cooking effect the rest actually causes — named honestly in
       `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
       deliberately-scoped-out deeper alternative, not silently implied
-      closed. Still open: `WHISK`, `STEAM`, `ROAST`/`GRILL`, `MARINATE`,
-      `KNEAD`, `STRAIN`/`DRAIN`.
+      closed. Still open: `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `KNEAD`,
+      `STRAIN`/`DRAIN`.
+      **`WHISK` closed 2026-08-16** (`data/actions/whisk.json`), closing
+      `egg_white.json`'s own long-standing `todo` note ("whipping to
+      stiff peaks specifically isn't modeled"). One parameter-driven verb
+      (`peakStage`: foamy/soft_peaks/firm_peaks/stiff_peaks — same shape
+      as `CUT`'s `shape`), plus `over_whisked` as a TICKET-5-shaped
+      terminal failure state, checked against real technique before
+      asserting: the whole progression is one-way in BOTH directions that
+      matter (no reverting to raw, AND no reverting to an earlier,
+      less-developed peak stage either — a real, structural fact about
+      denatured/aggregated egg-white protein, not a convention). Scoped
+      to `egg_white` only — whipped cream needs the identical mechanism
+      once a dairy entity beyond butter exists, not yet built. Directly
+      forced a second, real, pre-existing fix found in passing:
+      `egg_white.json` had a `'pasteurized'` tag and a note explaining why
+      raw whipped white (royal icing, uncooked meringue) needs it, but was
+      never actually wired to `PASTEURIZE`/`isPasteurizable` the way its
+      `egg_yolk.json` sibling already was — closed the same day, same
+      change. Proven via `scripts/whisk-egg-white-as-a-robot.ts`
+      (`npm run capability-test:whisk-egg-white`). No real recipe exercises
+      it yet — a meringue needs `sugar`, still unbuilt (below).
       **`REMOVE` closed 2026-08-16** (`data/actions/remove.json`, found
       2026-08-15 via the exact real recipe bug this entry names —
       `garlic-oil-potatoes.json` originally fried garlic, then left it

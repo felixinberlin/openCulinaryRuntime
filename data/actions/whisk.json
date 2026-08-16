@@ -1,0 +1,61 @@
+{
+  "id": "whisk",
+  "verb": "WHISK",
+  "names": {
+    "en": "Whisk",
+    "es": "Batir a punto de nieve"
+  },
+  "requiredTools": [
+    "mixer"
+  ],
+  "requiredTargetCapability": "isWhiskable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "parameters": [
+    {
+      "id": "peakStage",
+      "names": {
+        "en": "Peak stage",
+        "es": "Punto"
+      },
+      "required": true,
+      "allowedValues": [
+        "foamy",
+        "soft_peaks",
+        "firm_peaks",
+        "stiff_peaks"
+      ]
+    }
+  ],
+  "outputs": {
+    "transformedStateFromParameter": "peakStage",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "required",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 600,
+  "metadata": {
+    "notes": "Added 2026-08-16, closing egg_white.json's own long-standing todo note ('whipping to stiff peaks specifically — soft/firm/stiff peak stages — isn't modeled'). One verb with a 'peakStage' parameter (CLAUDE_DEV_CTX.md's 4th pillar, Parameters — same shape as CUT's 'shape'), not four separate verbs — the resulting state is whichever stage was requested, matching this vocabulary's own established CUT/BEAT precedent rather than inventing a new mechanism. Scoped to egg_white only for now (isWhiskable) — whipped cream goes through the same real foamy/soft/firm/stiff progression, but no dairy entity beyond butter exists in this vocabulary yet (ROADMAP.md's 'Far more staple ingredients' gap); this verb generalizes to it for free via the same capability once cream is built, no changes needed here.",
+    "toolNote": "requiredTools: ['mixer'], the same tool data/actions/mix.json already requires — no dedicated balloon-whisk tool entity exists in this vocabulary. Hand-whisking with a balloon whisk (the classical technique for a French meringue specifically, valued for finer control near stiff peaks) is real and NOT modeled as a mechanically distinct path here — named honestly as a real, un-built granularity limit rather than silently assumed equivalent to machine-whisking.",
+    "stagesNote": "Four real, independently-recognizable stages, not an arbitrary subdivision — multiple convergent baking sources (see REFERENCES.md) consistently distinguish foamy (small bubbles, still mostly liquid/transparent) from soft peaks (a peak forms but folds/melts back within seconds) from firm/medium peaks (holds shape longer, glossier) from stiff peaks (holds its shape fully when the whisk is lifted, doesn't slump). Which stage a recipe wants genuinely depends on use: soft peaks are correct for folding into a soufflé base (won't overwork the batter), stiff peaks for a stable meringue shell.",
+    "invalidTransitionsNote": "See egg_white.json's own invalidTransitionsNote for the real reasoning: every peak stage forbids reverting to any LESS-developed stage (including 'raw') — once air is incorporated and the albumen proteins denature/aggregate at the air-water interface, there is no real technique that removes air or re-dissolves that structure back to liquid raw white, the same one-way-only physical fact egg_cracked.json's fried/scrambled states already assert for a different reason (you cannot un-cook a set curd).",
+    "overWhiskedNote": "'over_whisked' (egg_white.json's new terminal failure state, TICKET-5-shaped — see that file's own failureStateNote) is deliberately NOT one of this parameter's allowedValues: a cook whisks TOWARD a real target stage, never deliberately toward over-whisked — it's reached only by continuing past 'stiff_peaks' with no detection mechanism to stop at the right moment, the same authored-fact-only shape burned/overcooked already use elsewhere in this vocabulary, not something this action's own parameter offers as a choice.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a real, elapsed-time, visually-terminated do-until process (whisk until it looks like X) — the same class as MASH/GRATE's repeated-mechanical-strokes shape, genuinely different from CUT's bounded discrete-strokes-toward-a-fixed-geometry shape (see cut.json's own actionKindNote for that exact contrast) despite superficially sharing CUT's transformedStateFromParameter mechanism here.",
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced: 600s (10 minutes) is well past how long any real stand/hand mixer takes to reach stiff peaks from raw egg white (commonly a few minutes) — a real timeout ceiling, not a claimed realistic duration; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria ('do not copy the paper's numbers — they have no stated provenance')."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Peak shape and hold-time when the whisk/beater is lifted matches the requested stage (foamy/soft/firm/stiff) — see stagesNote for what distinguishes each",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "moving_blade",
+      "severity": "medium",
+      "note": "Same hazard as mix.json's identical entry — an electric mixer's beaters, not a static blade, but the same motorized-attachment risk category."
+    }
+  ],
+  "retrySafe": true
+}

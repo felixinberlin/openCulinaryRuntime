@@ -528,6 +528,18 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   and Key Sensory Compounds," *Comprehensive Reviews in Food Science and
   Food Safety* (2025) — the same journal this repo already cites for
   Bermúdez-Aguirre & Niemira's egg-pasteurization review.
+- **Convergent baking sources on egg-white whisking stages** (Food52,
+  "How to Whip Egg Whites for Soft, Firm and Stiff Peaks"; The Kitchn, "A
+  Visual Guide to Whipping Soft, Firm, And Stiff Peaks"; Taste of Home;
+  and others independently checked) — the real, distinguishable
+  foamy/soft-peaks/firm-peaks/stiff-peaks progression, and independent
+  descriptions of over-whisking as producing a grainy, watery, collapsed
+  result with no described rescue. Used in `data/actions/whisk.json`'s
+  `stagesNote` and `data/entities/egg_white.json`'s `whiskNote` (added
+  2026-08-16). Confidence: `commonly_cited_unverified` — multiple
+  convergent consumer baking sources, not one peer-reviewed primary
+  source, same tier as this repo's other consumer-recipe-derived
+  technique facts.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

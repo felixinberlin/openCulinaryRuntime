@@ -46,10 +46,20 @@
   "criticalControlPointsByAction": {
     "pasteurize": "egg_pasteurization_liquid"
   },
+  "rawContaminationRiskStates": [
+    "raw",
+    "blended",
+    "foamy",
+    "soft_peaks",
+    "firm_peaks",
+    "stiff_peaks",
+    "over_whisked"
+  ],
   "capabilities": {
     "isBlendable": true,
     "isWhiskable": true,
-    "isPasteurizable": true
+    "isPasteurizable": true,
+    "isRawContaminationRisk": true
   },
   "sensory": {
     "taste": ["neutral"],
@@ -65,6 +75,7 @@
     "notes": "Byproduct entity spawned when 'separate' is applied to egg.json (see EntitySchema.producedByproducts on egg) — mirrors potato_peel.json's producedBy convention for potato's 'peel' byproduct.",
     "todo": "isBlendable/mix reuses the existing MIX action (data/actions/mix.json, mixer tool) — same mechanism as potato_peel.json. MIX has no intensity/duration parameter yet, so 'mixed a little vs. a lot' isn't distinguishable, just raw-vs-blended.",
     "whiskNote": "CLOSED 2026-08-16 — the WHIPPING half of this file's own former todo note ('whipping to stiff peaks specifically — soft/firm/stiff peak stages — isn't modeled'). isWhiskable + WHISK (data/actions/whisk.json) adds the real foamy -> soft_peaks -> firm_peaks -> stiff_peaks progression, plus 'over_whisked' as a TICKET-5-shaped terminal failure state (PAPER_NOTES_2608.04768.md — reachable only as an authored fact, no detection mechanism, same discipline as potato.json's/egg.json's burned/overcooked). invalidTransitions makes the whole progression one-way only in BOTH directions that matter: no peak stage (or over_whisked) can revert to 'raw', AND no stage can revert to an earlier, less-developed stage either (e.g. stiff_peaks -> soft_peaks is forbidden) — once air is incorporated and the albumen proteins denature/aggregate at the air-water interface, there is no real technique that removes air or re-liquefies the structure. Checked against real technique before asserting, same discipline as every invalidTransitions entry in this vocabulary: multiple convergent baking sources (REFERENCES.md) independently describe this as one-way and irreversible, including over-whisking specifically ('once over-beaten, egg whites start to break down, collapse and become grainy and watery... instead of smooth and silky' — no rescue described in any source checked). 'over_whisked' ALSO forbids 'blended' (MIX's own pre-existing, unrelated outcome state), unlike the other peak stages — a deliberate choice to keep 'over_whisked' FULLY terminal (isTerminalState computes true for it, matching 'burned'), not partially terminal like potato's 'overcooked': no source found describes blending/re-mixing a collapsed, watery, broken egg white into anything usable, so no rescue path was left open.",
+    "rawContaminationRiskNote": "Added 2026-08-16, mirroring egg_yolk.json's identical note/mechanism (src/tool-hygiene.ts) — same reasoning applies doubly here: every one of this entity's states, including 'stiff_peaks'/'over_whisked', is still raw, mechanically whipped egg white, never heat-treated (whisking incorporates air, it doesn't cook anything) — so the FULL possibleStates list is listed, not a subset the way egg.json/egg_cracked.json (which DO have real cooked states) can narrow to.",
     "pasteurizedTagNote": "possibleTags: ['pasteurized'] for the same reason as egg_yolk.json's — a raw meringue/royal icing use case would carry the same never-independently-cooked risk this whole mechanism exists for. CLOSED 2026-08-16, same day as whiskNote above, directly forced by it: this entity previously had the tag and this note, but was never actually wired to isPasteurizable/criticalControlPointsByAction the way egg_yolk.json's identical case already was — a real, pre-existing gap, found while WHISK made the raw-whipped-white use case concretely reachable for the first time. Now mirrors egg_yolk.json exactly: PASTEURIZE + egg_pasteurization_liquid.json (60°C/210s, same liquid-egg process, same reasoning — egg white is just as much a never-independently-heat-treated liquid egg product as yolk is)."
   }
 }

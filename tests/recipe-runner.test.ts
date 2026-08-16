@@ -881,3 +881,169 @@ describe("runRecipe — spawnedEntityIds", () => {
     assert.equal(result.spawnedEntityIds.size, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// TOOL HYGIENE / CROSS-CONTAMINATION — 2026-08-16, ROADMAP.md's
+// "Cross-contamination / hygiene knowledge" gap. See recipe-runner.ts's own
+// top doc comment / src/tool-hygiene.ts for the full design reasoning; these
+// are the concrete, synthetic-fixture proof (independent of data/*.json's
+// actual current shape) that the mechanism itself behaves correctly.
+// ---------------------------------------------------------------------------
+
+const hygieneEgg = makeEntity({
+  id: "hygiene-egg",
+  rawContaminationRiskStates: ["raw"],
+  capabilities: { isCrackable: true, isRawContaminationRisk: true },
+});
+const hygieneGarlic = makeEntity({
+  id: "hygiene-garlic",
+  possibleStates: ["raw", "peeled", "cut"],
+  capabilities: { isChoppable: true },
+});
+const crackAction = makeAction({
+  id: "crack",
+  verb: "CRACK",
+  requiredTargetCapability: "isCrackable",
+  outputs: { destroysTarget: true },
+  parameters: [{ id: "toolInstanceId", required: false, allowedValues: ["knife-1", "knife-2"] }],
+});
+const hygieneCutAction = makeAction({
+  id: "cut",
+  verb: "CUT",
+  requiredTargetCapability: "isChoppable",
+  outputs: { transformedState: "cut" },
+  parameters: [{ id: "toolInstanceId", required: false, allowedValues: ["knife-1", "knife-2"] }],
+});
+const washToolAction = makeAction({
+  id: "wash_tool",
+  verb: "WASH_TOOL",
+  outputs: {},
+  parameters: [{ id: "toolInstanceId", required: true, allowedValues: ["knife-1", "knife-2"] }],
+});
+const hygieneEntities = new Map([
+  ["hygiene-egg", hygieneEgg],
+  ["hygiene-garlic", hygieneGarlic],
+]);
+const hygieneActions = new Map([
+  ["crack", crackAction],
+  ["cut", hygieneCutAction],
+  ["wash_tool", washToolAction],
+]);
+
+function makeHygieneRecipe(sequence: RecipeScript["sequence"]): RecipeScript {
+  return {
+    id: "hygiene-test-recipe",
+    names: { en: "Hygiene test recipe" },
+    initialInventory: [
+      { id: "egg-1", entityId: "hygiene-egg", state: "raw", tags: [] },
+      { id: "garlic-1", entityId: "hygiene-garlic", state: "peeled", tags: [] },
+    ],
+    availableTools: [],
+    sequence,
+    metadata: {},
+  };
+}
+
+describe("runRecipe — tool hygiene / cross-contamination", () => {
+  test("a step with no toolInstanceId is completely unaffected — toolContamination stays empty", () => {
+    const recipe = makeHygieneRecipe([
+      {
+        actionId: "crack",
+        targetInstanceId: "egg-1",
+        params: {},
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, hygieneEntities, hygieneActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.toolContamination.size, 0);
+  });
+
+  test("contact with a raw-contamination-risk instance marks the named tool instance contaminated", () => {
+    const recipe = makeHygieneRecipe([
+      {
+        actionId: "crack",
+        targetInstanceId: "egg-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, hygieneEntities, hygieneActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    const state = result.toolContamination.get("knife-1");
+    assert.equal(state?.contaminated, true);
+    assert.equal(state?.contaminatedByEntityId, "hygiene-egg");
+    assert.equal(state?.contaminatedByState, "raw");
+  });
+
+  test("reusing a contaminated tool instance warns, but does NOT reject the step (advisory, per explicit design decision)", () => {
+    const recipe = makeHygieneRecipe([
+      {
+        actionId: "crack",
+        targetInstanceId: "egg-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "cut",
+        targetInstanceId: "garlic-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, hygieneEntities, hygieneActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.warnings.length, 1);
+    assert.match(result.warnings[0], /reuses "knife-1" without washing it first/);
+    // The step still ran and mutated the target normally.
+    assert.equal(result.finalInventory.get("garlic-1")?.state, "cut");
+  });
+
+  test("WASH_TOOL clears contamination — a subsequent reuse warns no more", () => {
+    const recipe = makeHygieneRecipe([
+      {
+        actionId: "crack",
+        targetInstanceId: "egg-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "wash_tool",
+        targetInstanceId: "knife-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "cut",
+        targetInstanceId: "garlic-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, hygieneEntities, hygieneActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.warnings.length, 0);
+    assert.equal(result.toolContamination.get("knife-1")?.contaminated, false);
+  });
+
+  test("a different, never-contaminated tool instance is unaffected by another instance's contamination", () => {
+    const recipe = makeHygieneRecipe([
+      {
+        actionId: "crack",
+        targetInstanceId: "egg-1",
+        params: { toolInstanceId: "knife-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "cut",
+        targetInstanceId: "garlic-1",
+        params: { toolInstanceId: "knife-2" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, hygieneEntities, hygieneActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.warnings.length, 0);
+    assert.equal(result.toolContamination.get("knife-2")?.contaminated, false);
+  });
+});

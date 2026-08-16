@@ -11,7 +11,17 @@
     "ingredient"
   ],
   "requiredIngredientCapabilities": [],
-  "parameters": [],
+  "parameters": [
+    {
+      "id": "toolInstanceId",
+      "names": {
+        "en": "Tool instance id",
+        "es": "Id de la herramienta"
+      },
+      "required": false,
+      "allowedValues": ["knife-1", "knife-2"]
+    }
+  ],
   "outputs": {
     "transformedState": "cracked",
     "spawnsTargetByproducts": true,
@@ -23,7 +33,8 @@
   "metadata": {
     "notes": "Opens the egg without separating yolk from white — the entry point for scrambled eggs and the plain/French omelette, as opposed to SEPARATE (data/actions/separate.json) which explicitly splits yolk and white apart for recipes that need them independently (meringue, custard, ...). Same destroysTarget + spawnsTargetByproducts mechanism as SEPARATE; see egg.json's byproductsByAction.crack (spawns egg_shell + egg_cracked, not egg_yolk/egg_white).",
     "retrySafeNote": "retrySafe: true — but not because it's silently idempotent: destroysTarget means the target instance is already gone from inventory after a first success, so a blind retry fails loudly ('Unknown target instance') instead of duplicating anything.",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off mechanical act (paper's own 'ingredient addition'-shaped class), not an accumulating process; both discriminators agree."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off mechanical act (paper's own 'ingredient addition'-shaped class), not an accumulating process; both discriminators agree.",
+    "toolInstanceIdNote": "Added 2026-08-16, ROADMAP.md's 'Cross-contamination / hygiene knowledge' gap — optional and informational, mirroring fill.json's/remove.json's placeId pattern. requiredTools stays [] (unchanged, still tool-agnostic — cracking with a bare hand/counter edge, no knife, is equally real and common); this only lets a recipe optionally NAME which tool instance was used, for the real case where one was (a paring knife or blade edge against the shell — also directly relevant to this repo's own robot-control framing, ENGINE_INVARIANTS.md #11). When set, recipe-runner.ts records that tool instance as contaminated by contact with raw egg (src/tool-hygiene.ts) — see that file's own doc comment. Every existing recipe's CRACK step has no toolInstanceId and is completely behaviorally unaffected. This is also, as of 2026-08-16, the ONLY concrete path by which a knife can ever legally touch a RAW egg in this vocabulary at all: CUT can't (egg.json's statePrerequisites.cut requires 'peeled', which itself requires 'boiled' first) — see recipe-runner.ts's own top doc comment / scripts/tool-hygiene-as-a-robot.ts for why this addition was needed to make the named scenario reachable, not just theoretically mechanized."
   },
   "verification": {
     "method": "visual",

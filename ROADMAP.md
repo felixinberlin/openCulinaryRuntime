@@ -631,13 +631,62 @@ covered by what exists:**
       leaning dishes). Cross-contamination/hygiene (below) remains a
       SEPARATE, deliberately un-conflated gap — this closes what a dish's
       own ingredients contain, not what a shared knife/board might transfer.
-- [ ] **Cross-contamination / hygiene knowledge.** `HazardSchema` models
+- [x] **Cross-contamination / hygiene knowledge.** `HazardSchema` models
       danger to the PERSON performing an action (a blade, hot oil); nothing
       models danger to the FOOD from equipment/surface reuse (same knife for
       raw egg then a ready-to-eat ingredient; a cutting board not washed
       between uses). `CriticalControlPointSchema` is thermal-only by design
       (see `LEARNINGS_DOMAIN.md` 2026-08-12) — this would need a genuinely different
       mechanism, not a stretched CCP.
+      **Closed 2026-08-16**, via a genuinely new mechanism, not a stretched
+      CCP as predicted above: `src/tool-hygiene.ts`'s `ToolContaminationState`
+      — a runner-local `Map<toolInstanceId, ToolContaminationState>`,
+      mirroring `place.ts`'s own `PlaceState`/`places` precedent exactly
+      (a tool instance carrying real state OUTSIDE `Instance`/`applyAction`,
+      since tools have zero per-instance identity in this engine —
+      `availableTools` is a flat `Set<string>` of entity ids, confirmed by
+      direct inspection before this was built). An opt-in `params.
+      toolInstanceId` a step may set (mirroring `placeId`'s pattern) drives
+      a pre-check + post-update wrapped around the *existing* `applyAction`
+      call in `recipe-runner.ts` (contamination is a discrete fact toggled
+      by an ordinary instantaneous action, unlike `FILL`/`HEAT_PLACE`'s
+      genuinely continuous shape — no new special-cased verb needed for
+      THAT half). A new special-cased verb, `WASH_TOOL`
+      (`data/actions/wash_tool.json`), clears it — closing the exact gap
+      `wash.json`'s own notes long named and deferred ("a tool's 'clean'
+      state doesn't map onto the same tag as an ingredient's"). `isRaw
+      ContaminationRisk` (`ingredient.ts`'s new `rawContaminationRiskStates`
+      field + a `capabilities.isRawContaminationRisk` flag) resolves
+      "capabilities are static, risk is state-dependent" by requiring both;
+      set on egg/egg_cracked/egg_yolk/egg_white. Reuses the identical
+      Salmonella/USDA citation `egg_cooking.json`/`egg_pasteurization_raw.
+      json` already carry (`REFERENCES.md`) for a different, surface-
+      transfer pathway of the same organism. `knife.json`'s own dead
+      `possibleStates: ["clean","dirty",...]` (`allowedTransformations: []`)
+      is deliberately NOT reactivated — that's `Instance`-based machinery
+      tools don't have; a cross-reference note was added instead of wiring
+      it. **Explicit design decision, not a default**: the user chose an
+      ADVISORY warning (`RecipeRunResult.warnings`, mirroring
+      `egg_cooking.json`'s `advisoryOnly: true`), not a hard reject like
+      `egg_pasteurization_raw.json`'s — a contaminated tool's reuse warns
+      but the step still proceeds; this also means the mechanism doesn't
+      interact with `SafetyPolicy`'s human/autonomous split at all. Proven
+      via `scripts/tool-hygiene-as-a-robot.ts` (`npm run
+      capability-test:tool-hygiene`) and `tests/recipe-runner.test.ts`'s new
+      describe block. A real, honest finding this surfaced: NO existing
+      action in this vocabulary ever let a knife touch RAW egg before this
+      change (`CUT` requires 'peeled', which requires 'boiled' first;
+      `CRACK`/`SEPARATE`, the only actions touching raw egg, were both
+      `requiredTools: []`) — `crack.json` gained an optional
+      `toolInstanceId` parameter specifically to make the named scenario
+      reachable at all, not just theoretically mechanized. Deliberately NOT
+      closed: no cutting-board entity (the proof case only needed `knife`);
+      no "is the downstream target ready-to-eat" inference (warns on reuse
+      against ANY subsequent food-contact step, not just RTE ones — a real
+      simplification, named as such); no general contamination graph beyond
+      the four egg-derived entities; no probability/detection modeling. See
+      `src/tool-hygiene.ts`'s own top doc comment for the full reasoning and
+      `LEARNINGS_ENGINE.md` 2026-08-16 for the design-process notes.
 - [ ] **Far more staple ingredients/entities.** Still no flour, milk/cheese,
       herbs, sugar, or any protein besides egg. (Onion closed 2026-08-16,
       vinegar/acid closed 2026-08-15 — both corrected out of this line the

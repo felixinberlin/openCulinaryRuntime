@@ -175,6 +175,26 @@ for (const entity of entities.items.values()) {
       }
     }
   }
+  // rawContaminationRiskStates (ingredient.ts, src/tool-hygiene.ts, closed
+  // 2026-08-16 — ROADMAP.md's "Cross-contamination / hygiene knowledge"
+  // gap) — same hard-fail standard invalidTransitions above already holds
+  // itself to: a state listed here that isn't in this entity's own
+  // possibleStates is always an authoring bug, not a legitimate edge case.
+  for (const state of entity.rawContaminationRiskStates) {
+    if (!entity.possibleStates.includes(state)) {
+      fail(
+        `entities/${entity.id}.json: rawContaminationRiskStates references unknown state "${state}" (not in possibleStates)`
+      );
+    }
+  }
+  if (
+    entity.capabilities.isRawContaminationRisk === true &&
+    entity.rawContaminationRiskStates.length === 0
+  ) {
+    console.log(
+      `NOTE entities/${entity.id}.json: capabilities.isRawContaminationRisk is true but rawContaminationRiskStates is empty — this capability can never actually trigger a warning.`
+    );
+  }
   for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
     if (!actions.items.has(actionId)) {
       fail(

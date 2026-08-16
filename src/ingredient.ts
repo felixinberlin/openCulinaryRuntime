@@ -521,6 +521,37 @@ export const EntitySchema = z.object({
    * the risk is a fact about *what's* being fried, not the verb.
    */
   criticalControlPointsByAction: z.record(z.string(), z.string()).default({}),
+  /**
+   * States this entity is a raw-contamination-risk food-safety hazard IN,
+   * e.g. `egg.json`: `["raw", "cracked"]`. Closes ROADMAP.md's long-open
+   * "Cross-contamination / hygiene knowledge" gap (`HazardSchema` models
+   * danger to the PERSON performing an action; nothing modeled danger to
+   * the FOOD from a tool/surface reused on a ready-to-eat ingredient
+   * without washing in between) — see `src/tool-hygiene.ts` for the
+   * mechanism this field feeds.
+   *
+   * Deliberately a SEPARATE field from `capabilities`, not a boolean
+   * capability flag there, even though `CapabilitiesSchema` is exactly
+   * where a flag like this would normally live: the actual risk is
+   * STATE-dependent (raw egg is a hazard, a boiled egg isn't), and
+   * `CapabilitiesSchema` is `.catchall(z.boolean())` — structurally unable
+   * to hold a list of states. `src/tool-hygiene.ts`'s
+   * `isRawContaminationRisk` checks BOTH this list (is the instance's
+   * CURRENT state one of the risky ones) AND a companion
+   * `capabilities.isRawContaminationRisk: true` flag (is this entity even
+   * the kind of thing that carries this risk at all) — the same
+   * capability-plus-state-check split `invalidTransitions` above already
+   * established for a different question, applied here.
+   *
+   * Optional and defaults to `[]`, so every entity file written before
+   * this field existed is completely unaffected — only egg/egg_cracked/
+   * egg_yolk/egg_white set it (added 2026-08-16); this is NOT a general
+   * "every raw ingredient is a contamination risk" claim (raw potato/
+   * garlic are not, in this vocabulary) — see ROADMAP.md's own
+   * "explicitly out of scope" notes on that gap for why the wider claim
+   * isn't attempted here.
+   */
+  rawContaminationRiskStates: z.array(z.string()).default([]),
   capabilities: CapabilitiesSchema.default({}),
   physicalDimensions: PhysicalDimensionsSchema.optional(),
   thermophysical: ThermophysicalPropertiesSchema.optional(),

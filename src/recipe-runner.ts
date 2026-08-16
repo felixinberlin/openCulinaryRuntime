@@ -11,6 +11,13 @@ import {
   isAtTargetTemp,
   type PlaceState,
 } from "./place.ts";
+import {
+  cleanTool,
+  markContaminated,
+  washTool,
+  isRawContaminationRisk,
+  type ToolContaminationState,
+} from "./tool-hygiene.ts";
 
 /**
  * Walks a RecipeScript's sequence against engine.ts's applyAction, the way
@@ -120,6 +127,30 @@ import {
  * closes only the REMOVAL mechanism, not the adjacent, still-fully-open
  * "elapsed idle time causes doneness/burn consequences" half of the same
  * ROADMAP entry — see `remove.json`'s own `idleTimeScopeNote`.
+ *
+ * TOOL HYGIENE / CROSS-CONTAMINATION — added 2026-08-16, closing ROADMAP.md's
+ * "Cross-contamination / hygiene knowledge" gap: a tool touching a raw,
+ * contamination-risk ingredient (egg, `src/tool-hygiene.ts`'s
+ * `isRawContaminationRisk`), then reused on other food with no
+ * intervening wash, is a real food-safety risk `HazardSchema` (danger to
+ * the PERSON) and `CriticalControlPointSchema` (thermal-only) both never
+ * modeled. Mirrors the PLACE mechanism's own shape: a runner-local
+ * `toolContamination: Map<string, ToolContaminationState>`, keyed by an
+ * opt-in `params.toolInstanceId` a step may set (mirroring `placeId`'s
+ * pattern exactly) — a step that never sets it is completely unaffected.
+ * `WASH_TOOL` (`data/actions/wash_tool.json`) is special-cased like
+ * `fill`/`place_in`/`heat_place`/`remove`, dispatched BEFORE the normal
+ * `instance` resolution (its real target is never an `Instance`).
+ * Contamination itself is NOT a special-cased verb — it's a pre-check +
+ * post-update wrapped around the *existing* `applyAction` call, since it's
+ * a discrete fact toggled by an ordinary instantaneous action (`CRACK`),
+ * unlike `FILL`/`HEAT_PLACE`'s genuinely different continuous shape. An
+ * explicit user decision: advisory only (`warnings`/`log`), not a hard
+ * reject — mirrors `egg_cooking.json`'s `advisoryOnly: true` posture, not
+ * `egg_pasteurization_raw.json`'s unconditional one; see
+ * `tool-hygiene.ts`'s own doc comment for the full reasoning and what's
+ * explicitly out of scope. Proven via `scripts/tool-hygiene-as-a-robot.ts`
+ * (`npm run capability-test:tool-hygiene`).
  */
 
 export interface RecipeStepError {
@@ -158,6 +189,11 @@ export interface RecipeRunResult {
    * exactly the parallel-source-of-truth problem this file's own top doc
    * comment already warns against elsewhere). */
   spawnedEntityIds: Map<string, string>;
+  /** Every tool instance touched via a step's opt-in `params.toolInstanceId`
+   *  during this run, keyed by that toolInstanceId — see
+   *  `src/tool-hygiene.ts`'s own top doc comment for the full mechanism.
+   *  Empty when the recipe never sets `toolInstanceId` on any step. */
+  toolContamination: Map<string, ToolContaminationState>;
 }
 
 function requireParam(
@@ -357,6 +393,27 @@ function handleRemove(
   );
 }
 
+/** WASH_TOOL — resets a tool instance's `ToolContaminationState` back to
+ *  clean. See `data/actions/wash_tool.json`'s own notes for why this is a
+ *  new special-cased verb (mirroring `fill`/`place_in`/`heat_place`/
+ *  `remove`) rather than an extension of `wash.json`: its real target
+ *  (`toolContamination.get(toolInstanceId)`) is never an `Instance`. */
+function handleWashTool(
+  action: Action,
+  step: RecipeStep,
+  toolContamination: Map<string, ToolContaminationState>,
+  log: string[]
+): void {
+  const toolInstanceId = requireParam(step.params, "toolInstanceId", action.verb);
+  const current = toolContamination.get(toolInstanceId) ?? cleanTool(toolInstanceId);
+  toolContamination.set(toolInstanceId, washTool(current));
+  log.push(
+    current.contaminated
+      ? `${action.verb} ${toolInstanceId}: was contaminated (by ${current.contaminatedByEntityId}, state "${current.contaminatedByState}") — now clean`
+      : `${action.verb} ${toolInstanceId}: already clean`
+  );
+}
+
 /** Fallback tick-count bound, used ONLY if `heat_place.json` somehow lacks
  *  `maxDurationSeconds` (action.ts, TICKET 2, PAPER_NOTES_2608.04768.md) —
  *  every real `data/actions/heat_place.json` has one as of 2026-08-16
@@ -534,16 +591,37 @@ export function runRecipe(
   const places = new Map<string, PlaceState>();
   const placeContents = new Map<string, string[]>();
   const spawnedEntityIds = new Map<string, string>();
+  const toolContamination = new Map<string, ToolContaminationState>();
   let spawnCounter = 0;
 
   for (const step of recipe.sequence) {
     const action = actions.get(step.actionId);
-    const instance = inventory.get(step.targetInstanceId);
 
     if (!action) {
       errors.push({ step, message: `Unknown action "${step.actionId}"` });
       continue;
     }
+
+    // WASH_TOOL — dispatched before the `instance` bail-out below, because
+    // (per the authoring convention named in wash_tool.json's own notes)
+    // its real target is a ToolContaminationState, keyed by
+    // params.toolInstanceId, never an inventory Instance — targetInstanceId
+    // is set to the same toolInstanceId by convention, but not resolved
+    // against `inventory` at all. Kept a separate branch from the PLACE
+    // steps below (not folded into that list) since, unlike those, this
+    // touches neither `Instance` nor `places`.
+    if (action.id === "wash_tool") {
+      try {
+        handleWashTool(action, step, toolContamination, log);
+      } catch (err) {
+        const message = (err as Error).message;
+        errors.push({ step, message });
+        log.push(`REJECTED ${action.verb} ${step.targetInstanceId}: ${message}`);
+      }
+      continue;
+    }
+
+    const instance = inventory.get(step.targetInstanceId);
     if (!instance) {
       errors.push({ step, message: `Unknown target instance "${step.targetInstanceId}"` });
       continue;
@@ -637,6 +715,24 @@ export function runRecipe(
       }
     }
 
+    // Opt-in tool-hygiene pre-check (2026-08-16) — see tool-hygiene.ts's own
+    // doc comment. Advisory only (an explicit user decision, not a hard
+    // reject like egg_pasteurization_raw.json's): the step still proceeds
+    // to applyAction either way. A step that never sets
+    // params.toolInstanceId never reaches this, same opt-in gating as the
+    // placeId check above.
+    if (step.params.toolInstanceId) {
+      const existing = toolContamination.get(step.params.toolInstanceId);
+      if (existing?.contaminated) {
+        const message =
+          `${action.verb} reuses "${step.params.toolInstanceId}" without washing it first — ` +
+          `contaminated by contact with "${existing.contaminatedByEntityId}" (state "${existing.contaminatedByState}"). ` +
+          `WASH_TOOL it before reusing on other food.`;
+        warnings.push(message);
+        log.push(`  WARNING: ${message}`);
+      }
+    }
+
     try {
       const result = applyAction(
         instance,
@@ -653,6 +749,27 @@ export function runRecipe(
       for (const warning of result.warnings) {
         warnings.push(warning);
         log.push(`  WARNING: ${warning}`);
+      }
+      // Post-update: does contact with THIS target (its state BEFORE the
+      // action ran — what the tool actually touched, not what it became)
+      // mark the named tool instance contaminated? See
+      // tool-hygiene.ts's isRawContaminationRisk.
+      if (step.params.toolInstanceId) {
+        const target = entities.get(instance.entityId);
+        if (target && isRawContaminationRisk(target, instance.state)) {
+          const current =
+            toolContamination.get(step.params.toolInstanceId) ??
+            cleanTool(step.params.toolInstanceId);
+          toolContamination.set(
+            step.params.toolInstanceId,
+            markContaminated(current, target.id, instance.state)
+          );
+          log.push(
+            `  ${step.params.toolInstanceId} contaminated by contact with ${target.id} (state "${instance.state}") — WASH_TOOL required before reuse.`
+          );
+        } else if (!toolContamination.has(step.params.toolInstanceId)) {
+          toolContamination.set(step.params.toolInstanceId, cleanTool(step.params.toolInstanceId));
+        }
       }
       if (result.destroyed) {
         inventory.delete(step.targetInstanceId);
@@ -692,5 +809,6 @@ export function runRecipe(
     places,
     placeContents,
     spawnedEntityIds,
+    toolContamination,
   };
 }

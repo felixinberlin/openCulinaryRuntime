@@ -1,0 +1,39 @@
+{
+  "id": "wash_tool",
+  "verb": "WASH_TOOL",
+  "names": {
+    "en": "Wash tool",
+    "es": "Lavar herramienta"
+  },
+  "requiredTools": [],
+  "validTargetKinds": ["tool"],
+  "parameters": [
+    {
+      "id": "toolInstanceId",
+      "names": {
+        "en": "Tool instance id",
+        "es": "Id de la herramienta"
+      },
+      "required": true,
+      "allowedValues": ["knife-1", "knife-2"]
+    }
+  ],
+  "outputs": {},
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "Added 2026-08-16, closing the exact gap wash.json's own notes name and defer: 'wiring WASH up to tools is left for later... a tool's clean state doesn't map onto the same tag (washed) as an ingredient's.' A NEW verb, not an extension of wash.json's validTargetKinds, because the two targets are structurally different: WASH resolves step.targetInstanceId against recipe-runner.ts's inventory (an Instance) and adds a tag; WASH_TOOL's real target is a src/tool-hygiene.ts ToolContaminationState, keyed by params.toolInstanceId, which is never an Instance at all (see tool-hygiene.ts's own doc comment — tools have no per-instance Instance representation anywhere in this engine). Dispatched entirely outside applyAction, in recipe-runner.ts's handleWashTool, the same special-cased treatment fill/place_in/heat_place/remove already get for the identical underlying reason (their real target isn't an Instance either).",
+    "targetInstanceIdConvention": "RecipeStepSchema.targetInstanceId (recipe.ts) is a required, non-empty string on EVERY step, including this one, even though handleWashTool never actually reads it (it reads params.toolInstanceId instead) — rather than special-casing recipe.ts's schema for one verb, the stated authoring convention is to set targetInstanceId equal to the toolInstanceId being washed (e.g. targetInstanceId: 'knife-1', params: { toolInstanceId: 'knife-1' }), a harmless duplication, not a schema change.",
+    "validTargetKindsNote": "['tool'], unlike wash.json's ['ingredient'] — engine.ts's validTargetKinds check is never actually reached for this verb (applyAction never runs), so this is documentation of intent, matching the real target kind, rather than an enforced constraint.",
+    "toolInstanceIdNote": "allowedValues is a closed, small placeholder set, matching fill.json's/remove.json's identical placeId pattern (an author-chosen label, not a physical quantity) — not enforced by handleWashTool itself, informational only, same depth as every other allowedValues list in this vocabulary that a runner handler doesn't cross-check.",
+    "retrySafeNote": "retrySafe: true — washing an already-clean tool is harmless (src/tool-hygiene.ts's washTool is idempotent: cleanTool(id) either way)."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "No visible residue/staining remaining on the tool's food-contact surface",
+    "confidence": "medium"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

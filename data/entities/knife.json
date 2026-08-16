@@ -17,6 +17,7 @@
     "isWashable": true
   },
   "metadata": {
-    "notes": "Minimal tool entity, added only so data/actions/peel.json's requiredTools reference resolves. Not fully modeled (no thermophysical/sensory data — tools don't need them the way ingredients do)."
+    "notes": "Minimal tool entity, added only so data/actions/peel.json's requiredTools reference resolves. Not fully modeled (no thermophysical/sensory data — tools don't need them the way ingredients do).",
+    "possibleStatesNote": "Added 2026-08-16: 'clean'/'dirty' above are a real but DELIBERATELY DEAD vocabulary slot — allowedTransformations: [] means nothing in engine.ts's normal Instance-based state-transition model ever sets or reads them, and that stays true after this note. The actual cross-contamination/hygiene mechanism (ROADMAP.md's long-open gap) is src/tool-hygiene.ts's ToolContaminationState — a runner-local map keyed by an author-chosen toolInstanceId, living outside Instance entirely, mirroring place.ts's own PlaceState precedent — NOT a reactivation of this field. Reactivating it would require giving every tool a real per-instance Instance entry for the first time, a materially bigger engine change than this gap needed. See tool-hygiene.ts's own top doc comment for the full reasoning."
   }
 }

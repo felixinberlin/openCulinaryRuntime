@@ -1383,3 +1383,66 @@ was made. Don't rewrite or delete old entries — append.
   discover only when validation fails (which is what actually happened
   here — caught by the schema's own required-range check on the first
   real run, not anticipated in advance).
+
+### Tool hygiene / cross-contamination — a repeatedly-NAMED gap that nobody had actually checked was reachable, and a design decision the user deliberately overrode
+
+- **A gap can be named in four different places (`ROADMAP.md`,
+  `LEARNINGS_TOOLING.md`, `LEARNINGS_ENGINE.md`, an external review) and
+  still never have had anyone check whether the concrete scenario it
+  describes was even MECHANICALLY REACHABLE with the vocabulary that
+  existed.** "Same knife for raw egg then a ready-to-eat ingredient" was
+  the standing example every single time this gap was named — but a
+  direct check (before writing any engine code) found no action in this
+  vocabulary ever let a knife touch RAW egg at all: `CUT` requires
+  `'peeled'`, which itself requires `'boiled'` first, and `CRACK`/
+  `SEPARATE` — the only two actions that ever touch raw egg — were both
+  `requiredTools: []`. The mechanism being designed would have been
+  correct but permanently unexercisable by its own textbook example
+  without one small, deliberate, additive touch (`crack.json` gaining an
+  optional `toolInstanceId` parameter). Worth generalizing: when a gap
+  has been named many times without being built, check reachability of
+  its own worked example before assuming the example still holds — the
+  repeated naming is evidence the GAP is real, not evidence the example
+  was ever verified.
+- **The user explicitly overrode the assistant's own recommendation
+  twice in the same design conversation, and both overrides mattered.**
+  First, choosing "cross-contamination" (architecturally novel, tools
+  have zero per-instance state anywhere) over the assistant's recommended
+  lower-risk "storage/shelf-life" alternative. Second — after seeing a
+  fully-reasoned recommendation for an unconditional hard reject, mirroring
+  `egg_pasteurization_raw.json`'s own "no disclosed-consent framing for
+  silently skipping raw-egg mitigation" precedent — choosing an ADVISORY
+  warning instead. Neither override was arbitrary: the second one
+  meaningfully simplified the resulting design (no interaction with
+  `SafetyPolicy`'s human/autonomous split needed at all, since there's
+  nothing to override in any mode). A strong technical argument for a
+  stricter default is not the same thing as the right call for every
+  mechanism — this repo's own posture varies by CCP already
+  (`egg_cooking.json` advisory vs. `egg_pasteurization_raw.json` hard
+  reject for genuinely different reasons); a NEW mechanism doesn't
+  inherit one CCP's posture just because it's the most-recently-built
+  precedent to mirror.
+- **`place.ts`'s "runner-local map, keyed by an author-chosen instance
+  id, living outside `Instance`/`applyAction`" shape generalized cleanly
+  to a second, unrelated problem** (tool contamination, not shared
+  heat) — real evidence that shape is a genuine reusable PATTERN in this
+  engine (an escape hatch for "this concept needs real per-instance
+  state but the entity/kind it attaches to has none in the core model"),
+  not a one-off special case built just for `PlaceState`. Worth watching
+  for a THIRD occurrence before promoting it to a named, documented
+  convention rather than something each new file's doc comment
+  re-derives by pointing back at `place.ts`.
+- **A previously-declared-but-dead vocabulary slot (`knife.json`'s
+  `possibleStates: ["clean","dirty",...]`, `allowedTransformations: []`)
+  looked like the obvious thing to wire up, and wiring it up was the
+  wrong call.** That machinery is `Instance`-based; tools have no
+  `Instance` representation anywhere in this engine, so reactivating it
+  would have meant giving every tool real per-instance inventory
+  tracking for the first time — a materially bigger, structurally
+  different change than the actual gap needed. The right move was
+  building the real mechanism elsewhere (mirroring `place.ts` instead)
+  and leaving the dead field honestly dead, cross-referenced rather than
+  silently implied to be wired up. Matches this repo's own recurring
+  discipline (see `knife.json`'s own new note) of naming what's NOT
+  reactivated/covered rather than letting an old declaration quietly
+  imply more than was ever built.

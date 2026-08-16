@@ -77,6 +77,22 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   Implemented as `requiredHoldSeconds` in `src/thermal.ts`, with its own
   stated validity condition (product must reach medium temperature quickly
   — thin/liquid/well-mixed, no insulating barrier).
+- **USDA "Clean, Separate, Cook, Chill" — cross-contamination prevention
+  guidance** — the general food-safety practice basis for
+  `src/tool-hygiene.ts`/`data/actions/wash_tool.json`
+  (`rawContaminationRiskStates`, `ingredient.ts`, added 2026-08-16, closing
+  ROADMAP.md's "Cross-contamination / hygiene knowledge" gap). The
+  *organism* and its thermal-inactivation citation are NOT new — reused
+  directly from `egg_cooking.json`/`egg_pasteurization_raw.json` above
+  (*Salmonella* spp., USDA FoodSafety.gov). What's cited here is the
+  *different, surface-transfer* pathway (an unwashed knife/surface carrying
+  the pathogen from raw egg to another food) rather than the egg's own
+  internal temperature. Confidence: `commonly_cited_unverified` — the
+  "Clean, Separate, Cook, Chill" framing is asserted as commonly-known,
+  established USDA consumer guidance, not independently verified against a
+  primary USDA document in this session; see `tool-hygiene.ts`'s own doc
+  comment for the mechanism this citation feeds and what's explicitly out
+  of scope.
 - **Food Allergen Labeling and Consumer Protection Act (FALCPA), 2004** —
   named 8 major food allergens (milk, egg, fish, crustacean shellfish, tree
   nuts, peanuts, wheat, soybeans) — and the **Food Allergy Safety,

@@ -1048,3 +1048,64 @@ was made. Don't rewrite or delete old entries — append.
   discipline this whole session has applied to every `invalidTransitions`
   entry, extended here to a whole action's sequencing, not just one
   forbidden edge.
+
+### `REST` — a user's real-world correction surfaced that `Instance` has NO temperature field at all, anywhere
+
+- **A user asked whether this repo correctly models "hot potato partially
+  cooks the raw egg it's mixed with" (tortilla de patatas' real
+  combine-then-rest technique) — checking `engine.ts`'s actual `Instance`
+  type (`{entityId, state, tags}`) confirmed it does not, and structurally
+  CANNOT without a real change: no ingredient instance has ever carried a
+  temperature, anywhere in this engine, once it isn't inside a tracked
+  `PlaceState`.** `place.ts` only ever tracks the VESSEL's contents'
+  temperature (the oil, the water) — the food dropped into it has no
+  tracked thermal state of its own even DURING cooking, a gap
+  `fry-egg-as-a-robot.ts`'s own closing note already named for a
+  different reason. This session chose the lightweight fix (a generic
+  `REST` verb, `addsTag: "rested"`, informational only) over the deeper
+  one (give `Instance` a real `currentTempC`, compute actual heat
+  transfer at `COMBINE` time from each side's already-cited
+  `thermophysical` mass/specific-heat data, let `REST` evolve it via
+  elapsed time) — offered to the user as an explicit choice via
+  `AskUserQuestion` rather than picked unilaterally, since unlike most
+  gaps closed this session (where "the obviously right scope" was clear
+  from precedent), this one is a genuine fork with real, different
+  future implications: the deep version would also generalize to "potato
+  keeps cooking briefly after leaving hot oil" and similar carryover
+  effects this repo has so far only modeled narrowly (egg's `SHOCK`).
+- **Worth stating explicitly why the lightweight choice is still honest,
+  not a cop-out**: `tortilla_mixture.json`'s new `rawStateHonestyNote`
+  names the specific real fact NOT being modeled (the mixture is spawned
+  `"raw"` even though the egg has typically already started cooking a
+  little by the time a human looks at it) rather than letting `REST`'s
+  existence imply the whole technique is now causally simulated. Same
+  "informational tag, real gap named in the entity's own metadata, not
+  silently implied solved" pattern this vocabulary already uses
+  everywhere else (`FRY`'s `doneness`, `oilTempC`, `coldOilStartNote`) —
+  applied here to a gap a user found by asking a direct factual question,
+  not one this repo discovered by its own audit.
+- **Deliberately did NOT let `REST`/resting feed any HACCP credit into
+  `egg_cooking`'s CCP threshold** — a real, considered decision, not an
+  omission: this repo's whole safety discipline has been "cite a real
+  D/z thermal model or don't claim the credit" (`thermal.ts`,
+  `execution-bounds.ts`), and there is no controlled, cited model here
+  for how much an uncontrolled contact-heating rest actually pasteurizes
+  loose egg. Modeling the TEXTURE/flavor effect (real, low-stakes if
+  wrong) and refusing to model a SAFETY effect (real, high-stakes if
+  wrong, and unsupported by any citation this repo has) from the same
+  underlying physical fact is a deliberate asymmetry, not an
+  inconsistency — the same distinction `LEARNINGS_DOMAIN.md`'s
+  `bakingSodaAssistedNote`-adjacent reasoning already draws between
+  informational technique facts and anything CCP-adjacent.
+- **`REST` closed two independently-named gaps with one verb, found by
+  actively checking for reuse before building single-purpose** — the
+  already-existing `par-fry.json` `restNote`/`crispy-french-fries.json`
+  `restGapNote` (a genuinely different real reason to rest: moisture/heat
+  redistribution in fried potato, not egg-protein setting) turned out to
+  need the exact same verb shape (`addsTag`, elapsed time, no state
+  change). Worth the general lesson: before building a new verb for a
+  freshly-found gap, grep whether an EXISTING named-but-unbuilt gap in
+  `ROADMAP.md` would be satisfied by the same shape — building `REST`
+  narrowly "for tortilla only" would have left the par-fry gap open for
+  no real reason, and building it "for par-fry only" earlier would have
+  missed the tortilla case entirely.

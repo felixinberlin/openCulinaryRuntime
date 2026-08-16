@@ -291,6 +291,22 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `data/actions/par-fry.json`'s `sourcesNote`/`restNote`/`thicknessNote`.
   Confidence: `commonly_cited_unverified` — a well-regarded food-science-literate
   source, not itself peer-reviewed.
+- **Convergent consumer recipe sources on resting tortilla de patatas'
+  combined potato-and-egg mixture before frying** (Spanish Sabores,
+  Kitchen Frau, and other independently-checked tortilla recipes) —
+  commonly cited rest times ranging 5–20 minutes, for two named real
+  effects: the potato absorbs some of the raw egg's flavor, and the
+  potato's own residual heat partially cooks/coagulates the egg at
+  contact surfaces before any pan heat is applied. Used in
+  `data/actions/rest.json`'s `durationSecondsNote` and
+  `data/entities/tortilla_mixture.json`'s `restNote` (added 2026-08-16,
+  directly in response to a user's real-world correction that this
+  repo's tortilla recipes were missing the step entirely). Confidence:
+  `commonly_cited_unverified` — multiple convergent consumer sources
+  checked, not one peer-reviewed primary source; the SPECIFIC contact-
+  heat-cooking mechanism is physically well-understood (ordinary
+  conductive heat transfer between two masses in contact) even though no
+  primary source here quantifies how MUCH cooking actually occurs.
 - **Inspired Taste, "Easy Crispy Fried Garlic Recipe"** —
   https://www.inspiredtaste.net/56390/fried-garlic/ — "cook until it turns
   a pale golden color, 3 to 5 minutes" at medium heat, with garlic

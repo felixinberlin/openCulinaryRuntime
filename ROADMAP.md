@@ -693,10 +693,21 @@ covered by what exists:**
       to, so the new entry sits earlier on the page despite landing
       later in the session).
 - [ ] **More common technique verbs.** ~~`SIMMER`~~ **closed 2026-08-13** —
-      see "Common culinary knowledge coverage" below. Still open: `WHISK`,
-      `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `REST` (post-cook carryover
-      exists narrowly for egg via `SHOCK`, not generally), `KNEAD`,
-      `STRAIN`/`DRAIN`. **New name added 2026-08-15, found via a real
+      see "Common culinary knowledge coverage" below. **`REST` closed
+      2026-08-16**, in direct response to a user's real-world correction
+      that this repo's tortilla-de-patatas recipes were skipping the real
+      combine-then-rest step (`data/actions/rest.json`; also closes the
+      independently-named par-fry rest gap for free — see
+      `crispy-french-fries.json`'s `restGapNote`). Informational-only
+      (`addsTag: "rested"`), matching this vocabulary's existing
+      non-causal depth: it does not, and given this engine's total lack
+      of per-instance temperature tracking (see `LEARNINGS_ENGINE.md`
+      2026-08-16), currently cannot, model the real contact-heat partial-
+      cooking effect the rest actually causes — named honestly in
+      `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
+      deliberately-scoped-out deeper alternative, not silently implied
+      closed. Still open: `WHISK`, `STEAM`, `ROAST`/`GRILL`, `MARINATE`,
+      `KNEAD`, `STRAIN`/`DRAIN`. **New name added 2026-08-15, found via a real
       recipe bug**: `REMOVE`/`TAKE_OUT` — "physically take this instance
       out of the vessel it's cooking in." `garlic-oil-potatoes.json`'s
       original step order fried garlic, then left it sitting in the hot

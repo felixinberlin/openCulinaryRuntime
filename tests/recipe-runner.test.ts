@@ -468,3 +468,85 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
     assert.equal(result.finalInventory.get("egg-1")?.state, "fried");
   });
 });
+
+// spawnedEntityIds — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 2. Added
+// so recipe-explain.ts can resolve a step targeting a spawned instance with
+// real ground truth instead of silently skipping it — see that file's own
+// executionBounds tests for the actual consumer.
+describe("runRecipe — spawnedEntityIds", () => {
+  const potato = makeEntity({ id: "potato", capabilities: { isPeelable: true }, producedByproducts: ["potato_peel"] });
+  const potatoPeel = makeEntity({ id: "potato_peel" });
+  const peel = makeAction({
+    id: "peel",
+    requiredTargetCapability: "isPeelable",
+    outputs: { transformedState: "peeled", spawnsTargetByproducts: true },
+  });
+  const entities = new Map([
+    ["potato", potato],
+    ["potato_peel", potatoPeel],
+  ]);
+  const actions = new Map([["peel", peel]]);
+
+  test("records every spawned instance id's entity id, even ones later destroyed", () => {
+    const combine = makeAction({
+      id: "combine",
+      requiredSecondaryCapability: "isCombinable",
+      outputs: { combinesInto: "mash" },
+    });
+    const mash = makeEntity({ id: "mash" });
+    const potatoPeelCombinable = makeEntity({ id: "potato_peel", capabilities: { isCombinable: true } });
+    const allEntities = new Map([
+      ["potato", potato],
+      ["potato_peel", potatoPeelCombinable],
+      ["mash", mash],
+    ]);
+    const allActions = new Map([
+      ["peel", peel],
+      ["combine", combine],
+    ]);
+    const recipe: RecipeScript = {
+      id: "spawn-test",
+      names: { en: "Spawn test" },
+      initialInventory: [
+        { id: "potato-1", entityId: "potato", state: "raw", tags: [] },
+        { id: "other-1", entityId: "potato", state: "raw", tags: [] },
+      ],
+      availableTools: [],
+      sequence: [
+        { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
+        // Consumes potato_peel-1 into a combined "mash" instance — it will
+        // no longer be in finalInventory, but spawnedEntityIds must still
+        // remember it existed and what entity it was.
+        {
+          actionId: "combine",
+          targetInstanceId: "other-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+          secondaryInstanceId: "potato_peel-1",
+        },
+      ],
+      metadata: {},
+    };
+    const result = runRecipe(recipe, allEntities, allActions);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    // potato_peel-1 was consumed by COMBINE — gone from finalInventory...
+    assert.equal(result.finalInventory.has("potato_peel-1"), false);
+    // ...but spawnedEntityIds still has it, with its real entity id.
+    assert.equal(result.spawnedEntityIds.get("potato_peel-1"), "potato_peel");
+    // The COMBINE output itself is also recorded.
+    assert.equal(result.spawnedEntityIds.get("mash-2"), "mash");
+  });
+
+  test("a recipe that never spawns anything has an empty spawnedEntityIds map", () => {
+    const recipe: RecipeScript = {
+      id: "no-spawn-test",
+      names: { en: "No spawn test" },
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
+      availableTools: [],
+      sequence: [],
+      metadata: {},
+    };
+    const result = runRecipe(recipe, entities, actions);
+    assert.equal(result.spawnedEntityIds.size, 0);
+  });
+});

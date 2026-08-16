@@ -322,6 +322,31 @@ export const ActionSchema = z.object({
    * matches `continuous`, and everywhere else where it does not yet.
    */
   actionKind: z.enum(["instantaneous", "continuous"]).optional(),
+  /**
+   * Upper time bound for a `continuous` action — TICKET 2 of
+   * `PAPER_NOTES_2608.04768.md` (`REFERENCES.md`), the direct follow-on to
+   * `actionKind` above. The paper's own generated control code pairs every
+   * continuous step's sensory termination condition with a hard timeout
+   * "derived from empirical cooking experience" so an executor makes
+   * progress even if the sensory condition never fires — this field is
+   * that ceiling, for an eventual executor built against this vocabulary.
+   * `src/execution-bounds.ts`'s `executionBoundFor` is where it's actually
+   * consumed (standalone, `applyAction`-unchanged — see that file's own
+   * doc comment); `applyAction` itself does not read this field at all.
+   *
+   * Applicable ONLY to `actionKind: "continuous"` actions (see the
+   * `.refine()` below) — an instantaneous action has no do-until loop for
+   * a timeout to bound. Every `data/actions/*.json` entry with
+   * `actionKind: "continuous"` sets a real value here as of 2026-08-16,
+   * each traced in its own `metadata.maxDurationSecondsNote` to either an
+   * already-cited source (commonly: this action's own `durationSeconds`
+   * parameter's `numericRange.max`, reused rather than duplicated — the
+   * top of an already-established real range doubles as a reasonable
+   * timeout ceiling) or an explicit HOUSE VALUE with a stated rationale,
+   * per this ticket's own acceptance criteria: "do not copy the paper's
+   * numbers — they have no stated provenance."
+   */
+  maxDurationSeconds: z.number().positive().optional(),
   /** How a machine would confirm this action's effect actually happened —
    *  see VerificationCriterionSchema's doc comment. Optional (existing
    *  actions predate this field), but every action added or touched from
@@ -351,5 +376,8 @@ export const ActionSchema = z.object({
    */
   retrySafe: z.boolean().optional(),
   metadata: z.record(z.string(), z.unknown()).default({}),
-});
+})
+  .refine((a) => !(a.actionKind === "instantaneous" && a.maxDurationSeconds !== undefined), {
+    message: "maxDurationSeconds only applies to actionKind: \"continuous\" — an instantaneous action has no do-until loop for a timeout to bound",
+  });
 export type Action = z.infer<typeof ActionSchema>;

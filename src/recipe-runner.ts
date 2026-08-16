@@ -123,6 +123,22 @@ export interface RecipeRunResult {
    *  order — the concrete, checkable record of "these instances share one
    *  place's heat," not just an assertion. */
   placeContents: Map<string, string[]>;
+  /**
+   * Every spawned instance id's entity id, for the WHOLE run — including
+   * ones later destroyed (e.g. combined into a `tortilla_mixture`) and so
+   * no longer present in `finalInventory`. Added 2026-08-16 (TICKET 2,
+   * `PAPER_NOTES_2608.04768.md`) directly because `recipe-explain.ts`'s
+   * `explainRecipe` is deliberately execution-free and can only resolve a
+   * `targetInstanceId` against `recipe.initialInventory` on its own — a
+   * step targeting a SPAWNED instance (e.g. `PASTEURIZE` on
+   * `egg_yolk-3`, `SEPARATE`'s own output) was silently unresolvable there.
+   * A caller that already has a real `RecipeRunResult` (e.g.
+   * `scripts/validate-recipe.ts`, which runs both) can pass this map into
+   * `explainRecipe` to close that gap with REAL ground truth, not a second
+   * static re-derivation of `spawnCounter`'s naming scheme (which would be
+   * exactly the parallel-source-of-truth problem this file's own top doc
+   * comment already warns against elsewhere). */
+  spawnedEntityIds: Map<string, string>;
 }
 
 function requireParam(params: Readonly<Record<string, string>>, key: string, actionVerb: string): string {
@@ -247,12 +263,15 @@ function handlePlaceIn(
   );
 }
 
-/** A generous but finite tick bound so an unreachable targetTempC (a
- *  mismatched heat source, a typo'd entity with no real ceiling) fails
- *  loudly instead of looping forever — same defensive posture as
- *  engine.ts's NaN guards elsewhere in this codebase. At the default 30s
- *  tick this is ~3.3 simulated hours, well past any real stovetop task. */
-const MAX_HEAT_TICKS = 400;
+/** Fallback tick-count bound, used ONLY if `heat_place.json` somehow lacks
+ *  `maxDurationSeconds` (action.ts, TICKET 2, PAPER_NOTES_2608.04768.md) —
+ *  every real `data/actions/heat_place.json` has one as of 2026-08-16
+ *  (1800s/30min, see its own `metadata.maxDurationSecondsNote`), so this is
+ *  defensive dead code in practice, kept as a safety net rather than
+ *  assuming the JSON will always carry the field. At the default 30s tick
+ *  this is ~3.3 simulated hours, well past any real stovetop task — same
+ *  defensive posture as engine.ts's NaN guards elsewhere in this codebase. */
+const FALLBACK_MAX_HEAT_TICKS = 400;
 
 /** HEAT_PLACE — advance a place's real, persistent temperature toward a
  *  target over real (simulated) elapsed time, ticking `place.ts`'s
@@ -306,13 +325,22 @@ function handleHeatPlace(
 
   const tickSeconds = numberOrDefault(step.params, "tickSeconds", 30);
 
+  // TICKET 2 (execution-bounds.ts, PAPER_NOTES_2608.04768.md): the real
+  // upper bound HEAT_PLACE times out against is now action.maxDurationSeconds
+  // — a real, cited-or-house-valued seconds figure on the loaded Action —
+  // not an arbitrary tick count. Falls back to the old tick-count bound only
+  // if the action genuinely has no maxDurationSeconds set (see
+  // FALLBACK_MAX_HEAT_TICKS's own doc comment).
+  const maxElapsedSeconds = action.maxDurationSeconds ?? FALLBACK_MAX_HEAT_TICKS * tickSeconds;
+
   let place = place0;
   let elapsedSeconds = 0;
   let ticks = 0;
   while (!isAtTargetTemp(place, targetTempC)) {
-    if (ticks >= MAX_HEAT_TICKS) {
+    if (elapsedSeconds >= maxElapsedSeconds) {
       throw new Error(
-        `${action.verb}: place "${placeId}" did not reach ${targetTempC}°C after ${elapsedSeconds}s (${ticks} ticks) — check heatSourceId/targetTempC.`
+        `${action.verb}: place "${placeId}" did not reach ${targetTempC}°C after ${elapsedSeconds}s (${ticks} ticks) — ` +
+          `exceeded maxDurationSeconds (${maxElapsedSeconds}s); check heatSourceId/targetTempC.`
       );
     }
     place = advanceTempSeconds(place, heatSource, tickSeconds, contentsEntity, targetTempC);
@@ -398,6 +426,7 @@ export function runRecipe(
   const warnings: string[] = [];
   const places = new Map<string, PlaceState>();
   const placeContents = new Map<string, string[]>();
+  const spawnedEntityIds = new Map<string, string>();
   let spawnCounter = 0;
 
   for (const step of recipe.sequence) {
@@ -517,6 +546,7 @@ export function runRecipe(
       for (const spawned of result.spawned) {
         const spawnedId = `${spawned.entityId}-${++spawnCounter}`;
         inventory.set(spawnedId, spawned);
+        spawnedEntityIds.set(spawnedId, spawned.entityId);
         log.push(`  spawned ${spawnedId} (${spawned.entityId}, state: "${spawned.state}")`);
       }
     } catch (err) {
@@ -526,5 +556,5 @@ export function runRecipe(
     }
   }
 
-  return { finalInventory: inventory, errors, log, warnings, places, placeContents };
+  return { finalInventory: inventory, errors, log, warnings, places, placeContents, spawnedEntityIds };
 }

@@ -451,7 +451,21 @@ it ever being mistaken for a safety citation.
   `recipe-runner.ts` had already arrived at the identical split
   independently, unnamed, from the simulation side; this paper reaches it
   from the hardware side, real convergent evidence rather than a borrowed
-  framework. Confidence: `commonly_cited_unverified` — a preprint, not
+  framework — and the **sensory-OR-timeout dual bound**
+  (`action.ts`'s `maxDurationSeconds`, `src/execution-bounds.ts`'s
+  `ExecutionBound`, `LEARNINGS_ENGINE.md` 2026-08-16): the paper's own
+  generated control code pairs every continuous step's sensory termination
+  condition with a hard timeout "derived from empirical cooking
+  experience" — this repo's `maxDurationSeconds` values are NOT copied
+  from the paper (it states no provenance for its own numbers; see this
+  citation's own confidence note); every `data/actions/*.json` value is
+  either reused from that action's own already-cited `durationSeconds`
+  range or an explicitly-marked house value with a stated rationale
+  (`metadata.maxDurationSecondsNote` on all 18 `continuous` actions). The
+  CCP-floor-as-adversary framing (a sensor must not be able to override a
+  real microbiological hold-time floor) is this repo's own contribution,
+  not the paper's — its architecture lets a sensory reading end a step
+  outright. Confidence: `commonly_cited_unverified` — a preprint, not
   peer-reviewed; see `PAPER_NOTES_2608.04768.md` §6 for specific,
   independently-checked reasons for caution about OTHER claims in this
   same paper (a real arithmetic looseness in its reported percentage

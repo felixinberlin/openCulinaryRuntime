@@ -1,6 +1,7 @@
 import type { Entity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
+import type { CriticalControlPoint } from "./thermal.ts";
 import { eggBoilDonenessRangeForSize } from "./egg-doneness.ts";
 import { potatoBoilDonenessRange } from "./potato-doneness.ts";
 import { cutShapeDimensionMm, halvedOrQuarteredDimensionMm } from "./cut-dimensions.ts";
@@ -10,6 +11,7 @@ import {
   secondsForCenterToReachTempC,
   POTATO_FORK_TENDER_CENTER_TEMP_C,
 } from "./heat-penetration.ts";
+import { executionBoundFor, type ExecutionBound } from "./execution-bounds.ts";
 
 /**
  * A pre-flight, read-only report over a `RecipeScript` — computed WITHOUT
@@ -97,6 +99,18 @@ export interface RecipeExplanation {
   /** actionKind for every step, in sequence order — see StepActionKind's
    *  own doc comment for why this is display-only. */
   actionKinds: StepActionKind[];
+  /**
+   * `execution-bounds.ts`'s dual sensory-timeout/safety-floor bound for
+   * every step where one actually applies (TICKET 2,
+   * `PAPER_NOTES_2608.04768.md`) — filtered, unlike `actionKinds` above,
+   * to only the steps `executionBoundFor` returns something for
+   * (instantaneous actions and continuous actions with no
+   * `maxDurationSeconds` are skipped rather than listed as "none", to
+   * avoid drowning the real entries in noise). Read-only, pre-flight
+   * display only — does NOT change `runRecipe`'s dispatch behavior, same
+   * scoping `actionKinds` itself uses.
+   */
+  executionBounds: { stepIndex: number; actionId: string; targetInstanceId: string; bound: ExecutionBound }[];
 }
 
 function candidatesForCapability(entities: Map<string, Entity>, capability: string, kind?: Entity["kind"]): string[] {
@@ -108,7 +122,24 @@ function candidatesForCapability(entities: Map<string, Entity>, capability: stri
 export function explainRecipe(
   recipe: RecipeScript,
   entities: Map<string, Entity>,
-  actions: Map<string, Action>
+  actions: Map<string, Action>,
+  // Optional, defaulted — added 2026-08-16 (TICKET 2,
+  // PAPER_NOTES_2608.04768.md) alongside executionBounds below. Every
+  // pre-existing call site (this file's own 20+ synthetic-fixture tests
+  // included) is unaffected: omitting ccps just means executionBoundFor
+  // never finds a CCP, so executionBounds comes back empty rather than
+  // wrong — the same "additive, non-breaking" convention every other
+  // optional parameter in this codebase follows.
+  ccps: ReadonlyMap<string, CriticalControlPoint> = new Map(),
+  // Optional, defaulted, added alongside ccps above — a step targeting a
+  // SPAWNED instance id (e.g. PASTEURIZE on egg_yolk-3, SEPARATE's own
+  // output) can't be resolved against recipe.initialInventory alone; a
+  // caller that already ran runRecipe (e.g. scripts/validate-recipe.ts)
+  // can pass its real RecipeRunResult.spawnedEntityIds here to close that
+  // gap with REAL ground truth. Omitting it just means those steps are
+  // silently skipped in executionBounds below, same as before this
+  // parameter existed — not wrong, just less complete.
+  spawnedEntityIds: ReadonlyMap<string, string> = new Map()
 ): RecipeExplanation {
   const availableTools = new Set(recipe.availableTools);
 
@@ -132,12 +163,24 @@ export function explainRecipe(
   const shapeByInstanceId = new Map<string, string>();
 
   const actionKinds: StepActionKind[] = [];
+  const executionBounds: RecipeExplanation["executionBounds"] = [];
 
   for (const [stepIndex, step] of recipe.sequence.entries()) {
     const action = actions.get(step.actionId);
     if (!action) continue; // unknown action ids are runRecipe's job to reject, not this report's
 
     actionKinds.push({ stepIndex, actionId: step.actionId, actionKind: action.actionKind ?? null });
+
+    const targetEntityId =
+      recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId ??
+      spawnedEntityIds.get(step.targetInstanceId);
+    const targetEntity = targetEntityId ? entities.get(targetEntityId) : undefined;
+    if (targetEntity) {
+      const bound = executionBoundFor(action, targetEntity, step.params, ccps);
+      if (bound) {
+        executionBounds.push({ stepIndex, actionId: step.actionId, targetInstanceId: step.targetInstanceId, bound });
+      }
+    }
 
     for (const toolId of action.requiredTools) toolsNeeded.add(toolId);
     for (const cap of action.requiredToolCapabilities) toolCapsNeeded.add(cap);
@@ -322,5 +365,6 @@ export function explainRecipe(
     timingAdvisories,
     prepAdvisories,
     actionKinds,
+    executionBounds,
   };
 }

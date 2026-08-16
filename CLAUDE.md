@@ -145,6 +145,32 @@ Same day, `egg-doneness.ts` gained `EGG_SIZE_ADJUSTMENT_SECONDS`/
 parameter) — a real, cited offset on top of the existing large-egg-only
 table, not a second competing one.
 
+A sixth, 2026-08-16: `src/execution-bounds.ts` (`executionBoundFor`) —
+implementing TICKET 2 of a user-supplied paper read (`PAPER_NOTES_2608.
+04768.md`, analyzing Song et al., arXiv:2608.04768 — `REFERENCES.md`),
+the direct follow-on to `action.ts`'s new `actionKind` field (TICKET 1,
+same day). Computes a dual bound for a continuous action: `maxDuration
+Seconds` (the paper's own sensory-OR-timeout ceiling, set on all 18
+`continuous` actions) and `minSafeHoldSeconds` (a real safety floor read
+from this repo's existing CCP machinery, `thermal.ts`/`data/ccps/*.json`
+— including the D/z `thermalModel` computation where one applies) that a
+plausible sensory "looks done" signal must not be allowed to override.
+Same standalone-module-before-engine-wiring precedent as `place.ts`/
+`heat-source.ts`/`egg-doneness.ts` — `engine.ts`'s `applyAction` is
+completely unchanged; surfaced read-only in `recipe-explain.ts`'s new
+`executionBounds` field (`npm run validate-recipe`). Proven via `npm run
+capability-test:execution-bounds`
+(`scripts/reject-early-sensory-termination.ts`), which shows a plausible
+early sensory reading correctly rejected against both a flat CCP floor
+(egg via `BOIL`) and a real D/z-computed one (`egg_yolk` via
+`PASTEURIZE`), citation printed. Building this also found and fixed a
+real, independently-discovered gap in `recipe-explain.ts` itself (it
+couldn't resolve a step targeting a SPAWNED instance, e.g. `PASTEURIZE`
+on `egg_yolk-3` — exactly the ticket's own best demo case) via a new
+`RecipeRunResult.spawnedEntityIds` map on `recipe-runner.ts`, not a
+second, parallel re-derivation of the spawn-id naming scheme — see
+`LEARNINGS_ENGINE.md` 2026-08-16 for the full reasoning.
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.

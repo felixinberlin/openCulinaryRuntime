@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
 import { explainRecipe } from "../src/recipe-explain.ts";
-import { makeEntity, makeAction } from "./helpers.ts";
+import { makeEntity, makeAction, makeCcp } from "./helpers.ts";
 import type { RecipeScript } from "../src/recipe.ts";
 
 /**
@@ -419,5 +419,83 @@ describe("explainRecipe — actionKinds", () => {
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.actionKinds, []);
+  });
+});
+
+// executionBounds — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 2. Display-
+// only, same scoping as actionKinds above.
+describe("explainRecipe — executionBounds", () => {
+  const water = makeEntity({ id: "water", capabilities: { isBoilingMedium: true } });
+  const egg = makeEntity({ id: "egg", capabilities: { isBoilable: true }, criticalControlPointsByAction: { boil: "egg_cooking" } });
+  const boil = makeAction({
+    id: "boil",
+    actionKind: "continuous",
+    maxDurationSeconds: 2400,
+    requiredIngredientCapabilities: ["isBoilingMedium"],
+    outputs: { transformedState: "boiled" },
+  });
+  const salt = makeAction({ id: "salt", actionKind: "instantaneous", outputs: { addsTag: "salted" } });
+  const entities = new Map([
+    ["water", water],
+    ["egg", egg],
+  ]);
+  const actions = new Map([
+    ["boil", boil],
+    ["salt", salt],
+  ]);
+  const ccps = new Map([[
+    "egg_cooking",
+    makeCcp({ id: "egg_cooking", heldC: 63, heldSeconds: 15, source: "test fixture — egg_cooking CCP" }),
+  ]]);
+
+  test("a continuous action's bound is reported when ccps is supplied", () => {
+    const recipe = makeRecipe({
+      initialInventory: [
+        { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+        { id: "water-1", entityId: "water", state: "cold", tags: [] },
+      ],
+      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: ["water-1"] }],
+    });
+    const report = explainRecipe(recipe, entities, actions, ccps);
+    assert.equal(report.executionBounds.length, 1);
+    assert.equal(report.executionBounds[0].bound.maxDurationSeconds, 2400);
+    assert.equal(report.executionBounds[0].bound.minSafeHoldSeconds, 15);
+    assert.equal(report.executionBounds[0].bound.floorIsSafetyCritical, true);
+  });
+
+  test("omitting ccps entirely (existing call sites, unaffected) still reports a bound, just with no CCP floor", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
+      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions); // no ccps argument at all
+    assert.equal(report.executionBounds.length, 1);
+    assert.equal(report.executionBounds[0].bound.floorIsSafetyCritical, false);
+  });
+
+  test("an instantaneous action never appears in executionBounds", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
+      sequence: [{ actionId: "salt", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions, ccps);
+    assert.deepEqual(report.executionBounds, []);
+  });
+
+  test("a step targeting a SPAWNED instance (not in initialInventory) is resolved via the spawnedEntityIds parameter", () => {
+    const recipe = makeRecipe({
+      initialInventory: [],
+      sequence: [{ actionId: "boil", targetInstanceId: "egg-9", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    // Without spawnedEntityIds: silently skipped (egg-9 isn't in initialInventory).
+    const withoutMap = explainRecipe(recipe, entities, actions, ccps);
+    assert.deepEqual(withoutMap.executionBounds, []);
+
+    // With it (the real ground truth a caller like validate-recipe.ts would
+    // have from an actual runRecipe result): resolved correctly.
+    const withMap = explainRecipe(recipe, entities, actions, ccps, new Map([["egg-9", "egg"]]));
+    assert.equal(withMap.executionBounds.length, 1);
+    assert.equal(withMap.executionBounds[0].targetInstanceId, "egg-9");
+    assert.equal(withMap.executionBounds[0].bound.minSafeHoldSeconds, 15);
   });
 });

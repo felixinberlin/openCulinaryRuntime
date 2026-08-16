@@ -106,7 +106,7 @@ export function narrateRecipe(
   actions: Map<string, Action>,
   ccps: Map<string, CriticalControlPoint> = new Map()
 ): RecipeNarration {
-  const explanation = explainRecipe(recipe, entities, actions);
+  const explanation = explainRecipe(recipe, entities, actions, ccps);
   const result = runRecipe(recipe, entities, actions, ccps);
 
   // targetEntityId lookup: initial inventory ids resolve directly; ids

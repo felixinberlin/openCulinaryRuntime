@@ -21,10 +21,12 @@
   "duration": "variable",
   "precision": "optional",
   "actionKind": "continuous",
+  "maxDurationSeconds": 5400,
   "metadata": {
     "notes": "Dry heat: unlike FRY/BOIL, no medium ingredient is required at all — requiredIngredientCapabilities is deliberately empty, not just satisfied by something ambient.",
     "retrySafeNote": "retrySafe: true (data-level, no duplication) — but re-baking an already-done target risks drying it out/overcooking, same culinary caveat as fry.json/boil.json's cooking actions.",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, in an oven rather than a liquid/oil medium — a real, elapsed-time thermal process. No place.ts/oven wiring exists at all yet (oven.json has no thermophysical data) — applyAction executes it atomically today, an honest gap this field makes explicit rather than hides."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, in an oven rather than a liquid/oil medium — a real, elapsed-time thermal process. No place.ts/oven wiring exists at all yet (oven.json has no thermophysical data) — applyAction executes it atomically today, an honest gap this field makes explicit rather than hides.",
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced (this action has no durationSeconds parameter to reuse a max from at all — its own gap, unrelated to this ticket). 5400s (90 minutes) is a generous outer bound covering typical home-oven baking tasks (most baked dishes finish well under 90 minutes); hitting it indicates something has gone wrong (wrong temperature, wrong dish), not a legitimately slow bake. Not derived from any specific cited dish or source."
   },
   "verification": {
     "method": "thermal",

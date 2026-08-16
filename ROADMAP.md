@@ -55,6 +55,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Shared-pot heat, boiling_start vs. cold_start — identical mechanism, real step-order difference, disproves "independent, unlinked applyAction calls" | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pot-heat` |
 | Place-aware fried egg — FILL/HEAT_PLACE generalized to oil (isPourable/isVessel), FRY rejected while oil is genuinely cold, real huevo_frito params reused | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- fried_egg_shared_pan` |
 | Shared-pan heat, FRY readiness gated on real oil temperature — same mechanism as BOIL's, reading fry.json's own oilTempC minimum | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pan-heat` |
+| Reject early sensory termination — a plausible "looks done" sensor reading correctly rejected against a real CCP floor (flat + D/z-computed cases), citation printed | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:execution-bounds` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1146,6 +1147,48 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       (most of this vocabulary's mixing/mechanical verbs, now nameable),
       not a fix for any of them — `heat_place` remains the only action
       where `continuous` is already matched by real engine behavior.
+- [x] **`maxDurationSeconds`/`src/execution-bounds.ts` — closed 2026-08-16,
+      same day, TICKET 2 of the same paper read.** The paper's own generated
+      control code pairs every continuous step's sensory termination
+      condition with a hard timeout — `action.ts`'s new `maxDurationSeconds`
+      is that ceiling, set on all 18 `continuous` actions (reused from each
+      action's own already-cited `durationSeconds.numericRange.max` where
+      one exists; an explicit HOUSE VALUE with a stated rationale where none
+      does — `metadata.maxDurationSecondsNote` on each, per the ticket's own
+      "do not copy the paper's numbers" acceptance criterion). New standalone
+      module `src/execution-bounds.ts` (`executionBoundFor`, same
+      standalone-before-engine-wiring precedent as `place.ts`/
+      `heat-source.ts`) computes the REAL asymmetry this ticket names: a
+      `minSafeHoldSeconds` floor read from this repo's existing CCP
+      machinery (`thermal.ts`, `data/ccps/*.json`, including the real D/z
+      `thermalModel` computation where one applies) that a plausible sensory
+      "looks done" signal must NOT be allowed to override — `ENGINE_
+      INVARIANTS.md` #11's control/perception gap, now with a concrete
+      adversary. Proven via `scripts/reject-early-sensory-termination.ts`
+      (`npm run capability-test:execution-bounds`), two real cases (`BOIL`
+      on egg's flat 15s floor; `PASTEURIZE` on `egg_yolk`'s real D/z-computed
+      floor), both showing a plausible early sensory reading correctly
+      REJECTED with the CCP's own citation printed. Surfaced read-only in
+      `recipe-explain.ts`'s `executionBounds` (`npm run validate-recipe`);
+      `engine.ts`'s `applyAction` is completely unchanged, per the ticket's
+      own acceptance criterion. One real, narrow exception, staying inside
+      `recipe-runner.ts` not `engine.ts`: `HEAT_PLACE`'s own tick-loop
+      timeout now reads `action.maxDurationSeconds` directly instead of an
+      ad hoc tick-count constant — a concrete, already-real mechanism this
+      field made more principled, not new engine surface.
+      \
+      **A real, independently-found gap fixed along the way, not left as a
+      known limitation**: `recipe-explain.ts`'s pre-flight resolution had
+      always been unable to identify a step's target entity when it named a
+      SPAWNED instance (e.g. `PASTEURIZE` on `egg_yolk-3`) — silently
+      skipped rather than reported, the exact case this ticket's own best
+      demo needed most. Fixed by giving `recipe-runner.ts`'s
+      `RecipeRunResult` a new `spawnedEntityIds` map (every instance ever
+      spawned during a run, including ones later destroyed) that a caller
+      who already ran `runRecipe` can pass into `explainRecipe` — real
+      ground truth, not a second, parallel re-derivation of the spawn-id
+      naming scheme. See `LEARNINGS_ENGINE.md` 2026-08-16 for the full
+      reasoning on why the quick/wrong fix was rejected on sight.
 - [x] **`state` vs. `tags` modeling fix for `WASH` — closed 2026-08-15,
       found by a user correction, not self-discovered.** After the fix
       above, the user pointed out the wash/peel/cut order itself wasn't

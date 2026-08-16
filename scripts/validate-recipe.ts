@@ -51,9 +51,19 @@ if (!parsed.success) {
 }
 const recipe = parsed.data;
 
+// Run first (silently — its own log is printed later, under "Running the
+// recipe") so explainRecipe below can resolve a step targeting a SPAWNED
+// instance (e.g. PASTEURIZE on egg_yolk-3) using real ground truth
+// (spawnedEntityIds) rather than silently skipping it — see
+// recipe-runner.ts's RecipeRunResult.spawnedEntityIds and
+// recipe-explain.ts's own doc comment for why this doesn't make
+// explainRecipe itself execution-dependent (the parameter is optional,
+// defaulted, and this is the only caller relying on it).
+const result = runRecipe(recipe, entities, actions, ccps, undefined, heatSources);
+
 console.log(`=== Pre-flight report: "${recipe.names.en}" ===\n`);
 
-const explanation = explainRecipe(recipe, entities, actions);
+const explanation = explainRecipe(recipe, entities, actions, ccps, result.spawnedEntityIds);
 
 console.log(`Tools needed:  ${explanation.tools.needed.join(", ") || "(none)"}`);
 console.log(`Tools declared (availableTools): ${recipe.availableTools.join(", ") || "(none)"}`);
@@ -74,6 +84,19 @@ for (const { stepIndex, actionId, actionKind } of explanation.actionKinds) {
   console.log(`  [${stepIndex}] ${actionId}: ${actionKind ?? "unaudited"}`);
 }
 
+if (explanation.executionBounds.length > 0) {
+  console.log(
+    "\nExecution bounds (execution-bounds.ts, PAPER_NOTES_2608.04768.md TICKET 2 — sensory-OR-timeout dual bound):"
+  );
+  for (const { stepIndex, actionId, targetInstanceId, bound } of explanation.executionBounds) {
+    const floor =
+      bound.minSafeHoldSeconds !== undefined
+        ? `${bound.minSafeHoldSeconds.toFixed(1)}s minSafeHoldSeconds (safety-critical CCP floor — no sensor may end this step before it)`
+        : "no CCP floor applies";
+    console.log(`  [${stepIndex}] ${actionId} on "${targetInstanceId}": maxDurationSeconds=${bound.maxDurationSeconds}s, ${floor}`);
+  }
+}
+
 console.log(`\nIngredient capabilities needed: ${explanation.ingredients.needed.join(", ") || "(none)"}`);
 for (const { capability, candidates } of explanation.ingredients.missing) {
   console.log(
@@ -92,7 +115,6 @@ if (explanation.prepAdvisories.length > 0) {
 }
 
 console.log("\n=== Running the recipe (ground truth) ===\n");
-const result = runRecipe(recipe, entities, actions, ccps, undefined, heatSources);
 for (const line of result.log) console.log(line);
 
 console.log("\nFinal inventory:");

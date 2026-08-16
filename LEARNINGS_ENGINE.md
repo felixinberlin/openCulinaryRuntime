@@ -782,3 +782,58 @@ was made. Don't rewrite or delete old entries — append.
   state transition today. The field makes that gap nameable and greppable
   ("which actions claim to be continuous but aren't modeled that way yet"
   is now a real query against `data/actions/*.json`), not closed.
+
+### `maxDurationSeconds`/`execution-bounds.ts` — the CCP floor as a concrete adversary to a plausible sensor
+
+- **Building the demo script (`scripts/reject-early-sensory-termination.ts`)
+  surfaced a real, silent gap in `recipe-explain.ts` before the ticket's
+  own acceptance criteria could even be satisfied: the flagship example —
+  `PASTEURIZE` on a spawned `egg_yolk` instance — didn't appear in the new
+  `executionBounds` report at all.** `explainRecipe` only ever resolved a
+  step's target entity against `recipe.initialInventory`
+  (`recipe.initialInventory.find(...)`) — the same limitation the
+  pre-existing WASH/PEEL/CUT heuristic has always had, never previously
+  visible as a problem because nothing important depended on it. A step
+  targeting a SPAWNED instance id (`egg_yolk-3`, `SEPARATE`'s own output)
+  was silently unresolvable, and silently skipped rather than reported —
+  exactly the failure mode this whole session's discipline exists to
+  catch, this time in a new module's own acceptance test rather than a
+  data file.
+- **The tempting quick fix — re-derive spawned instance ids statically
+  inside `explainRecipe` by re-implementing `recipe-runner.ts`'s
+  `spawnCounter` naming scheme — was rejected on sight, not just in
+  retrospect.** That would have created exactly the "second, parallel
+  source of truth" this same ticket's own instructions warned against for
+  `minSafeHoldSeconds` (read from the real CCP machinery, not
+  re-derived) — applied to a different kind of ground truth (spawn ids
+  instead of hold times), but the same principle. `explainRecipe` is
+  deliberately execution-free by design (its own top doc comment); making
+  it secretly re-simulate spawn behavior to fix one report field would
+  have quietly broken that invariant for a narrow, local win.
+- **The actual fix: give `recipe-runner.ts`'s `RecipeRunResult` a new
+  `spawnedEntityIds: Map<instanceId, entityId>` — a complete record of
+  every instance ever spawned during a run, including ones later
+  destroyed (e.g. consumed by a later `COMBINE`) and so absent from
+  `finalInventory`.** This is real ground truth from the ONE place spawn
+  ids are actually generated, not a re-derivation — `explainRecipe` gained
+  an optional, defaulted `spawnedEntityIds` parameter a caller who already
+  ran `runRecipe` (`scripts/validate-recipe.ts`) can supply, closing the
+  gap with zero new sources of truth and zero change to `explainRecipe`'s
+  own "no execution" design constraint (the caller executes; the function
+  itself still doesn't). Proven by a synthetic-fixture test
+  (`tests/recipe-runner.test.ts`) that deliberately destroys the spawned
+  instance via `COMBINE` before checking `spawnedEntityIds` still
+  remembers it — the exact case `finalInventory` alone would have missed.
+- **The `waterTempC`-only key `execution-bounds.ts` reads to trigger a
+  CCP's D/z `thermalModel` was copied byte-for-byte from `engine.ts`'s own
+  `applyAction`, including that function's own real, pre-existing
+  narrowness** (FRY declares `oilTempC`, not `waterTempC`, so FRY's own
+  CCP checks — where one exists — never actually trigger the D/z path in
+  `applyAction` either, today). Generalizing this NEW module to also read
+  `oilTempC` would have been a real, easy-looking improvement — and
+  exactly the wrong move: it would have made `execution-bounds.ts`
+  compute a DIFFERENT answer than `applyAction` would for the identical
+  action/entity/params, the two-sources-of-truth problem again, just
+  discovered a second time in the same session under a different name.
+  Reproducing a known narrowness faithfully, and naming it as such, beats
+  fixing it quietly in only one of two places that need to agree.

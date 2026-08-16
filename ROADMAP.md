@@ -57,6 +57,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Shared-pan heat, FRY readiness gated on real oil temperature — same mechanism as BOIL's, reading fry.json's own oilTempC minimum | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pan-heat` |
 | Reject early sensory termination — a plausible "looks done" sensor reading correctly rejected against a real CCP floor (flat + D/z-computed cases), citation printed | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:execution-bounds` |
 | Failure states as a robot — burned/overcooked reachable and correctly terminal, FRY on a burned potato rejected, SALT on the same instance still succeeds, pre-flight advisory fires | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:failure-states` |
+| Is goal still reachable — real dead ends with named reasons, a surprising real gap found by pure graph search, a found path actually executed against the real engine, determinism verified | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:reachability` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1558,6 +1559,69 @@ domain facts.
       world state to a goal. Every `data/recipes/*.json` file today is a
       hand-computed example of exactly this search, done manually, one file
       at a time.
+      \
+      **The QUERY half — "is a goal still reachable from here" — closed
+      2026-08-16, TICKET 4 of `PAPER_NOTES_2608.04768.md`, deliberately the
+      LAST of that ticket list ("the real work... do last, do slowly").**
+      `src/reachability.ts`'s `isGoalReachable` is real BFS over exactly
+      this planning-domain shape (`allowedTransformations` as candidate
+      edges, `requiredTargetCapability`/`requiredTools`/
+      `requiredToolCapabilities`/`requiredIngredientCapabilities` as
+      preconditions, `invalidTransitions` as closures) — the outer bullet's
+      own framing turned out to be exactly right. Scoped DELIBERATELY
+      NARROWER than the full item above, stated rather than implied
+      covered: REACHABILITY only, not migration/planning (proposing an
+      alternative goal needs a real planner this repo doesn't have — the
+      still-unchecked items below); discrete state/tag graph only, no
+      numeric fluents/thermal dose/tolerance metric (the paper's own
+      equation (9) distance metric `D(·,·)` has no stated weights — not
+      reproduced); single-instance scope (`requiredSecondaryCapability`
+      COMBINE-shaped edges are recorded as blocked, not explored — no
+      model of a second instance being available). `engine.ts`'s
+      `applyAction` is completely unchanged. Deterministic BFS, fixed
+      tie-break order (`entity.allowedTransformations`'s own declared
+      array order, `parameters[].allowedValues`'s own array order) — tested
+      directly, not assumed (`tests/reachability.test.ts`).
+      \
+      **Two real findings surfaced while building this, both checked
+      against real data before acting on them, neither assumed**: (1) the
+      ticket's own suggested forcing case ("mashed potato closed off from
+      fried") is factually WRONG against this repo's already-audited data
+      — `mashed → fried` is deliberately legal (`mashNote`'s potato-cakes
+      exception) — caught by reading `potato.json` directly, not trusted
+      from the ticket's prose (`LEARNINGS_PROCESS.md` 2026-08-16). (2) The
+      tool itself then found a REAL, previously-invisible gap by pure graph
+      search: `mashed potato → goal "peeled"` reports reachable (via
+      `mashed → fry → peel`), because `potato.json` has no `"fried"` key in
+      `invalidTransitions` at all — unlike `egg.json`'s own already-audited
+      `fried`/`poached` forbidding `peeled`. Deliberately NOT patched here
+      (a proper fix needs the same dedicated, real-technique-checked audit
+      `egg.json` got on 2026-08-15, not a rushed one-line addition under a
+      different ticket's scope) — named as a real, concrete follow-up
+      instead, exactly the kind of question this ticket's own "why" section
+      says a reachability tool answers that the field currently answers
+      "empirically and expensively." A smaller, directly analogous, and
+      DID get fixed: `egg.json` was missing a `"separated"` closure
+      forbidding `boiled`/`fried`/`poached` (the same "no shell/intact
+      structure in play" reasoning already established for `fried`/
+      `poached` forbidding `peeled`) — fixed in the same change
+      (`egg.json`'s own `separatedNote`), enabling this ticket's own second
+      real dead-end example (a separated egg can never reach a whole
+      boiled egg again — not because of a state closure alone, but because
+      `SEPARATE`'s `destroysTarget` means the original instance no longer
+      exists to reach anything, modeled as a real `instance_destroyed`
+      dead end with zero outgoing edges).
+      \
+      Proven via `scripts/is-goal-still-reachable.ts` (`npm run
+      capability-test:reachability`): two real, verified dead ends with
+      specific named reasons (a terminal `burned` potato; a `separated`
+      egg), the surprising-but-real `mashed → peeled` reachable finding
+      above, a real mid-recipe reachable case (raw potato with a `washed`
+      tag, goal `fried`) whose found path is then ACTUALLY EXECUTED against
+      `engine.ts`'s real `applyAction` step by step (not just claimed), and
+      a direct determinism check (identical query, run twice, identical
+      result). 14 new unit tests in `tests/reachability.test.ts` against
+      synthetic fixtures, independent of `data/*.json`'s current shape.
 - [ ] Closed-loop / replanning execution mode, distinct from
       `recipe-runner.ts`'s current "log the failure, continue to the next
       step anyway" — correct for offline validation, actively wrong if ever

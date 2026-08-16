@@ -43,6 +43,7 @@
     "capability-test:shared-pan-heat": "tsx scripts/shared-pan-heat-as-a-robot.ts",
     "capability-test:execution-bounds": "tsx scripts/reject-early-sensory-termination.ts",
     "capability-test:failure-states": "tsx scripts/failure-states-as-a-robot.ts",
+    "capability-test:reachability": "tsx scripts/is-goal-still-reachable.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

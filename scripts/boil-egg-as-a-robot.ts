@@ -37,7 +37,9 @@ const yolkDoneness = "medium" as const;
 const potWaterMassKg = 1.2; // a realistic small-pot quantity for boiling a couple of eggs
 const startTempC = 15; // tap-cold
 
-console.log(`Goal: a "${yolkDoneness}" boiled egg, ${potWaterMassKg}kg water, starting at ${startTempC}°C, on ${heatSource.names.en}.\n`);
+console.log(
+  `Goal: a "${yolkDoneness}" boiled egg, ${potWaterMassKg}kg water, starting at ${startTempC}°C, on ${heatSource.names.en}.\n`
+);
 
 // ---------------------------------------------------------------------
 // 1. "Put water in a pan." — a real quantity, actually poured, not an
@@ -63,7 +65,9 @@ while (!isAtBoiling(place, water)) {
   elapsedPreheatSeconds += TICK_SECONDS;
   console.log(`   +${elapsedPreheatSeconds}s: ${place.currentTempC.toFixed(1)}°C`);
 }
-console.log(`   Boiling reached (${water.thermophysical!.boilingPointC}°C) after ${elapsedPreheatSeconds}s.\n`);
+console.log(
+  `   Boiling reached (${water.thermophysical!.boilingPointC}°C) after ${elapsedPreheatSeconds}s.\n`
+);
 
 // ---------------------------------------------------------------------
 // 3. "Put the egg very delicately." — closed 2026-08-14 (boil.json's new
@@ -78,7 +82,9 @@ console.log(`   Boiling reached (${water.thermophysical!.boilingPointC}°C) afte
 //    this one parameter deliberately does NOT also cover.
 // ---------------------------------------------------------------------
 const placementMethod = "lowered_with_spoon" as const;
-console.log(`3. Egg placement: "${placementMethod}" — avoids the mechanical-impact crack a drop risks (boil.json's placementMethodNote).\n`);
+console.log(
+  `3. Egg placement: "${placementMethod}" — avoids the mechanical-impact crack a drop risks (boil.json's placementMethodNote).\n`
+);
 
 // ---------------------------------------------------------------------
 // 4. "Is salt needed?" — No. egg.json's own crackContainmentNote is
@@ -87,7 +93,9 @@ console.log(`3. Egg placement: "${placementMethod}" — avoids the mechanical-im
 //    leak if the shell already cracked, a contingency, not a requirement.
 //    Correctly not called here — this recipe has no reason to.
 // ---------------------------------------------------------------------
-console.log("4. Salt needed? No — see egg.json's crackContainmentNote: salt only helps CONTAIN a leak if the shell");
+console.log(
+  "4. Salt needed? No — see egg.json's crackContainmentNote: salt only helps CONTAIN a leak if the shell"
+);
 console.log("   cracks, it has no effect on doneness or safety. Not used in this run.\n");
 
 // ---------------------------------------------------------------------
@@ -101,7 +109,9 @@ console.log("   cracks, it has no effect on doneness or safety. Not used in this
 // ---------------------------------------------------------------------
 const { min, max } = eggBoilDonenessRange(yolkDoneness);
 const holdSeconds = Math.round((min + max) / 2); // midpoint of the cited range
-console.log(`5. "${yolkDoneness}" resolves to ${min}-${max}s held at boiling — using the midpoint, ${holdSeconds}s.\n`);
+console.log(
+  `5. "${yolkDoneness}" resolves to ${min}-${max}s held at boiling — using the midpoint, ${holdSeconds}s.\n`
+);
 
 const policy: SafetyPolicy = { mode: "autonomous" }; // no human present — ENGINE_INVARIANTS.md #11
 const tools = new Set(["pot"]);
@@ -118,10 +128,21 @@ const boiled = applyAction(
   policy
 );
 console.log(`   BOIL executed: "${rawEgg.state}" -> "${boiled.instance.state}"`);
-console.log(`   HACCP warnings: ${boiled.warnings.length === 0 ? "none" : boiled.warnings.join("; ")}\n`);
+console.log(
+  `   HACCP warnings: ${boiled.warnings.length === 0 ? "none" : boiled.warnings.join("; ")}\n`
+);
 
-const shocked = applyAction(boiled.instance, actions.get("shock")!, entities, new Set(["bowl"]), {}, ingredients).instance;
-console.log(`6. SHOCK immediately (carryover cooking — shock.json's carryoverCookingNote): "${boiled.instance.state}" -> "${shocked.state}"\n`);
+const shocked = applyAction(
+  boiled.instance,
+  actions.get("shock")!,
+  entities,
+  new Set(["bowl"]),
+  {},
+  ingredients
+).instance;
+console.log(
+  `6. SHOCK immediately (carryover cooking — shock.json's carryoverCookingNote): "${boiled.instance.state}" -> "${shocked.state}"\n`
+);
 
 const totalSeconds = elapsedPreheatSeconds + holdSeconds;
 console.log(

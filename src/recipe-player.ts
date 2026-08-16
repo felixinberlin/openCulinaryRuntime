@@ -157,12 +157,16 @@ export function createVariation(
   const prefix = recipe.sequence.slice(0, branchAfterIndex + 1);
   const sequence = [...prefix, ...newTailSequence];
   if (sequence.length === 0) {
-    throw new Error("createVariation: the resulting sequence would be empty (RecipeScriptSchema requires at least one step).");
+    throw new Error(
+      "createVariation: the resulting sequence would be empty (RecipeScriptSchema requires at least one step)."
+    );
   }
   return {
     ...recipe,
     id: `${recipe.id}_${variationSuffix}`,
-    names: Object.fromEntries(Object.entries(recipe.names).map(([lang, name]) => [lang, `${name} (${variationSuffix})`])),
+    names: Object.fromEntries(
+      Object.entries(recipe.names).map(([lang, name]) => [lang, `${name} (${variationSuffix})`])
+    ),
     sequence,
   };
 }

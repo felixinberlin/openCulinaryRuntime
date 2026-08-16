@@ -87,7 +87,12 @@ export type BlockingReason =
   | { kind: "missing_tool"; actionId: string; toolId: string }
   | { kind: "missing_tool_capability"; actionId: string; capability: string }
   | { kind: "missing_ingredient_capability"; actionId: string; capability: string }
-  | { kind: "unsatisfied_state_prerequisite"; actionId: string; fromState: string; requiredAnyOf: string[] }
+  | {
+      kind: "unsatisfied_state_prerequisite";
+      actionId: string;
+      fromState: string;
+      requiredAnyOf: string[];
+    }
   | { kind: "forbidden_transition"; actionId: string; fromState: string; toState: string }
   | { kind: "requires_secondary_instance"; actionId: string }
   | { kind: "instance_destroyed"; actionId: string }
@@ -100,8 +105,7 @@ export interface ReachabilityStep {
 }
 
 export type ReachabilityResult =
-  | { reachable: true; path: ReachabilityStep[] }
-  | { reachable: false; blockedBy: BlockingReason[] };
+  { reachable: true; path: ReachabilityStep[] } | { reachable: false; blockedBy: BlockingReason[] };
 
 export interface ReachabilityQuery {
   entity: Entity;
@@ -129,7 +133,16 @@ function matchesGoal(state: string, tags: readonly string[], goal: GoalPredicate
 }
 
 export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
-  const { entity, entities, actions, startState, startTags, goal, availableTools, availableIngredients } = query;
+  const {
+    entity,
+    entities,
+    actions,
+    startState,
+    startTags,
+    goal,
+    availableTools,
+    availableIngredients,
+  } = query;
 
   if (matchesGoal(startState, startTags, goal)) {
     return { reachable: true, path: [] };
@@ -168,8 +181,15 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
         recordBlock({ kind: "requires_secondary_instance", actionId });
         continue;
       }
-      if (action.requiredTargetCapability && entity.capabilities[action.requiredTargetCapability] !== true) {
-        recordBlock({ kind: "missing_target_capability", actionId, capability: action.requiredTargetCapability });
+      if (
+        action.requiredTargetCapability &&
+        entity.capabilities[action.requiredTargetCapability] !== true
+      ) {
+        recordBlock({
+          kind: "missing_target_capability",
+          actionId,
+          capability: action.requiredTargetCapability,
+        });
         continue;
       }
 
@@ -181,7 +201,9 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
         }
       }
       for (const capability of action.requiredToolCapabilities) {
-        const satisfied = [...availableTools].some((id) => entities.get(id)?.capabilities[capability] === true);
+        const satisfied = [...availableTools].some(
+          (id) => entities.get(id)?.capabilities[capability] === true
+        );
         if (!satisfied) {
           recordBlock({ kind: "missing_tool_capability", actionId, capability });
           toolsOk = false;
@@ -191,7 +213,9 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
 
       let ingredientsOk = true;
       for (const capability of action.requiredIngredientCapabilities) {
-        const satisfied = [...availableIngredients].some((id) => entities.get(id)?.capabilities[capability] === true);
+        const satisfied = [...availableIngredients].some(
+          (id) => entities.get(id)?.capabilities[capability] === true
+        );
         if (!satisfied) {
           recordBlock({ kind: "missing_ingredient_capability", actionId, capability });
           ingredientsOk = false;
@@ -202,9 +226,15 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
       const requiredPrior = entity.statePrerequisites[actionId];
       if (requiredPrior) {
         const allowed = Array.isArray(requiredPrior) ? requiredPrior : [requiredPrior];
-        const satisfied = allowed.includes(node.state) || allowed.some((s) => node.tags.includes(s));
+        const satisfied =
+          allowed.includes(node.state) || allowed.some((s) => node.tags.includes(s));
         if (!satisfied) {
-          recordBlock({ kind: "unsatisfied_state_prerequisite", actionId, fromState: node.state, requiredAnyOf: allowed });
+          recordBlock({
+            kind: "unsatisfied_state_prerequisite",
+            actionId,
+            fromState: node.state,
+            requiredAnyOf: allowed,
+          });
           continue;
         }
       }
@@ -222,7 +252,9 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
       if (action.outputs.transformedState) {
         candidates.push({ state: action.outputs.transformedState });
       } else if (action.outputs.transformedStateFromParameter) {
-        const paramDef = action.parameters.find((p) => p.id === action.outputs.transformedStateFromParameter);
+        const paramDef = action.parameters.find(
+          (p) => p.id === action.outputs.transformedStateFromParameter
+        );
         for (const value of paramDef?.allowedValues ?? []) {
           candidates.push({ state: value, param: value });
         }
@@ -233,7 +265,12 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
 
       for (const { state: nextState, param } of candidates) {
         if (entity.invalidTransitions[node.state]?.includes(nextState)) {
-          recordBlock({ kind: "forbidden_transition", actionId, fromState: node.state, toState: nextState });
+          recordBlock({
+            kind: "forbidden_transition",
+            actionId,
+            fromState: node.state,
+            toState: nextState,
+          });
           continue;
         }
         let nextTags = node.tags;

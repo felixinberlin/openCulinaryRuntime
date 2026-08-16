@@ -81,10 +81,20 @@ export function atmosphericPressurePa(altitudeMeters: number): number {
   if (altitudeMeters < 0) {
     throw new Error(`altitudeMeters must be non-negative, got ${altitudeMeters}`);
   }
-  const { seaLevelPressurePa, temperatureLapseRateKPerM, seaLevelTempK, gravityMPerS2, molarMassAirKgPerMol, gasConstantJPerMolK } =
-    STANDARD_ATMOSPHERE;
-  const exponent = (gravityMPerS2 * molarMassAirKgPerMol) / (gasConstantJPerMolK * temperatureLapseRateKPerM);
-  return seaLevelPressurePa * Math.pow(1 - (temperatureLapseRateKPerM * altitudeMeters) / seaLevelTempK, exponent);
+  const {
+    seaLevelPressurePa,
+    temperatureLapseRateKPerM,
+    seaLevelTempK,
+    gravityMPerS2,
+    molarMassAirKgPerMol,
+    gasConstantJPerMolK,
+  } = STANDARD_ATMOSPHERE;
+  const exponent =
+    (gravityMPerS2 * molarMassAirKgPerMol) / (gasConstantJPerMolK * temperatureLapseRateKPerM);
+  return (
+    seaLevelPressurePa *
+    Math.pow(1 - (temperatureLapseRateKPerM * altitudeMeters) / seaLevelTempK, exponent)
+  );
 }
 
 /**

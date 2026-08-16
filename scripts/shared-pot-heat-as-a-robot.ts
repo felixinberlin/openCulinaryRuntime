@@ -71,7 +71,9 @@ function makeRecipe(id: string, order: "boiling_start" | "cold_start"): RecipeSc
     ],
     availableTools: ["pot"],
     sequence:
-      order === "boiling_start" ? [fill, heat, placeIn1, placeIn2] : [fill, placeIn1, placeIn2, heat],
+      order === "boiling_start"
+        ? [fill, heat, placeIn1, placeIn2]
+        : [fill, placeIn1, placeIn2, heat],
     metadata: {},
   };
 }
@@ -87,7 +89,9 @@ for (const order of ["boiling_start", "cold_start"] as const) {
   }
   const place = result.places.get("pot-1")!;
   const contents = result.placeContents.get("pot-1") ?? [];
-  console.log(`  Final place "pot-1": ${place.currentTempC.toFixed(1)}°C, co-located: [${contents.join(", ")}]`);
+  console.log(
+    `  Final place "pot-1": ${place.currentTempC.toFixed(1)}°C, co-located: [${contents.join(", ")}]`
+  );
 }
 
 console.log(

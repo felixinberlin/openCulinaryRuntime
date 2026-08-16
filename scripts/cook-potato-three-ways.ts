@@ -14,7 +14,14 @@ function apply(
 ): Instance {
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
-  const result = applyAction(instance, action, entities, availableTools, undefined, availableIngredients);
+  const result = applyAction(
+    instance,
+    action,
+    entities,
+    availableTools,
+    undefined,
+    availableIngredients
+  );
   console.log(`  ${action.verb}: "${instance.state}" -> "${result.instance.state}"`);
   return result.instance;
 }

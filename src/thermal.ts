@@ -39,7 +39,9 @@ export const ThermalInactivationModelSchema = z.object({
 export type ThermalInactivationModel = z.infer<typeof ThermalInactivationModelSchema>;
 
 export function requiredHoldSeconds(model: ThermalInactivationModel, actualTempC: number): number {
-  return model.referenceHoldSeconds * Math.pow(10, (model.referenceTempC - actualTempC) / model.zValueC);
+  return (
+    model.referenceHoldSeconds * Math.pow(10, (model.referenceTempC - actualTempC) / model.zValueC)
+  );
 }
 
 /**

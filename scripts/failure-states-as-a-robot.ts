@@ -34,14 +34,22 @@ const actions = loadActions(join(root, "data", "actions"));
 const potato = entities.get("potato")!;
 const garlic = entities.get("garlic")!;
 
-console.log("1. isTerminalState — burned is unconditionally terminal; overcooked is NOT (deliberately left able to");
-console.log("   degrade further into burned — see each entity's own failureStateNote); a normal state is neither:");
+console.log(
+  "1. isTerminalState — burned is unconditionally terminal; overcooked is NOT (deliberately left able to"
+);
+console.log(
+  "   degrade further into burned — see each entity's own failureStateNote); a normal state is neither:"
+);
 console.log(`   potato "burned": ${isTerminalState(potato, "burned")}`);
-console.log(`   potato "overcooked": ${isTerminalState(potato, "overcooked")} (terminal for RECOVERY, not absolutely)`);
+console.log(
+  `   potato "overcooked": ${isTerminalState(potato, "overcooked")} (terminal for RECOVERY, not absolutely)`
+);
 console.log(`   potato "boiled" (normal, reversible-ish): ${isTerminalState(potato, "boiled")}`);
 console.log(`   garlic "burned": ${isTerminalState(garlic, "burned")}\n`);
 
-console.log("2. FRY against a burned potato — REJECTED, per-entity invalidTransitions, no detection involved:");
+console.log(
+  "2. FRY against a burned potato — REJECTED, per-entity invalidTransitions, no detection involved:"
+);
 const burnedPotato: Instance = { entityId: "potato", state: "burned", tags: [] };
 try {
   applyAction(burnedPotato, actions.get("fry")!, entities, new Set(["pan"]), {}, new Set(["oil"]));
@@ -50,21 +58,39 @@ try {
   console.log(`   REJECTED: ${(e as Error).message}\n`);
 }
 
-console.log("3. SALT against the SAME burned potato — still succeeds (tag-only, not a state change):");
-const salted = applyAction(burnedPotato, actions.get("salt")!, entities, new Set([]), {}, new Set(["salt"]));
+console.log(
+  "3. SALT against the SAME burned potato — still succeeds (tag-only, not a state change):"
+);
+const salted = applyAction(
+  burnedPotato,
+  actions.get("salt")!,
+  entities,
+  new Set([]),
+  {},
+  new Set(["salt"])
+);
 console.log(
   `   SALT executed: "${burnedPotato.state}" -> "${salted.instance.state}", tags [${salted.instance.tags}] — ` +
     "pointless in reality (nobody seasons a discarded burnt potato), but not schema-forbidden, the same " +
     "state-vs-tag distinction engine.ts already draws everywhere else, not a new gap this ticket introduced.\n"
 );
 
-console.log("4. recipe-explain.ts's pre-flight report flags a recipe that starts an instance already burned:");
+console.log(
+  "4. recipe-explain.ts's pre-flight report flags a recipe that starts an instance already burned:"
+);
 const badRecipe: RecipeScript = {
   id: "already-burned-garlic",
   names: { en: "Already-burned garlic (authoring mistake or deliberate failure-recovery test)" },
   initialInventory: [{ id: "garlic-1", entityId: "garlic", state: "burned", tags: [] }],
   availableTools: [],
-  sequence: [{ actionId: "peel", targetInstanceId: "garlic-1", params: {}, availableIngredientInstanceIds: [] }],
+  sequence: [
+    {
+      actionId: "peel",
+      targetInstanceId: "garlic-1",
+      params: {},
+      availableIngredientInstanceIds: [],
+    },
+  ],
   metadata: {},
 };
 const explanation = explainRecipe(badRecipe, entities, actions);

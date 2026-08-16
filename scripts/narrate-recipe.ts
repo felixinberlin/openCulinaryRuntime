@@ -31,7 +31,8 @@ const raw = JSON.parse(readFileSync(recipePath, "utf8"));
 const parsed = RecipeScriptSchema.safeParse(raw);
 if (!parsed.success) {
   console.error(`"${recipePath}" does not match RecipeScriptSchema:`);
-  for (const issue of parsed.error.issues) console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+  for (const issue of parsed.error.issues)
+    console.error(`  - ${issue.path.join(".")}: ${issue.message}`);
   process.exit(1);
 }
 

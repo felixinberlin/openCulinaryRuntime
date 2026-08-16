@@ -32,37 +32,84 @@ const fry = actions.get("fry")!;
 
 console.log("=== 1. PAR_FRY produces a genuinely different state from FRY ===");
 const peeledPotato: Instance = { entityId: "potato", state: "peeled", tags: [] };
-const parFried = applyAction(peeledPotato, parFry, entities, tools, { oilTempC: "160", durationSeconds: "300" }, ingredients).instance;
+const parFried = applyAction(
+  peeledPotato,
+  parFry,
+  entities,
+  tools,
+  { oilTempC: "160", durationSeconds: "300" },
+  ingredients
+).instance;
 console.log(`  PAR_FRY: "peeled" -> "${parFried.state}"`);
 if (parFried.state === "fried") {
-  throw new Error("PAR_FRY produced 'fried' directly — it should stop at the distinct 'par_fried' intermediate");
+  throw new Error(
+    "PAR_FRY produced 'fried' directly — it should stop at the distinct 'par_fried' intermediate"
+  );
 }
-console.log("  Correctly stops short of 'fried' — a par-fried potato is pale/soft, not a finished dish.\n");
+console.log(
+  "  Correctly stops short of 'fried' — a par-fried potato is pale/soft, not a finished dish.\n"
+);
 
 console.log("=== 2. FRY still works unchanged, directly from 'peeled' (single-stage frying) ===");
-const directFried = applyAction(peeledPotato, fry, entities, tools, { oilTempC: "180", durationSeconds: "480" }, ingredients).instance;
+const directFried = applyAction(
+  peeledPotato,
+  fry,
+  entities,
+  tools,
+  { oilTempC: "180", durationSeconds: "480" },
+  ingredients
+).instance;
 console.log(`  FRY: "peeled" -> "${directFried.state}"\n`);
 
-console.log("=== 3. FRY finishes a par-fried potato into 'fried' — composes via existing sequencing, no new engine feature ===");
-const finished = applyAction(parFried, fry, entities, tools, { oilTempC: "191", durationSeconds: "180" }, ingredients).instance;
+console.log(
+  "=== 3. FRY finishes a par-fried potato into 'fried' — composes via existing sequencing, no new engine feature ==="
+);
+const finished = applyAction(
+  parFried,
+  fry,
+  entities,
+  tools,
+  { oilTempC: "191", durationSeconds: "180" },
+  ingredients
+).instance;
 console.log(`  FRY: "${parFried.state}" -> "${finished.state}"`);
 if (finished.state !== "fried") {
   throw new Error(`Expected the finishing FRY to reach "fried", got "${finished.state}"`);
 }
-console.log("  Two ordinary applyAction calls in sequence — PAR_FRY then FRY — is all double-frying needs.\n");
+console.log(
+  "  Two ordinary applyAction calls in sequence — PAR_FRY then FRY — is all double-frying needs.\n"
+);
 
 console.log("=== 4. Both oilTempC bands are real and enforced ===");
 try {
-  applyAction(peeledPotato, parFry, entities, tools, { oilTempC: "191", durationSeconds: "300" }, ingredients);
+  applyAction(
+    peeledPotato,
+    parFry,
+    entities,
+    tools,
+    { oilTempC: "191", durationSeconds: "300" },
+    ingredients
+  );
   console.log("  UNEXPECTED: 191°C (a finishing-fry temp) was accepted for PAR_FRY");
 } catch (err) {
-  console.log(`  REJECTED as expected — 191°C is the FINISHING temperature, not a par-fry one:\n    ${(err as Error).message}`);
+  console.log(
+    `  REJECTED as expected — 191°C is the FINISHING temperature, not a par-fry one:\n    ${(err as Error).message}`
+  );
 }
 try {
-  applyAction(peeledPotato, fry, entities, tools, { oilTempC: "250", durationSeconds: "300" }, ingredients);
+  applyAction(
+    peeledPotato,
+    fry,
+    entities,
+    tools,
+    { oilTempC: "250", durationSeconds: "300" },
+    ingredients
+  );
   console.log("  UNEXPECTED: 250°C was accepted for FRY");
 } catch (err) {
-  console.log(`  REJECTED as expected — 250°C is outside FRY's real 120-200°C band:\n    ${(err as Error).message}`);
+  console.log(
+    `  REJECTED as expected — 250°C is outside FRY's real 120-200°C band:\n    ${(err as Error).message}`
+  );
 }
 
 console.log(

@@ -44,7 +44,9 @@ const pieceSize = "halved_or_quartered" as const;
 const potWaterMassKg = 1.5; // enough to cover halved/quartered potatoes for a small batch
 const startTempC = 15; // tap-cold
 
-console.log(`Goal: boiled potato, piece size "${pieceSize}", ${potWaterMassKg}kg water from ${startTempC}°C, on ${heatSource.names.en}.\n`);
+console.log(
+  `Goal: boiled potato, piece size "${pieceSize}", ${potWaterMassKg}kg water from ${startTempC}°C, on ${heatSource.names.en}.\n`
+);
 
 console.log(
   "Real technique note (potato-doneness.ts): sources actually recommend COLD-START for potato — more even " +
@@ -60,7 +62,9 @@ console.log(
 let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
 potato = applyAction(potato, actions.get("wash")!, entities, new Set(["knife"])).instance;
 potato = applyAction(potato, actions.get("peel")!, entities, new Set(["knife"])).instance;
-potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife"]), { shape: "quartered" }).instance;
+potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife"]), {
+  shape: "quartered",
+}).instance;
 console.log(`1. WASH -> PEEL -> CUT (quartered): potato is now "${potato.state}".\n`);
 
 // 2. Pour + heat the water — identical mechanism to the egg script, proven
@@ -79,7 +83,9 @@ console.log(`   Boiling reached after ${elapsedPreheatSeconds}s.\n`);
 // 3. Piece size resolves to a real, cited hold-time range.
 const { min, max } = potatoBoilDonenessRange(pieceSize);
 const holdSeconds = Math.round((min + max) / 2);
-console.log(`3. "${pieceSize}" resolves to ${min}-${max}s held at boiling — using the midpoint, ${holdSeconds}s.\n`);
+console.log(
+  `3. "${pieceSize}" resolves to ${min}-${max}s held at boiling — using the midpoint, ${holdSeconds}s.\n`
+);
 
 const tools = new Set(["pot", "knife"]);
 const ingredients = new Set(["water"]);
@@ -93,7 +99,9 @@ const boiled = applyAction(
   ccps
 );
 console.log(`   BOIL executed: "${potato.state}" -> "${boiled.instance.state}"`);
-console.log(`   HACCP warnings: ${boiled.warnings.length === 0 ? "none" : boiled.warnings.join("; ")}\n`);
+console.log(
+  `   HACCP warnings: ${boiled.warnings.length === 0 ? "none" : boiled.warnings.join("; ")}\n`
+);
 
 // 4. Finish as a salad, same as egg-salad-prep.ts's closing move.
 const salted = applyAction(

@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { loadEntities } from "../src/registry.ts";
 import { secondsForYolkToReachTempC, YOLK_TARGET_TEMP_C } from "../src/egg-heat-penetration.ts";
-import { EGG_BOIL_DONENESS, EGG_SIZE_GRAMS, eggBoilDonenessRange } from "../src/egg-doneness.ts";
+import { EGG_SIZE_GRAMS, eggBoilDonenessRange } from "../src/egg-doneness.ts";
 import { waterBoilingPointC } from "../src/altitude.ts";
 
 /**
@@ -24,13 +24,15 @@ const entities = loadEntities(join(root, "data", "entities"));
 const egg = entities.get("egg")!;
 const t = egg.thermophysical!;
 
-console.log("Goal: cross-check Williams' computed spherical-conduction time against the real empirical table.\n");
+console.log(
+  "Goal: cross-check Williams' computed spherical-conduction time against the real empirical table.\n"
+);
 
 // ---------------------------------------------------------------------
 // 1. The real cross-check, for a "large" egg (this repo's own baseline
 //    assumption) — soft/medium/hard, computed vs. empirical.
 // ---------------------------------------------------------------------
-console.log("1. \"large\" egg (55g), 4°C start, 100°C sea-level water:");
+console.log('1. "large" egg (55g), 4°C start, 100°C sea-level water:');
 for (const doneness of ["soft", "medium", "hard"] as const) {
   const params = {
     massKg: EGG_SIZE_GRAMS.large / 1000,
@@ -53,7 +55,9 @@ for (const doneness of ["soft", "medium", "hard"] as const) {
 // 2. Real physical ordering across all 4 sizes — a bigger egg should
 //    always take longer for the same target, computed, not assumed.
 // ---------------------------------------------------------------------
-console.log("\n2. Same check (soft, 65°C target) across all 4 real sizes — bigger egg, longer time:");
+console.log(
+  "\n2. Same check (soft, 65°C target) across all 4 real sizes — bigger egg, longer time:"
+);
 let previousSeconds = 0;
 for (const size of ["small", "medium", "large", "extra_large"] as const) {
   const params = {
@@ -66,7 +70,9 @@ for (const size of ["small", "medium", "large", "extra_large"] as const) {
   };
   const seconds = secondsForYolkToReachTempC(params, YOLK_TARGET_TEMP_C.soft);
   const ordered = seconds > previousSeconds;
-  console.log(`   ${size.padEnd(12)} (${EGG_SIZE_GRAMS[size]}g): ${seconds.toFixed(0)}s ${ordered || previousSeconds === 0 ? "" : "— WARNING: not monotonically increasing"}`);
+  console.log(
+    `   ${size.padEnd(12)} (${EGG_SIZE_GRAMS[size]}g): ${seconds.toFixed(0)}s ${ordered || previousSeconds === 0 ? "" : "— WARNING: not monotonically increasing"}`
+  );
   previousSeconds = seconds;
 }
 

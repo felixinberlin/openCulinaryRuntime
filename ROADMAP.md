@@ -1208,8 +1208,37 @@ covered by what exists:**
       not after — the same discipline applied to every other item in that
       report, which is why two of its suggested "fixes" got corrected
       rather than applied as-written.
-- [ ] Lint/format config — none present (no eslint/oxlint/prettier config in
-      the repo).
+- [x] **Lint/format config — closed 2026-08-16.** `oxlint` (linting) +
+      `prettier` (formatting), both explicitly named as options in this
+      entry's own original text — picked over ESLint's flat-config +
+      typescript-eslint plugin setup specifically for the same
+      minimal-dependency ethos this repo's `package.json` already had
+      (3 devDependencies before this change: `@types/node`, `tsx`,
+      `typescript`). `npm run lint`/`format`/`format:check` all added.
+      `oxlint` found 5 real, small, genuine issues on the first run
+      (unused imports/variables in `flavor-balance.ts`, `scripts/boil-
+      egg-by-physics.ts`, `scripts/simmer-vs-boil.ts`, `scripts/
+      validate.ts`, `scripts/egg-salad-prep.ts`) — each fixed properly,
+      not suppressed: `flavor-balance.ts`'s `DILUTION_CITATION` was
+      genuinely dead code because it was never `export`ed, unlike every
+      other citation constant in this repo (`WILLIAMS_FORMULA_CITATION`,
+      `YOLK_TARGET_TEMP_CITATION`, etc.) — exporting it was the real fix,
+      not deleting it. `scripts/validate.ts`'s unused `knownInstanceIds`
+      turned out to be leftover from an earlier static check the file's
+      own adjacent comment already says was deliberately superseded by
+      the real `runRecipe` simulation — safe to delete, confirmed by
+      reading the surrounding code, not assumed. `.prettierignore`
+      deliberately EXCLUDES `data/*.json` — reformatting 95 hand-authored
+      data files with prettier's own JSON opinions would be a large,
+      low-value diff unrelated to code quality, disrupting a deliberate,
+      stable authoring convention this repo already has; prettier is
+      scoped to `src`/`scripts`/`tests` only. Ran `prettier --write`
+      across all 86 flagged `.ts` files after confirming (via a real,
+      inspected diff on one file first) the changes are purely cosmetic
+      (quote-style normalization, line-wrapping) with zero semantic
+      risk — verified with the full suite immediately after (`npm test`
+      260/260, `tsc` clean, `npm run validate` 95/95, every `demo:*`/
+      `capability-test:*` script), not assumed safe from the diff alone.
 - [x] `CLAUDE.md`'s "Repository state" — kept current as of this rewrite;
       see `CLAUDE.md`'s own instruction to update it *in the same change*
       that makes it stale, not later.

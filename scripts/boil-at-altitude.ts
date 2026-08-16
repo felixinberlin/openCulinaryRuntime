@@ -44,7 +44,9 @@ for (const { name, altitudeMeters } of locations) {
     place = advanceTempSeconds(place, heatSource, TICK_SECONDS, water, targetTempC);
     elapsedSeconds += TICK_SECONDS;
   }
-  console.log(`  Reached in ${elapsedSeconds}s — faster than sea level, since less energy is needed to reach a lower target.\n`);
+  console.log(
+    `  Reached in ${elapsedSeconds}s — faster than sea level, since less energy is needed to reach a lower target.\n`
+  );
 }
 
 console.log(

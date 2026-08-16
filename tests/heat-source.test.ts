@@ -32,11 +32,20 @@ describe("estimatedPreheatSeconds", () => {
   });
 
   test("lower efficiency means more time, all else equal — a real physical ordering, not just a different number", () => {
-    const efficient = makeHeatSource({ id: "efficient", thermalEfficiencyPercentRange: { min: 80, max: 80 } });
-    const inefficient = makeHeatSource({ id: "inefficient", thermalEfficiencyPercentRange: { min: 20, max: 20 } });
+    const efficient = makeHeatSource({
+      id: "efficient",
+      thermalEfficiencyPercentRange: { min: 80, max: 80 },
+    });
+    const inefficient = makeHeatSource({
+      id: "inefficient",
+      thermalEfficiencyPercentRange: { min: 20, max: 20 },
+    });
     const fastTime = estimatedPreheatSeconds(1, 20, 100, efficient);
     const slowTime = estimatedPreheatSeconds(1, 20, 100, inefficient);
-    assert.ok(slowTime > fastTime, "a less efficient heat source should take longer to reach the same target");
+    assert.ok(
+      slowTime > fastTime,
+      "a less efficient heat source should take longer to reach the same target"
+    );
   });
 
   test("more water takes proportionally longer to reach the same target temperature", () => {

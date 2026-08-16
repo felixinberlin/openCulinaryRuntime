@@ -27,7 +27,10 @@ describe("CUT_SHAPE_DIMENSIONS", () => {
     const julienne = cutShapeDimensionMm("julienne");
     const diced = cutShapeDimensionMm("diced");
     assert.ok(minced.max <= julienne.max, "minced should never be coarser than julienne");
-    assert.ok(julienne.max <= diced.min, "julienne's cross-section should be no coarser than dice's edge");
+    assert.ok(
+      julienne.max <= diced.min,
+      "julienne's cross-section should be no coarser than dice's edge"
+    );
   });
 
   test("cutShapeDimensionMm throws for an out-of-vocabulary value instead of returning undefined", () => {

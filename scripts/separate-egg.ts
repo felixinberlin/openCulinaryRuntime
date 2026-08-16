@@ -16,7 +16,14 @@ function apply(
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
   console.log(`Applying ${action.verb} to ${instance.entityId} (state: "${instance.state}")`);
-  const result = applyAction(instance, action, entities, availableTools, params, availableIngredients);
+  const result = applyAction(
+    instance,
+    action,
+    entities,
+    availableTools,
+    params,
+    availableIngredients
+  );
   console.log(
     result.destroyed
       ? `  -> ${instance.entityId} destroyed (conservation of mass) — was "${result.instance.state}" the instant before`

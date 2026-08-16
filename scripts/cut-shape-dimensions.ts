@@ -1,6 +1,10 @@
 import { join } from "node:path";
 import { loadEntities, loadActions } from "../src/registry.ts";
-import { CUT_SHAPE_DIMENSIONS, cutShapeDimensionMm, halvedOrQuarteredDimensionMm } from "../src/cut-dimensions.ts";
+import {
+  CUT_SHAPE_DIMENSIONS,
+  cutShapeDimensionMm,
+  halvedOrQuarteredDimensionMm,
+} from "../src/cut-dimensions.ts";
 
 /**
  * Capability test for `src/cut-dimensions.ts` — prints real, cited
@@ -16,7 +20,9 @@ const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 
 const cut = actions.get("cut")!;
-console.log(`cut.json's shape allowedValues: ${cut.parameters.find((p) => p.id === "shape")!.allowedValues!.join(", ")}\n`);
+console.log(
+  `cut.json's shape allowedValues: ${cut.parameters.find((p) => p.id === "shape")!.allowedValues!.join(", ")}\n`
+);
 
 for (const entry of CUT_SHAPE_DIMENSIONS) {
   console.log(`${entry.shape}: ${entry.dimensionMm.min}-${entry.dimensionMm.max}mm`);
@@ -31,8 +37,12 @@ console.log(`potato.json's own typicalDiameterCm: ${diameter.min}-${diameter.max
 
 const halved = halvedOrQuarteredDimensionMm(diameter, 2);
 const quartered = halvedOrQuarteredDimensionMm(diameter, 4);
-console.log(`halved: ${halved.min.toFixed(1)}-${halved.max.toFixed(1)}mm largest dimension (half the potato's own diameter)`);
-console.log(`quartered: ${quartered.min.toFixed(1)}-${quartered.max.toFixed(1)}mm largest dimension (a quarter of it)\n`);
+console.log(
+  `halved: ${halved.min.toFixed(1)}-${halved.max.toFixed(1)}mm largest dimension (half the potato's own diameter)`
+);
+console.log(
+  `quartered: ${quartered.min.toFixed(1)}-${quartered.max.toFixed(1)}mm largest dimension (a quarter of it)\n`
+);
 
 console.log(
   "Real tension named, not resolved: this table's 'diced' " +

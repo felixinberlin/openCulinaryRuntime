@@ -13,7 +13,11 @@ import { makeEntity, makeAction } from "./helpers.ts";
 
 describe("isGoalReachable — trivial cases", () => {
   test("start state already matches the goal -> reachable with an empty path", () => {
-    const potato = makeEntity({ id: "potato", possibleStates: ["raw"], allowedTransformations: [] });
+    const potato = makeEntity({
+      id: "potato",
+      possibleStates: ["raw"],
+      allowedTransformations: [],
+    });
     const result = isGoalReachable({
       entity: potato,
       entities: new Map([["potato", potato]]),
@@ -50,7 +54,11 @@ describe("isGoalReachable — a simple real path", () => {
     allowedTransformations: ["peel", "fry"],
     statePrerequisites: { fry: ["peeled"] }, // forces the 2-step path — FRY isn't available straight from "raw" in this fixture
   });
-  const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+  const peel = makeAction({
+    id: "peel",
+    requiredTargetCapability: "isPeelable",
+    outputs: { transformedState: "peeled" },
+  });
   const fry = makeAction({
     id: "fry",
     requiredTargetCapability: "isFryable",
@@ -78,7 +86,10 @@ describe("isGoalReachable — a simple real path", () => {
       availableTools: new Set(),
       availableIngredients: new Set(["oil"]),
     });
-    assert.deepEqual(result, { reachable: true, path: [{ actionId: "peel" }, { actionId: "fry" }] });
+    assert.deepEqual(result, {
+      reachable: true,
+      path: [{ actionId: "peel" }, { actionId: "fry" }],
+    });
   });
 
   test("missing the required ingredient capability blocks FRY, with a specific reason", () => {
@@ -110,8 +121,16 @@ describe("isGoalReachable — BFS finds the SHORTEST path, deterministically", (
     capabilities: { isPeelable: true, isFryable: true },
     allowedTransformations: ["peel", "fry"],
   });
-  const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
-  const fry = makeAction({ id: "fry", requiredTargetCapability: "isFryable", outputs: { transformedState: "fried" } });
+  const peel = makeAction({
+    id: "peel",
+    requiredTargetCapability: "isPeelable",
+    outputs: { transformedState: "peeled" },
+  });
+  const fry = makeAction({
+    id: "fry",
+    requiredTargetCapability: "isFryable",
+    outputs: { transformedState: "fried" },
+  });
   const entities = new Map([["potato", potato]]);
   const actions = new Map([
     ["peel", peel],
@@ -202,7 +221,11 @@ describe("isGoalReachable — real dead-end reasons, one per mechanism", () => {
       allowedTransformations: ["peel"],
       invalidTransitions: { mashed: ["peeled"] },
     });
-    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+    const peel = makeAction({
+      id: "peel",
+      requiredTargetCapability: "isPeelable",
+      outputs: { transformedState: "peeled" },
+    });
     const result = isGoalReachable({
       entity: potato,
       entities: new Map([["potato", potato]]),
@@ -215,7 +238,9 @@ describe("isGoalReachable — real dead-end reasons, one per mechanism", () => {
     });
     assert.deepEqual(result, {
       reachable: false,
-      blockedBy: [{ kind: "forbidden_transition", actionId: "peel", fromState: "mashed", toState: "peeled" }],
+      blockedBy: [
+        { kind: "forbidden_transition", actionId: "peel", fromState: "mashed", toState: "peeled" },
+      ],
     });
   });
 
@@ -243,15 +268,34 @@ describe("isGoalReachable — real dead-end reasons, one per mechanism", () => {
     });
     assert.deepEqual(result, {
       reachable: false,
-      blockedBy: [{ kind: "unsatisfied_state_prerequisite", actionId: "cut", fromState: "raw", requiredAnyOf: ["peeled"] }],
+      blockedBy: [
+        {
+          kind: "unsatisfied_state_prerequisite",
+          actionId: "cut",
+          fromState: "raw",
+          requiredAnyOf: ["peeled"],
+        },
+      ],
     });
   });
 
   test("missing_target_capability, missing_tool, missing_tool_capability", () => {
     const potato = makeEntity({ id: "potato", allowedTransformations: ["peel", "boil", "fry"] });
-    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
-    const boil = makeAction({ id: "boil", requiredTools: ["pot"], outputs: { transformedState: "boiled" } });
-    const fry = makeAction({ id: "fry", requiredToolCapabilities: ["isFryingVessel"], outputs: { transformedState: "fried" } });
+    const peel = makeAction({
+      id: "peel",
+      requiredTargetCapability: "isPeelable",
+      outputs: { transformedState: "peeled" },
+    });
+    const boil = makeAction({
+      id: "boil",
+      requiredTools: ["pot"],
+      outputs: { transformedState: "boiled" },
+    });
+    const fry = makeAction({
+      id: "fry",
+      requiredToolCapabilities: ["isFryingVessel"],
+      outputs: { transformedState: "fried" },
+    });
     const result = isGoalReachable({
       entity: potato,
       entities: new Map([["potato", potato]]),
@@ -332,8 +376,16 @@ describe("isGoalReachable — addsTag actions preserve state and accumulate tags
     capabilities: { isWashable: true, isSaltable: true },
     allowedTransformations: ["wash", "salt"],
   });
-  const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
-  const salt = makeAction({ id: "salt", requiredTargetCapability: "isSaltable", outputs: { addsTag: "salted" } });
+  const wash = makeAction({
+    id: "wash",
+    requiredTargetCapability: "isWashable",
+    outputs: { addsTag: "washed" },
+  });
+  const salt = makeAction({
+    id: "salt",
+    requiredTargetCapability: "isSaltable",
+    outputs: { addsTag: "salted" },
+  });
   const entities = new Map([["potato", potato]]);
   const actions = new Map([
     ["wash", wash],

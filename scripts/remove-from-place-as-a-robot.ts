@@ -27,10 +27,19 @@ console.log("Goal: prove REMOVE's rejection paths, not just its success path.\n"
 //    of truth for the success case.
 // ---------------------------------------------------------------------
 const workingRecipe = recipes.get("garlic_oil_potatoes_shared_pan")!;
-const workingResult = runRecipe(workingRecipe, entities, actions, new Map(), undefined, heatSources);
+const workingResult = runRecipe(
+  workingRecipe,
+  entities,
+  actions,
+  new Map(),
+  undefined,
+  heatSources
+);
 const removeLine = workingResult.log.find((l) => l.startsWith("REMOVE"));
 console.log(`1. Real recipe's REMOVE line: "${removeLine}"`);
-console.log(`   placeContents["pan-1"] after the full run: [${workingResult.placeContents.get("pan-1")?.join(", ") || "nothing"}]\n`);
+console.log(
+  `   placeContents["pan-1"] after the full run: [${workingResult.placeContents.get("pan-1")?.join(", ") || "nothing"}]\n`
+);
 
 // ---------------------------------------------------------------------
 // 2. REMOVE something that was NEVER placed anywhere — correctly
@@ -40,11 +49,28 @@ const neverPlacedRecipe: RecipeScript = {
   ...workingRecipe,
   id: "test-never-placed",
   sequence: [
-    { actionId: "fill", targetInstanceId: "oil-1", params: { placeId: "pan-1", toolEntityId: "pan", massKg: "0.3", startTempC: "20" }, availableIngredientInstanceIds: [] },
-    { actionId: "remove", targetInstanceId: "potato-1", params: { placeId: "pan-1", removalMethod: "tongs" }, availableIngredientInstanceIds: [] },
+    {
+      actionId: "fill",
+      targetInstanceId: "oil-1",
+      params: { placeId: "pan-1", toolEntityId: "pan", massKg: "0.3", startTempC: "20" },
+      availableIngredientInstanceIds: [],
+    },
+    {
+      actionId: "remove",
+      targetInstanceId: "potato-1",
+      params: { placeId: "pan-1", removalMethod: "tongs" },
+      availableIngredientInstanceIds: [],
+    },
   ],
 };
-const neverPlacedResult = runRecipe(neverPlacedRecipe, entities, actions, new Map(), undefined, heatSources);
+const neverPlacedResult = runRecipe(
+  neverPlacedRecipe,
+  entities,
+  actions,
+  new Map(),
+  undefined,
+  heatSources
+);
 console.log(`2. REMOVE on a never-placed instance: ${neverPlacedResult.errors.length} error(s)`);
 console.log(`   "${neverPlacedResult.errors[0]?.message}"\n`);
 
@@ -57,13 +83,40 @@ const removedTwiceRecipe: RecipeScript = {
   ...workingRecipe,
   id: "test-removed-twice",
   sequence: [
-    { actionId: "fill", targetInstanceId: "oil-1", params: { placeId: "pan-1", toolEntityId: "pan", massKg: "0.3", startTempC: "20" }, availableIngredientInstanceIds: [] },
-    { actionId: "place_in", targetInstanceId: "garlic-1", params: { placeId: "pan-1" }, availableIngredientInstanceIds: [] },
-    { actionId: "remove", targetInstanceId: "garlic-1", params: { placeId: "pan-1" }, availableIngredientInstanceIds: [] },
-    { actionId: "remove", targetInstanceId: "garlic-1", params: { placeId: "pan-1" }, availableIngredientInstanceIds: [] },
+    {
+      actionId: "fill",
+      targetInstanceId: "oil-1",
+      params: { placeId: "pan-1", toolEntityId: "pan", massKg: "0.3", startTempC: "20" },
+      availableIngredientInstanceIds: [],
+    },
+    {
+      actionId: "place_in",
+      targetInstanceId: "garlic-1",
+      params: { placeId: "pan-1" },
+      availableIngredientInstanceIds: [],
+    },
+    {
+      actionId: "remove",
+      targetInstanceId: "garlic-1",
+      params: { placeId: "pan-1" },
+      availableIngredientInstanceIds: [],
+    },
+    {
+      actionId: "remove",
+      targetInstanceId: "garlic-1",
+      params: { placeId: "pan-1" },
+      availableIngredientInstanceIds: [],
+    },
   ],
 };
-const removedTwiceResult = runRecipe(removedTwiceRecipe, entities, actions, new Map(), undefined, heatSources);
+const removedTwiceResult = runRecipe(
+  removedTwiceRecipe,
+  entities,
+  actions,
+  new Map(),
+  undefined,
+  heatSources
+);
 console.log(`3. REMOVE the same instance twice: ${removedTwiceResult.errors.length} error(s)`);
 console.log(`   "${removedTwiceResult.errors[0]?.message}"`);
 

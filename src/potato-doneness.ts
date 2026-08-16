@@ -78,14 +78,14 @@ export type PotatoBoilDoneness = z.infer<typeof PotatoBoilDonenessSchema>;
 
 const ATK_CITATION: Citation = {
   source:
-    "America's Test Kitchen, \"Boiling Potatoes\" (americastestkitchen.com/how_tos/5964-boiling-potatoes) — size-banded whole-potato boiling times (2-2.5\" diameter: 15-18 min), and the cold-start-is-both-more-even-AND-faster finding cited in this file's own doc comment.",
+    'America\'s Test Kitchen, "Boiling Potatoes" (americastestkitchen.com/how_tos/5964-boiling-potatoes) — size-banded whole-potato boiling times (2-2.5" diameter: 15-18 min), and the cold-start-is-both-more-even-AND-faster finding cited in this file\'s own doc comment.',
   confidence: "commonly_cited_unverified",
   note: "A professional test-kitchen source, same tier of authority as egg-doneness.ts's López-Alt/Serious Eats citation, but not independently re-verified against a primary/peer-reviewed source this session.",
 };
 
 const CUT_PIECE_CITATION: Citation = {
   source:
-    "Convergent across commonly-cited cooking guides for halved/quartered and diced/cubed potato boiling times (e.g. A Couple Cooks, \"How Long to Boil Potatoes for Potato Salad\" — large cubes/quarters 8-15min, diced/baby potatoes ~10min; Key to My Lime's independent ~15-20min quartered figure cross-checked against the same range).",
+    'Convergent across commonly-cited cooking guides for halved/quartered and diced/cubed potato boiling times (e.g. A Couple Cooks, "How Long to Boil Potatoes for Potato Salad" — large cubes/quarters 8-15min, diced/baby potatoes ~10min; Key to My Lime\'s independent ~15-20min quartered figure cross-checked against the same range).',
   confidence: "commonly_cited_unverified",
   note: "Blended across multiple convergent consumer cooking sources, not one single authoritative test-kitchen source the way the 'whole' entry is — reported as a wider range for that reason, not narrowed artificially.",
 };
@@ -94,13 +94,15 @@ export const POTATO_BOIL_DONENESS: readonly PotatoBoilDoneness[] = [
   {
     pieceSize: "diced",
     durationSecondsRange: { min: 480, max: 720 },
-    description: "~1-inch (2.5cm) dice — the fastest-cooking real preparation, used for potato salad and quick sides.",
+    description:
+      "~1-inch (2.5cm) dice — the fastest-cooking real preparation, used for potato salad and quick sides.",
     citation: CUT_PIECE_CITATION,
   },
   {
     pieceSize: "halved_or_quartered",
     durationSecondsRange: { min: 480, max: 1200 },
-    description: "Halved or quartered — the common whole-but-reduced size for potato salad/roasting prep, real range depends heavily on the source potato's own size.",
+    description:
+      "Halved or quartered — the common whole-but-reduced size for potato salad/roasting prep, real range depends heavily on the source potato's own size.",
     citation: CUT_PIECE_CITATION,
   },
   {
@@ -109,15 +111,22 @@ export const POTATO_BOIL_DONENESS: readonly PotatoBoilDoneness[] = [
     // Diameter figure lives on potato.json's own physicalDimensions.
     // typicalDiameterCm now (added 2026-08-15) — same ATK citation, no
     // longer duplicated independently here.
-    description: "Whole, unpeeled, potato.json's own typicalDiameterCm — the classic 'boil then peel' or potato-for-mash starting point.",
+    description:
+      "Whole, unpeeled, potato.json's own typicalDiameterCm — the classic 'boil then peel' or potato-for-mash starting point.",
     citation: ATK_CITATION,
   },
 ];
 
 /** Convenience lookup — throws rather than returning undefined, same
  *  contract as `egg-doneness.ts`'s `eggBoilDonenessRange`. */
-export function potatoBoilDonenessRange(pieceSize: "whole" | "halved_or_quartered" | "diced"): { min: number; max: number } {
+export function potatoBoilDonenessRange(pieceSize: "whole" | "halved_or_quartered" | "diced"): {
+  min: number;
+  max: number;
+} {
   const entry = POTATO_BOIL_DONENESS.find((e) => e.pieceSize === pieceSize);
-  if (!entry) throw new Error(`No POTATO_BOIL_DONENESS entry for "${pieceSize}" — out of sync with boil.json's allowedValues`);
+  if (!entry)
+    throw new Error(
+      `No POTATO_BOIL_DONENESS entry for "${pieceSize}" — out of sync with boil.json's allowedValues`
+    );
   return entry.durationSecondsRange;
 }

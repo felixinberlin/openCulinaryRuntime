@@ -43,7 +43,10 @@ describe("EGG_BOIL_DONENESS", () => {
 describe("eggBoilDonenessRangeForSize", () => {
   test("'large' is an exact no-op — matches eggBoilDonenessRange unchanged", () => {
     for (const yolkDoneness of ["soft", "medium", "hard"] as const) {
-      assert.deepEqual(eggBoilDonenessRangeForSize(yolkDoneness, "large"), eggBoilDonenessRange(yolkDoneness));
+      assert.deepEqual(
+        eggBoilDonenessRangeForSize(yolkDoneness, "large"),
+        eggBoilDonenessRange(yolkDoneness)
+      );
     }
   });
 

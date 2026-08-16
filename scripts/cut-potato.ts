@@ -18,7 +18,9 @@ function run(steps: Step[]): Instance {
     const action = actions.get(step.id);
     if (!action) throw new Error(`Unknown action "${step.id}"`);
     const label = step.params
-      ? ` (${Object.entries(step.params).map(([k, v]) => `${k}: ${v}`).join(", ")})`
+      ? ` (${Object.entries(step.params)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")})`
       : "";
     console.log(`Applying ${action.verb}${label} to potato (state: "${potato.state}")`);
     potato = applyAction(potato, action, entities, availableTools, step.params).instance;

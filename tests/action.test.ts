@@ -13,9 +13,14 @@ describe("ActionParameterSchema", () => {
         numericRange: { unit: "s", min: 0, max: 1 },
       })
     );
-    assert.doesNotThrow(() => ActionParameterSchema.parse({ id: "shape", allowedValues: ["diced"] }));
     assert.doesNotThrow(() =>
-      ActionParameterSchema.parse({ id: "durationSeconds", numericRange: { unit: "s", min: 0, max: 1 } })
+      ActionParameterSchema.parse({ id: "shape", allowedValues: ["diced"] })
+    );
+    assert.doesNotThrow(() =>
+      ActionParameterSchema.parse({
+        id: "durationSeconds",
+        numericRange: { unit: "s", min: 0, max: 1 },
+      })
     );
   });
 
@@ -28,16 +33,26 @@ describe("ActionParameterSchema", () => {
 describe("ActionOutputsSchema", () => {
   test("transformedState and transformedStateFromParameter are mutually exclusive", () => {
     assert.throws(() =>
-      ActionOutputsSchema.parse({ transformedState: "peeled", transformedStateFromParameter: "shape" })
+      ActionOutputsSchema.parse({
+        transformedState: "peeled",
+        transformedStateFromParameter: "shape",
+      })
     );
     assert.doesNotThrow(() => ActionOutputsSchema.parse({ transformedState: "peeled" }));
-    assert.doesNotThrow(() => ActionOutputsSchema.parse({ transformedStateFromParameter: "shape" }));
+    assert.doesNotThrow(() =>
+      ActionOutputsSchema.parse({ transformedStateFromParameter: "shape" })
+    );
   });
 
   test("combinesInto is mutually exclusive with transformedState/transformedStateFromParameter", () => {
-    assert.throws(() => ActionOutputsSchema.parse({ combinesInto: "tortilla_mixture", transformedState: "combined" }));
     assert.throws(() =>
-      ActionOutputsSchema.parse({ combinesInto: "tortilla_mixture", transformedStateFromParameter: "shape" })
+      ActionOutputsSchema.parse({ combinesInto: "tortilla_mixture", transformedState: "combined" })
+    );
+    assert.throws(() =>
+      ActionOutputsSchema.parse({
+        combinesInto: "tortilla_mixture",
+        transformedStateFromParameter: "shape",
+      })
     );
     assert.doesNotThrow(() => ActionOutputsSchema.parse({ combinesInto: "tortilla_mixture" }));
   });
@@ -73,8 +88,14 @@ describe("ActionSchema", () => {
   });
 
   test("actionKind accepts 'instantaneous' or 'continuous', rejects anything else", () => {
-    assert.doesNotThrow(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "instantaneous" }));
-    assert.doesNotThrow(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "continuous" }));
-    assert.throws(() => ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "variable" }));
+    assert.doesNotThrow(() =>
+      ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "instantaneous" })
+    );
+    assert.doesNotThrow(() =>
+      ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "continuous" })
+    );
+    assert.throws(() =>
+      ActionSchema.parse({ ...base, names: { en: "Peel" }, actionKind: "variable" })
+    );
   });
 });

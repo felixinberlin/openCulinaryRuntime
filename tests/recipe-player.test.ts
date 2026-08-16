@@ -24,7 +24,11 @@ import {
 
 const potato = makeEntity({ id: "potato", capabilities: { isPeelable: true, isFryable: true } });
 const oil = makeEntity({ id: "oil", capabilities: { isFryingMedium: true } });
-const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+const peel = makeAction({
+  id: "peel",
+  requiredTargetCapability: "isPeelable",
+  outputs: { transformedState: "peeled" },
+});
 const fry = makeAction({
   id: "fry",
   requiredTargetCapability: "isFryable",
@@ -50,8 +54,18 @@ function makeRecipe(overrides: Partial<RecipeScript> = {}): RecipeScript {
     ],
     availableTools: [],
     sequence: [
-      { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
-      { actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: ["oil-1"] },
+      {
+        actionId: "peel",
+        targetInstanceId: "potato-1",
+        params: {},
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "fry",
+        targetInstanceId: "potato-1",
+        params: {},
+        availableIngredientInstanceIds: ["oil-1"],
+      },
     ],
     metadata: {},
     ...overrides,
@@ -116,8 +130,18 @@ describe("recipe-player — canApplyNext", () => {
   test("false case: the next step is missing a required ingredient capability", () => {
     const recipeWithNoOilOffered = makeRecipe({
       sequence: [
-        { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
-        { actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }, // no oil offered
+        {
+          actionId: "peel",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+        {
+          actionId: "fry",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        }, // no oil offered
       ],
     });
     let player = createPlayer(recipeWithNoOilOffered);
@@ -142,7 +166,12 @@ describe("recipe-player — createVariation", () => {
   test("produces a RecipeScript that validates against RecipeScriptSchema and runs cleanly", () => {
     const recipe = makeRecipe();
     const variation = createVariation(recipe, 0, [
-      { actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: ["oil-1"] },
+      {
+        actionId: "fry",
+        targetInstanceId: "potato-1",
+        params: {},
+        availableIngredientInstanceIds: ["oil-1"],
+      },
     ]);
 
     // Doesn't throw — a real, schema-valid RecipeScript, not just a shaped object.
@@ -158,7 +187,12 @@ describe("recipe-player — createVariation", () => {
   test("branching from -1 replaces the whole sequence", () => {
     const recipe = makeRecipe();
     const variation = createVariation(recipe, -1, [
-      { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
+      {
+        actionId: "peel",
+        targetInstanceId: "potato-1",
+        params: {},
+        availableIngredientInstanceIds: [],
+      },
     ]);
     assert.equal(variation.sequence.length, 1);
     assert.equal(variation.sequence[0].actionId, "peel");

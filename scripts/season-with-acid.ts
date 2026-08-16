@@ -20,11 +20,24 @@ const root = join(import.meta.dirname, "..");
 const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 
-function apply(instance: Instance, actionId: string, availableIngredients: ReadonlySet<string>): Instance {
+function apply(
+  instance: Instance,
+  actionId: string,
+  availableIngredients: ReadonlySet<string>
+): Instance {
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
-  const result = applyAction(instance, action, entities, new Set(["knife", "pan"]), { timing: "after_cooking" }, availableIngredients);
-  console.log(`  ${action.verb}: tags [${instance.tags.join(", ")}] -> [${result.instance.tags.join(", ")}]`);
+  const result = applyAction(
+    instance,
+    action,
+    entities,
+    new Set(["knife", "pan"]),
+    { timing: "after_cooking" },
+    availableIngredients
+  );
+  console.log(
+    `  ${action.verb}: tags [${instance.tags.join(", ")}] -> [${result.instance.tags.join(", ")}]`
+  );
   return result.instance;
 }
 
@@ -32,15 +45,26 @@ function friedPotato(): Instance {
   let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
   potato = applyAction(potato, actions.get("wash")!, entities, new Set(["knife", "pan"])).instance;
   potato = applyAction(potato, actions.get("peel")!, entities, new Set(["knife", "pan"])).instance;
-  potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife", "pan"]), { shape: "diced" }).instance;
-  potato = applyAction(potato, actions.get("fry")!, entities, new Set(["knife", "pan"]), {}, new Set(["oil"])).instance;
+  potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife", "pan"]), {
+    shape: "diced",
+  }).instance;
+  potato = applyAction(
+    potato,
+    actions.get("fry")!,
+    entities,
+    new Set(["knife", "pan"]),
+    {},
+    new Set(["oil"])
+  ).instance;
   return potato;
 }
 
 console.log("=== 1. ACID actually runs end-to-end against a real fried potato ===");
 apply(friedPotato(), "acid", new Set(["vinegar"]));
 
-console.log("\n=== 2. ACID correctly rejects a non-acid ingredient (same shape as SALT rejecting black_pepper) ===");
+console.log(
+  "\n=== 2. ACID correctly rejects a non-acid ingredient (same shape as SALT rejecting black_pepper) ==="
+);
 try {
   apply(friedPotato(), "acid", new Set(["salt"]));
   throw new Error("ACID wrongly accepted salt as an acid source — isAcid check is not working");
@@ -56,11 +80,15 @@ all = apply(all, "chili", new Set(["chili_flakes"]));
 all = apply(all, "acid", new Set(["vinegar"]));
 console.log(`  Final tags: [${all.tags.join(", ")}]`);
 
-console.log("\n=== 4. src/flavor-balance.ts: real, cited counterbalance data, actually queryable ===");
+console.log(
+  "\n=== 4. src/flavor-balance.ts: real, cited counterbalance data, actually queryable ==="
+);
 for (const taste of ["bitter", "sour", "richness", "umami"] as const) {
   const pairs = counterbalancesInvolving(taste);
   if (pairs.length === 0) {
-    console.log(`  "${taste}": no modeled counterbalance pair (honest empty answer, not an error).`);
+    console.log(
+      `  "${taste}": no modeled counterbalance pair (honest empty answer, not an error).`
+    );
     continue;
   }
   for (const pair of pairs) {
@@ -71,6 +99,6 @@ for (const taste of ["bitter", "sour", "richness", "umami"] as const) {
 }
 
 console.log(
-  "\nReal answer for a real complaint: \"this sauce is too bitter\" -> the data says add something salty, " +
-  "not \"add more of whatever\" — a structured, cited fact an intent layer could actually use, not prose."
+  '\nReal answer for a real complaint: "this sauce is too bitter" -> the data says add something salty, ' +
+    'not "add more of whatever" — a structured, cited fact an intent layer could actually use, not prose.'
 );

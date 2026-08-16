@@ -190,8 +190,12 @@ export function applyAction(
     // anymore; every entry that names an actual state (the overwhelming
     // majority) is completely unaffected, since instance.state is still
     // checked first/either way.
-    const allowedPriorStates = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
-    const satisfied = allowedPriorStates.includes(instance.state) || allowedPriorStates.some((s) => instance.tags.includes(s));
+    const allowedPriorStates = Array.isArray(requiredPriorState)
+      ? requiredPriorState
+      : [requiredPriorState];
+    const satisfied =
+      allowedPriorStates.includes(instance.state) ||
+      allowedPriorStates.some((s) => instance.tags.includes(s));
     if (!satisfied) {
       throw new Error(
         `${action.verb} requires "${target.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}", tags [${instance.tags}]).`
@@ -363,7 +367,8 @@ export function applyAction(
   // logic as destroysTarget but for two instances at once — see
   // ActionOutputsSchema.combinesInto's doc comment (action.ts).
   const destroyed = action.outputs.destroysTarget || !!action.outputs.combinesInto;
-  const secondaryDestroyed = action.requiredSecondaryCapability !== undefined && secondaryInstance !== undefined;
+  const secondaryDestroyed =
+    action.requiredSecondaryCapability !== undefined && secondaryInstance !== undefined;
 
   // Gated on durationSeconds actually being supplied, not merely on the
   // target having a criticalControlPointsByAction entry: durationSeconds is
@@ -394,7 +399,9 @@ export function applyAction(
       // declares durationSeconds formally) is a convention, not an enforced
       // invariant; this check must not depend on that convention holding.
       if (Number.isNaN(seconds)) {
-        throw new Error(`${action.verb} on "${target.id}": durationSeconds "${durationRaw}" is not a valid number — cannot verify the "${ccp.names.en}" threshold, so refusing to proceed.`);
+        throw new Error(
+          `${action.verb} on "${target.id}": durationSeconds "${durationRaw}" is not a valid number — cannot verify the "${ccp.names.en}" threshold, so refusing to proceed.`
+        );
       }
 
       // If this CCP has a real, computable thermal model AND the step
@@ -409,7 +416,9 @@ export function applyAction(
       if (ccp.thermalModel && waterTempRaw !== undefined) {
         const actualTempC = Number(waterTempRaw);
         if (Number.isNaN(actualTempC)) {
-          throw new Error(`${action.verb} on "${target.id}": waterTempC "${waterTempRaw}" is not a valid number — cannot compute the "${ccp.names.en}" threshold, so refusing to proceed.`);
+          throw new Error(
+            `${action.verb} on "${target.id}": waterTempC "${waterTempRaw}" is not a valid number — cannot compute the "${ccp.names.en}" threshold, so refusing to proceed.`
+          );
         }
         requiredSeconds = requiredHoldSeconds(ccp.thermalModel, actualTempC);
         thresholdDescription =
@@ -418,15 +427,22 @@ export function applyAction(
       }
 
       if (seconds < requiredSeconds) {
-        const msg = `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` + `${thresholdDescription} for ${ccp.pathogen}. ${ccp.source}`;
-        const overridden = policy.mode === "autonomous" && policy.humanOverrides?.has(ccp.id) === true;
+        const msg =
+          `${action.verb} on "${target.id}": ${seconds}s is below "${ccp.names.en}"'s minimum hold of ` +
+          `${thresholdDescription} for ${ccp.pathogen}. ${ccp.source}`;
+        const overridden =
+          policy.mode === "autonomous" && policy.humanOverrides?.has(ccp.id) === true;
         if (ccp.advisoryOnly && (policy.mode === "human" || overridden)) {
-          warnings.push(overridden ? `${msg} [autonomous mode: proceeding on explicit human override]` : msg);
+          warnings.push(
+            overridden ? `${msg} [autonomous mode: proceeding on explicit human override]` : msg
+          );
         } else if (ccp.advisoryOnly) {
           // autonomous, not overridden: an advisory a human could judge for
           // themselves has no judge here, so the safe default is reject —
           // see SafetyPolicy's doc comment.
-          throw new Error(`${msg} [autonomous mode: no human present to accept this risk — rejected by default; pass this CCP's id in humanOverrides to proceed]`);
+          throw new Error(
+            `${msg} [autonomous mode: no human present to accept this risk — rejected by default; pass this CCP's id in humanOverrides to proceed]`
+          );
         } else {
           throw new Error(msg);
         }

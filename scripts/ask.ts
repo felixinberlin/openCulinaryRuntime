@@ -30,9 +30,14 @@ if (!answer) {
 
 console.log(`${answer.actionVerb}.${answer.parameterId}`);
 if (answer.allowedValues) console.log(`  allowedValues: ${answer.allowedValues.join(" | ")}`);
-if (answer.numericRange) console.log(`  numericRange: ${answer.numericRange.min}-${answer.numericRange.max} ${answer.numericRange.unit}`);
+if (answer.numericRange)
+  console.log(
+    `  numericRange: ${answer.numericRange.min}-${answer.numericRange.max} ${answer.numericRange.unit}`
+  );
 console.log(`  required: ${answer.required}`);
-console.log(`  stateDetermining: ${answer.stateDetermining} ${answer.stateDetermining ? "" : "(informational only — recorded, not enforced)"}`);
+console.log(
+  `  stateDetermining: ${answer.stateDetermining} ${answer.stateDetermining ? "" : "(informational only — recorded, not enforced)"}`
+);
 
 if (answer.relevantNotes.length > 0) {
   console.log(`\n  Domain knowledge (metadata.*, cited in-file):`);
@@ -44,7 +49,9 @@ if (answer.relevantNotes.length > 0) {
 if (answer.recipeUsages.length > 0) {
   console.log(`  Real recipe usage:`);
   for (const usage of answer.recipeUsages) {
-    console.log(`  - ${usage.recipeNameEn} (${usage.recipeId}), step ${usage.stepIndex}: ${answer.parameterId} = ${usage.value ?? "(not set)"}`);
+    console.log(
+      `  - ${usage.recipeNameEn} (${usage.recipeId}), step ${usage.stepIndex}: ${answer.parameterId} = ${usage.value ?? "(not set)"}`
+    );
   }
 } else {
   console.log(`  No recipe in data/recipes/ currently sets this parameter.`);

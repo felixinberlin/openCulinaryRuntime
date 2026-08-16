@@ -28,12 +28,22 @@ const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 
 const boil = actions.get("boil")!;
-console.log(`boil.json's tool requirement: requiredTools=[${boil.requiredTools}], requiredToolCapabilities=[${boil.requiredToolCapabilities}]\n`);
+console.log(
+  `boil.json's tool requirement: requiredTools=[${boil.requiredTools}], requiredToolCapabilities=[${boil.requiredToolCapabilities}]\n`
+);
 
 function attempt(toolId: string) {
   const egg: Instance = { entityId: "egg", state: "raw", tags: [] };
   try {
-    const result = applyAction(egg, boil, entities, new Set([toolId]), { durationSeconds: "480" }, new Set(["water"]), ccps);
+    const result = applyAction(
+      egg,
+      boil,
+      entities,
+      new Set([toolId]),
+      { durationSeconds: "480" },
+      new Set(["water"]),
+      ccps
+    );
     console.log(`  "${toolId}" only: OK — egg -> "${result.instance.state}"`);
   } catch (e) {
     console.log(`  "${toolId}" only: REJECTED — ${(e as Error).message}`);
@@ -46,7 +56,9 @@ attempt("pan");
 console.log("\n2. Robot has only a pot:");
 attempt("pot");
 
-console.log("\n3. Robot has only a saucepan — a tool boil.json never names, proving real substitution:");
+console.log(
+  "\n3. Robot has only a saucepan — a tool boil.json never names, proving real substitution:"
+);
 attempt("saucepan");
 
 console.log(

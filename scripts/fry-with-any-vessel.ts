@@ -23,7 +23,9 @@ const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 
 const fry = actions.get("fry")!;
-console.log(`fry.json's tool requirement: requiredTools=[${fry.requiredTools}], requiredToolCapabilities=[${fry.requiredToolCapabilities}]\n`);
+console.log(
+  `fry.json's tool requirement: requiredTools=[${fry.requiredTools}], requiredToolCapabilities=[${fry.requiredToolCapabilities}]\n`
+);
 
 function attempt(toolId: string) {
   const egg: Instance = { entityId: "egg", state: "raw", tags: [] };

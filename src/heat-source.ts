@@ -83,7 +83,10 @@ export const HeatSourceProfileSchema = z.object({
    *  than escaping around the sides / radiating away — the real reason gas
    *  and wood need much more raw power than vitro/induction to deliver the
    *  same heat to the food. 0-100. */
-  thermalEfficiencyPercentRange: z.object({ min: z.number().positive().max(100), max: z.number().positive().max(100) }),
+  thermalEfficiencyPercentRange: z.object({
+    min: z.number().positive().max(100),
+    max: z.number().positive().max(100),
+  }),
   /** How quickly the delivered heat actually changes when the cook adjusts
    *  the control (or the fire changes on its own) — NOT the same thing as
    *  power. Vitro is "slow" despite being a controllable dial specifically
@@ -155,9 +158,12 @@ export function estimatedPreheatSeconds(
     throw new Error(`targetTempC (${targetTempC}) must be above initialTempC (${initialTempC})`);
   }
   const energyRequiredJ = waterMassKg * waterSpecificHeatJPerKgK * (targetTempC - initialTempC);
-  const midPowerW = (heatSource.typicalPowerWattsRange.min + heatSource.typicalPowerWattsRange.max) / 2;
+  const midPowerW =
+    (heatSource.typicalPowerWattsRange.min + heatSource.typicalPowerWattsRange.max) / 2;
   const midEfficiency =
-    (heatSource.thermalEfficiencyPercentRange.min + heatSource.thermalEfficiencyPercentRange.max) / 2 / 100;
+    (heatSource.thermalEfficiencyPercentRange.min + heatSource.thermalEfficiencyPercentRange.max) /
+    2 /
+    100;
   const deliveredPowerW = midPowerW * midEfficiency;
   return energyRequiredJ / deliveredPowerW;
 }

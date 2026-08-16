@@ -43,7 +43,14 @@ potato = apply(potato, "fry", { heatLevel: "low", durationSeconds: "900" }).inst
 console.log(`  Potato component done: "${potato.state}" (soft-fried, unbrowned)`);
 
 console.log("\n--- Egg component ---");
-const crackResult = applyAction({ entityId: "egg", state: "raw", tags: [] }, actions.get("crack")!, entities, tools, {}, ingredients);
+const crackResult = applyAction(
+  { entityId: "egg", state: "raw", tags: [] },
+  actions.get("crack")!,
+  entities,
+  tools,
+  {},
+  ingredients
+);
 let egg = crackResult.spawned.find((s) => s.entityId === "egg_cracked")!;
 console.log(`  CRACK: spawned egg_cracked ("${egg.state}")`);
 egg = apply(egg, "beat", { intensity: "beaten" }).instance;
@@ -52,13 +59,25 @@ console.log(`  Egg component done: "${egg.state}", tags [${egg.tags}]`);
 
 console.log("\n--- Combine: potato (target) + egg (secondary) -> tortilla_mixture ---");
 const combineAction = actions.get("combine")!;
-const combineResult = applyAction(potato, combineAction, entities, tools, {}, new Set(), new Map(), undefined, egg);
+const combineResult = applyAction(
+  potato,
+  combineAction,
+  entities,
+  tools,
+  {},
+  new Set(),
+  new Map(),
+  undefined,
+  egg
+);
 if (!combineResult.destroyed || !combineResult.secondaryDestroyed) {
   throw new Error("Expected COMBINE to consume BOTH the potato and the egg instance");
 }
 let tortilla = combineResult.spawned.find((s) => s.entityId === "tortilla_mixture")!;
 if (!tortilla) throw new Error("Expected COMBINE to spawn tortilla_mixture");
-console.log(`  Both potato and egg instances consumed. Spawned tortilla_mixture ("${tortilla.state}").`);
+console.log(
+  `  Both potato and egg instances consumed. Spawned tortilla_mixture ("${tortilla.state}").`
+);
 
 console.log("\n--- Fry, flip, fry again ---");
 tortilla = apply(tortilla, "fry", { heatLevel: "medium", durationSeconds: "180" }).instance;
@@ -66,6 +85,12 @@ tortilla = apply(tortilla, "flip").instance;
 tortilla = apply(tortilla, "fry", { heatLevel: "medium", durationSeconds: "120" }).instance;
 
 console.log("\n=== VERDICT ===");
-console.log(`Tortilla de patatas: state "${tortilla.state}", tags [${tortilla.tags}]. Fully makeable end-to-end.`);
-console.log("Original blockers (no multi-instance merge, no FLIP) are closed. Not closed by this change:");
-console.log("real robot control/perception for heatLevel/doneness/etc. — see ENGINE_INVARIANTS.md #11.");
+console.log(
+  `Tortilla de patatas: state "${tortilla.state}", tags [${tortilla.tags}]. Fully makeable end-to-end.`
+);
+console.log(
+  "Original blockers (no multi-instance merge, no FLIP) are closed. Not closed by this change:"
+);
+console.log(
+  "real robot control/perception for heatLevel/doneness/etc. — see ENGINE_INVARIANTS.md #11."
+);

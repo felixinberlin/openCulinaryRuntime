@@ -70,7 +70,9 @@ function describeReason(r: BlockingReason): string {
   }
 }
 
-console.log('=== Case 1: burned potato, goal state "peeled" (a clean, already-verified terminal dead end) ===');
+console.log(
+  '=== Case 1: burned potato, goal state "peeled" (a clean, already-verified terminal dead end) ==='
+);
 const potato = entities.get("potato")!;
 const result1 = isGoalReachable({
   entity: potato,
@@ -88,7 +90,9 @@ if (!result1.reachable) {
   for (const r of result1.blockedBy) console.log(`  - ${describeReason(r)}`);
 }
 
-console.log('\n=== Case 1b: mashed potato, goal state "peeled" — regression check on a real, now-fixed gap ===');
+console.log(
+  '\n=== Case 1b: mashed potato, goal state "peeled" — regression check on a real, now-fixed gap ==='
+);
 const result1b = isGoalReachable({
   entity: potato,
   entities,
@@ -124,7 +128,14 @@ const result2 = isGoalReachable({
   startTags: [],
   goal: { state: "boiled" },
   availableTools: new Set(["pot", "pan", "bowl"]),
-  availableIngredients: new Set(["water", "oil", "salt", "black_pepper", "chili_flakes", "vinegar"]),
+  availableIngredients: new Set([
+    "water",
+    "oil",
+    "salt",
+    "black_pepper",
+    "chili_flakes",
+    "vinegar",
+  ]),
 });
 console.log(`reachable: ${result2.reachable}`);
 if (!result2.reachable) {
@@ -137,7 +148,9 @@ console.log(
     "LEARNINGS_ENGINE.md 2026-08-16.)"
 );
 
-console.log('\n=== Case 3: raw + "washed" tag potato, goal state "fried" — REACHABLE, path executed for real ===');
+console.log(
+  '\n=== Case 3: raw + "washed" tag potato, goal state "fried" — REACHABLE, path executed for real ==='
+);
 const result3 = isGoalReachable({
   entity: potato,
   entities,
@@ -150,13 +163,22 @@ const result3 = isGoalReachable({
 });
 console.log(`reachable: ${result3.reachable}`);
 if (result3.reachable) {
-  console.log(`path: ${result3.path.map((s) => (s.param ? `${s.actionId}(${s.param})` : s.actionId)).join(" -> ")}`);
+  console.log(
+    `path: ${result3.path.map((s) => (s.param ? `${s.actionId}(${s.param})` : s.actionId)).join(" -> ")}`
+  );
 
   let instance: Instance = { entityId: "potato", state: "raw", tags: ["washed"] };
   for (const step of result3.path) {
     const action = actions.get(step.actionId)!;
     const params: Record<string, string> = step.param ? { shape: step.param } : {};
-    const applied = applyAction(instance, action, entities, new Set(["knife", "pan"]), params, new Set(["oil"]));
+    const applied = applyAction(
+      instance,
+      action,
+      entities,
+      new Set(["knife", "pan"]),
+      params,
+      new Set(["oil"])
+    );
     console.log(`  ${action.verb}: "${instance.state}" -> "${applied.instance.state}"`);
     instance = applied.instance;
   }

@@ -19,7 +19,9 @@ import type { z } from "zod";
  * data/*.json file does.
  */
 
-export function makeEntity(overrides: Partial<z.input<typeof EntitySchema>> & { id: string }): Entity {
+export function makeEntity(
+  overrides: Partial<z.input<typeof EntitySchema>> & { id: string }
+): Entity {
   return EntitySchema.parse({
     kind: "ingredient",
     names: { en: overrides.id },
@@ -28,7 +30,9 @@ export function makeEntity(overrides: Partial<z.input<typeof EntitySchema>> & { 
   });
 }
 
-export function makeAction(overrides: Partial<z.input<typeof ActionSchema>> & { id: string }): Action {
+export function makeAction(
+  overrides: Partial<z.input<typeof ActionSchema>> & { id: string }
+): Action {
   return ActionSchema.parse({
     verb: overrides.id.toUpperCase(),
     names: { en: overrides.id },

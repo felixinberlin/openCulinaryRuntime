@@ -19,7 +19,11 @@ const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 const tools = new Set(["pot"]);
 
-function pasteurize(waterTempC: number, durationSeconds: number, policy?: { mode: "human" | "autonomous" }) {
+function pasteurize(
+  waterTempC: number,
+  durationSeconds: number,
+  policy?: { mode: "human" | "autonomous" }
+) {
   const action = actions.get("pasteurize")!;
   const instance: Instance = { entityId: "egg", state: "raw", tags: [] };
   const result = applyAction(
@@ -32,7 +36,9 @@ function pasteurize(waterTempC: number, durationSeconds: number, policy?: { mode
     ccps,
     policy
   );
-  console.log(`  ${waterTempC}°C for ${durationSeconds}s (${policy?.mode ?? "human"} mode): tags [${result.instance.tags}]`);
+  console.log(
+    `  ${waterTempC}°C for ${durationSeconds}s (${policy?.mode ?? "human"} mode): tags [${result.instance.tags}]`
+  );
   return result;
 }
 
@@ -46,12 +52,16 @@ pasteurize(57, 3900, { mode: "autonomous" });
 // numericRange (1800-7200s, a plausible-attempt sanity bound) but BELOW
 // egg_pasteurization_raw.json's actual heldSeconds (3900s) — this exercises
 // the CCP threshold check specifically, not just basic parameter bounds.
-console.log("\n--- Plausible but insufficient (57°C, 40 min — within range, below CCP threshold) — human mode ---");
+console.log(
+  "\n--- Plausible but insufficient (57°C, 40 min — within range, below CCP threshold) — human mode ---"
+);
 try {
   pasteurize(57, 2400);
   console.log("  UNEXPECTED: did not reject");
 } catch (err) {
-  console.log(`  REJECTED (human mode too — advisoryOnly: false, no 'diner accepts the risk' path here):`);
+  console.log(
+    `  REJECTED (human mode too — advisoryOnly: false, no 'diner accepts the risk' path here):`
+  );
   console.log(`    ${(err as Error).message}`);
 }
 

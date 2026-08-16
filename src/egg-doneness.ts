@@ -67,10 +67,9 @@ export type EggBoilDoneness = z.infer<typeof EggBoilDonenessSchema>;
 
 const CITATION: Citation = {
   source:
-    "Commonly cited large-egg, boiling-water-start timing guidelines convergent across cooking-science sources (e.g. J. Kenji López-Alt, Serious Eats \"The Food Lab\" egg-timing guide)",
+    'Commonly cited large-egg, boiling-water-start timing guidelines convergent across cooking-science sources (e.g. J. Kenji López-Alt, Serious Eats "The Food Lab" egg-timing guide)',
   confidence: "commonly_cited_unverified",
-  note:
-    "Not verified against a primary source this session. soft's range (360-420s) was cross-checked for internal consistency, not independently derived: data/recipes/soft-boiled-egg.json already chose 390s for a 'soft'/jammy result before this table existed, and 390 falls inside this range rather than requiring reconciliation — a real check, not just an assertion, that the two were built from the same underlying common knowledge.",
+  note: "Not verified against a primary source this session. soft's range (360-420s) was cross-checked for internal consistency, not independently derived: data/recipes/soft-boiled-egg.json already chose 390s for a 'soft'/jammy result before this table existed, and 390 falls inside this range rather than requiring reconciliation — a real check, not just an assertion, that the two were built from the same underlying common knowledge.",
 };
 
 export const EGG_BOIL_DONENESS: readonly EggBoilDoneness[] = [
@@ -83,7 +82,8 @@ export const EGG_BOIL_DONENESS: readonly EggBoilDoneness[] = [
   {
     yolkDoneness: "medium",
     durationSecondsRange: { min: 480, max: 540 },
-    description: "Yolk mostly set but still creamy/fudgy at the center, not chalky — the common 'jammy-firm' middle ground.",
+    description:
+      "Yolk mostly set but still creamy/fudgy at the center, not chalky — the common 'jammy-firm' middle ground.",
     citation: CITATION,
   },
   {
@@ -97,9 +97,15 @@ export const EGG_BOIL_DONENESS: readonly EggBoilDoneness[] = [
 /** Convenience lookup — throws rather than returning undefined, since every
  *  value of `boil.json`'s `yolkDoneness` allowedValues has an entry here by
  *  construction; a miss would mean the two drifted out of sync. */
-export function eggBoilDonenessRange(yolkDoneness: "soft" | "medium" | "hard"): { min: number; max: number } {
+export function eggBoilDonenessRange(yolkDoneness: "soft" | "medium" | "hard"): {
+  min: number;
+  max: number;
+} {
   const entry = EGG_BOIL_DONENESS.find((e) => e.yolkDoneness === yolkDoneness);
-  if (!entry) throw new Error(`No EGG_BOIL_DONENESS entry for "${yolkDoneness}" — out of sync with boil.json's allowedValues`);
+  if (!entry)
+    throw new Error(
+      `No EGG_BOIL_DONENESS entry for "${yolkDoneness}" — out of sync with boil.json's allowedValues`
+    );
   return entry.durationSecondsRange;
 }
 
@@ -130,7 +136,9 @@ export function eggBoilDonenessRange(yolkDoneness: "soft" | "medium" | "hard"): 
  * point citations already use, rather than implying more precision than
  * the source material actually gives for that one size.
  */
-export const EGG_SIZE_ADJUSTMENT_SECONDS: Readonly<Record<"small" | "medium" | "large" | "extra_large", number>> = {
+export const EGG_SIZE_ADJUSTMENT_SECONDS: Readonly<
+  Record<"small" | "medium" | "large" | "extra_large", number>
+> = {
   small: -60,
   medium: -30,
   large: 0, // the baseline EGG_BOIL_DONENESS itself already assumes
@@ -162,7 +170,9 @@ export const EGG_SIZE_ADJUSTMENT_SECONDS: Readonly<Record<"small" | "medium" | "
  * reconciliation, not a direct citation) even though the EU regulation
  * it's shaped by is `standard_reference` — see REFERENCES.md.
  */
-export const EGG_SIZE_GRAMS: Readonly<Record<"small" | "medium" | "large" | "extra_large", number>> = {
+export const EGG_SIZE_GRAMS: Readonly<
+  Record<"small" | "medium" | "large" | "extra_large", number>
+> = {
   small: 45,
   medium: 50,
   large: 55, // anchor — matches this file's own EGG_BOIL_DONENESS base-table assumption
@@ -180,7 +190,9 @@ export function eggBoilDonenessRangeForSize(
   const base = eggBoilDonenessRange(yolkDoneness);
   const offset = EGG_SIZE_ADJUSTMENT_SECONDS[size];
   if (offset === undefined) {
-    throw new Error(`No EGG_SIZE_ADJUSTMENT_SECONDS entry for "${size}" — out of sync with boil.json's eggSize allowedValues`);
+    throw new Error(
+      `No EGG_SIZE_ADJUSTMENT_SECONDS entry for "${size}" — out of sync with boil.json's eggSize allowedValues`
+    );
   }
   return { min: base.min + offset, max: base.max + offset };
 }

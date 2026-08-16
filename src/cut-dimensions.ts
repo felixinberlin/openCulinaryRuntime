@@ -73,28 +73,27 @@ export type CutShapeDimension = z.infer<typeof CutShapeDimensionSchema>;
 
 const KNIFE_CUT_STANDARD_CITATION: Citation = {
   source:
-    "Wikipedia, \"List of culinary knife cuts\" (en.wikipedia.org/wiki/List_of_culinary_knife_cuts) — standard professional knife-cut size definitions (julienne: 1/8\"x1/8\"x1-2\"; fine julienne: 1/16\"x1/16\"x1-2\"; brunoise: 1/8\" sides; small dice: 1/4\" sides; medium dice: 1/2\" sides; large dice: 3/4\" sides), aggregating culinary-school-taught standards (e.g. Escoffier School of Culinary Arts).",
+    'Wikipedia, "List of culinary knife cuts" (en.wikipedia.org/wiki/List_of_culinary_knife_cuts) — standard professional knife-cut size definitions (julienne: 1/8"x1/8"x1-2"; fine julienne: 1/16"x1/16"x1-2"; brunoise: 1/8" sides; small dice: 1/4" sides; medium dice: 1/2" sides; large dice: 3/4" sides), aggregating culinary-school-taught standards (e.g. Escoffier School of Culinary Arts).',
   confidence: "commonly_cited_unverified",
-  note:
-    "Checked via direct lookup 2026-08-15. mm values below are this repo's own precise conversion from the cited inch fractions (1/4in = 6.35mm, not a rounded 5-6mm approximation), not independently re-measured or re-derived from a primary culinary-school textbook.",
+  note: "Checked via direct lookup 2026-08-15. mm values below are this repo's own precise conversion from the cited inch fractions (1/4in = 6.35mm, not a rounded 5-6mm approximation), not independently re-measured or re-derived from a primary culinary-school textbook.",
 };
 
 const TORTILLA_SLICE_CITATION: Citation = {
   source:
-    "Convergent tortilla de patatas recipe sources, checked via direct lookup 2026-08-15: The Mediterranean Dish (themediterraneandish.com/spanish-tortilla-recipe) specifies \"1/8-inch-thick slices\" (~3.2mm); Spanish Sabores (spanishsabores.com/best-spanish-omelet-recipe) specifies \"about 5 mm thick.\"",
+    'Convergent tortilla de patatas recipe sources, checked via direct lookup 2026-08-15: The Mediterranean Dish (themediterraneandish.com/spanish-tortilla-recipe) specifies "1/8-inch-thick slices" (~3.2mm); Spanish Sabores (spanishsabores.com/best-spanish-omelet-recipe) specifies "about 5 mm thick."',
   confidence: "commonly_cited_unverified",
-  note:
-    "Two independent consumer recipe sources, both directly quoted this session, converging on a 3-5mm range for this specific dish's slicing technique — not a universal 'sliced' standard (see this file's own doc comment for why none exists).",
+  note: "Two independent consumer recipe sources, both directly quoted this session, converging on a 3-5mm range for this specific dish's slicing technique — not a universal 'sliced' standard (see this file's own doc comment for why none exists).",
 };
 
 const LOOSE_TERM_CITATION_NOTE =
-  "No authoritative numeric standard exists for this term (Wikipedia's \"List of culinary knife cuts\" gives no measurement for it — checked directly 2026-08-15). This range is an honest best-effort approximation from general culinary usage, not a sourced figure — reported with the same schema shape as the sourced entries for consistency, not the same confidence.";
+  'No authoritative numeric standard exists for this term (Wikipedia\'s "List of culinary knife cuts" gives no measurement for it — checked directly 2026-08-15). This range is an honest best-effort approximation from general culinary usage, not a sourced figure — reported with the same schema shape as the sourced entries for consistency, not the same confidence.';
 
 export const CUT_SHAPE_DIMENSIONS: readonly CutShapeDimension[] = [
   {
     shape: "sliced",
     dimensionMm: { min: 3, max: 5 },
-    description: "Thin round slice, the tortilla de patatas / potato-frying case that motivated this table.",
+    description:
+      "Thin round slice, the tortilla de patatas / potato-frying case that motivated this table.",
     citation: TORTILLA_SLICE_CITATION,
   },
   {
@@ -107,20 +106,29 @@ export const CUT_SHAPE_DIMENSIONS: readonly CutShapeDimension[] = [
   {
     shape: "julienne",
     dimensionMm: { min: 1.6, max: 3.2 },
-    description: "Matchstick cross-section, spanning fine julienne (1/16\") to regular julienne (1/8\"); real length is 3-5cm, not captured by this single dimension.",
+    description:
+      'Matchstick cross-section, spanning fine julienne (1/16") to regular julienne (1/8"); real length is 3-5cm, not captured by this single dimension.',
     citation: KNIFE_CUT_STANDARD_CITATION,
   },
   {
     shape: "chopped",
     dimensionMm: { min: 10, max: 20 },
     description: "Rough-cut, irregular pieces — the loosest-defined term in this set.",
-    citation: { source: "General culinary usage, no single authoritative standard", confidence: "commonly_cited_unverified", note: LOOSE_TERM_CITATION_NOTE },
+    citation: {
+      source: "General culinary usage, no single authoritative standard",
+      confidence: "commonly_cited_unverified",
+      note: LOOSE_TERM_CITATION_NOTE,
+    },
   },
   {
     shape: "minced",
     dimensionMm: { min: 1, max: 2 },
-    description: "Finer than brunoise (1/8\"/3mm) — the finest cut in this set.",
-    citation: { source: "General culinary usage, no single authoritative standard", confidence: "commonly_cited_unverified", note: LOOSE_TERM_CITATION_NOTE },
+    description: 'Finer than brunoise (1/8"/3mm) — the finest cut in this set.',
+    citation: {
+      source: "General culinary usage, no single authoritative standard",
+      confidence: "commonly_cited_unverified",
+      note: LOOSE_TERM_CITATION_NOTE,
+    },
   },
 ];
 
@@ -130,9 +138,14 @@ export const CUT_SHAPE_DIMENSIONS: readonly CutShapeDimension[] = [
  *  `quartered` are handled by `halvedOrQuarteredDimensionMm` below, since
  *  they're derived from `potato.json`'s own size rather than an
  *  independently cited knife-cut standard. */
-export function cutShapeDimensionMm(shape: "sliced" | "diced" | "julienne" | "chopped" | "minced"): { min: number; max: number } {
+export function cutShapeDimensionMm(
+  shape: "sliced" | "diced" | "julienne" | "chopped" | "minced"
+): { min: number; max: number } {
   const entry = CUT_SHAPE_DIMENSIONS.find((e) => e.shape === shape);
-  if (!entry) throw new Error(`No CUT_SHAPE_DIMENSIONS entry for "${shape}" — out of sync with cut.json's allowedValues`);
+  if (!entry)
+    throw new Error(
+      `No CUT_SHAPE_DIMENSIONS entry for "${shape}" — out of sync with cut.json's allowedValues`
+    );
   return entry.dimensionMm;
 }
 
@@ -150,5 +163,8 @@ export function halvedOrQuarteredDimensionMm(
   pieces: 2 | 4
 ): { min: number; max: number } {
   const divisor = pieces === 2 ? 2 : 4;
-  return { min: (typicalDiameterCm.min * 10) / divisor, max: (typicalDiameterCm.max * 10) / divisor };
+  return {
+    min: (typicalDiameterCm.min * 10) / divisor,
+    max: (typicalDiameterCm.max * 10) / divisor,
+  };
 }

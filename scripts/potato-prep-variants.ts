@@ -34,27 +34,41 @@ let p1: Instance = { entityId: "potato", state: "raw", tags: [] };
 p1 = applyAction(p1, wash, entities, knife).instance;
 p1 = applyAction(p1, peel, entities, knife).instance;
 p1 = applyAction(p1, cut, entities, knife, { shape: "diced" }).instance;
-console.log(`  wash -> peel -> cut: state "${p1.state}", tags [${p1.tags}] — stayed washed through the peel\n`);
+console.log(
+  `  wash -> peel -> cut: state "${p1.state}", tags [${p1.tags}] — stayed washed through the peel\n`
+);
 
-console.log("=== 2. Peel a dirty potato FIRST, then wash the peeled flesh — sand removed after, not before ===");
+console.log(
+  "=== 2. Peel a dirty potato FIRST, then wash the peeled flesh — sand removed after, not before ==="
+);
 let p2: Instance = { entityId: "potato", state: "raw", tags: [] };
 p2 = applyAction(p2, peel, entities, knife).instance;
 p2 = applyAction(p2, wash, entities, knife).instance;
 p2 = applyAction(p2, cut, entities, knife, { shape: "diced" }).instance;
-console.log(`  peel -> wash -> cut: state "${p2.state}", tags [${p2.tags}] — CUT was satisfied via "peeled" state either way\n`);
+console.log(
+  `  peel -> wash -> cut: state "${p2.state}", tags [${p2.tags}] — CUT was satisfied via "peeled" state either way\n`
+);
 
-console.log("=== 3. Skin-on: wash, cut, fry — never peeled at all (real technique, e.g. skin-on wedges/fries) ===");
+console.log(
+  "=== 3. Skin-on: wash, cut, fry — never peeled at all (real technique, e.g. skin-on wedges/fries) ==="
+);
 let p3: Instance = { entityId: "potato", state: "raw", tags: [] };
 p3 = applyAction(p3, wash, entities, knife).instance;
 p3 = applyAction(p3, cut, entities, knife, { shape: "halved" }).instance;
 p3 = applyAction(p3, fry, entities, pan, { durationSeconds: "600" }, oil).instance;
-console.log(`  wash -> cut -> fry: state "${p3.state}", tags [${p3.tags}] — CUT satisfied via the "washed" TAG, never peeled\n`);
+console.log(
+  `  wash -> cut -> fry: state "${p3.state}", tags [${p3.tags}] — CUT satisfied via the "washed" TAG, never peeled\n`
+);
 
-console.log("=== 4. Whole, unpeeled, into the oven — wash then bake directly, no cut/peel at all ===");
+console.log(
+  "=== 4. Whole, unpeeled, into the oven — wash then bake directly, no cut/peel at all ==="
+);
 let p4: Instance = { entityId: "potato", state: "raw", tags: [] };
 p4 = applyAction(p4, wash, entities, knife).instance; // running water, not a tool — knife set unused, kept only for signature parity
 p4 = applyAction(p4, bake, entities, oven, { durationSeconds: "3600" }).instance;
-console.log(`  wash -> bake: state "${p4.state}", tags [${p4.tags}] — BAKE has no statePrerequisites at all, whole skin-on baked potato\n`);
+console.log(
+  `  wash -> bake: state "${p4.state}", tags [${p4.tags}] — BAKE has no statePrerequisites at all, whole skin-on baked potato\n`
+);
 
 console.log(
   "All four are real, distinct techniques, not variations of one 'correct' order — the fix this proves is that " +

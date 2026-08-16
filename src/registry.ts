@@ -9,7 +9,13 @@ import { HeatSourceProfileSchema, type HeatSourceProfile } from "./heat-source.t
 /** Parses every *.json file in `dir` against `schema`, keyed by its `id`. Throws on the first invalid file. */
 function loadDir<T extends { id: string }>(
   dir: string,
-  schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } } }
+  schema: {
+    safeParse: (
+      v: unknown
+    ) =>
+      | { success: true; data: T }
+      | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } };
+  }
 ): Map<string, T> {
   const items = new Map<string, T>();
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {

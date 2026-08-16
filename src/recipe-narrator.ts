@@ -81,7 +81,13 @@ export interface RecipeNarration {
   verbsUsed: string[];
   stepCount: number;
   createdElements: SpawnedElement[];
-  finalInventory: { instanceId: string; entityId: string; entityName: string; state: string; tags: string[] }[];
+  finalInventory: {
+    instanceId: string;
+    entityId: string;
+    entityName: string;
+    state: string;
+    tags: string[];
+  }[];
   /** Sum of every step's `durationSeconds`, when stated — see this
    *  file's own doc comment for why this is a lower bound, not a real
    *  elapsed-time total. */
@@ -121,7 +127,8 @@ export function narrateRecipe(
   // knows about them — no re-deriving spawnCounter logic here.
   const entityIdForInstance = new Map<string, string>();
   for (const item of recipe.initialInventory) entityIdForInstance.set(item.id, item.entityId);
-  for (const [id, instance] of result.finalInventory) entityIdForInstance.set(id, instance.entityId);
+  for (const [id, instance] of result.finalInventory)
+    entityIdForInstance.set(id, instance.entityId);
 
   const verbsUsed: string[] = [];
   const capabilityResolutions: CapabilityResolution[] = [];
@@ -226,7 +233,9 @@ export function narrateRecipe(
     timingAdvisories: explanation.timingAdvisories,
     prepAdvisories: explanation.prepAdvisories,
     allergenSummary: explanation.allergenSummary,
-    runErrors: result.errors.map((e) => `${e.step.actionId} on ${e.step.targetInstanceId}: ${e.message}`),
+    runErrors: result.errors.map(
+      (e) => `${e.step.actionId} on ${e.step.targetInstanceId}: ${e.message}`
+    ),
     ranCleanly: result.errors.length === 0,
   };
 }
@@ -255,7 +264,9 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
   p(`## Structure — initial inventory`);
   p();
   for (const item of n.initialInventory) {
-    p(`- \`${item.instanceId}\`: ${item.entityName} (${item.entityId}), starting state \`${item.state}\``);
+    p(
+      `- \`${item.instanceId}\`: ${item.entityName} (${item.entityId}), starting state \`${item.state}\``
+    );
   }
   p();
 
@@ -265,12 +276,16 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
   p(`Needed by the sequence: ${n.toolsNeeded.join(", ") || "(none)"}`);
   if (n.toolsMissing.length > 0) p(`⚠️ MISSING: ${n.toolsMissing.join(", ")}`);
   for (const m of n.toolCapabilitiesMissing) {
-    p(`⚠️ MISSING tool capability "${m.capability}" — candidates: ${m.candidates.join(", ") || "(none known)"}`);
+    p(
+      `⚠️ MISSING tool capability "${m.capability}" — candidates: ${m.candidates.join(", ") || "(none known)"}`
+    );
   }
   p();
   p(`**Ingredient capabilities needed**: ${n.ingredientCapabilitiesNeeded.join(", ") || "(none)"}`);
   for (const m of n.ingredientCapabilitiesMissing) {
-    p(`⚠️ MISSING ingredient capability "${m.capability}" — candidates: ${m.candidates.join(", ") || "(none known)"}`);
+    p(
+      `⚠️ MISSING ingredient capability "${m.capability}" — candidates: ${m.candidates.join(", ") || "(none known)"}`
+    );
   }
   p();
 
@@ -280,15 +295,21 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
     p(`No ingredient-capability resolutions were needed by this sequence.`);
   } else {
     for (const r of n.capabilityResolutions) {
-      p(`- Step ${r.stepIndex + 1} (${r.verb}) needed \`${r.capability}\` — satisfied by \`${r.satisfiedByInstanceId}\` (${r.satisfiedByEntityId}).`);
+      p(
+        `- Step ${r.stepIndex + 1} (${r.verb}) needed \`${r.capability}\` — satisfied by \`${r.satisfiedByInstanceId}\` (${r.satisfiedByEntityId}).`
+      );
     }
   }
   const inherited = n.createdElements.filter((e) => e.confidentlyInheritedTags.length > 0);
   if (inherited.length > 0) {
     p();
-    p(`Tag inheritance (conservation of mass — a byproduct carries the parent's real, applicable tags forward; only shown when this instance was never targeted again afterward, so the tags can't have come from anything else):`);
+    p(
+      `Tag inheritance (conservation of mass — a byproduct carries the parent's real, applicable tags forward; only shown when this instance was never targeted again afterward, so the tags can't have come from anything else):`
+    );
     for (const e of inherited) {
-      p(`- \`${e.instanceId}\` (${e.entityName}) inherited tags [${e.confidentlyInheritedTags.join(", ")}].`);
+      p(
+        `- \`${e.instanceId}\` (${e.entityName}) inherited tags [${e.confidentlyInheritedTags.join(", ")}].`
+      );
     }
   }
   if (n.timingAdvisories.length > 0 || n.prepAdvisories.length > 0) {
@@ -297,7 +318,9 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
     for (const a of [...n.timingAdvisories, ...n.prepAdvisories]) p(`- ${a}`);
   } else {
     p();
-    p(`Zero advisories — every pre-flight check (timing-vs-doneness, wash-before-peel/cut, fry-timing-vs-geometry) passed cleanly.`);
+    p(
+      `Zero advisories — every pre-flight check (timing-vs-doneness, wash-before-peel/cut, fry-timing-vs-geometry) passed cleanly.`
+    );
   }
   p();
 
@@ -312,17 +335,23 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
     p(`Nothing spawned — every instance in the final inventory was already present at the start.`);
   } else {
     for (const e of n.createdElements) {
-      p(`- \`${e.instanceId}\`: ${e.entityName} (${e.entityId}), state \`${e.state}\`${e.tags.length ? `, tags [${e.tags.join(", ")}]` : ""}`);
+      p(
+        `- \`${e.instanceId}\`: ${e.entityName} (${e.entityId}), state \`${e.state}\`${e.tags.length ? `, tags [${e.tags.join(", ")}]` : ""}`
+      );
     }
   }
   p();
 
   p(`## How long it takes`);
   p();
-  p(`Stated active duration: **${n.statedActiveDurationSeconds}s** (${(n.statedActiveDurationSeconds / 60).toFixed(1)} min) — sum of every step's own \`durationSeconds\`, not a real elapsed-time simulation.`);
+  p(
+    `Stated active duration: **${n.statedActiveDurationSeconds}s** (${(n.statedActiveDurationSeconds / 60).toFixed(1)} min) — sum of every step's own \`durationSeconds\`, not a real elapsed-time simulation.`
+  );
   if (n.stepsWithUnstatedDuration.length > 0) {
     p();
-    p(`Steps that COULD state a duration but don't (not counted above, not zero — genuinely unstated):`);
+    p(
+      `Steps that COULD state a duration but don't (not counted above, not zero — genuinely unstated):`
+    );
     for (const s of n.stepsWithUnstatedDuration) p(`- ${s}`);
   }
   p();
@@ -330,13 +359,19 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
   p(`## Final inventory`);
   p();
   for (const item of n.finalInventory) {
-    p(`- \`${item.instanceId}\`: ${item.entityName} (${item.entityId}), state \`${item.state}\`${item.tags.length ? `, tags [${item.tags.join(", ")}]` : ""}`);
+    p(
+      `- \`${item.instanceId}\`: ${item.entityName} (${item.entityId}), state \`${item.state}\`${item.tags.length ? `, tags [${item.tags.join(", ")}]` : ""}`
+    );
   }
   p();
 
   p(`## Result`);
   p();
-  p(n.ranCleanly ? `✅ Runs end-to-end with zero errors.` : `❌ ${n.runErrors.length} step(s) failed:`);
+  p(
+    n.ranCleanly
+      ? `✅ Runs end-to-end with zero errors.`
+      : `❌ ${n.runErrors.length} step(s) failed:`
+  );
   for (const e of n.runErrors) p(`- ${e}`);
 
   return lines.join("\n");

@@ -15,7 +15,12 @@ import { makeEntity } from "./helpers.ts";
 describe("EntitySchema", () => {
   test("names must include an 'en' entry", () => {
     assert.throws(() =>
-      EntitySchema.parse({ id: "potato", kind: "ingredient", names: { es: "Patata" }, aggregationState: "solid" })
+      EntitySchema.parse({
+        id: "potato",
+        kind: "ingredient",
+        names: { es: "Patata" },
+        aggregationState: "solid",
+      })
     );
   });
 
@@ -57,7 +62,10 @@ describe("CitationSchema", () => {
 
 // YieldFractionSchema — 2026-08-16, ROADMAP.md's "yield/waste factors" gap.
 describe("YieldFractionSchema", () => {
-  const base = { ofParentEntityId: "potato", citation: { source: "test fixture", confidence: "commonly_cited_unverified" as const } };
+  const base = {
+    ofParentEntityId: "potato",
+    citation: { source: "test fixture", confidence: "commonly_cited_unverified" as const },
+  };
 
   test("accepts a real range where min <= max", () => {
     assert.doesNotThrow(() => YieldFractionSchema.parse({ ...base, min: 0.1, max: 0.25 }));
@@ -80,7 +88,17 @@ describe("YieldFractionSchema", () => {
 // AllergenSchema — 2026-08-16, ROADMAP.md's "Allergens" gap.
 describe("AllergenSchema", () => {
   test("accepts every one of the FDA's 'Big 9'", () => {
-    for (const a of ["milk", "egg", "fish", "crustacean_shellfish", "tree_nuts", "peanuts", "wheat", "soybeans", "sesame"]) {
+    for (const a of [
+      "milk",
+      "egg",
+      "fish",
+      "crustacean_shellfish",
+      "tree_nuts",
+      "peanuts",
+      "wheat",
+      "soybeans",
+      "sesame",
+    ]) {
       assert.doesNotThrow(() => AllergenSchema.parse(a));
     }
   });

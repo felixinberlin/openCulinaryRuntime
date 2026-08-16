@@ -12,7 +12,13 @@ const root = join(import.meta.dirname, "..");
 function loadDir<T extends { id: string }>(
   dir: string,
   label: string,
-  schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } } }
+  schema: {
+    safeParse: (
+      v: unknown
+    ) =>
+      | { success: true; data: T }
+      | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } };
+  }
 ) {
   const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
   const items = new Map<string, T>();
@@ -37,8 +43,16 @@ function loadDir<T extends { id: string }>(
 const entities = loadDir<Entity>(join(root, "data", "entities"), "entities", EntitySchema);
 const actions = loadDir<Action>(join(root, "data", "actions"), "actions", ActionSchema);
 const recipes = loadDir<RecipeScript>(join(root, "data", "recipes"), "recipes", RecipeScriptSchema);
-const ccps = loadDir<CriticalControlPoint>(join(root, "data", "ccps"), "ccps", CriticalControlPointSchema);
-const heatSources = loadDir<HeatSourceProfile>(join(root, "data", "heat-sources"), "heat-sources", HeatSourceProfileSchema);
+const ccps = loadDir<CriticalControlPoint>(
+  join(root, "data", "ccps"),
+  "ccps",
+  CriticalControlPointSchema
+);
+const heatSources = loadDir<HeatSourceProfile>(
+  join(root, "data", "heat-sources"),
+  "heat-sources",
+  HeatSourceProfileSchema
+);
 
 let crossFailed = 0;
 function fail(msg: string) {
@@ -64,7 +78,12 @@ function fail(msg: string) {
 // ~10-25%), and checking THAT against ~100% would be a real category
 // error (`isDestroyingAction` undefined/false skips the sum check
 // entirely, not a lenient bound).
-function checkYieldFractions(parent: Entity, byproductIds: string[], label: string, isDestroyingAction: boolean): void {
+function checkYieldFractions(
+  parent: Entity,
+  byproductIds: string[],
+  label: string,
+  isDestroyingAction: boolean
+): void {
   let sum = 0;
   let allHaveFraction = byproductIds.length > 0;
   for (const byproductId of byproductIds) {
@@ -94,12 +113,17 @@ function checkYieldFractions(parent: Entity, byproductIds: string[], label: stri
 for (const entity of entities.items.values()) {
   for (const byproductId of entity.producedByproducts) {
     if (!entities.items.has(byproductId)) {
-      fail(`entities/${entity.id}.json: producedByproducts references unknown entity "${byproductId}"`);
+      fail(
+        `entities/${entity.id}.json: producedByproducts references unknown entity "${byproductId}"`
+      );
     }
   }
   const nonOverriddenSpawningActions = entity.allowedTransformations
     .map((id) => actions.items.get(id))
-    .filter((a): a is Action => !!a && a.outputs.spawnsTargetByproducts && !(a.id in entity.byproductsByAction));
+    .filter(
+      (a): a is Action =>
+        !!a && a.outputs.spawnsTargetByproducts && !(a.id in entity.byproductsByAction)
+    );
   checkYieldFractions(
     entity,
     entity.producedByproducts,
@@ -109,7 +133,9 @@ for (const entity of entities.items.values()) {
   for (const actionId of entity.allowedTransformations) {
     const action = actions.items.get(actionId);
     if (!action) {
-      fail(`entities/${entity.id}.json: allowedTransformations references unknown action "${actionId}"`);
+      fail(
+        `entities/${entity.id}.json: allowedTransformations references unknown action "${actionId}"`
+      );
       continue;
     }
     // outputs.addsTag is applied by engine.ts unconditionally (never
@@ -137,21 +163,29 @@ for (const entity of entities.items.values()) {
   // producedByproducts/byproductsByAction below hold themselves to.
   for (const [fromState, forbidden] of Object.entries(entity.invalidTransitions)) {
     if (!entity.possibleStates.includes(fromState)) {
-      fail(`entities/${entity.id}.json: invalidTransitions references unknown state "${fromState}" (not in possibleStates) as a key`);
+      fail(
+        `entities/${entity.id}.json: invalidTransitions references unknown state "${fromState}" (not in possibleStates) as a key`
+      );
     }
     for (const toState of forbidden) {
       if (!entity.possibleStates.includes(toState)) {
-        fail(`entities/${entity.id}.json: invalidTransitions["${fromState}"] references unknown state "${toState}" (not in possibleStates)`);
+        fail(
+          `entities/${entity.id}.json: invalidTransitions["${fromState}"] references unknown state "${toState}" (not in possibleStates)`
+        );
       }
     }
   }
   for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
     if (!actions.items.has(actionId)) {
-      fail(`entities/${entity.id}.json: byproductsByAction references unknown action "${actionId}"`);
+      fail(
+        `entities/${entity.id}.json: byproductsByAction references unknown action "${actionId}"`
+      );
     }
     for (const byproductId of byproductIds) {
       if (!entities.items.has(byproductId)) {
-        fail(`entities/${entity.id}.json: byproductsByAction["${actionId}"] references unknown entity "${byproductId}"`);
+        fail(
+          `entities/${entity.id}.json: byproductsByAction["${actionId}"] references unknown entity "${byproductId}"`
+        );
       }
     }
     checkYieldFractions(
@@ -163,10 +197,14 @@ for (const entity of entities.items.values()) {
   }
   for (const [actionId, ccpId] of Object.entries(entity.criticalControlPointsByAction)) {
     if (!actions.items.has(actionId)) {
-      fail(`entities/${entity.id}.json: criticalControlPointsByAction references unknown action "${actionId}"`);
+      fail(
+        `entities/${entity.id}.json: criticalControlPointsByAction references unknown action "${actionId}"`
+      );
     }
     if (!ccps.items.has(ccpId)) {
-      fail(`entities/${entity.id}.json: criticalControlPointsByAction["${actionId}"] references unknown CCP "${ccpId}"`);
+      fail(
+        `entities/${entity.id}.json: criticalControlPointsByAction["${actionId}"] references unknown CCP "${ccpId}"`
+      );
     }
   }
   // structure.components (ingredient.ts's StructureSchema) was never
@@ -179,7 +217,9 @@ for (const entity of entities.items.values()) {
   if (entity.structure.composite) {
     for (const componentId of entity.structure.components) {
       if (!entities.items.has(componentId)) {
-        fail(`entities/${entity.id}.json: structure.components references unknown entity "${componentId}"`);
+        fail(
+          `entities/${entity.id}.json: structure.components references unknown entity "${componentId}"`
+        );
       }
     }
   }
@@ -221,12 +261,18 @@ for (const entity of entities.items.values()) {
   const cookingCapabilities = ["isFryable", "isBoilable", "isPoachable", "isScramblable"] as const;
   const hasCookingCapability = cookingCapabilities.some((c) => entity.capabilities[c]);
   if (hasCookingCapability && Object.keys(entity.criticalControlPointsByAction).length === 0) {
-    console.log(`NOTE entities/${entity.id}.json: has a cooking capability but no criticalControlPointsByAction — confirm this is deliberate (no pathogen risk), not unaudited.`);
+    console.log(
+      `NOTE entities/${entity.id}.json: has a cooking capability but no criticalControlPointsByAction — confirm this is deliberate (no pathogen risk), not unaudited.`
+    );
   }
   if (entity.composition?.nutrientsPer100g && !entity.composition.citation) {
     console.log(`NOTE entities/${entity.id}.json: composition.nutrientsPer100g has no citation.`);
   }
-  if (entity.thermophysical && Object.keys(entity.thermophysical).some((k) => k !== "citation") && !entity.thermophysical.citation) {
+  if (
+    entity.thermophysical &&
+    Object.keys(entity.thermophysical).some((k) => k !== "citation") &&
+    !entity.thermophysical.citation
+  ) {
     console.log(`NOTE entities/${entity.id}.json: thermophysical has no citation.`);
   }
 }
@@ -237,7 +283,9 @@ for (const action of actions.items.values()) {
     if (!tool) {
       fail(`actions/${action.id}.json: requiredTools references unknown entity "${toolId}"`);
     } else if (tool.kind !== "tool") {
-      fail(`actions/${action.id}.json: requiredTools references "${toolId}" which is kind "${tool.kind}", not "tool"`);
+      fail(
+        `actions/${action.id}.json: requiredTools references "${toolId}" which is kind "${tool.kind}", not "tool"`
+      );
     }
   }
   // Same dead-capability shape the last session's verb audit went looking
@@ -251,24 +299,34 @@ for (const action of actions.items.values()) {
       (e) => e.kind === "tool" && e.capabilities[capability] === true
     );
     if (!satisfied) {
-      fail(`actions/${action.id}.json: requiredToolCapabilities references "${capability}", which no tool entity asserts true — this action can never be executed`);
+      fail(
+        `actions/${action.id}.json: requiredToolCapabilities references "${capability}", which no tool entity asserts true — this action can never be executed`
+      );
     }
   }
   if (action.outputs.combinesInto && !entities.items.has(action.outputs.combinesInto)) {
-    fail(`actions/${action.id}.json: outputs.combinesInto references unknown entity "${action.outputs.combinesInto}"`);
+    fail(
+      `actions/${action.id}.json: outputs.combinesInto references unknown entity "${action.outputs.combinesInto}"`
+    );
   }
   if (!action.verification) {
-    console.log(`NOTE actions/${action.id}.json: no verification criterion — how would a machine confirm this action's effect happened?`);
+    console.log(
+      `NOTE actions/${action.id}.json: no verification criterion — how would a machine confirm this action's effect happened?`
+    );
   }
   if (action.retrySafe === undefined) {
-    console.log(`NOTE actions/${action.id}.json: retrySafe not audited — is blindly re-running this after an interruption safe?`);
+    console.log(
+      `NOTE actions/${action.id}.json: retrySafe not audited — is blindly re-running this after an interruption safe?`
+    );
   }
   // actionKind (action.ts, 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 1) —
   // same "flag unaudited, don't fail" treatment as verification/retrySafe
   // above, so a NEW action added later without classifying it is visible,
   // not silently missed.
   if (action.actionKind === undefined) {
-    console.log(`NOTE actions/${action.id}.json: actionKind not audited — one-off (instantaneous) or elapsed-time/do-until (continuous)?`);
+    console.log(
+      `NOTE actions/${action.id}.json: actionKind not audited — one-off (instantaneous) or elapsed-time/do-until (continuous)?`
+    );
   } else {
     // Soft correspondence check (TICKET 1 step 3): every manual_confirmation
     // action is precisely the paper's "cannot be reliably sensed" class, and
@@ -276,7 +334,10 @@ for (const action of actions.items.values()) {
     // process — a NOTE here means the two fields were set inconsistently,
     // worth a human's attention, not necessarily wrong (a future action
     // could have a real reason to break the pattern).
-    if (action.verification?.method === "manual_confirmation" && action.actionKind !== "instantaneous") {
+    if (
+      action.verification?.method === "manual_confirmation" &&
+      action.actionKind !== "instantaneous"
+    ) {
       console.log(
         `NOTE actions/${action.id}.json: verification.method is manual_confirmation (the paper's own "cannot be reliably ` +
           `sensed" class) but actionKind is "${action.actionKind}", not "instantaneous" — confirm this is deliberate.`
@@ -292,11 +353,12 @@ for (const action of actions.items.values()) {
 }
 
 for (const recipe of recipes.items.values()) {
-  const knownInstanceIds = new Set(recipe.initialInventory.map((i) => i.id));
   const knownEntityIds = new Set(recipe.initialInventory.map((i) => i.entityId));
   for (const item of recipe.initialInventory) {
     if (!entities.items.has(item.entityId)) {
-      fail(`recipes/${recipe.id}.json: initialInventory references unknown entity "${item.entityId}"`);
+      fail(
+        `recipes/${recipe.id}.json: initialInventory references unknown entity "${item.entityId}"`
+      );
     }
     // A "relative" quantity (e.g. baker's-percentage salt) is meaningless
     // without the entity it's a ratio OF actually being present in the
@@ -316,12 +378,16 @@ for (const recipe of recipes.items.values()) {
     if (!tool) {
       fail(`recipes/${recipe.id}.json: availableTools references unknown entity "${toolId}"`);
     } else if (tool.kind !== "tool") {
-      fail(`recipes/${recipe.id}.json: availableTools references "${toolId}" which is kind "${tool.kind}", not "tool"`);
+      fail(
+        `recipes/${recipe.id}.json: availableTools references "${toolId}" which is kind "${tool.kind}", not "tool"`
+      );
     }
   }
   for (const [i, step] of recipe.sequence.entries()) {
     if (!actions.items.has(step.actionId)) {
-      fail(`recipes/${recipe.id}.json: sequence[${i}] references unknown action "${step.actionId}"`);
+      fail(
+        `recipes/${recipe.id}.json: sequence[${i}] references unknown action "${step.actionId}"`
+      );
     }
     // A step referencing an id not in initialInventory isn't necessarily
     // wrong here — it might be an instance a prior step spawns at runtime
@@ -345,18 +411,35 @@ for (const recipe of recipes.items.values()) {
 // concern — same severity as the schema/cross-reference checks above.
 if (entities.failed === 0 && actions.failed === 0 && ccps.failed === 0) {
   for (const recipe of recipes.items.values()) {
-    const result = runRecipe(recipe, entities.items, actions.items, ccps.items, undefined, heatSources.items);
+    const result = runRecipe(
+      recipe,
+      entities.items,
+      actions.items,
+      ccps.items,
+      undefined,
+      heatSources.items
+    );
     if (result.errors.length > 0) {
       for (const { step, message } of result.errors) {
-        fail(`recipes/${recipe.id}.json: sequence step "${step.actionId}" on "${step.targetInstanceId}" failed to run: ${message}`);
+        fail(
+          `recipes/${recipe.id}.json: sequence step "${step.actionId}" on "${step.targetInstanceId}" failed to run: ${message}`
+        );
       }
     } else {
-      console.log(`OK   recipes/${recipe.id}.json simulated end-to-end, zero step errors (${recipe.sequence.length} steps)`);
+      console.log(
+        `OK   recipes/${recipe.id}.json simulated end-to-end, zero step errors (${recipe.sequence.length} steps)`
+      );
     }
   }
 }
 
-const failed = entities.failed + actions.failed + recipes.failed + ccps.failed + heatSources.failed + crossFailed;
+const failed =
+  entities.failed +
+  actions.failed +
+  recipes.failed +
+  ccps.failed +
+  heatSources.failed +
+  crossFailed;
 const total = entities.total + actions.total + recipes.total + ccps.total + heatSources.total;
 if (failed > 0) {
   console.error(`\n${failed} problem(s) found.`);

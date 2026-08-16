@@ -17,14 +17,18 @@ const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 const recipes = loadRecipes(join(root, "data", "recipes"));
 
-console.log("Goal: a recipe can say 'this dish contains X' before a single step runs, over the REAL data.\n");
+console.log(
+  "Goal: a recipe can say 'this dish contains X' before a single step runs, over the REAL data.\n"
+);
 
 // ---------------------------------------------------------------------
 // 1. An egg-free recipe correctly reports zero tracked allergens.
 // ---------------------------------------------------------------------
 const potatoRecipe = recipes.get("salted_fried_potatoes")!;
 const potatoAllergens = explainRecipe(potatoRecipe, entities, actions, ccps).allergenSummary;
-console.log(`1. "${potatoRecipe.names.en}": allergens = [${potatoAllergens.join(", ")}] (expected empty)`);
+console.log(
+  `1. "${potatoRecipe.names.en}": allergens = [${potatoAllergens.join(", ")}] (expected empty)`
+);
 
 // ---------------------------------------------------------------------
 // 2. Every real recipe containing egg correctly reports "egg" — proves

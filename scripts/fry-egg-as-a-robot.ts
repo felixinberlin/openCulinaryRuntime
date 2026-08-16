@@ -30,7 +30,9 @@ const targetOilTempC = 175; // real value inside fry.json's oilTempC range (120-
 const oilMassKg = 0.3; // a shallow pool for pan-frying an egg, not a deep-fry submersion
 const startTempC = 20;
 
-console.log(`Goal: fry an egg, oil heated to ${targetOilTempC}°C, ${oilMassKg}kg oil from ${startTempC}°C, on ${heatSource.names.en}.\n`);
+console.log(
+  `Goal: fry an egg, oil heated to ${targetOilTempC}°C, ${oilMassKg}kg oil from ${startTempC}°C, on ${heatSource.names.en}.\n`
+);
 
 // ---------------------------------------------------------------------
 // 1. Smoke-point safety demonstrated FIRST, deliberately, before the real
@@ -87,7 +89,9 @@ const fried = applyAction(
   ccps
 );
 console.log(`3. FRY executed: "${rawEgg.state}" -> "${fried.instance.state}"`);
-console.log(`   HACCP warnings: ${fried.warnings.length === 0 ? "none" : fried.warnings.join("; ")}\n`);
+console.log(
+  `   HACCP warnings: ${fried.warnings.length === 0 ? "none" : fried.warnings.join("; ")}\n`
+);
 
 console.log(
   `Total real elapsed time: ${elapsedPreheatSeconds}s to reach ${targetOilTempC}°C + 90s frying = ` +

@@ -55,13 +55,18 @@
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",
     "new-recipe": "tsx scripts/new-recipe.ts",
     "ask": "tsx scripts/ask.ts",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "lint": "oxlint src scripts tests",
+    "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\""
   },
   "dependencies": {
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "oxlint": "^1.78.0",
+    "prettier": "^3.9.6",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"
   }

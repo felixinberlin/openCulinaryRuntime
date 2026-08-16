@@ -1,0 +1,12 @@
+# Hand-maintained data files with a deliberate, stable authoring convention
+# (dense, long citation/note strings) — prettier reformatting these would
+# create large, low-value diffs unrelated to code quality. See ROADMAP.md's
+# "Lint/format config" entry for the full reasoning.
+data/
+
+# Generated / third-party / not-authored-here
+dist/
+node_modules/
+graft/
+olddocs/
+repomix-output.md

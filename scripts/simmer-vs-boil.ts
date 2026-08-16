@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { loadEntities, loadActions, loadCcps, loadHeatSources } from "../src/registry.ts";
-import { applyAction, type Instance } from "../src/engine.ts";
+import { applyAction } from "../src/engine.ts";
 
 /**
  * Capability test for the 2026-08-13 SIMMER verb (data/actions/simmer.json,
@@ -56,16 +56,33 @@ const simmeredEgg = applyAction(
 console.log(`  BOIL:   raw -> "${boiledEgg.state}"`);
 console.log(`  SIMMER: raw -> "${simmeredEgg.state}"`);
 if (boiledEgg.state !== simmeredEgg.state) {
-  throw new Error(`Expected SIMMER and BOIL to produce the same state, got "${simmeredEgg.state}" vs "${boiledEgg.state}"`);
+  throw new Error(
+    `Expected SIMMER and BOIL to produce the same state, got "${simmeredEgg.state}" vs "${boiledEgg.state}"`
+  );
 }
-console.log("  Same state, as intended — a simmered egg IS a boiled egg, just gentler to get there.\n");
+console.log(
+  "  Same state, as intended — a simmered egg IS a boiled egg, just gentler to get there.\n"
+);
 
-console.log("=== 2. Downstream statePrerequisites (PEEL requires 'boiled') work unchanged after SIMMER ===");
+console.log(
+  "=== 2. Downstream statePrerequisites (PEEL requires 'boiled') work unchanged after SIMMER ==="
+);
 const peelAction = actions.get("peel")!;
-const peeledAfterSimmer = applyAction(simmeredEgg, peelAction, entities, tools, undefined, ingredients);
-console.log(`  PEEL after SIMMER: "${simmeredEgg.state}" -> "${peeledAfterSimmer.instance.state}" (no error — statePrerequisites.peel is satisfied by SIMMER's output, no separate wiring needed)\n`);
+const peeledAfterSimmer = applyAction(
+  simmeredEgg,
+  peelAction,
+  entities,
+  tools,
+  undefined,
+  ingredients
+);
+console.log(
+  `  PEEL after SIMMER: "${simmeredEgg.state}" -> "${peeledAfterSimmer.instance.state}" (no error — statePrerequisites.peel is satisfied by SIMMER's output, no separate wiring needed)\n`
+);
 
-console.log("=== 3. waterTempC's 85-96°C band is real and enforced (not the same range as a rolling boil) ===");
+console.log(
+  "=== 3. waterTempC's 85-96°C band is real and enforced (not the same range as a rolling boil) ==="
+);
 try {
   applyAction(
     { entityId: "egg", state: "raw", tags: [] },
@@ -78,16 +95,24 @@ try {
   );
   console.log("  UNEXPECTED: 100°C was accepted as a valid simmer temperature");
 } catch (err) {
-  console.log(`  REJECTED as expected — 100°C is a rolling boil, not a simmer:\n    ${(err as Error).message}`);
+  console.log(
+    `  REJECTED as expected — 100°C is a rolling boil, not a simmer:\n    ${(err as Error).message}`
+  );
 }
 
-console.log("\n=== 4. HACCP applies identically to SIMMER as to BOIL (literally the same CCP, not a look-alike one) ===");
+console.log(
+  "\n=== 4. HACCP applies identically to SIMMER as to BOIL (literally the same CCP, not a look-alike one) ==="
+);
 const egg = entities.get("egg")!;
 const simmerCcp = egg.criticalControlPointsByAction["simmer"];
 const boilCcp = egg.criticalControlPointsByAction["boil"];
-console.log(`  egg.json: criticalControlPointsByAction.simmer = "${simmerCcp}", .boil = "${boilCcp}"`);
+console.log(
+  `  egg.json: criticalControlPointsByAction.simmer = "${simmerCcp}", .boil = "${boilCcp}"`
+);
 if (simmerCcp !== boilCcp) {
-  throw new Error(`Expected SIMMER and BOIL to reference the identical CCP, got "${simmerCcp}" vs "${boilCcp}"`);
+  throw new Error(
+    `Expected SIMMER and BOIL to reference the identical CCP, got "${simmerCcp}" vs "${boilCcp}"`
+  );
 }
 console.log(
   "  Same CCP id, not a separately-tuned one — turbulence has no bearing on Salmonella kill-time, so there's no\n" +
@@ -95,7 +120,9 @@ console.log(
     "  clears egg_cooking's 15s hold requirement on any valid input — same as BOIL's identical floor.)\n"
 );
 
-console.log("=== 5. Potato is simmerable too (no CCP — no pathogen risk, same as BOIL/FRY/BAKE) ===");
+console.log(
+  "=== 5. Potato is simmerable too (no CCP — no pathogen risk, same as BOIL/FRY/BAKE) ==="
+);
 const simmeredPotato = applyAction(
   { entityId: "potato", state: "peeled", tags: [] },
   simmerAction,
@@ -106,7 +133,9 @@ const simmeredPotato = applyAction(
 ).instance;
 console.log(`  SIMMER: "peeled" -> "${simmeredPotato.state}"\n`);
 
-console.log("=== 6. Why heat source matters more for SIMMER than for BOIL: holding a stable band, not just reaching one ===");
+console.log(
+  "=== 6. Why heat source matters more for SIMMER than for BOIL: holding a stable band, not just reaching one ==="
+);
 for (const id of ["gas", "vitro", "wood_fire"]) {
   const source = heatSources.get(id)!;
   console.log(

@@ -58,9 +58,14 @@ function slugToDisplayName(slug: string): string {
     .join(" ");
 }
 
-export function buildRecipeScaffold(input: RecipeScaffoldInput, entities: Map<string, Entity>): RecipeScaffold {
+export function buildRecipeScaffold(
+  input: RecipeScaffoldInput,
+  entities: Map<string, Entity>
+): RecipeScaffold {
   if (input.entityIds.length === 0) {
-    throw new Error("buildRecipeScaffold: at least one entity id is required for initialInventory (RecipeScriptSchema requires min(1)).");
+    throw new Error(
+      "buildRecipeScaffold: at least one entity id is required for initialInventory (RecipeScriptSchema requires min(1))."
+    );
   }
 
   // Every existing data/recipes/*.json file numbers instance ids PER
@@ -74,10 +79,14 @@ export function buildRecipeScaffold(input: RecipeScaffoldInput, entities: Map<st
   const initialInventory = input.entityIds.map((entityId) => {
     const entity = entities.get(entityId);
     if (!entity) {
-      throw new Error(`buildRecipeScaffold: unknown entity id "${entityId}" — check data/entities/*.json for the real id.`);
+      throw new Error(
+        `buildRecipeScaffold: unknown entity id "${entityId}" — check data/entities/*.json for the real id.`
+      );
     }
     if (entity.possibleStates.length === 0) {
-      throw new Error(`buildRecipeScaffold: entity "${entityId}" has no possibleStates — cannot pick a starting state for it.`);
+      throw new Error(
+        `buildRecipeScaffold: entity "${entityId}" has no possibleStates — cannot pick a starting state for it.`
+      );
     }
     const n = (countPerEntity.get(entityId) ?? 0) + 1;
     countPerEntity.set(entityId, n);

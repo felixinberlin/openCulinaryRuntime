@@ -46,21 +46,29 @@ console.log(`Wrote ${outputPath}\n`);
 console.log(`id: "${scaffold.id}"`);
 console.log(`names.en: "${scaffold.names.en}"\n`);
 
-console.log("Initial inventory (real entities, real starting states — check these against data/entities/*.json):");
+console.log(
+  "Initial inventory (real entities, real starting states — check these against data/entities/*.json):"
+);
 for (const item of scaffold.initialInventory) {
   const entity = entities.get(item.entityId)!;
   const capabilities = Object.entries(entity.capabilities)
     .filter(([, v]) => v === true)
     .map(([k]) => k);
-  console.log(`  ${item.id}: ${entity.names.en} (${item.entityId}), starting state "${item.state}"`);
+  console.log(
+    `  ${item.id}: ${entity.names.en} (${item.entityId}), starting state "${item.state}"`
+  );
   console.log(`    capabilities: ${capabilities.join(", ") || "(none)"}`);
-  console.log(`    other possible states: ${entity.possibleStates.filter((s) => s !== item.state).join(", ") || "(none)"}`);
+  console.log(
+    `    other possible states: ${entity.possibleStates.filter((s) => s !== item.state).join(", ") || "(none)"}`
+  );
 }
 
 console.log(
   "\nNOT yet a valid recipe — sequence is empty (RecipeScriptSchema requires at least one step) and " +
     "availableTools is empty too. Browse data/actions/*.json for verbs whose requiredTargetCapability matches " +
-    "one of the capabilities listed above, add steps to \"sequence\", then run:\n"
+    'one of the capabilities listed above, add steps to "sequence", then run:\n'
 );
 console.log(`  npm run validate-recipe -- ${outputPath}\n`);
-console.log("...and follow AUTHORING.md's loop (read the pre-flight report + execution log, fix, repeat) until it's clean.");
+console.log(
+  "...and follow AUTHORING.md's loop (read the pre-flight report + execution log, fix, repeat) until it's clean."
+);

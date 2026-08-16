@@ -37,7 +37,7 @@ const ccps = loadCcps(join(root, "data", "ccps"));
 const tools = new Set(["pot", "bowl", "knife"]);
 const ingredients = new Set(["water"]);
 
-const { min, max } = eggBoilDonenessRange("hard");
+const { min } = eggBoilDonenessRange("hard");
 const holdSeconds = String(min); // fully set is the goal; no need to linger past the minimum
 
 function boilHardEgg(): Instance {
@@ -56,9 +56,18 @@ function boilHardEgg(): Instance {
 }
 
 function cutAndSalt(instance: Instance, label: string) {
-  const cut = applyAction(instance, actions.get("cut")!, entities, tools, { shape: "diced" }).instance;
+  const cut = applyAction(instance, actions.get("cut")!, entities, tools, {
+    shape: "diced",
+  }).instance;
   console.log(`  CUT (diced): "${instance.state}" -> "${cut.state}"`);
-  const salted = applyAction(cut, actions.get("salt")!, entities, tools, { timing: "after_cooking" }, new Set(["salt"])).instance;
+  const salted = applyAction(
+    cut,
+    actions.get("salt")!,
+    entities,
+    tools,
+    { timing: "after_cooking" },
+    new Set(["salt"])
+  ).instance;
   console.log(`  SALT: tags [${salted.tags}]`);
   console.log(`${label} result: "${salted.state}", tags [${salted.tags}]\n`);
 }
@@ -66,7 +75,14 @@ function cutAndSalt(instance: Instance, label: string) {
 console.log('Path A: BOIL -> SHOCK -> PEEL -> CUT (diced) -> SALT ("shock, don\'t wait")');
 {
   const boiled = boilHardEgg();
-  const shocked = applyAction(boiled, actions.get("shock")!, entities, tools, {}, ingredients).instance;
+  const shocked = applyAction(
+    boiled,
+    actions.get("shock")!,
+    entities,
+    tools,
+    {},
+    ingredients
+  ).instance;
   console.log(`  SHOCK: "${boiled.state}" -> "${shocked.state}", tags [${shocked.tags}]`);
   const peeled = applyAction(shocked, actions.get("peel")!, entities, tools).instance;
   console.log(`  PEEL: "${shocked.state}" -> "${peeled.state}"`);

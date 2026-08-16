@@ -51,7 +51,9 @@ for (const fatId of ["oil", "sunflower_oil", "butter"]) {
     new Set([fatId]),
     ccps
   );
-  console.log(`  "${fatId}": OK — egg -> "${result.instance.state}" (zero engine changes needed for this substitution)`);
+  console.log(
+    `  "${fatId}": OK — egg -> "${result.instance.state}" (zero engine changes needed for this substitution)`
+  );
 }
 
 console.log(
@@ -60,7 +62,9 @@ console.log(
     "since before any of these three entities existed.\n"
 );
 
-console.log("=== 2. Can each fat actually reach crispy_french_fries.json's real 191°C finishing-fry target? ===\n");
+console.log(
+  "=== 2. Can each fat actually reach crispy_french_fries.json's real 191°C finishing-fry target? ===\n"
+);
 const targetTempC = 191; // fry.json's own oilTempCNote-cited finishing temperature
 
 for (const fatId of ["oil", "sunflower_oil", "butter"]) {
@@ -75,7 +79,9 @@ for (const fatId of ["oil", "sunflower_oil", "butter"]) {
       elapsed += 15;
       if (elapsed > 600) break; // safety valve for this demo loop
     }
-    console.log(`    Reached ${targetTempC}°C in ${elapsed}s — safe, ${(smokePointC - targetTempC).toFixed(0)}°C of margin below smoke point.`);
+    console.log(
+      `    Reached ${targetTempC}°C in ${elapsed}s — safe, ${(smokePointC - targetTempC).toFixed(0)}°C of margin below smoke point.`
+    );
   } catch (e) {
     console.log(`    REJECTED: ${(e as Error).message}`);
   }

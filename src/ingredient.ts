@@ -217,9 +217,7 @@ export const SensoryPropertiesSchema = z
      * schema field: still just "how does this register on the tongue/in
      * the mouth," the same question every other taste value answers.
      */
-    taste: z.array(
-      z.enum(["salty", "sweet", "sour", "bitter", "umami", "pungent", "neutral"])
-    ),
+    taste: z.array(z.enum(["salty", "sweet", "sour", "bitter", "umami", "pungent", "neutral"])),
     aroma: z.array(z.string()),
     texture: z.array(z.string()),
     color: z.string(),

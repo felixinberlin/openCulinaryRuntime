@@ -126,7 +126,12 @@ export function pourInto(
   if (massKg <= 0) {
     throw new Error(`massKg must be positive, got ${massKg}`);
   }
-  return { toolEntityId: place.toolEntityId, contentsEntityId: ingredientEntityId, massKg, currentTempC: tempC };
+  return {
+    toolEntityId: place.toolEntityId,
+    contentsEntityId: ingredientEntityId,
+    massKg,
+    currentTempC: tempC,
+  };
 }
 
 /** Shared precondition both `advanceTempSeconds` and `advanceHeatSeconds`
@@ -136,7 +141,9 @@ export function pourInto(
  *  missing property on it. */
 function assertPlaceMatchesEntity(place: PlaceState, contentsEntity: Entity): void {
   if (place.contentsEntityId === null || place.massKg === null) {
-    throw new Error(`Cannot heat "${place.toolEntityId}": nothing has been poured in yet (call pourInto() first).`);
+    throw new Error(
+      `Cannot heat "${place.toolEntityId}": nothing has been poured in yet (call pourInto() first).`
+    );
   }
   if (place.contentsEntityId !== contentsEntity.id) {
     throw new Error(
@@ -201,9 +208,12 @@ export function advanceTempSeconds(
     return place;
   }
 
-  const midPowerW = (heatSource.typicalPowerWattsRange.min + heatSource.typicalPowerWattsRange.max) / 2;
+  const midPowerW =
+    (heatSource.typicalPowerWattsRange.min + heatSource.typicalPowerWattsRange.max) / 2;
   const midEfficiency =
-    (heatSource.thermalEfficiencyPercentRange.min + heatSource.thermalEfficiencyPercentRange.max) / 2 / 100;
+    (heatSource.thermalEfficiencyPercentRange.min + heatSource.thermalEfficiencyPercentRange.max) /
+    2 /
+    100;
   const deliveredPowerW = midPowerW * midEfficiency;
   const energyDeliveredJ = deliveredPowerW * elapsedSeconds;
   const deltaT = energyDeliveredJ / (place.massKg! * specificHeat);

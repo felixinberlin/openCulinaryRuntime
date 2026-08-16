@@ -1,7 +1,11 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { requiredHoldSeconds, CriticalControlPointSchema, type ThermalInactivationModel } from "../src/thermal.ts";
+import {
+  requiredHoldSeconds,
+  CriticalControlPointSchema,
+  type ThermalInactivationModel,
+} from "../src/thermal.ts";
 import { makeCcp } from "./helpers.ts";
 
 describe("requiredHoldSeconds — D-value/z-value thermal death time model", () => {
@@ -28,7 +32,9 @@ describe("requiredHoldSeconds — D-value/z-value thermal death time model", () 
 
 describe("CriticalControlPointSchema", () => {
   test("names must include an 'en' entry", () => {
-    assert.throws(() => makeCcp({ id: "x", names: { es: "x" } as unknown as Record<string, string> }));
+    assert.throws(() =>
+      makeCcp({ id: "x", names: { es: "x" } as unknown as Record<string, string> })
+    );
   });
 
   test("advisoryOnly defaults to false", () => {

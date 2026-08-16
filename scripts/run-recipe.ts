@@ -1,5 +1,11 @@
 import { join } from "node:path";
-import { loadEntities, loadActions, loadRecipes, loadCcps, loadHeatSources } from "../src/registry.ts";
+import {
+  loadEntities,
+  loadActions,
+  loadRecipes,
+  loadCcps,
+  loadHeatSources,
+} from "../src/registry.ts";
 import { runRecipe } from "../src/recipe-runner.ts";
 
 const recipeId = process.argv[2] ?? "salted_fried_potatoes";

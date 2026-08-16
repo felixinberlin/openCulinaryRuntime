@@ -45,7 +45,9 @@ const initialTempC = 20; // room/rested temperature — same convention potato-h
 const surfaceTempC = 175; // real pan temperature, matching fry.json's own oilTempC precedent used elsewhere
 const targetCenterTempC = 71; // egg_cooking.json's own real, cited instantaneous safety threshold — not invented here
 
-console.log("Goal: bound the real time for a tortilla's center to reach a safe, set temperature — not fake a single number.\n");
+console.log(
+  "Goal: bound the real time for a tortilla's center to reach a safe, set temperature — not fake a single number.\n"
+);
 
 const symmetricParams: SlabConductionParams = {
   halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 2),
@@ -63,12 +65,18 @@ const singleSidedParams: SlabConductionParams = {
 const tSymmetric = secondsForCenterToReachTempC(symmetricParams, targetCenterTempC);
 const tSingleSided = secondsForCenterToReachTempC(singleSidedParams, targetCenterTempC);
 
-console.log(`Real, computed 2.8cm-thick tortilla, 20°C start, 175°C pan, target center 71°C (egg_cooking.json's real threshold):\n`);
-console.log(`  LOWER bound (t_symmetric, both faces heated from t=0 — idealized, not achievable by an actual flip):`);
+console.log(
+  `Real, computed 2.8cm-thick tortilla, 20°C start, 175°C pan, target center 71°C (egg_cooking.json's real threshold):\n`
+);
+console.log(
+  `  LOWER bound (t_symmetric, both faces heated from t=0 — idealized, not achievable by an actual flip):`
+);
 console.log(`    ${tSymmetric.toFixed(0)}s (${(tSymmetric / 60).toFixed(1)} min)`);
 console.log(`  UPPER bound (t_singleSided, NEVER flipped — a real, honest worst case):`);
 console.log(`    ${tSingleSided.toFixed(0)}s (${(tSingleSided / 60).toFixed(1)} min)`);
-console.log(`  Ratio: ${(tSingleSided / tSymmetric).toFixed(2)}x — matches the model's own derivable L² scaling (4x for a halved effective length).`);
+console.log(
+  `  Ratio: ${(tSingleSided / tSymmetric).toFixed(2)}x — matches the model's own derivable L² scaling (4x for a halved effective length).`
+);
 
 console.log(
   `\nThe TRUE 'flipped exactly once, halfway through' time lies somewhere between these two — genuinely NOT computed ` +

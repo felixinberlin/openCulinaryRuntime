@@ -17,7 +17,9 @@ const ccps = loadCcps(join(root, "data", "ccps"));
 
 const tools = new Set(["mixer", "pot"]);
 
-console.log("Goal: raw egg white -> foamy -> soft -> firm -> stiff peaks, plus the real gates around it.\n");
+console.log(
+  "Goal: raw egg white -> foamy -> soft -> firm -> stiff peaks, plus the real gates around it.\n"
+);
 
 // ---------------------------------------------------------------------
 // 1. The real path: WHISK through all four real stages, one applyAction
@@ -27,7 +29,15 @@ console.log("Goal: raw egg white -> foamy -> soft -> firm -> stiff peaks, plus t
 // ---------------------------------------------------------------------
 let white: Instance = { entityId: "egg_white", state: "raw", tags: [] };
 for (const stage of ["foamy", "soft_peaks", "firm_peaks", "stiff_peaks"]) {
-  const result = applyAction(white, actions.get("whisk")!, entities, tools, { peakStage: stage }, new Set(), ccps);
+  const result = applyAction(
+    white,
+    actions.get("whisk")!,
+    entities,
+    tools,
+    { peakStage: stage },
+    new Set(),
+    ccps
+  );
   console.log(`1. WHISK (peakStage: ${stage}): "${white.state}" -> "${result.instance.state}"`);
   white = result.instance;
 }
@@ -39,7 +49,15 @@ console.log();
 //    be rejected, not silently "un-whisked."
 // ---------------------------------------------------------------------
 try {
-  applyAction(white, actions.get("whisk")!, entities, tools, { peakStage: "soft_peaks" }, new Set(), ccps);
+  applyAction(
+    white,
+    actions.get("whisk")!,
+    entities,
+    tools,
+    { peakStage: "soft_peaks" },
+    new Set(),
+    ccps
+  );
   console.log("2. Unexpected: stiff_peaks -> soft_peaks should have been rejected.");
 } catch (e) {
   console.log(`2. WHISK stiff_peaks -> soft_peaks correctly REJECTED: ${(e as Error).message}\n`);
@@ -49,7 +67,15 @@ try {
 // 3. invalidTransitions: cannot revert all the way to raw either.
 // ---------------------------------------------------------------------
 try {
-  applyAction(white, actions.get("whisk")!, entities, tools, { peakStage: "foamy" }, new Set(), ccps);
+  applyAction(
+    white,
+    actions.get("whisk")!,
+    entities,
+    tools,
+    { peakStage: "foamy" },
+    new Set(),
+    ccps
+  );
   console.log("3. Unexpected: stiff_peaks -> foamy should have been rejected.");
 } catch (e) {
   console.log(`3. WHISK stiff_peaks -> foamy correctly REJECTED: ${(e as Error).message}\n`);
@@ -60,15 +86,31 @@ try {
 //    authored fact (TICKET 5's shape), never as a WHISK parameter value.
 // ---------------------------------------------------------------------
 const eggWhiteEntity = entities.get("egg_white")!;
-console.log(`4. "over_whisked" is one of whisk.json's peakStage allowedValues? ${actions.get("whisk")!.parameters[0].allowedValues!.includes("over_whisked")} (expected false — never a chosen target)`);
-console.log(`   isTerminalState(egg_white, "over_whisked") = ${isTerminalState(eggWhiteEntity, "over_whisked")} (expected true)`);
+console.log(
+  `4. "over_whisked" is one of whisk.json's peakStage allowedValues? ${actions.get("whisk")!.parameters[0].allowedValues!.includes("over_whisked")} (expected false — never a chosen target)`
+);
+console.log(
+  `   isTerminalState(egg_white, "over_whisked") = ${isTerminalState(eggWhiteEntity, "over_whisked")} (expected true)`
+);
 
 const overWhisked: Instance = { entityId: "egg_white", state: "over_whisked", tags: [] };
 try {
-  applyAction(overWhisked, actions.get("whisk")!, entities, tools, { peakStage: "stiff_peaks" }, new Set(), ccps);
-  console.log("   Unexpected: whisking an over_whisked white back to stiff_peaks should have been rejected.");
+  applyAction(
+    overWhisked,
+    actions.get("whisk")!,
+    entities,
+    tools,
+    { peakStage: "stiff_peaks" },
+    new Set(),
+    ccps
+  );
+  console.log(
+    "   Unexpected: whisking an over_whisked white back to stiff_peaks should have been rejected."
+  );
 } catch (e) {
-  console.log(`   WHISK on an already-over_whisked white correctly REJECTED: ${(e as Error).message}\n`);
+  console.log(
+    `   WHISK on an already-over_whisked white correctly REJECTED: ${(e as Error).message}\n`
+  );
 }
 
 // ---------------------------------------------------------------------

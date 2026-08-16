@@ -19,7 +19,9 @@ const ccps = loadCcps(join(root, "data", "ccps"));
 const tools = new Set(["knife", "pan", "pot"]);
 const ingredients = new Set(["oil", "water"]);
 
-console.log("Goal: raw onion -> peeled -> sliced -> caramelized, plus proving the real gates around it.\n");
+console.log(
+  "Goal: raw onion -> peeled -> sliced -> caramelized, plus proving the real gates around it.\n"
+);
 
 // ---------------------------------------------------------------------
 // 1. CARAMELIZE correctly REFUSED on a raw (not yet sliced/chopped) onion —
@@ -39,9 +41,19 @@ try {
 let onion: Instance = { entityId: "onion", state: "raw", tags: [] };
 const peeled = applyAction(onion, actions.get("peel")!, entities, tools, {}, ingredients, ccps);
 onion = peeled.instance;
-console.log(`2. PEEL: "raw" -> "${onion.state}" (byproducts spawned: ${peeled.spawned.map((b) => b.entityId).join(", ") || "none"})`);
+console.log(
+  `2. PEEL: "raw" -> "${onion.state}" (byproducts spawned: ${peeled.spawned.map((b) => b.entityId).join(", ") || "none"})`
+);
 
-const sliced = applyAction(onion, actions.get("cut")!, entities, tools, { shape: "sliced" }, ingredients, ccps);
+const sliced = applyAction(
+  onion,
+  actions.get("cut")!,
+  entities,
+  tools,
+  { shape: "sliced" },
+  ingredients,
+  ccps
+);
 onion = sliced.instance;
 console.log(`   CUT (sliced): "peeled" -> "${onion.state}"`);
 
@@ -50,7 +62,12 @@ const caramelized = applyAction(
   actions.get("caramelize")!,
   entities,
   tools,
-  { heatLevel: "low", durationSeconds: "1800", technique: "low_and_slow", doneness: "deep_caramel" },
+  {
+    heatLevel: "low",
+    durationSeconds: "1800",
+    technique: "low_and_slow",
+    doneness: "deep_caramel",
+  },
   ingredients,
   ccps
 );
@@ -74,17 +91,39 @@ try {
 //    state gets (see onion.json's boiledPeeledNote).
 // ---------------------------------------------------------------------
 let pearlOnion: Instance = { entityId: "onion", state: "raw", tags: [] };
-const boiled = applyAction(pearlOnion, actions.get("boil")!, entities, tools, {}, ingredients, ccps);
+const boiled = applyAction(
+  pearlOnion,
+  actions.get("boil")!,
+  entities,
+  tools,
+  {},
+  ingredients,
+  ccps
+);
 pearlOnion = boiled.instance;
-const peeledAfterBoil = applyAction(pearlOnion, actions.get("peel")!, entities, tools, {}, ingredients, ccps);
-console.log(`4. Blanch-then-peel: "raw" -> "${pearlOnion.state}" -> "${peeledAfterBoil.instance.state}" — correctly ALLOWED (pearl-onion technique).\n`);
+const peeledAfterBoil = applyAction(
+  pearlOnion,
+  actions.get("peel")!,
+  entities,
+  tools,
+  {},
+  ingredients,
+  ccps
+);
+console.log(
+  `4. Blanch-then-peel: "raw" -> "${pearlOnion.state}" -> "${peeledAfterBoil.instance.state}" — correctly ALLOWED (pearl-onion technique).\n`
+);
 
 // ---------------------------------------------------------------------
 // 5. isTerminalState — burned is a dead end, overcooked is not.
 // ---------------------------------------------------------------------
 const onionEntity = entities.get("onion")!;
-console.log(`5. isTerminalState(onion, "burned") = ${isTerminalState(onionEntity, "burned")} (expected true)`);
-console.log(`   isTerminalState(onion, "overcooked") = ${isTerminalState(onionEntity, "overcooked")} (expected false)`);
+console.log(
+  `5. isTerminalState(onion, "burned") = ${isTerminalState(onionEntity, "burned")} (expected true)`
+);
+console.log(
+  `   isTerminalState(onion, "overcooked") = ${isTerminalState(onionEntity, "overcooked")} (expected false)`
+);
 
 console.log(
   "\nStill NOT closed by this script, named rather than implied covered: no tortilla-de-patatas-con-cebolla " +

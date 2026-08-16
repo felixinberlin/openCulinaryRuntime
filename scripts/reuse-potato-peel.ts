@@ -26,12 +26,26 @@ function apply(
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
   const label = params
-    ? ` (${Object.entries(params).map(([k, v]) => `${k}: ${v}`).join(", ")})`
+    ? ` (${Object.entries(params)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(", ")})`
     : "";
-  console.log(`Applying ${action.verb}${label} to ${instance.entityId} (state: "${instance.state}", tags [${instance.tags}])`);
-  const result = applyAction(instance, action, entities, availableTools, params, availableIngredients);
-  console.log(`  -> ${instance.entityId} is now "${result.instance.state}", tags [${result.instance.tags}]`);
-  for (const s of result.spawned) console.log(`  -> spawned ${s.entityId} (state: "${s.state}", tags [${s.tags}])`);
+  console.log(
+    `Applying ${action.verb}${label} to ${instance.entityId} (state: "${instance.state}", tags [${instance.tags}])`
+  );
+  const result = applyAction(
+    instance,
+    action,
+    entities,
+    availableTools,
+    params,
+    availableIngredients
+  );
+  console.log(
+    `  -> ${instance.entityId} is now "${result.instance.state}", tags [${result.instance.tags}]`
+  );
+  for (const s of result.spawned)
+    console.log(`  -> spawned ${s.entityId} (state: "${s.state}", tags [${s.tags}])`);
   return result;
 }
 
@@ -48,14 +62,20 @@ console.log(
 const friedPeelA = apply(peelA, "fry", undefined, new Set(["oil"])).instance;
 console.log(`\nFRY succeeded directly: "${friedPeelA.state}".\n`);
 
-console.log("=== Case B: potato peeled BEFORE washing — the peel comes off dirty and STAYS dirty ===\n");
+console.log(
+  "=== Case B: potato peeled BEFORE washing — the peel comes off dirty and STAYS dirty ===\n"
+);
 let potatoB: Instance = { entityId: "potato", state: "raw", tags: [] };
 const peelResultB = apply(potatoB, "peel"); // no wash first — a real, common case (peel first, then rinse the flesh)
 potatoB = peelResultB.instance;
 const peelB = peelResultB.spawned.find((s) => s.entityId === "potato_peel")!;
-console.log(`\nThe spawned peel has tags [${peelB.tags}] — genuinely dirty, nothing to inherit yet.\n`);
+console.log(
+  `\nThe spawned peel has tags [${peelB.tags}] — genuinely dirty, nothing to inherit yet.\n`
+);
 
-console.log("Washing the POTATO FLESH now does nothing for the already-spawned peel (separate instance):");
+console.log(
+  "Washing the POTATO FLESH now does nothing for the already-spawned peel (separate instance):"
+);
 ({ instance: potatoB } = apply(potatoB, "wash"));
 console.log(`  (potato flesh is now washed; peelB is untouched: tags [${peelB.tags}])\n`);
 

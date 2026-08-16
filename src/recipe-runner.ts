@@ -4,7 +4,13 @@ import type { RecipeScript, RecipeStep } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
 import type { HeatSourceProfile } from "./heat-source.ts";
 import { applyAction, type Instance, type SafetyPolicy } from "./engine.ts";
-import { emptyPlace, pourInto, advanceTempSeconds, isAtTargetTemp, type PlaceState } from "./place.ts";
+import {
+  emptyPlace,
+  pourInto,
+  advanceTempSeconds,
+  isAtTargetTemp,
+  type PlaceState,
+} from "./place.ts";
 
 /**
  * Walks a RecipeScript's sequence against engine.ts's applyAction, the way
@@ -154,7 +160,11 @@ export interface RecipeRunResult {
   spawnedEntityIds: Map<string, string>;
 }
 
-function requireParam(params: Readonly<Record<string, string>>, key: string, actionVerb: string): string {
+function requireParam(
+  params: Readonly<Record<string, string>>,
+  key: string,
+  actionVerb: string
+): string {
   const value = params[key];
   if (value === undefined) {
     throw new Error(`${actionVerb} requires a "${key}" parameter.`);
@@ -162,7 +172,11 @@ function requireParam(params: Readonly<Record<string, string>>, key: string, act
   return value;
 }
 
-function requireNumber(params: Readonly<Record<string, string>>, key: string, actionVerb: string): number {
+function requireNumber(
+  params: Readonly<Record<string, string>>,
+  key: string,
+  actionVerb: string
+): number {
   const raw = requireParam(params, key, actionVerb);
   const num = Number(raw);
   if (Number.isNaN(num)) {
@@ -171,7 +185,11 @@ function requireNumber(params: Readonly<Record<string, string>>, key: string, ac
   return num;
 }
 
-function numberOrDefault(params: Readonly<Record<string, string>>, key: string, fallback: number): number {
+function numberOrDefault(
+  params: Readonly<Record<string, string>>,
+  key: string,
+  fallback: number
+): number {
   const raw = params[key];
   if (raw === undefined) return fallback;
   const num = Number(raw);
@@ -181,11 +199,19 @@ function numberOrDefault(params: Readonly<Record<string, string>>, key: string, 
   return num;
 }
 
-function assertToolCapabilities(action: Action, availableTools: ReadonlySet<string>, entities: Map<string, Entity>): void {
+function assertToolCapabilities(
+  action: Action,
+  availableTools: ReadonlySet<string>,
+  entities: Map<string, Entity>
+): void {
   for (const capability of action.requiredToolCapabilities) {
-    const satisfied = [...availableTools].some((id) => entities.get(id)?.capabilities[capability] === true);
+    const satisfied = [...availableTools].some(
+      (id) => entities.get(id)?.capabilities[capability] === true
+    );
     if (!satisfied) {
-      throw new Error(`${action.verb} requires an available tool with capability "${capability}", but none is on hand.`);
+      throw new Error(
+        `${action.verb} requires an available tool with capability "${capability}", but none is on hand.`
+      );
     }
   }
 }
@@ -258,8 +284,14 @@ function handlePlaceIn(
   }
 
   const placementMethod = step.params.placementMethod;
-  const allowedPlacementMethods = action.parameters.find((p) => p.id === "placementMethod")?.allowedValues;
-  if (placementMethod !== undefined && allowedPlacementMethods && !allowedPlacementMethods.includes(placementMethod)) {
+  const allowedPlacementMethods = action.parameters.find(
+    (p) => p.id === "placementMethod"
+  )?.allowedValues;
+  if (
+    placementMethod !== undefined &&
+    allowedPlacementMethods &&
+    !allowedPlacementMethods.includes(placementMethod)
+  ) {
     throw new Error(
       `${action.verb} got "placementMethod: ${placementMethod}", but only ${allowedPlacementMethods.join(", ")} are valid.`
     );
@@ -296,8 +328,14 @@ function handleRemove(
   }
 
   const removalMethod = step.params.removalMethod;
-  const allowedRemovalMethods = action.parameters.find((p) => p.id === "removalMethod")?.allowedValues;
-  if (removalMethod !== undefined && allowedRemovalMethods && !allowedRemovalMethods.includes(removalMethod)) {
+  const allowedRemovalMethods = action.parameters.find(
+    (p) => p.id === "removalMethod"
+  )?.allowedValues;
+  if (
+    removalMethod !== undefined &&
+    allowedRemovalMethods &&
+    !allowedRemovalMethods.includes(removalMethod)
+  ) {
     throw new Error(
       `${action.verb} got "removalMethod: ${removalMethod}", but only ${allowedRemovalMethods.join(", ")} are valid.`
     );
@@ -350,11 +388,15 @@ function handleHeatPlace(
   const placeId = requireParam(step.params, "placeId", action.verb);
   const place0 = places.get(placeId);
   if (!place0 || place0.contentsEntityId === null) {
-    throw new Error(`${action.verb} requires place "${placeId}" to already exist and be filled — FILL it first.`);
+    throw new Error(
+      `${action.verb} requires place "${placeId}" to already exist and be filled — FILL it first.`
+    );
   }
   const contentsEntity = entities.get(place0.contentsEntityId);
   if (!contentsEntity) {
-    throw new Error(`${action.verb}: place "${placeId}" contains unknown entity "${place0.contentsEntityId}".`);
+    throw new Error(
+      `${action.verb}: place "${placeId}" contains unknown entity "${place0.contentsEntityId}".`
+    );
   }
 
   const heatSourceId = requireParam(step.params, "heatSourceId", action.verb);
@@ -369,7 +411,9 @@ function handleHeatPlace(
   if (step.params.targetTempC !== undefined) {
     targetTempC = Number(step.params.targetTempC);
     if (Number.isNaN(targetTempC)) {
-      throw new Error(`${action.verb} got "targetTempC: ${step.params.targetTempC}", which is not a valid number.`);
+      throw new Error(
+        `${action.verb} got "targetTempC: ${step.params.targetTempC}", which is not a valid number.`
+      );
     }
   } else if (contentsEntity.thermophysical?.boilingPointC !== undefined) {
     targetTempC = contentsEntity.thermophysical.boilingPointC;
@@ -422,10 +466,17 @@ function handleHeatPlace(
  *  numericRange (not a duplicated magic number) rather than inventing a
  *  third source of truth for either band. A step that never sets
  *  `params.placeId` never reaches this function at all. */
-function assertPlaceReady(action: Action, placeId: string, places: Map<string, PlaceState>, entities: Map<string, Entity>): void {
+function assertPlaceReady(
+  action: Action,
+  placeId: string,
+  places: Map<string, PlaceState>,
+  entities: Map<string, Entity>
+): void {
   const place = places.get(placeId);
   if (!place || place.contentsEntityId === null) {
-    throw new Error(`${action.verb} references place "${placeId}", but it doesn't exist or hasn't been FILLed yet.`);
+    throw new Error(
+      `${action.verb} references place "${placeId}", but it doesn't exist or hasn't been FILLed yet.`
+    );
   }
   const contentsEntity = entities.get(place.contentsEntityId);
 
@@ -500,7 +551,12 @@ export function runRecipe(
 
     // PLACE STEPS — handled entirely outside applyAction's generic
     // instantaneous-transition model; see this file's own top doc comment.
-    if (action.id === "fill" || action.id === "place_in" || action.id === "heat_place" || action.id === "remove") {
+    if (
+      action.id === "fill" ||
+      action.id === "place_in" ||
+      action.id === "heat_place" ||
+      action.id === "remove"
+    ) {
       try {
         if (action.id === "fill") {
           handleFill(action, step, instance, entities, availableTools, places, log);
@@ -509,7 +565,16 @@ export function runRecipe(
         } else if (action.id === "remove") {
           handleRemove(action, step, places, placeContents, log);
         } else {
-          handleHeatPlace(action, step, entities, availableTools, heatSources, places, placeContents, log);
+          handleHeatPlace(
+            action,
+            step,
+            entities,
+            availableTools,
+            heatSources,
+            places,
+            placeContents,
+            log
+          );
         }
       } catch (err) {
         const message = (err as Error).message;
@@ -545,7 +610,10 @@ export function runRecipe(
     for (const id of step.availableIngredientInstanceIds) {
       const ingredientInstance = inventory.get(id);
       if (!ingredientInstance) {
-        errors.push({ step, message: `Unknown ingredient instance "${id}" in availableIngredientInstanceIds` });
+        errors.push({
+          step,
+          message: `Unknown ingredient instance "${id}" in availableIngredientInstanceIds`,
+        });
         hasUnknownIngredientInstance = true;
         continue;
       }
@@ -599,7 +667,9 @@ export function runRecipe(
       }
       if (result.secondaryDestroyed && step.secondaryInstanceId) {
         inventory.delete(step.secondaryInstanceId);
-        log.push(`  consumed secondary instance ${step.secondaryInstanceId} (${secondaryInstance!.entityId})`);
+        log.push(
+          `  consumed secondary instance ${step.secondaryInstanceId} (${secondaryInstance!.entityId})`
+        );
       }
       for (const spawned of result.spawned) {
         const spawnedId = `${spawned.entityId}-${++spawnCounter}`;
@@ -614,5 +684,13 @@ export function runRecipe(
     }
   }
 
-  return { finalInventory: inventory, errors, log, warnings, places, placeContents, spawnedEntityIds };
+  return {
+    finalInventory: inventory,
+    errors,
+    log,
+    warnings,
+    places,
+    placeContents,
+    spawnedEntityIds,
+  };
 }

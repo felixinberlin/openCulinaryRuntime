@@ -45,12 +45,19 @@ for (const [label, halfThicknessM] of [
 ] as const) {
   const params = { halfThicknessM, diffusivityM2PerS: alpha, initialTempC, surfaceTempC: 175 };
   const seconds = secondsForCenterToReachTempC(params, targetC);
-  console.log(`  ${label}: ${seconds.toFixed(1)}s (Fo>0.2 valid: ${isWithinValidityCondition(params, seconds)})`);
+  console.log(
+    `  ${label}: ${seconds.toFixed(1)}s (Fo>0.2 valid: ${isWithinValidityCondition(params, seconds)})`
+  );
 }
 
 console.log("\n=== Same thickness (thin, 3mm), different oil temp ===\n");
 for (const surfaceTempC of [120, 165, 191, 200] as const) {
-  const params = { halfThicknessM: thinHalfThicknessM, diffusivityM2PerS: alpha, initialTempC, surfaceTempC };
+  const params = {
+    halfThicknessM: thinHalfThicknessM,
+    diffusivityM2PerS: alpha,
+    initialTempC,
+    surfaceTempC,
+  };
   const seconds = secondsForCenterToReachTempC(params, targetC);
   const browningPossible = surfaceTempC >= MAILLARD_REACTION_ONSET_TEMP_C;
   console.log(
@@ -71,17 +78,33 @@ console.log(
     "heat + thick cut (slow, even penetration), a real, deliberate technique choice, not always a mistake."
 );
 
-console.log("\n=== Swimming in oil (both faces) vs. only a little (one face) — same actual thickness, same oil temp ===\n");
+console.log(
+  "\n=== Swimming in oil (both faces) vs. only a little (one face) — same actual thickness, same oil temp ===\n"
+);
 for (const [label, actualThicknessM] of [
   [`thin (${sliceRange.min}mm)`, thinActualThicknessM],
   [`thick (${sliceRange.max}mm)`, thickActualThicknessM],
 ] as const) {
-  const submerged = { halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 2), diffusivityM2PerS: alpha, initialTempC, surfaceTempC: 175 };
-  const shallow = { halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 1), diffusivityM2PerS: alpha, initialTempC, surfaceTempC: 175 };
+  const submerged = {
+    halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 2),
+    diffusivityM2PerS: alpha,
+    initialTempC,
+    surfaceTempC: 175,
+  };
+  const shallow = {
+    halfThicknessM: effectiveHalfThicknessM(actualThicknessM, 1),
+    diffusivityM2PerS: alpha,
+    initialTempC,
+    surfaceTempC: 175,
+  };
   const secondsSubmerged = secondsForCenterToReachTempC(submerged, targetC);
   const secondsShallow = secondsForCenterToReachTempC(shallow, targetC);
-  console.log(`  ${label}, submerged (deep-fried, both faces in oil): ${secondsSubmerged.toFixed(1)}s`);
-  console.log(`  ${label}, shallow oil (pan-fried, one face in oil):  ${secondsShallow.toFixed(1)}s (${(secondsShallow / secondsSubmerged).toFixed(1)}x longer)`);
+  console.log(
+    `  ${label}, submerged (deep-fried, both faces in oil): ${secondsSubmerged.toFixed(1)}s`
+  );
+  console.log(
+    `  ${label}, shallow oil (pan-fried, one face in oil):  ${secondsShallow.toFixed(1)}s (${(secondsShallow / secondsSubmerged).toFixed(1)}x longer)`
+  );
 }
 console.log(
   "\nSame slice, same oil temperature — only how many faces actually touch the oil changed, and the center " +

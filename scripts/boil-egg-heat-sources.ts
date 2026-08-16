@@ -25,7 +25,9 @@ const specificHeat = water.thermophysical!.specificHeatJPerKgK!;
 const potWaterMassKg = 1.5; // ~1.5L for a small pot of eggs, a realistic home quantity
 const startTempC = 4; // refrigerator-cold water
 
-console.log(`Water: ${potWaterMassKg}kg, starting at ${startTempC}°C, boiling point ${boilingPointC}°C (sea level).\n`);
+console.log(
+  `Water: ${potWaterMassKg}kg, starting at ${startTempC}°C, boiling point ${boilingPointC}°C (sea level).\n`
+);
 
 console.log("Time to reach a boil, by heat source (this is what actually differs):");
 for (const id of ["gas", "vitro", "wood_fire"]) {
@@ -40,13 +42,19 @@ for (const id of ["gas", "vitro", "wood_fire"]) {
   );
 }
 
-console.log(`\nBut the TARGET TEMPERATURE is identical regardless of heat source — always ${boilingPointC}°C at sea level:`);
+console.log(
+  `\nBut the TARGET TEMPERATURE is identical regardless of heat source — always ${boilingPointC}°C at sea level:`
+);
 for (const id of ["gas", "vitro", "wood_fire"]) {
   const source = heatSources.get(id)!;
-  console.log(`  ${source.names.en}: boils at ${boilingPointC}°C (read from water.json once, not re-derived per source)`);
+  console.log(
+    `  ${source.names.en}: boils at ${boilingPointC}°C (read from water.json once, not re-derived per source)`
+  );
 }
 
-console.log("\nOnce boiling, yolk doneness (this part is the same regardless of what got the water there):");
+console.log(
+  "\nOnce boiling, yolk doneness (this part is the same regardless of what got the water there):"
+);
 for (const entry of EGG_BOIL_DONENESS) {
   console.log(
     `  ${entry.yolkDoneness.padEnd(6)}: ${entry.durationSecondsRange.min}-${entry.durationSecondsRange.max}s ` +
@@ -66,5 +74,7 @@ console.log(
   `\nsanity check — specificHeatJPerKgK read from water.json: ${specificHeat} J/(kg·K) (should be 4186)`
 );
 if (specificHeat !== 4186) {
-  throw new Error("water.json's specificHeatJPerKgK drifted from the expected value — check the entity file");
+  throw new Error(
+    "water.json's specificHeatJPerKgK drifted from the expected value — check the entity file"
+  );
 }

@@ -106,7 +106,14 @@ describe("runRecipe — availableIngredientInstanceIds resolution", () => {
 describe("runRecipe — unknown target/secondary instance (pre-existing behavior, sanity-checked)", () => {
   test("unknown targetInstanceId fails the step loudly", () => {
     const recipe = makeRecipe({
-      sequence: [{ actionId: "fry", targetInstanceId: "potato-99", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "fry",
+          targetInstanceId: "potato-99",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const result = runRecipe(recipe, entities, actions);
     assert.equal(result.errors.length, 1);
@@ -132,7 +139,11 @@ const placeEgg = makeEntity({
   id: "place-egg",
   capabilities: { isBoilable: true, isSimmerable: true },
 });
-const placePot = makeEntity({ id: "place-pot", kind: "tool", capabilities: { isDeepVessel: true } });
+const placePot = makeEntity({
+  id: "place-pot",
+  kind: "tool",
+  capabilities: { isDeepVessel: true },
+});
 
 const fillAction = makeAction({
   id: "fill",
@@ -147,7 +158,11 @@ const placeInAction = makeAction({
   requiredToolCapabilities: ["isDeepVessel"],
   outputs: {},
   parameters: [
-    { id: "placementMethod", required: false, allowedValues: ["dropped", "lowered_by_hand", "lowered_with_spoon"] },
+    {
+      id: "placementMethod",
+      required: false,
+      allowedValues: ["dropped", "lowered_by_hand", "lowered_with_spoon"],
+    },
   ],
 });
 const heatPlaceAction = makeAction({
@@ -161,7 +176,13 @@ const removeAction = makeAction({
   id: "remove",
   verb: "REMOVE",
   outputs: {},
-  parameters: [{ id: "removalMethod", required: false, allowedValues: ["slotted_spoon", "tongs", "strainer_drain", "poured_out"] }],
+  parameters: [
+    {
+      id: "removalMethod",
+      required: false,
+      allowedValues: ["slotted_spoon", "tongs", "strainer_drain", "poured_out"],
+    },
+  ],
 });
 const placeBoilAction = makeAction({
   id: "boil",
@@ -176,7 +197,9 @@ const placeSimmerAction = makeAction({
   requiredTargetCapability: "isSimmerable",
   requiredIngredientCapabilities: ["isBoilingMedium"],
   outputs: { transformedState: "boiled" },
-  parameters: [{ id: "waterTempC", required: false, numericRange: { unit: "celsius", min: 85, max: 96 } }],
+  parameters: [
+    { id: "waterTempC", required: false, numericRange: { unit: "celsius", min: 85, max: 96 } },
+  ],
 });
 
 // FRY/oil fixtures (2026-08-16 generalization) — reuse the SAME
@@ -192,14 +215,20 @@ const placeOil = makeEntity({
   capabilities: { isBoilingMedium: true }, // fixture reuse, see comment above
   thermophysical: { specificHeatJPerKgK: 1970 }, // no boilingPointC — oil never boils
 });
-const placePan = makeEntity({ id: "place-pan", kind: "tool", capabilities: { isDeepVessel: true } }); // fixture reuse
+const placePan = makeEntity({
+  id: "place-pan",
+  kind: "tool",
+  capabilities: { isDeepVessel: true },
+}); // fixture reuse
 const placeFryAction = makeAction({
   id: "fry",
   verb: "FRY",
   requiredTargetCapability: "isBoilable", // reuses placeEgg's existing capability
   requiredIngredientCapabilities: ["isBoilingMedium"], // fixture reuse — see placeOil comment
   outputs: { transformedState: "fried" },
-  parameters: [{ id: "oilTempC", required: false, numericRange: { unit: "celsius", min: 120, max: 200 } }],
+  parameters: [
+    { id: "oilTempC", required: false, numericRange: { unit: "celsius", min: 120, max: 200 } },
+  ],
 });
 
 const placeEntities = new Map([
@@ -266,7 +295,14 @@ describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
         availableIngredientInstanceIds: [],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
 
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     const place = result.places.get("pot-1");
@@ -290,7 +326,14 @@ describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
         availableIngredientInstanceIds: [],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /already contains/);
   });
@@ -304,7 +347,14 @@ describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
         availableIngredientInstanceIds: [],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /FILL it first/);
   });
@@ -324,7 +374,14 @@ describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
         availableIngredientInstanceIds: [],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /unknown heat source "nonexistent"/);
   });
@@ -348,70 +405,189 @@ describe("runRecipe — REMOVE", () => {
 
   test("removes a placed instance from placeContents, leaving co-located instances behind", () => {
     const recipe = filledPotRecipe([
-      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "place_in", targetInstanceId: "egg-2", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1", removalMethod: "tongs" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-2",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1", removalMethod: "tongs" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.deepEqual(result.placeContents.get("pot-1"), ["egg-2"]);
   });
 
   test("removing the only occupant leaves an empty (not missing) placeContents entry", () => {
     const recipe = filledPotRecipe([
-      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.deepEqual(result.placeContents.get("pot-1"), []);
   });
 
   test("rejected against a place that doesn't exist yet — same error shape as PLACE_IN's", () => {
     const recipe = makePlaceRecipe([
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /FILL it first/);
   });
 
   test("rejected for an instance that was never PLACE_IN'd — a real authoring mistake, not a silent no-op", () => {
     const recipe = filledPotRecipe([
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /not currently there/);
   });
 
   test("rejected the SECOND time on the same instance — retrySafe: true means fails loudly, not that it's idempotent", () => {
     const recipe = filledPotRecipe([
-      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /not currently there/);
   });
 
   test("an unrecognized removalMethod value is rejected, same validation as placementMethod's", () => {
     const recipe = filledPotRecipe([
-      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1", removalMethod: "bare_hands" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1", removalMethod: "bare_hands" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /removalMethod: bare_hands/);
   });
 
   test("does not transform the removed instance's own state/tags — bookkeeping only, same as PLACE_IN", () => {
     const recipe = filledPotRecipe([
-      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
-      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "remove",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.finalInventory.get("egg-1")?.state, "raw");
   });
@@ -445,7 +621,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["water-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /not yet at 100°C boiling/);
     // The egg must not have silently transitioned despite the rejection.
@@ -463,7 +646,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["water-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
   });
@@ -477,7 +667,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["water-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
   });
@@ -493,7 +690,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["water-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
   });
@@ -509,7 +713,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["water-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /outside SIMMER's own declared 85-96°C band/);
   });
@@ -529,7 +740,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["oil-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /below FRY's own declared 120°C minimum/);
     assert.equal(result.finalInventory.get("egg-1")?.state, "raw");
@@ -556,7 +774,14 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
         availableIngredientInstanceIds: ["oil-1"],
       },
     ]);
-    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    const result = runRecipe(
+      recipe,
+      placeEntities,
+      placeActions,
+      new Map(),
+      undefined,
+      idealHeatSource
+    );
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.places.get("pan-1")?.currentTempC, 175);
     assert.equal(result.finalInventory.get("egg-1")?.state, "fried");
@@ -568,7 +793,11 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
 // real ground truth instead of silently skipping it — see that file's own
 // executionBounds tests for the actual consumer.
 describe("runRecipe — spawnedEntityIds", () => {
-  const potato = makeEntity({ id: "potato", capabilities: { isPeelable: true }, producedByproducts: ["potato_peel"] });
+  const potato = makeEntity({
+    id: "potato",
+    capabilities: { isPeelable: true },
+    producedByproducts: ["potato_peel"],
+  });
   const potatoPeel = makeEntity({ id: "potato_peel" });
   const peel = makeAction({
     id: "peel",
@@ -588,7 +817,10 @@ describe("runRecipe — spawnedEntityIds", () => {
       outputs: { combinesInto: "mash" },
     });
     const mash = makeEntity({ id: "mash" });
-    const potatoPeelCombinable = makeEntity({ id: "potato_peel", capabilities: { isCombinable: true } });
+    const potatoPeelCombinable = makeEntity({
+      id: "potato_peel",
+      capabilities: { isCombinable: true },
+    });
     const allEntities = new Map([
       ["potato", potato],
       ["potato_peel", potatoPeelCombinable],
@@ -607,7 +839,12 @@ describe("runRecipe — spawnedEntityIds", () => {
       ],
       availableTools: [],
       sequence: [
-        { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
+        {
+          actionId: "peel",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
         // Consumes potato_peel-1 into a combined "mash" instance — it will
         // no longer be in finalInventory, but spawnedEntityIds must still
         // remember it existed and what entity it was.

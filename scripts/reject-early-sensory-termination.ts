@@ -39,18 +39,20 @@ function runCase(
   const bound = executionBoundFor(action, entity, params, ccps);
 
   if (!bound) {
-    console.log(`  No ExecutionBound applies (not continuous, or no maxDurationSeconds) — nothing to demonstrate.`);
+    console.log(
+      `  No ExecutionBound applies (not continuous, or no maxDurationSeconds) — nothing to demonstrate.`
+    );
     return;
   }
 
   console.log(`  maxDurationSeconds (paper's own ceiling): ${bound.maxDurationSeconds}s`);
-  console.log(`  minSafeHoldSeconds (this repo's real CCP floor): ${bound.minSafeHoldSeconds ?? "none — no CCP applies"}`);
+  console.log(
+    `  minSafeHoldSeconds (this repo's real CCP floor): ${bound.minSafeHoldSeconds ?? "none — no CCP applies"}`
+  );
   console.log(`  floorIsSafetyCritical: ${bound.floorIsSafetyCritical}`);
   console.log(`  citation: ${bound.citation ?? "(none)"}`);
 
-  console.log(
-    `\n  A plausible sensor reports "looks/reads done" at ${sensorReportedSeconds}s.`
-  );
+  console.log(`\n  A plausible sensor reports "looks/reads done" at ${sensorReportedSeconds}s.`);
   console.log(
     `  In the paper's own architecture (Song et al., arXiv:2608.04768), a continuous step's sensory ` +
       `termination condition ends the step the instant it fires — at ${sensorReportedSeconds}s here.`
@@ -68,9 +70,13 @@ function runCase(
         ` adversary: an early-but-plausible sensory signal).`
     );
   } else if (bound.floorIsSafetyCritical) {
-    console.log(`\n  ACCEPTED: ${sensorReportedSeconds}s >= ${bound.minSafeHoldSeconds}s — the real floor was actually met.`);
+    console.log(
+      `\n  ACCEPTED: ${sensorReportedSeconds}s >= ${bound.minSafeHoldSeconds}s — the real floor was actually met.`
+    );
   } else {
-    console.log(`\n  ACCEPTED (no CCP floor applies to this action/entity pair — nothing to reject against).`);
+    console.log(
+      `\n  ACCEPTED (no CCP floor applies to this action/entity pair — nothing to reject against).`
+    );
   }
 }
 

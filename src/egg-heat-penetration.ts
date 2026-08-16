@@ -107,10 +107,9 @@ import type { Citation } from "./ingredient.ts";
 
 export const WILLIAMS_FORMULA_CITATION: Citation = {
   source:
-    "University of Exeter, Department of Physics and Astronomy, \"Boiling an Egg\" (Charles Williams' closed-form spherical transient-conduction formula) — https://www.exeter.ac.uk/research-centres/theoretical-physics/boiling-an-egg/. A well-known, widely-reported piece of applied physics popularization (New Scientist, BBC, and others have covered it), not a peer-reviewed primary derivation.",
+    'University of Exeter, Department of Physics and Astronomy, "Boiling an Egg" (Charles Williams\' closed-form spherical transient-conduction formula) — https://www.exeter.ac.uk/research-centres/theoretical-physics/boiling-an-egg/. A well-known, widely-reported piece of applied physics popularization (New Scientist, BBC, and others have covered it), not a peer-reviewed primary derivation.',
   confidence: "commonly_cited_unverified",
-  note:
-    "Verified via direct lookup 2026-08-16 (fetched the actual page, not recalled from training data) — the formula, the sphere assumption, and the stated coagulation ranges (white 62-65C, yolk 65-70C) were all read directly. The 0.76 constant's own derivation is not shown on the source page and has not been independently re-derived here — see this file's own top doc comment.",
+  note: "Verified via direct lookup 2026-08-16 (fetched the actual page, not recalled from training data) — the formula, the sphere assumption, and the stated coagulation ranges (white 62-65C, yolk 65-70C) were all read directly. The 0.76 constant's own derivation is not shown on the source page and has not been independently re-derived here — see this file's own top doc comment.",
 };
 
 /**
@@ -146,8 +145,7 @@ export const YOLK_TARGET_TEMP_CITATION: Citation = {
   source:
     "Di Lorenzo & Di Maio, \"Periodic cooking of eggs,\" Communications Engineering (Nature Portfolio, 2025), https://www.nature.com/articles/s44172-024-00334-w — yolk denaturation ~65C (`soft`'s anchor) — combined with the University of Exeter page's own stated 65-70C yolk-coagulation range (`hard`'s anchor at the top of that range; `medium` is this repo's own unsourced interpretive midpoint, not directly cited).",
   confidence: "commonly_cited_unverified",
-  note:
-    "A genuinely mixed-confidence citation: the 65C soft anchor traces to a 2025 peer-reviewed paper (would be standard_reference on its own), but medium/hard are this repo's own reasoned interpretation layered on top of an informally-sourced range — kept at the weaker overall tier honestly, rather than letting the strongest component imply more rigor for the whole table than it has. See this file's own top doc comment for the real, checked cross-check against EGG_BOIL_DONENESS this produces.",
+  note: "A genuinely mixed-confidence citation: the 65C soft anchor traces to a 2025 peer-reviewed paper (would be standard_reference on its own), but medium/hard are this repo's own reasoned interpretation layered on top of an informally-sourced range — kept at the weaker overall tier honestly, rather than letting the strongest component imply more rigor for the whole table than it has. See this file's own top doc comment for the real, checked cross-check against EGG_BOIL_DONENESS this produces.",
 };
 
 export interface EggSphereConductionParams {
@@ -177,11 +175,23 @@ const WILLIAMS_LN_COEFFICIENT = 0.76; // given constant, not independently deriv
  * "target on the wrong side of the driving force" contract `heat-
  * penetration.ts`'s `secondsForCenterToReachTempC` already uses.
  */
-export function secondsForYolkToReachTempC(params: EggSphereConductionParams, targetYolkTempC: number): number {
-  const { massKg, specificHeatJPerKgK, densityKgPerM3, thermalConductivityWPerMK, initialTempC, waterTempC } = params;
+export function secondsForYolkToReachTempC(
+  params: EggSphereConductionParams,
+  targetYolkTempC: number
+): number {
+  const {
+    massKg,
+    specificHeatJPerKgK,
+    densityKgPerM3,
+    thermalConductivityWPerMK,
+    initialTempC,
+    waterTempC,
+  } = params;
 
   if (waterTempC === initialTempC) {
-    throw new Error("secondsForYolkToReachTempC: waterTempC equals initialTempC — no driving force, the target is never reached.");
+    throw new Error(
+      "secondsForYolkToReachTempC: waterTempC equals initialTempC — no driving force, the target is never reached."
+    );
   }
   const heating = waterTempC > initialTempC;
   if (heating && (targetYolkTempC <= initialTempC || targetYolkTempC >= waterTempC)) {
@@ -199,6 +209,7 @@ export function secondsForYolkToReachTempC(params: EggSphereConductionParams, ta
     (Math.pow(massKg, 2 / 3) * specificHeatJPerKgK * Math.pow(densityKgPerM3, 1 / 3)) /
     (thermalConductivityWPerMK * Math.PI ** 2 * Math.pow((4 * Math.PI) / 3, 2 / 3));
 
-  const lnArgument = (WILLIAMS_LN_COEFFICIENT * (initialTempC - waterTempC)) / (targetYolkTempC - waterTempC);
+  const lnArgument =
+    (WILLIAMS_LN_COEFFICIENT * (initialTempC - waterTempC)) / (targetYolkTempC - waterTempC);
   return prefactor * Math.log(lnArgument);
 }

@@ -35,7 +35,12 @@ export interface ParameterAnswer {
   relevantNotes: { key: string; text: string }[];
   /** Every recipe step found using this action, with the value it chose for
    *  this parameter (if any) — real precedent, not a hypothetical. */
-  recipeUsages: { recipeId: string; recipeNameEn: string; stepIndex: number; value: string | undefined }[];
+  recipeUsages: {
+    recipeId: string;
+    recipeNameEn: string;
+    stepIndex: number;
+    value: string | undefined;
+  }[];
 }
 
 export function answerAboutParameter(

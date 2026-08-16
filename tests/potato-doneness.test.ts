@@ -1,7 +1,11 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { POTATO_BOIL_DONENESS, potatoBoilDonenessRange, PotatoBoilDonenessSchema } from "../src/potato-doneness.ts";
+import {
+  POTATO_BOIL_DONENESS,
+  potatoBoilDonenessRange,
+  PotatoBoilDonenessSchema,
+} from "../src/potato-doneness.ts";
 
 describe("POTATO_BOIL_DONENESS", () => {
   test("has exactly one entry per boil.json pieceSize value, each schema-valid", () => {
@@ -24,7 +28,10 @@ describe("POTATO_BOIL_DONENESS", () => {
     const diced = potatoBoilDonenessRange("diced");
     const halved = potatoBoilDonenessRange("halved_or_quartered");
     const whole = potatoBoilDonenessRange("whole");
-    assert.ok(diced.min <= halved.min, "smaller pieces should never have a higher minimum than larger ones");
+    assert.ok(
+      diced.min <= halved.min,
+      "smaller pieces should never have a higher minimum than larger ones"
+    );
     assert.ok(halved.min <= whole.min);
   });
 

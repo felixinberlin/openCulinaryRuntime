@@ -1,7 +1,14 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { emptyPlace, pourInto, advanceHeatSeconds, isAtBoiling, advanceTempSeconds, isAtTargetTemp } from "../src/place.ts";
+import {
+  emptyPlace,
+  pourInto,
+  advanceHeatSeconds,
+  isAtBoiling,
+  advanceTempSeconds,
+  isAtTargetTemp,
+} from "../src/place.ts";
 import { makeEntity, makeHeatSource } from "./helpers.ts";
 
 const water = makeEntity({
@@ -51,7 +58,8 @@ describe("advanceHeatSeconds", () => {
     const source = makeHeatSource({ id: "ideal" });
     const place = pourInto(emptyPlace("pot"), "water", waterMassKg, startTempC);
     const secondsToBoil =
-      (waterMassKg * waterSpecificHeatJPerKgK * (targetTempC - startTempC)) / deliveredWattsAt100PercentEfficiency;
+      (waterMassKg * waterSpecificHeatJPerKgK * (targetTempC - startTempC)) /
+      deliveredWattsAt100PercentEfficiency;
     const boiled = advanceHeatSeconds(place, source, secondsToBoil, water);
     assert.ok(Math.abs(boiled.currentTempC - 100) < 1e-9);
   });
@@ -70,14 +78,20 @@ describe("advanceHeatSeconds", () => {
     let previous = place.currentTempC;
     for (let i = 0; i < 5; i++) {
       place = advanceHeatSeconds(place, source, 30, water);
-      assert.ok(place.currentTempC > previous, "temperature should strictly increase each tick while below boiling");
+      assert.ok(
+        place.currentTempC > previous,
+        "temperature should strictly increase each tick while below boiling"
+      );
       previous = place.currentTempC;
     }
   });
 
   test("throws on an empty place — nothing poured in yet", () => {
     const source = makeHeatSource({ id: "ideal" });
-    assert.throws(() => advanceHeatSeconds(emptyPlace("pot"), source, 60, water), /nothing has been poured/);
+    assert.throws(
+      () => advanceHeatSeconds(emptyPlace("pot"), source, 60, water),
+      /nothing has been poured/
+    );
   });
 
   test("throws when contentsEntity doesn't match what's actually in the place", () => {
@@ -91,7 +105,10 @@ describe("advanceHeatSeconds", () => {
     const source = makeHeatSource({ id: "ideal" });
     const undefinedThermal = makeEntity({ id: "mystery" });
     const place = pourInto(emptyPlace("pot"), "mystery", 1, 20);
-    assert.throws(() => advanceHeatSeconds(place, source, 60, undefinedThermal), /no thermophysical/);
+    assert.throws(
+      () => advanceHeatSeconds(place, source, 60, undefinedThermal),
+      /no thermophysical/
+    );
   });
 
   test("is a no-op once already at or above boiling", () => {
@@ -119,8 +136,15 @@ describe("advanceTempSeconds / isAtTargetTemp — the FRY generalization", () =>
     for (let i = 0; i < 20 && !isAtTargetTemp(place, fryTempC); i++) {
       place = advanceTempSeconds(place, source, 30, oil, fryTempC);
     }
-    assert.ok(isAtTargetTemp(place, fryTempC), "should reach the fry setpoint within a reasonable number of ticks");
-    assert.equal(place.currentTempC, fryTempC, "should clamp exactly at the requested target, not overshoot it");
+    assert.ok(
+      isAtTargetTemp(place, fryTempC),
+      "should reach the fry setpoint within a reasonable number of ticks"
+    );
+    assert.equal(
+      place.currentTempC,
+      fryTempC,
+      "should clamp exactly at the requested target, not overshoot it"
+    );
   });
 
   test("refuses to heat toward a target at or above the declared smokePointC — a real safety ceiling, not silently clamped", () => {

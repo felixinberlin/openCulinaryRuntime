@@ -40,7 +40,15 @@ import { CitationSchema, type Citation } from "./ingredient.ts";
 export type TasteCategory = "salty" | "sweet" | "sour" | "bitter" | "umami" | "pungent" | "neutral";
 export type PerceptualTarget = TasteCategory | "richness";
 
-const TASTE_CATEGORY_VALUES = ["salty", "sweet", "sour", "bitter", "umami", "pungent", "neutral"] as const;
+const TASTE_CATEGORY_VALUES = [
+  "salty",
+  "sweet",
+  "sour",
+  "bitter",
+  "umami",
+  "pungent",
+  "neutral",
+] as const;
 const TasteCategorySchema = z.enum(TASTE_CATEGORY_VALUES);
 const PerceptualTargetSchema = z.union([TasteCategorySchema, z.literal("richness")]);
 
@@ -69,26 +77,23 @@ export type FlavorCounterbalance = z.infer<typeof FlavorCounterbalanceSchema>;
 
 const SWEET_SOUR_CITATION: Citation = {
   source:
-    "Mao, Tian, Qin & Chen, \"Sensory sweetness and sourness interactive response of sucrose-citric acid mixture based on synergy and antagonism,\" npj Science of Food 6:33 (2022), doi:10.1038/s41538-022-00148-0",
+    'Mao, Tian, Qin & Chen, "Sensory sweetness and sourness interactive response of sucrose-citric acid mixture based on synergy and antagonism," npj Science of Food 6:33 (2022), doi:10.1038/s41538-022-00148-0',
   confidence: "standard_reference",
-  note:
-    "Verified via direct lookup this session, not recalled: citric acid raised sucrose's absolute detection threshold and reduced sensitivity to sweetness changes; sucrose raised citric acid's absolute detection threshold while INCREASING sensitivity to sourness-strength changes (an asymmetric mechanism even though the net effect — mutual suppression of perceived intensity — is symmetric). A real, controlled psychophysics study, not a culinary-tradition claim.",
+  note: "Verified via direct lookup this session, not recalled: citric acid raised sucrose's absolute detection threshold and reduced sensitivity to sweetness changes; sucrose raised citric acid's absolute detection threshold while INCREASING sensitivity to sourness-strength changes (an asymmetric mechanism even though the net effect — mutual suppression of perceived intensity — is symmetric). A real, controlled psychophysics study, not a culinary-tradition claim.",
 };
 
 const SALT_BITTER_CITATION: Citation = {
   source:
-    "Breslin & Beauchamp, \"Suppression of bitterness by sodium: variation among bitter taste stimuli,\" Chemical Senses 20(6):609-623 (1995), doi:10.1093/chemse/20.6.609",
+    'Breslin & Beauchamp, "Suppression of bitterness by sodium: variation among bitter taste stimuli," Chemical Senses 20(6):609-623 (1995), doi:10.1093/chemse/20.6.609',
   confidence: "standard_reference",
-  note:
-    "The classic, foundational study — verified via direct lookup this session. Deliberately NOT presented as a universal rule: the same paper found sodium salts suppress bitterness of some compounds by over 70% (e.g. urea) while barely affecting others (e.g. MgSO4) — see realWorldCaveat below. A 2013 follow-up (Keast lab, published in Chemosensory Perception) found the effect on bitter VEGETABLES specifically was strongest for tasters who perceived the plain vegetable as highly bitter to begin with, not a flat percentage reduction for everyone.",
+  note: "The classic, foundational study — verified via direct lookup this session. Deliberately NOT presented as a universal rule: the same paper found sodium salts suppress bitterness of some compounds by over 70% (e.g. urea) while barely affecting others (e.g. MgSO4) — see realWorldCaveat below. A 2013 follow-up (Keast lab, published in Chemosensory Perception) found the effect on bitter VEGETABLES specifically was strongest for tasters who perceived the plain vegetable as highly bitter to begin with, not a flat percentage reduction for everyone.",
 };
 
 const ACID_RICHNESS_CITATION: Citation = {
   source:
     "Samin Nosrat, Salt Fat Acid Heat (Simon & Schuster, 2017) — the book's own central, repeatedly-cited thesis (also the single most-recommended resource in the triaged Reddit thread this file traces to)",
   confidence: "commonly_cited_unverified",
-  note:
-    "Weaker evidentiary tier than the two pairs above ON PURPOSE, not an oversight: this is a real, widely-applied culinary technique (a squeeze of lemon on a rich dish; vinegar deglazing a pan's fond) with a plausible sensory-science characterization — acid's tightening/'contraction' mouthfeel sensation perceptually counteracting fat's coating/smoothness sensation — corroborated by general mouthfeel-science literature (e.g. Wolinska-Kennard et al., \"Mouthfeel of Food and Beverages: A Comprehensive Review of Physiology, Biochemistry, and Key Sensory Compounds,\" Comprehensive Reviews in Food Science and Food Safety, 2025) — but that review sat behind a paywall this session, so its exact text was NOT verified directly the way the two peer-reviewed primary studies above were. Named honestly as the weaker-tier claim rather than papered over with equal confidence.",
+  note: "Weaker evidentiary tier than the two pairs above ON PURPOSE, not an oversight: this is a real, widely-applied culinary technique (a squeeze of lemon on a rich dish; vinegar deglazing a pan's fond) with a plausible sensory-science characterization — acid's tightening/'contraction' mouthfeel sensation perceptually counteracting fat's coating/smoothness sensation — corroborated by general mouthfeel-science literature (e.g. Wolinska-Kennard et al., \"Mouthfeel of Food and Beverages: A Comprehensive Review of Physiology, Biochemistry, and Key Sensory Compounds,\" Comprehensive Reviews in Food Science and Food Safety, 2025) — but that review sat behind a paywall this session, so its exact text was NOT verified directly the way the two peer-reviewed primary studies above were. Named honestly as the weaker-tier claim rather than papered over with equal confidence.",
 };
 
 export const FLAVOR_COUNTERBALANCES: readonly FlavorCounterbalance[] = [
@@ -136,12 +141,11 @@ export function counterbalancesInvolving(taste: PerceptualTarget): readonly Flav
   return FLAVOR_COUNTERBALANCES.filter((c) => c.suppressed === taste || c.by === taste);
 }
 
-const DILUTION_CITATION: Citation = {
+export const DILUTION_CITATION: Citation = {
   source:
     "The standard dilution / conservation-of-solute relation (general chemistry — the C₁V₁ = C₂V₂ mass-balance form, adding a zero-concentration diluent), not a culinary or food-science-specific claim",
   confidence: "standard_reference",
-  note:
-    "Encountered applied to cooking specifically in PAPER_NOTES_2608.04768.md's analysis of Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026) — their equation (7), for their supervisory process's over-seasoning correction case. Cited here against the underlying physics itself (textbook, uncontroversial), NOT against that paper — the paper is where this repo found the CULINARY APPLICATION of a standard relation, not the source of the relation. See REFERENCES.md.",
+  note: "Encountered applied to cooking specifically in PAPER_NOTES_2608.04768.md's analysis of Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026) — their equation (7), for their supervisory process's over-seasoning correction case. Cited here against the underlying physics itself (textbook, uncontroversial), NOT against that paper — the paper is where this repo found the CULINARY APPLICATION of a standard relation, not the source of the relation. See REFERENCES.md.",
 };
 
 /**
@@ -168,7 +172,11 @@ const DILUTION_CITATION: Citation = {
  * `place.ts`'s own doc comment draws between a liquid MEDIUM and the solid
  * food within it, applied here to seasoning instead of heat.
  */
-export function dilutionVolumeToTarget(currentVolume: number, currentConc: number, targetConc: number): number {
+export function dilutionVolumeToTarget(
+  currentVolume: number,
+  currentConc: number,
+  targetConc: number
+): number {
   if (currentVolume <= 0) {
     throw new Error(`currentVolume must be positive, got ${currentVolume}.`);
   }

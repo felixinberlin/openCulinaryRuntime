@@ -85,8 +85,7 @@ export const ONE_TERM_APPROXIMATION_CITATION: Citation = {
   source:
     "Incropera & DeWitt, *Fundamentals of Heat and Mass Transfer* — the standard one-term approximation for 1D transient conduction in a plane wall (Table of lambda_1/A_1 coefficients by Biot number). For Bi -> infinity: lambda_1 = pi/2 (1.5708), A_1 = 4/pi (1.2732), valid for Fourier number > 0.2 — confirmed via multiple independent academic sources 2026-08-15, not just recalled.",
   confidence: "standard_reference",
-  note:
-    "The lambda_1/A_1 VALUES for the Bi->infinity case are exact, derivable mathematics (the eigenvalue equation cos(lambda)=0 has first root pi/2), not empirical figures needing independent verification — the citation is for the METHOD (which physical assumptions this approximation makes, and its Fo>0.2 validity range), not a number that could itself be wrong.",
+  note: "The lambda_1/A_1 VALUES for the Bi->infinity case are exact, derivable mathematics (the eigenvalue equation cos(lambda)=0 has first root pi/2), not empirical figures needing independent verification — the citation is for the METHOD (which physical assumptions this approximation makes, and its Fo>0.2 validity range), not a number that could itself be wrong.",
 };
 
 /** "Fork tender" internal potato temperature — the practically-meaningful
@@ -155,7 +154,10 @@ function fourierNumber(params: SlabConductionParams, elapsedSeconds: number): nu
 /** The center-plane temperature after `elapsedSeconds` of heating/cooling
  *  toward `surfaceTempC`. Real physics, not a lookup — see this file's
  *  own doc comment for the formula and its two honesty caveats. */
-export function centerTempCAfterSeconds(params: SlabConductionParams, elapsedSeconds: number): number {
+export function centerTempCAfterSeconds(
+  params: SlabConductionParams,
+  elapsedSeconds: number
+): number {
   const fo = fourierNumber(params, elapsedSeconds);
   const theta = ONE_TERM_A_1 * Math.exp(-(ONE_TERM_LAMBDA_1 ** 2) * fo);
   return params.surfaceTempC + theta * (params.initialTempC - params.surfaceTempC);
@@ -168,10 +170,15 @@ export function centerTempCAfterSeconds(params: SlabConductionParams, elapsedSec
  *  side of the driving force (colder than the surface while heating, or
  *  hotter than the surface while cooling — the center can never overshoot
  *  the medium it's equilibrating toward). */
-export function secondsForCenterToReachTempC(params: SlabConductionParams, targetCenterTempC: number): number {
+export function secondsForCenterToReachTempC(
+  params: SlabConductionParams,
+  targetCenterTempC: number
+): number {
   const { initialTempC, surfaceTempC } = params;
   if (surfaceTempC === initialTempC) {
-    throw new Error("secondsForCenterToReachTempC: surfaceTempC equals initialTempC — no driving force, the target is never reached.");
+    throw new Error(
+      "secondsForCenterToReachTempC: surfaceTempC equals initialTempC — no driving force, the target is never reached."
+    );
   }
   const heating = surfaceTempC > initialTempC;
   if (heating && (targetCenterTempC <= initialTempC || targetCenterTempC >= surfaceTempC)) {
@@ -192,7 +199,10 @@ export function secondsForCenterToReachTempC(params: SlabConductionParams, targe
 /** Exposed so callers/tests can confirm a given scenario actually falls
  *  within the one-term approximation's Fo > 0.2 validity condition,
  *  rather than only asserting it in prose. */
-export function isWithinValidityCondition(params: SlabConductionParams, elapsedSeconds: number): boolean {
+export function isWithinValidityCondition(
+  params: SlabConductionParams,
+  elapsedSeconds: number
+): boolean {
   return fourierNumber(params, elapsedSeconds) > MIN_VALID_FOURIER_NUMBER;
 }
 

@@ -14,11 +14,24 @@ const root = join(import.meta.dirname, "..");
 const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 
-function apply(instance: Instance, actionId: string, availableIngredients: ReadonlySet<string>): Instance {
+function apply(
+  instance: Instance,
+  actionId: string,
+  availableIngredients: ReadonlySet<string>
+): Instance {
   const action = actions.get(actionId);
   if (!action) throw new Error(`Unknown action "${actionId}"`);
-  const result = applyAction(instance, action, entities, new Set(["knife", "pan"]), { timing: "after_cooking" }, availableIngredients);
-  console.log(`  ${action.verb}: tags [${instance.tags.join(", ")}] -> [${result.instance.tags.join(", ")}]`);
+  const result = applyAction(
+    instance,
+    action,
+    entities,
+    new Set(["knife", "pan"]),
+    { timing: "after_cooking" },
+    availableIngredients
+  );
+  console.log(
+    `  ${action.verb}: tags [${instance.tags.join(", ")}] -> [${result.instance.tags.join(", ")}]`
+  );
   return result.instance;
 }
 
@@ -26,8 +39,17 @@ function friedPotato(): Instance {
   let potato: Instance = { entityId: "potato", state: "raw", tags: [] };
   potato = applyAction(potato, actions.get("wash")!, entities, new Set(["knife", "pan"])).instance;
   potato = applyAction(potato, actions.get("peel")!, entities, new Set(["knife", "pan"])).instance;
-  potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife", "pan"]), { shape: "diced" }).instance;
-  potato = applyAction(potato, actions.get("fry")!, entities, new Set(["knife", "pan"]), {}, new Set(["oil"])).instance;
+  potato = applyAction(potato, actions.get("cut")!, entities, new Set(["knife", "pan"]), {
+    shape: "diced",
+  }).instance;
+  potato = applyAction(
+    potato,
+    actions.get("fry")!,
+    entities,
+    new Set(["knife", "pan"]),
+    {},
+    new Set(["oil"])
+  ).instance;
   return potato;
 }
 
@@ -46,10 +68,14 @@ all = apply(all, "salt", new Set(["salt"]));
 all = apply(all, "pepper", new Set(["black_pepper"]));
 all = apply(all, "chili", new Set(["chili_flakes"]));
 
-console.log("\nCross-check: SALT must NOT accept black_pepper as a substitute (isSaltySeasoning, not generic isSeasoning):");
+console.log(
+  "\nCross-check: SALT must NOT accept black_pepper as a substitute (isSaltySeasoning, not generic isSeasoning):"
+);
 try {
   apply(friedPotato(), "salt", new Set(["black_pepper"]));
-  throw new Error("SALT wrongly accepted black_pepper as a salt source — isSaltySeasoning check is not working");
+  throw new Error(
+    "SALT wrongly accepted black_pepper as a salt source — isSaltySeasoning check is not working"
+  );
 } catch (err) {
   console.log(`  Correctly rejected: ${(err as Error).message}`);
 }

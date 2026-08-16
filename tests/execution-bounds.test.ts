@@ -11,7 +11,10 @@ import { makeEntity, makeAction, makeCcp } from "./helpers.ts";
  */
 
 const egg = makeEntity({ id: "egg", criticalControlPointsByAction: { boil: "egg_cooking" } });
-const eggYolk = makeEntity({ id: "egg_yolk", criticalControlPointsByAction: { pasteurize: "egg_pasteurization" } });
+const eggYolk = makeEntity({
+  id: "egg_yolk",
+  criticalControlPointsByAction: { pasteurize: "egg_pasteurization" },
+});
 const garlic = makeEntity({ id: "garlic" }); // no criticalControlPointsByAction at all
 
 const boilContinuous = makeAction({
@@ -24,7 +27,12 @@ const beatInstantaneous = makeAction({ id: "beat", actionKind: "instantaneous", 
 const mashUnaudited = makeAction({ id: "mash", outputs: {} }); // no actionKind at all
 const crushContinuousNoMax = makeAction({ id: "crush", actionKind: "continuous", outputs: {} }); // no maxDurationSeconds
 
-const flatCcp = makeCcp({ id: "egg_cooking", heldC: 63, heldSeconds: 15, source: "test fixture — flat CCP" });
+const flatCcp = makeCcp({
+  id: "egg_cooking",
+  heldC: 63,
+  heldSeconds: 15,
+  source: "test fixture — flat CCP",
+});
 const thermalModelCcp = makeCcp({
   id: "egg_pasteurization",
   heldC: 60,
@@ -101,7 +109,12 @@ describe("executionBoundFor — CCP floor resolution", () => {
     // At exactly referenceTempC (60°C), requiredHoldSeconds returns exactly
     // referenceHoldSeconds (210s) — a direct sanity check against thermal.ts's
     // own formula, not just "some number came back".
-    const atReference = executionBoundFor(pasteurizeContinuous, eggYolk, { waterTempC: "60" }, ccps);
+    const atReference = executionBoundFor(
+      pasteurizeContinuous,
+      eggYolk,
+      { waterTempC: "60" },
+      ccps
+    );
     assert.equal(atReference!.minSafeHoldSeconds, 210);
     assert.equal(atReference!.citation, "test fixture — thermalModel source");
 
@@ -129,12 +142,20 @@ describe("executionBoundFor — CCP floor resolution", () => {
       maxDurationSeconds: 7200,
       outputs: {},
     });
-    const bound = executionBoundFor(pasteurizeContinuous, eggYolk, { waterTempC: "not-a-number" }, ccps);
+    const bound = executionBoundFor(
+      pasteurizeContinuous,
+      eggYolk,
+      { waterTempC: "not-a-number" },
+      ccps
+    );
     assert.equal(bound!.minSafeHoldSeconds, 210);
   });
 
   test("a CCP id referenced by the entity but not present in the ccps map is treated as no CCP applying, not a throw", () => {
-    const targetEntity = makeEntity({ id: "mystery", criticalControlPointsByAction: { boil: "nonexistent_ccp" } });
+    const targetEntity = makeEntity({
+      id: "mystery",
+      criticalControlPointsByAction: { boil: "nonexistent_ccp" },
+    });
     const bound = executionBoundFor(boilContinuous, targetEntity, {}, ccps);
     assert.ok(bound);
     assert.equal(bound!.minSafeHoldSeconds, undefined);

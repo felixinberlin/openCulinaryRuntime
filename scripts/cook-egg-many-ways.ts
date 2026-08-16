@@ -37,7 +37,9 @@ function crack(instance: Instance): Instance {
   const result = applyAction(instance, action, entities, tools, undefined, ingredients);
   const cracked = result.spawned.find((s) => s.entityId === "egg_cracked");
   if (!cracked) throw new Error("Expected CRACK to spawn egg_cracked");
-  console.log(`  CRACK: "${instance.state}" -> egg destroyed, spawned egg_cracked ("${cracked.state}")`);
+  console.log(
+    `  CRACK: "${instance.state}" -> egg destroyed, spawned egg_cracked ("${cracked.state}")`
+  );
   return cracked;
 }
 
@@ -52,7 +54,10 @@ function salt(instance: Instance): Instance {
   return result.instance;
 }
 
-function beat(instance: Instance, intensity: "lightly_beaten" | "beaten" | "well_beaten"): Instance {
+function beat(
+  instance: Instance,
+  intensity: "lightly_beaten" | "beaten" | "well_beaten"
+): Instance {
   const action = actions.get("beat")!;
   const result = applyAction(instance, action, entities, tools, { intensity });
   console.log(`  BEAT (${intensity}): "${instance.state}" -> "${result.instance.state}"`);
@@ -71,7 +76,9 @@ const poached = apply(freshEgg(), "poach");
 console.log("\n4. Poached egg, salted:");
 const poachedSalted = salt(apply(freshEgg(), "poach"));
 
-console.log("\n5. Plain / French omelette — crack, then optionally beat (more or less) in a bowl, then fry:");
+console.log(
+  "\n5. Plain / French omelette — crack, then optionally beat (more or less) in a bowl, then fry:"
+);
 const omeletteVariants: [string, Instance][] = [];
 for (const intensity of ["none", "lightly_beaten", "beaten", "well_beaten"] as const) {
   for (const salted of [false, true]) {
@@ -84,7 +91,9 @@ for (const intensity of ["none", "lightly_beaten", "beaten", "well_beaten"] as c
   }
 }
 
-console.log("\n6. Scrambled eggs (crack, then scramble — BEAT applies here too, same as the omelette, omitted for brevity):");
+console.log(
+  "\n6. Scrambled eggs (crack, then scramble — BEAT applies here too, same as the omelette, omitted for brevity):"
+);
 const scrambled = apply(crack(freshEgg()), "scramble");
 
 console.log("\n7. Scrambled eggs, salted:");

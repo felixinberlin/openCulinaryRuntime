@@ -110,7 +110,12 @@ export interface RecipeExplanation {
    * display only — does NOT change `runRecipe`'s dispatch behavior, same
    * scoping `actionKinds` itself uses.
    */
-  executionBounds: { stepIndex: number; actionId: string; targetInstanceId: string; bound: ExecutionBound }[];
+  executionBounds: {
+    stepIndex: number;
+    actionId: string;
+    targetInstanceId: string;
+    bound: ExecutionBound;
+  }[];
   /**
    * Every allergen (`ingredient.ts`'s `AllergenSchema`, the FDA "Big 9")
    * any `initialInventory` entity carries, deduplicated and sorted —
@@ -132,7 +137,11 @@ export interface RecipeExplanation {
   allergenSummary: Allergen[];
 }
 
-function candidatesForCapability(entities: Map<string, Entity>, capability: string, kind?: Entity["kind"]): string[] {
+function candidatesForCapability(
+  entities: Map<string, Entity>,
+  capability: string,
+  kind?: Entity["kind"]
+): string[] {
   return [...entities.values()]
     .filter((e) => (kind === undefined || e.kind === kind) && e.capabilities[capability] === true)
     .map((e) => e.id);
@@ -217,7 +226,12 @@ export function explainRecipe(
     if (targetEntity) {
       const bound = executionBoundFor(action, targetEntity, step.params, ccps);
       if (bound) {
-        executionBounds.push({ stepIndex, actionId: step.actionId, targetInstanceId: step.targetInstanceId, bound });
+        executionBounds.push({
+          stepIndex,
+          actionId: step.actionId,
+          targetInstanceId: step.targetInstanceId,
+          bound,
+        });
       }
     }
 
@@ -231,7 +245,9 @@ export function explainRecipe(
       if (action.verb === "CUT" && step.params["shape"]) {
         shapeByInstanceId.set(step.targetInstanceId, step.params["shape"]);
       }
-      const targetEntityId = recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId;
+      const targetEntityId = recipe.initialInventory.find(
+        (i) => i.id === step.targetInstanceId
+      )?.entityId;
       const entity = targetEntityId ? entities.get(targetEntityId) : undefined;
       // Capability-based (isWashable), not state/tag-based — "washed" is a
       // TAG (2026-08-15: see wash.json/ingredient.ts's statePrerequisites
@@ -240,7 +256,10 @@ export function explainRecipe(
       // requiredTargetCapability checks, and doesn't depend on this
       // heuristic staying in sync with exactly how "washability" happens
       // to be represented elsewhere.
-      if (entity?.capabilities.isWashable === true && !washedInstanceIds.has(step.targetInstanceId)) {
+      if (
+        entity?.capabilities.isWashable === true &&
+        !washedInstanceIds.has(step.targetInstanceId)
+      ) {
         prepAdvisories.push(
           `${action.verb} on "${step.targetInstanceId}" (${entity.id}) happens before any WASH step on it — ` +
             `"${entity.id}" is washable; consider washing it first. (Heuristic advice only — ` +
@@ -260,7 +279,13 @@ export function explainRecipe(
       const yolkDoneness = step.params["yolkDoneness"];
       if (yolkDoneness === "soft" || yolkDoneness === "medium" || yolkDoneness === "hard") {
         const eggSizeRaw = step.params["eggSize"];
-        const eggSize = eggSizeRaw === "small" || eggSizeRaw === "medium" || eggSizeRaw === "large" || eggSizeRaw === "extra_large" ? eggSizeRaw : "large";
+        const eggSize =
+          eggSizeRaw === "small" ||
+          eggSizeRaw === "medium" ||
+          eggSizeRaw === "large" ||
+          eggSizeRaw === "extra_large"
+            ? eggSizeRaw
+            : "large";
         const seconds = Number(durationRaw);
         const { min, max } = eggBoilDonenessRangeForSize(yolkDoneness, eggSize);
         if (!Number.isNaN(seconds) && (seconds < min || seconds > max)) {
@@ -305,29 +330,57 @@ export function explainRecipe(
     // TARGET temperature is potato-specific by name
     // (POTATO_FORK_TENDER_CENTER_TEMP_C) — the one piece that doesn't
     // yet generalize, gated explicitly rather than silently assumed.
-    if ((action.verb === "FRY" || action.verb === "PAR_FRY") && durationRaw !== undefined && step.params["oilTempC"] !== undefined) {
+    if (
+      (action.verb === "FRY" || action.verb === "PAR_FRY") &&
+      durationRaw !== undefined &&
+      step.params["oilTempC"] !== undefined
+    ) {
       const shape = shapeByInstanceId.get(step.targetInstanceId);
-      const targetEntityId = recipe.initialInventory.find((i) => i.id === step.targetInstanceId)?.entityId;
+      const targetEntityId = recipe.initialInventory.find(
+        (i) => i.id === step.targetInstanceId
+      )?.entityId;
       const entity = targetEntityId ? entities.get(targetEntityId) : undefined;
       const oilTempC = Number(step.params["oilTempC"]);
       const fryDurationSeconds = Number(durationRaw);
 
-      if (shape && entity && targetEntityId === "potato" && !Number.isNaN(oilTempC) && !Number.isNaN(fryDurationSeconds)) {
+      if (
+        shape &&
+        entity &&
+        targetEntityId === "potato" &&
+        !Number.isNaN(oilTempC) &&
+        !Number.isNaN(fryDurationSeconds)
+      ) {
         try {
           const diffusivity = thermalDiffusivityM2PerS(entity);
           let dimensionMm: { min: number; max: number } | undefined;
-          if (shape === "sliced" || shape === "diced" || shape === "julienne" || shape === "chopped" || shape === "minced") {
+          if (
+            shape === "sliced" ||
+            shape === "diced" ||
+            shape === "julienne" ||
+            shape === "chopped" ||
+            shape === "minced"
+          ) {
             dimensionMm = cutShapeDimensionMm(shape);
-          } else if ((shape === "halved" || shape === "quartered") && entity.physicalDimensions?.typicalDiameterCm) {
-            dimensionMm = halvedOrQuarteredDimensionMm(entity.physicalDimensions.typicalDiameterCm, shape === "halved" ? 2 : 4);
+          } else if (
+            (shape === "halved" || shape === "quartered") &&
+            entity.physicalDimensions?.typicalDiameterCm
+          ) {
+            dimensionMm = halvedOrQuarteredDimensionMm(
+              entity.physicalDimensions.typicalDiameterCm,
+              shape === "halved" ? 2 : 4
+            );
           }
 
           if (dimensionMm) {
-            const targetC = (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTER_TEMP_C.max) / 2;
+            const targetC =
+              (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTER_TEMP_C.max) / 2;
             const initialTempC = 20; // room temperature, stated assumption — same as scripts/potato-heat-penetration.ts
 
             const topCookingMethod = step.params["topCookingMethod"];
-            const oneFaceOnly = topCookingMethod === "basted" || topCookingMethod === "covered" || topCookingMethod === "untouched";
+            const oneFaceOnly =
+              topCookingMethod === "basted" ||
+              topCookingMethod === "covered" ||
+              topCookingMethod === "untouched";
             const faceCounts: (1 | 2)[] = oneFaceOnly ? [1] : [1, 2];
 
             let fastestSeconds: number | undefined;
@@ -336,7 +389,12 @@ export function explainRecipe(
               for (const thicknessMm of [dimensionMm.min, dimensionMm.max]) {
                 const halfThicknessM = effectiveHalfThicknessM(thicknessMm / 1000, faceCount);
                 const t = secondsForCenterToReachTempC(
-                  { halfThicknessM, diffusivityM2PerS: diffusivity, initialTempC, surfaceTempC: oilTempC },
+                  {
+                    halfThicknessM,
+                    diffusivityM2PerS: diffusivity,
+                    initialTempC,
+                    surfaceTempC: oilTempC,
+                  },
                   targetC
                 );
                 if (fastestSeconds === undefined || t < fastestSeconds) fastestSeconds = t;
@@ -384,8 +442,13 @@ export function explainRecipe(
 
   const missingTools = [...toolsNeeded].filter((id) => !availableTools.has(id));
   const missingToolCapabilities = [...toolCapsNeeded]
-    .filter((cap) => ![...availableTools].some((id) => entities.get(id)?.capabilities[cap] === true))
-    .map((capability) => ({ capability, candidates: candidatesForCapability(entities, capability, "tool") }));
+    .filter(
+      (cap) => ![...availableTools].some((id) => entities.get(id)?.capabilities[cap] === true)
+    )
+    .map((capability) => ({
+      capability,
+      candidates: candidatesForCapability(entities, capability, "tool"),
+    }));
 
   // Ingredient capabilities are checked per-step in the real engine
   // (availableIngredientInstanceIds is per-step, not recipe-wide like
@@ -395,8 +458,14 @@ export function explainRecipe(
   // authoritative one.
   const initialInventoryEntityIds = new Set(recipe.initialInventory.map((i) => i.entityId));
   const missingIngredientCapabilities = [...ingredientCapsNeeded]
-    .filter((cap) => ![...initialInventoryEntityIds].some((id) => entities.get(id)?.capabilities[cap] === true))
-    .map((capability) => ({ capability, candidates: candidatesForCapability(entities, capability) }));
+    .filter(
+      (cap) =>
+        ![...initialInventoryEntityIds].some((id) => entities.get(id)?.capabilities[cap] === true)
+    )
+    .map((capability) => ({
+      capability,
+      candidates: candidatesForCapability(entities, capability),
+    }));
 
   const allergenSet = new Set<Allergen>();
   for (const item of recipe.initialInventory) {
@@ -407,7 +476,11 @@ export function explainRecipe(
   const allergenSummary = [...allergenSet].sort();
 
   return {
-    tools: { needed: [...toolsNeeded], missing: missingTools, missingCapabilities: missingToolCapabilities },
+    tools: {
+      needed: [...toolsNeeded],
+      missing: missingTools,
+      missingCapabilities: missingToolCapabilities,
+    },
     ingredients: { needed: [...ingredientCapsNeeded], missing: missingIngredientCapabilities },
     timingAdvisories,
     prepAdvisories,

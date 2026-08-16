@@ -20,18 +20,38 @@ const dissolve = actions.get("dissolve")!;
 
 console.log("=== 1. Dry salt dissolves when a dissolving medium (water) is present ===");
 const drySalt = { entityId: "salt", state: "dry", tags: [] };
-const dissolved = applyAction(drySalt, dissolve, entities, new Set(), {}, new Set(["water"])).instance;
+const dissolved = applyAction(
+  drySalt,
+  dissolve,
+  entities,
+  new Set(),
+  {},
+  new Set(["water"])
+).instance;
 console.log(`  DISSOLVE: "${drySalt.state}" -> "${dissolved.state}"\n`);
 
 console.log("=== 2. Without water present, DISSOLVE is correctly rejected ===");
 try {
-  applyAction({ entityId: "salt", state: "dry", tags: [] }, dissolve, entities, new Set(), {}, new Set());
+  applyAction(
+    { entityId: "salt", state: "dry", tags: [] },
+    dissolve,
+    entities,
+    new Set(),
+    {},
+    new Set()
+  );
   console.log("  UNEXPECTED: dissolved with nothing to dissolve into");
 } catch (err) {
   console.log(`  REJECTED as expected:\n    ${(err as Error).message}\n`);
 }
 
-console.log("=== 3. isDissolvingMedium is a distinct capability from isBoilingMedium, not a reuse ===");
+console.log(
+  "=== 3. isDissolvingMedium is a distinct capability from isBoilingMedium, not a reuse ==="
+);
 const water = entities.get("water")!;
-console.log(`  water.json: isBoilingMedium=${water.capabilities.isBoilingMedium}, isDissolvingMedium=${water.capabilities.isDissolvingMedium}`);
-console.log("  Same substance, two separate capability flags — this repo's established one-capability-per-verb convention.");
+console.log(
+  `  water.json: isBoilingMedium=${water.capabilities.isBoilingMedium}, isDissolvingMedium=${water.capabilities.isDissolvingMedium}`
+);
+console.log(
+  "  Same substance, two separate capability flags — this repo's established one-capability-per-verb convention."
+);

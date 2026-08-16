@@ -109,7 +109,8 @@ export const ActionOutputsSchema = z
     message: "transformedState and transformedStateFromParameter are mutually exclusive",
   })
   .refine((o) => !(o.combinesInto && (o.transformedState || o.transformedStateFromParameter)), {
-    message: "combinesInto is mutually exclusive with transformedState/transformedStateFromParameter",
+    message:
+      "combinesInto is mutually exclusive with transformedState/transformedStateFromParameter",
   });
 export type ActionOutputs = z.infer<typeof ActionOutputsSchema>;
 
@@ -171,213 +172,215 @@ export const HazardSchema = z.object({
 });
 export type Hazard = z.infer<typeof HazardSchema>;
 
-export const ActionSchema = z.object({
-  /** Stable machine id, e.g. "peel". Referenced by EntitySchema.allowedTransformations. */
-  id: z.string().min(1),
-  /** Uppercase verb, per CONCEPT.md convention (PEEL, CUT, MOVE, HEAT, ...). */
-  verb: z.string().min(1),
-  names: z.record(z.string(), z.string()).refine((n) => "en" in n, {
-    message: "names must at least include an 'en' entry",
-  }),
-  /**
-   * Tool entity ids required to perform this action (CONCEPT.md §5/§7:
-   * "PEEL requires: knife"). Cross-checked against data/entities/ at
-   * validation time — every id here must resolve to an entity of kind "tool".
-   *
-   * Id-based on purpose, for the case where one SPECIFIC tool is genuinely
-   * required (BAKE really does need an oven, not "any heat-capable
-   * enclosure") — but that made every tool requirement id-based even when
-   * the real physical constraint is a property several different tools can
-   * share (any vessel deep enough to submerge food, not literally the one
-   * entity named "pot"). See `requiredToolCapabilities` below for that case.
-   */
-  requiredTools: z.array(z.string()).default([]),
-  /**
-   * Capabilities required of some available TOOL — the tool-side mirror of
-   * `requiredIngredientCapabilities` below, added 2026-08-14 once a real
-   * case forced it: a robot with only a pan on hand (no pot) hard-failed
-   * BOIL, even for a hypothetical vessel that would genuinely work, because
-   * `requiredTools` can only ever check "is the tool literally named X,"
-   * never "is ANY available tool physically suited for this." Same
-   * capability-vs-id distinction `requiredIngredientCapabilities`'s own doc
-   * comment already draws for ingredients, generalized to tools: an action
-   * lists a capability (e.g. "isDeepVessel"), and ANY tool asserting it true
-   * satisfies the check — not one hardcoded entity id. Purely additive:
-   * every action written before this field existed has an empty array here
-   * and is completely unaffected; `requiredTools` and
-   * `requiredToolCapabilities` can both be used on the same action (ANDed
-   * together) when an action genuinely needs one specific tool AND some
-   * capability from another. Checked for presence only, same limit
-   * `requiredIngredientCapabilities` already states — not consumed/
-   * decremented, no notion of a tool being "busy" elsewhere.
-   */
-  requiredToolCapabilities: z.array(z.string()).default([]),
-  /**
-   * The capability flag (EntitySchema.capabilities key) a target entity must
-   * assert `true` for this action to be legal against it — e.g. "isPeelable".
-   * Generalizes CONCEPT.md §7's "valid targets: vegetables" into the
-   * capability model already used for entities (see ingredient.ts), instead
-   * of hardcoding food categories into the verb.
-   *
-   * A missing or `false` capability both block the action; only an explicit
-   * `false` on the entity is a *permanent* denial (see ingredient.ts
-   * CapabilitiesSchema doc comment) that a future capability-inference pass
-   * must never override.
-   */
-  requiredTargetCapability: z.string().optional(),
-  validTargetKinds: z.array(EntityKindSchema).default(["ingredient"]),
-  /**
-   * Capabilities required of some OTHER ingredient present alongside the
-   * target — e.g. FRY needs a frying medium (oil, butter, ...) in addition
-   * to whatever's being fried. Capability-based like requiredTargetCapability,
-   * not id-based like requiredTools: any isFryingMedium ingredient will do,
-   * not one specific entity. Checked for presence only (not consumed/
-   * decremented) — proper ingredient consumption belongs to the full
-   * recipe-level inventory in ROADMAP.md Phase 4, not this per-action check.
-   */
-  requiredIngredientCapabilities: z.array(z.string()).default([]),
-  /**
-   * The capability a SECONDARY instance must assert `true` for a COMBINE-
-   * shaped action — distinct from requiredIngredientCapabilities, which only
-   * ever checks presence and never consumes anything (ROADMAP.md Phase 4:
-   * "only checks that a qualifying ingredient is present, not consume/
-   * decrement it"). A secondary instance satisfying THIS capability is
-   * consumed exactly like the primary target when outputs.combinesInto is
-   * set — the caller must supply which specific instance via
-   * RecipeStepSchema.secondaryInstanceId (recipe.ts) / applyAction's
-   * secondaryInstance argument (engine.ts), the same way targetInstanceId
-   * designates the primary target.
-   */
-  requiredSecondaryCapability: z.string().optional(),
-  parameters: z.array(ActionParameterSchema).default([]),
-  outputs: ActionOutputsSchema,
-  duration: z.enum(["fixed", "variable"]).default("variable"),
-  precision: z.enum(["required", "optional"]).default("optional"),
-  /**
-   * Is this verb a one-off operation (instantaneous) or one that evolves
-   * over real elapsed time and terminates on an observable condition
-   * (continuous)? Added 2026-08-16 in direct response to Song, Huang, Sun,
-   * Tian, Wang & Li, "Embedding Large Language Models into Flow Controls,"
-   * arXiv:2608.04768 (2026) — see `PAPER_NOTES_2608.04768.md` TICKET 1,
-   * `REFERENCES.md`. That paper's generated control code renders the
-   * identical split independently, from the hardware side, as
-   * `Step(Pulse, Await(Enter))` vs. `Step(Continuous, Until(Condition))
-   * with Timeout(...)`: "Instantaneous actions correspond to one-off
-   * operations whose completion cannot be reliably sensed, such as
-   * ignition or ingredient addition, and are executed once before
-   * proceeding. Continuous actions correspond to operations that evolve
-   * over time, such as stirring or heating, and are expressed using
-   * explicit do–until constructs." Two independent derivations of the same
-   * distinction (this repo's own `place.ts`/`recipe-runner.ts` split
-   * arrived here first, unnamed, from the simulation side — see
-   * `place.ts`'s own top doc comment) is a real signal this is structure,
-   * not a local modeling artifact — see `LEARNINGS_ENGINE.md` 2026-08-16.
-   *
-   * TWO DISCRIMINATORS, WHICH CAN GENUINELY DISAGREE — every `data/actions/
-   * *.json` file's own `metadata.actionKindNote` states which was applied
-   * and why, per-action, not by pattern-matching a category:
-   * - The paper's test: does the action have an observable sensory
-   *   termination condition it evolves toward, or is it fire-and-forget?
-   * - This engine's test: does the action's effect actually depend on
-   *   elapsed time or a `PlaceState` temperature in `applyAction`/
-   *   `recipe-runner.ts` today?
-   * Where they disagree (e.g. BEAT: continuous by the paper's test — real
-   * stirring, a real visual until-uniform termination — but `applyAction`
-   * fires its effect the instant preconditions pass, with no elapsed-time
-   * term at all, so instantaneous by the engine's test), this field is set
-   * by the PAPER's test — the physical truth — not the engine's current
-   * (admittedly narrower) behavior. That makes every such entry a real,
-   * honest, searchable inventory of exactly where this engine's one-shot
-   * `applyAction` model still departs from physical reality, which is more
-   * valuable than a classification that always agrees with what's already
-   * built.
-   *
-   * ADJACENT TO BUT NOT THE SAME QUESTION AS `duration` ABOVE: `variable`
-   * means "how long this takes is not fixed"; `continuous` means "the
-   * effect accumulates over elapsed time and terminates on a condition."
-   * `cut` is `duration: "variable"` (a potato's size affects how long
-   * cutting takes) AND `actionKind: "instantaneous"` (a bounded, discrete
-   * number of tool-strokes toward a FIXED target shape, not an open-ended
-   * do-until threshold — see `cut.json`'s own note for the direct contrast
-   * against `mash`/`grate`, which look similarly repeated/mechanical but
-   * are genuinely different). Keep both fields; do not overload `duration`
-   * or attempt to derive one from the other.
-   *
-   * Optional, not defaulted — a missing value means "not yet audited,"
-   * the same precedent `retrySafe` sets in its own doc comment below. A
-   * silent wrong default here (e.g. defaulting to "instantaneous," which
-   * matches `applyAction`'s actual current behavior for every action) would
-   * be worse than an absent field: it would quietly assert every future
-   * verb is physically one-shot, foreclosing exactly the honest-gap
-   * inventory this field exists to build. Every action in this repo has
-   * been individually classified as of 2026-08-16 (`LEARNINGS_ENGINE.md`
-   * same date) — but do not assume that stays true for a NEW action added
-   * later without checking.
-   *
-   * Does NOT change `applyAction`'s semantics at all — every action still
-   * executes as one instantaneous state transition regardless of this
-   * field's value; see `recipe-runner.ts`'s own top doc comment for the one
-   * place (`heat_place`, and the opt-in `params.placeId` check on
-   * `boil`/`simmer`/`fry`) where the engine's ACTUAL behavior already
-   * matches `continuous`, and everywhere else where it does not yet.
-   */
-  actionKind: z.enum(["instantaneous", "continuous"]).optional(),
-  /**
-   * Upper time bound for a `continuous` action — TICKET 2 of
-   * `PAPER_NOTES_2608.04768.md` (`REFERENCES.md`), the direct follow-on to
-   * `actionKind` above. The paper's own generated control code pairs every
-   * continuous step's sensory termination condition with a hard timeout
-   * "derived from empirical cooking experience" so an executor makes
-   * progress even if the sensory condition never fires — this field is
-   * that ceiling, for an eventual executor built against this vocabulary.
-   * `src/execution-bounds.ts`'s `executionBoundFor` is where it's actually
-   * consumed (standalone, `applyAction`-unchanged — see that file's own
-   * doc comment); `applyAction` itself does not read this field at all.
-   *
-   * Applicable ONLY to `actionKind: "continuous"` actions (see the
-   * `.refine()` below) — an instantaneous action has no do-until loop for
-   * a timeout to bound. Every `data/actions/*.json` entry with
-   * `actionKind: "continuous"` sets a real value here as of 2026-08-16,
-   * each traced in its own `metadata.maxDurationSecondsNote` to either an
-   * already-cited source (commonly: this action's own `durationSeconds`
-   * parameter's `numericRange.max`, reused rather than duplicated — the
-   * top of an already-established real range doubles as a reasonable
-   * timeout ceiling) or an explicit HOUSE VALUE with a stated rationale,
-   * per this ticket's own acceptance criteria: "do not copy the paper's
-   * numbers — they have no stated provenance."
-   */
-  maxDurationSeconds: z.number().positive().optional(),
-  /** How a machine would confirm this action's effect actually happened —
-   *  see VerificationCriterionSchema's doc comment. Optional (existing
-   *  actions predate this field), but every action added or touched from
-   *  here on should carry one deliberately, not by omission. */
-  verification: VerificationCriterionSchema.optional(),
-  /** Physical/operational dangers from PERFORMING this action — see
-   *  HazardSchema's doc comment. Empty array is a real, meaningful claim
-   *  ("this action has no notable physical hazard", e.g. SALT), not just an
-   *  unfilled field — audited per-action, not defaulted-and-forgotten. */
-  hazards: z.array(HazardSchema).default([]),
-  /**
-   * Is blindly re-running this exact action (after an interruption — a
-   * fault, a power loss, a human stopping and resuming) safe, or could it
-   * double an effect that already happened? Two genuinely different reasons
-   * an action can be `true` here, both real: (1) idempotent by construction
-   * — engine.ts guards `addsTag` against duplicates (SALT/FLIP/FOLD/SHOCK/
-   * INFUSE/PASTEURIZE re-running is a silent no-op, not a double effect);
-   * (2) fails LOUDLY instead of silently repeating — a `destroysTarget`
-   * action's target is already gone from inventory on a second attempt
-   * (CRACK/SEPARATE/COMBINE), so a retry errors instead of duplicating.
-   * `false` (or unset) means neither protection applies — most concretely,
-   * PEEL: `spawnsTargetByproducts` fires again on an already-peeled target
-   * (no state check prevents re-running it), producing a byproduct instance
-   * that doesn't physically exist (you cannot peel a potato twice and get a
-   * second peel). Left `undefined`, not defaulted to `false`, where genuinely
-   * not yet audited — but every action in this repo has been.
-   */
-  retrySafe: z.boolean().optional(),
-  metadata: z.record(z.string(), z.unknown()).default({}),
-})
+export const ActionSchema = z
+  .object({
+    /** Stable machine id, e.g. "peel". Referenced by EntitySchema.allowedTransformations. */
+    id: z.string().min(1),
+    /** Uppercase verb, per CONCEPT.md convention (PEEL, CUT, MOVE, HEAT, ...). */
+    verb: z.string().min(1),
+    names: z.record(z.string(), z.string()).refine((n) => "en" in n, {
+      message: "names must at least include an 'en' entry",
+    }),
+    /**
+     * Tool entity ids required to perform this action (CONCEPT.md §5/§7:
+     * "PEEL requires: knife"). Cross-checked against data/entities/ at
+     * validation time — every id here must resolve to an entity of kind "tool".
+     *
+     * Id-based on purpose, for the case where one SPECIFIC tool is genuinely
+     * required (BAKE really does need an oven, not "any heat-capable
+     * enclosure") — but that made every tool requirement id-based even when
+     * the real physical constraint is a property several different tools can
+     * share (any vessel deep enough to submerge food, not literally the one
+     * entity named "pot"). See `requiredToolCapabilities` below for that case.
+     */
+    requiredTools: z.array(z.string()).default([]),
+    /**
+     * Capabilities required of some available TOOL — the tool-side mirror of
+     * `requiredIngredientCapabilities` below, added 2026-08-14 once a real
+     * case forced it: a robot with only a pan on hand (no pot) hard-failed
+     * BOIL, even for a hypothetical vessel that would genuinely work, because
+     * `requiredTools` can only ever check "is the tool literally named X,"
+     * never "is ANY available tool physically suited for this." Same
+     * capability-vs-id distinction `requiredIngredientCapabilities`'s own doc
+     * comment already draws for ingredients, generalized to tools: an action
+     * lists a capability (e.g. "isDeepVessel"), and ANY tool asserting it true
+     * satisfies the check — not one hardcoded entity id. Purely additive:
+     * every action written before this field existed has an empty array here
+     * and is completely unaffected; `requiredTools` and
+     * `requiredToolCapabilities` can both be used on the same action (ANDed
+     * together) when an action genuinely needs one specific tool AND some
+     * capability from another. Checked for presence only, same limit
+     * `requiredIngredientCapabilities` already states — not consumed/
+     * decremented, no notion of a tool being "busy" elsewhere.
+     */
+    requiredToolCapabilities: z.array(z.string()).default([]),
+    /**
+     * The capability flag (EntitySchema.capabilities key) a target entity must
+     * assert `true` for this action to be legal against it — e.g. "isPeelable".
+     * Generalizes CONCEPT.md §7's "valid targets: vegetables" into the
+     * capability model already used for entities (see ingredient.ts), instead
+     * of hardcoding food categories into the verb.
+     *
+     * A missing or `false` capability both block the action; only an explicit
+     * `false` on the entity is a *permanent* denial (see ingredient.ts
+     * CapabilitiesSchema doc comment) that a future capability-inference pass
+     * must never override.
+     */
+    requiredTargetCapability: z.string().optional(),
+    validTargetKinds: z.array(EntityKindSchema).default(["ingredient"]),
+    /**
+     * Capabilities required of some OTHER ingredient present alongside the
+     * target — e.g. FRY needs a frying medium (oil, butter, ...) in addition
+     * to whatever's being fried. Capability-based like requiredTargetCapability,
+     * not id-based like requiredTools: any isFryingMedium ingredient will do,
+     * not one specific entity. Checked for presence only (not consumed/
+     * decremented) — proper ingredient consumption belongs to the full
+     * recipe-level inventory in ROADMAP.md Phase 4, not this per-action check.
+     */
+    requiredIngredientCapabilities: z.array(z.string()).default([]),
+    /**
+     * The capability a SECONDARY instance must assert `true` for a COMBINE-
+     * shaped action — distinct from requiredIngredientCapabilities, which only
+     * ever checks presence and never consumes anything (ROADMAP.md Phase 4:
+     * "only checks that a qualifying ingredient is present, not consume/
+     * decrement it"). A secondary instance satisfying THIS capability is
+     * consumed exactly like the primary target when outputs.combinesInto is
+     * set — the caller must supply which specific instance via
+     * RecipeStepSchema.secondaryInstanceId (recipe.ts) / applyAction's
+     * secondaryInstance argument (engine.ts), the same way targetInstanceId
+     * designates the primary target.
+     */
+    requiredSecondaryCapability: z.string().optional(),
+    parameters: z.array(ActionParameterSchema).default([]),
+    outputs: ActionOutputsSchema,
+    duration: z.enum(["fixed", "variable"]).default("variable"),
+    precision: z.enum(["required", "optional"]).default("optional"),
+    /**
+     * Is this verb a one-off operation (instantaneous) or one that evolves
+     * over real elapsed time and terminates on an observable condition
+     * (continuous)? Added 2026-08-16 in direct response to Song, Huang, Sun,
+     * Tian, Wang & Li, "Embedding Large Language Models into Flow Controls,"
+     * arXiv:2608.04768 (2026) — see `PAPER_NOTES_2608.04768.md` TICKET 1,
+     * `REFERENCES.md`. That paper's generated control code renders the
+     * identical split independently, from the hardware side, as
+     * `Step(Pulse, Await(Enter))` vs. `Step(Continuous, Until(Condition))
+     * with Timeout(...)`: "Instantaneous actions correspond to one-off
+     * operations whose completion cannot be reliably sensed, such as
+     * ignition or ingredient addition, and are executed once before
+     * proceeding. Continuous actions correspond to operations that evolve
+     * over time, such as stirring or heating, and are expressed using
+     * explicit do–until constructs." Two independent derivations of the same
+     * distinction (this repo's own `place.ts`/`recipe-runner.ts` split
+     * arrived here first, unnamed, from the simulation side — see
+     * `place.ts`'s own top doc comment) is a real signal this is structure,
+     * not a local modeling artifact — see `LEARNINGS_ENGINE.md` 2026-08-16.
+     *
+     * TWO DISCRIMINATORS, WHICH CAN GENUINELY DISAGREE — every `data/actions/
+     * *.json` file's own `metadata.actionKindNote` states which was applied
+     * and why, per-action, not by pattern-matching a category:
+     * - The paper's test: does the action have an observable sensory
+     *   termination condition it evolves toward, or is it fire-and-forget?
+     * - This engine's test: does the action's effect actually depend on
+     *   elapsed time or a `PlaceState` temperature in `applyAction`/
+     *   `recipe-runner.ts` today?
+     * Where they disagree (e.g. BEAT: continuous by the paper's test — real
+     * stirring, a real visual until-uniform termination — but `applyAction`
+     * fires its effect the instant preconditions pass, with no elapsed-time
+     * term at all, so instantaneous by the engine's test), this field is set
+     * by the PAPER's test — the physical truth — not the engine's current
+     * (admittedly narrower) behavior. That makes every such entry a real,
+     * honest, searchable inventory of exactly where this engine's one-shot
+     * `applyAction` model still departs from physical reality, which is more
+     * valuable than a classification that always agrees with what's already
+     * built.
+     *
+     * ADJACENT TO BUT NOT THE SAME QUESTION AS `duration` ABOVE: `variable`
+     * means "how long this takes is not fixed"; `continuous` means "the
+     * effect accumulates over elapsed time and terminates on a condition."
+     * `cut` is `duration: "variable"` (a potato's size affects how long
+     * cutting takes) AND `actionKind: "instantaneous"` (a bounded, discrete
+     * number of tool-strokes toward a FIXED target shape, not an open-ended
+     * do-until threshold — see `cut.json`'s own note for the direct contrast
+     * against `mash`/`grate`, which look similarly repeated/mechanical but
+     * are genuinely different). Keep both fields; do not overload `duration`
+     * or attempt to derive one from the other.
+     *
+     * Optional, not defaulted — a missing value means "not yet audited,"
+     * the same precedent `retrySafe` sets in its own doc comment below. A
+     * silent wrong default here (e.g. defaulting to "instantaneous," which
+     * matches `applyAction`'s actual current behavior for every action) would
+     * be worse than an absent field: it would quietly assert every future
+     * verb is physically one-shot, foreclosing exactly the honest-gap
+     * inventory this field exists to build. Every action in this repo has
+     * been individually classified as of 2026-08-16 (`LEARNINGS_ENGINE.md`
+     * same date) — but do not assume that stays true for a NEW action added
+     * later without checking.
+     *
+     * Does NOT change `applyAction`'s semantics at all — every action still
+     * executes as one instantaneous state transition regardless of this
+     * field's value; see `recipe-runner.ts`'s own top doc comment for the one
+     * place (`heat_place`, and the opt-in `params.placeId` check on
+     * `boil`/`simmer`/`fry`) where the engine's ACTUAL behavior already
+     * matches `continuous`, and everywhere else where it does not yet.
+     */
+    actionKind: z.enum(["instantaneous", "continuous"]).optional(),
+    /**
+     * Upper time bound for a `continuous` action — TICKET 2 of
+     * `PAPER_NOTES_2608.04768.md` (`REFERENCES.md`), the direct follow-on to
+     * `actionKind` above. The paper's own generated control code pairs every
+     * continuous step's sensory termination condition with a hard timeout
+     * "derived from empirical cooking experience" so an executor makes
+     * progress even if the sensory condition never fires — this field is
+     * that ceiling, for an eventual executor built against this vocabulary.
+     * `src/execution-bounds.ts`'s `executionBoundFor` is where it's actually
+     * consumed (standalone, `applyAction`-unchanged — see that file's own
+     * doc comment); `applyAction` itself does not read this field at all.
+     *
+     * Applicable ONLY to `actionKind: "continuous"` actions (see the
+     * `.refine()` below) — an instantaneous action has no do-until loop for
+     * a timeout to bound. Every `data/actions/*.json` entry with
+     * `actionKind: "continuous"` sets a real value here as of 2026-08-16,
+     * each traced in its own `metadata.maxDurationSecondsNote` to either an
+     * already-cited source (commonly: this action's own `durationSeconds`
+     * parameter's `numericRange.max`, reused rather than duplicated — the
+     * top of an already-established real range doubles as a reasonable
+     * timeout ceiling) or an explicit HOUSE VALUE with a stated rationale,
+     * per this ticket's own acceptance criteria: "do not copy the paper's
+     * numbers — they have no stated provenance."
+     */
+    maxDurationSeconds: z.number().positive().optional(),
+    /** How a machine would confirm this action's effect actually happened —
+     *  see VerificationCriterionSchema's doc comment. Optional (existing
+     *  actions predate this field), but every action added or touched from
+     *  here on should carry one deliberately, not by omission. */
+    verification: VerificationCriterionSchema.optional(),
+    /** Physical/operational dangers from PERFORMING this action — see
+     *  HazardSchema's doc comment. Empty array is a real, meaningful claim
+     *  ("this action has no notable physical hazard", e.g. SALT), not just an
+     *  unfilled field — audited per-action, not defaulted-and-forgotten. */
+    hazards: z.array(HazardSchema).default([]),
+    /**
+     * Is blindly re-running this exact action (after an interruption — a
+     * fault, a power loss, a human stopping and resuming) safe, or could it
+     * double an effect that already happened? Two genuinely different reasons
+     * an action can be `true` here, both real: (1) idempotent by construction
+     * — engine.ts guards `addsTag` against duplicates (SALT/FLIP/FOLD/SHOCK/
+     * INFUSE/PASTEURIZE re-running is a silent no-op, not a double effect);
+     * (2) fails LOUDLY instead of silently repeating — a `destroysTarget`
+     * action's target is already gone from inventory on a second attempt
+     * (CRACK/SEPARATE/COMBINE), so a retry errors instead of duplicating.
+     * `false` (or unset) means neither protection applies — most concretely,
+     * PEEL: `spawnsTargetByproducts` fires again on an already-peeled target
+     * (no state check prevents re-running it), producing a byproduct instance
+     * that doesn't physically exist (you cannot peel a potato twice and get a
+     * second peel). Left `undefined`, not defaulted to `false`, where genuinely
+     * not yet audited — but every action in this repo has been.
+     */
+    retrySafe: z.boolean().optional(),
+    metadata: z.record(z.string(), z.unknown()).default({}),
+  })
   .refine((a) => !(a.actionKind === "instantaneous" && a.maxDurationSeconds !== undefined), {
-    message: "maxDurationSeconds only applies to actionKind: \"continuous\" — an instantaneous action has no do-until loop for a timeout to bound",
+    message:
+      'maxDurationSeconds only applies to actionKind: "continuous" — an instantaneous action has no do-until loop for a timeout to bound',
   });
 export type Action = z.infer<typeof ActionSchema>;

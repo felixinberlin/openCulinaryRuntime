@@ -42,7 +42,12 @@ function makeRecipe(heatOilFirst: boolean): RecipeScript {
             {
               actionId: "heat_place",
               targetInstanceId: "oil-1",
-              params: { placeId: "pan-1", heatSourceId: "gas", targetTempC: "175", tickSeconds: "15" },
+              params: {
+                placeId: "pan-1",
+                heatSourceId: "gas",
+                targetTempC: "175",
+                tickSeconds: "15",
+              },
               availableIngredientInstanceIds: [],
             },
           ]

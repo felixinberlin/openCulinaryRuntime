@@ -21,7 +21,9 @@ const EGG_LIKE = {
   thermalConductivityWPerMK: 0.34,
 };
 
-function largeEggParams(overrides: Partial<EggSphereConductionParams> = {}): EggSphereConductionParams {
+function largeEggParams(
+  overrides: Partial<EggSphereConductionParams> = {}
+): EggSphereConductionParams {
   return {
     massKg: EGG_SIZE_GRAMS.large / 1000,
     ...EGG_LIKE,
@@ -42,9 +44,18 @@ describe("secondsForYolkToReachTempC", () => {
   });
 
   test("real physical ordering: a bigger egg takes longer for the same target temperature", () => {
-    const small = secondsForYolkToReachTempC(largeEggParams({ massKg: EGG_SIZE_GRAMS.small / 1000 }), YOLK_TARGET_TEMP_C.soft);
-    const large = secondsForYolkToReachTempC(largeEggParams({ massKg: EGG_SIZE_GRAMS.large / 1000 }), YOLK_TARGET_TEMP_C.soft);
-    const xl = secondsForYolkToReachTempC(largeEggParams({ massKg: EGG_SIZE_GRAMS.extra_large / 1000 }), YOLK_TARGET_TEMP_C.soft);
+    const small = secondsForYolkToReachTempC(
+      largeEggParams({ massKg: EGG_SIZE_GRAMS.small / 1000 }),
+      YOLK_TARGET_TEMP_C.soft
+    );
+    const large = secondsForYolkToReachTempC(
+      largeEggParams({ massKg: EGG_SIZE_GRAMS.large / 1000 }),
+      YOLK_TARGET_TEMP_C.soft
+    );
+    const xl = secondsForYolkToReachTempC(
+      largeEggParams({ massKg: EGG_SIZE_GRAMS.extra_large / 1000 }),
+      YOLK_TARGET_TEMP_C.soft
+    );
     assert.ok(small < large, "a small egg should reach the target faster than a large one");
     assert.ok(large < xl, "a large egg should reach the target faster than an extra-large one");
   });
@@ -58,8 +69,14 @@ describe("secondsForYolkToReachTempC", () => {
   });
 
   test("hotter water reaches the same yolk target faster", () => {
-    const cooler = secondsForYolkToReachTempC(largeEggParams({ waterTempC: 91 }), YOLK_TARGET_TEMP_C.soft); // e.g. Bogotá altitude
-    const hotter = secondsForYolkToReachTempC(largeEggParams({ waterTempC: 100 }), YOLK_TARGET_TEMP_C.soft);
+    const cooler = secondsForYolkToReachTempC(
+      largeEggParams({ waterTempC: 91 }),
+      YOLK_TARGET_TEMP_C.soft
+    ); // e.g. Bogotá altitude
+    const hotter = secondsForYolkToReachTempC(
+      largeEggParams({ waterTempC: 100 }),
+      YOLK_TARGET_TEMP_C.soft
+    );
     assert.ok(hotter < cooler, "hotter water should reach the same yolk target faster");
   });
 
@@ -71,14 +88,23 @@ describe("secondsForYolkToReachTempC", () => {
   });
 
   test("throws when the target is on the wrong side of the driving force (heating case)", () => {
-    assert.throws(() => secondsForYolkToReachTempC(largeEggParams(), 2), /can never reach it while heating/);
-    assert.throws(() => secondsForYolkToReachTempC(largeEggParams(), 100), /can never reach it while heating/);
+    assert.throws(
+      () => secondsForYolkToReachTempC(largeEggParams(), 2),
+      /can never reach it while heating/
+    );
+    assert.throws(
+      () => secondsForYolkToReachTempC(largeEggParams(), 100),
+      /can never reach it while heating/
+    );
   });
 
   test("throws when the target is on the wrong side of the driving force (cooling case)", () => {
     const cooling = largeEggParams({ initialTempC: 100, waterTempC: 4 }); // e.g. shocking a hot egg in cold water
     assert.throws(() => secondsForYolkToReachTempC(cooling, 2), /can never reach it while cooling/);
-    assert.throws(() => secondsForYolkToReachTempC(cooling, 100), /can never reach it while cooling/);
+    assert.throws(
+      () => secondsForYolkToReachTempC(cooling, 100),
+      /can never reach it while cooling/
+    );
   });
 });
 

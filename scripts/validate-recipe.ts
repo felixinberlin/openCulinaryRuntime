@@ -99,11 +99,15 @@ if (explanation.executionBounds.length > 0) {
       bound.minSafeHoldSeconds !== undefined
         ? `${bound.minSafeHoldSeconds.toFixed(1)}s minSafeHoldSeconds (safety-critical CCP floor — no sensor may end this step before it)`
         : "no CCP floor applies";
-    console.log(`  [${stepIndex}] ${actionId} on "${targetInstanceId}": maxDurationSeconds=${bound.maxDurationSeconds}s, ${floor}`);
+    console.log(
+      `  [${stepIndex}] ${actionId} on "${targetInstanceId}": maxDurationSeconds=${bound.maxDurationSeconds}s, ${floor}`
+    );
   }
 }
 
-console.log(`\nIngredient capabilities needed: ${explanation.ingredients.needed.join(", ") || "(none)"}`);
+console.log(
+  `\nIngredient capabilities needed: ${explanation.ingredients.needed.join(", ") || "(none)"}`
+);
 for (const { capability, candidates } of explanation.ingredients.missing) {
   console.log(
     `MISSING ingredient capability "${capability}" — nothing in initialInventory satisfies it. ` +

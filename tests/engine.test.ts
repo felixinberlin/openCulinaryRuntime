@@ -41,7 +41,12 @@ describe("applyAction — preconditions", () => {
       /requires "potato" to already be "peeled"/
     );
 
-    const result = applyAction({ entityId: "potato", state: "peeled", tags: [] }, action, entities, NO_TOOLS);
+    const result = applyAction(
+      { entityId: "potato", state: "peeled", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(result.instance.state, "diced");
   });
 
@@ -54,9 +59,19 @@ describe("applyAction — preconditions", () => {
     const entities = new Map([["potato", potato]]);
 
     // Neither listed state is required exclusively — either satisfies it.
-    const fromWashed = applyAction({ entityId: "potato", state: "washed", tags: [] }, action, entities, NO_TOOLS);
+    const fromWashed = applyAction(
+      { entityId: "potato", state: "washed", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(fromWashed.instance.state, "diced");
-    const fromPeeled = applyAction({ entityId: "potato", state: "peeled", tags: [] }, action, entities, NO_TOOLS);
+    const fromPeeled = applyAction(
+      { entityId: "potato", state: "peeled", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(fromPeeled.instance.state, "diced");
 
     // A state outside the set is still rejected, and the error names both options.
@@ -75,7 +90,12 @@ describe("applyAction — preconditions", () => {
     const entities = new Map([["potato", potato]]);
 
     // "peeled" as a real STATE still satisfies it (unchanged behavior).
-    const fromPeeledState = applyAction({ entityId: "potato", state: "peeled", tags: [] }, action, entities, NO_TOOLS);
+    const fromPeeledState = applyAction(
+      { entityId: "potato", state: "peeled", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(fromPeeledState.instance.state, "diced");
 
     // "washed" as a TAG — not the state — now satisfies it too: a raw,
@@ -83,7 +103,12 @@ describe("applyAction — preconditions", () => {
     // real case that forced this. This is the whole point of the fix: a
     // potato instance can carry "washed" as a fact independent of whatever
     // its current state is.
-    const fromWashedTag = applyAction({ entityId: "potato", state: "raw", tags: ["washed"] }, action, entities, NO_TOOLS);
+    const fromWashedTag = applyAction(
+      { entityId: "potato", state: "raw", tags: ["washed"] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(fromWashedTag.instance.state, "diced");
 
     // Neither the state nor a tag satisfies it — still rejected, and the
@@ -106,8 +131,16 @@ describe("applyAction — preconditions", () => {
       statePrerequisites: { cut: ["washed", "peeled"] },
       capabilities: { isWashable: true, isPeelable: true },
     });
-    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
-    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+    const wash = makeAction({
+      id: "wash",
+      requiredTargetCapability: "isWashable",
+      outputs: { addsTag: "washed" },
+    });
+    const peel = makeAction({
+      id: "peel",
+      requiredTargetCapability: "isPeelable",
+      outputs: { transformedState: "peeled" },
+    });
     const cut = makeAction({ id: "cut", outputs: { transformedState: "diced" } });
     const entities = new Map([["potato", potato]]);
 
@@ -147,7 +180,11 @@ describe("applyAction — preconditions", () => {
       capabilities: { isChoppable: true },
       invalidTransitions: { mashed: ["sliced", "peeled"] },
     });
-    const cut = makeAction({ id: "cut", requiredTargetCapability: "isChoppable", outputs: { transformedState: "sliced" } });
+    const cut = makeAction({
+      id: "cut",
+      requiredTargetCapability: "isChoppable",
+      outputs: { transformedState: "sliced" },
+    });
     const entities = new Map([["potato", potato]]);
 
     // Nothing else in this schema stops this — CUT's statePrerequisites is
@@ -159,7 +196,12 @@ describe("applyAction — preconditions", () => {
     );
 
     // A potato that was never mashed is completely unaffected.
-    const result = applyAction({ entityId: "potato", state: "peeled", tags: [] }, cut, entities, NO_TOOLS);
+    const result = applyAction(
+      { entityId: "potato", state: "peeled", tags: [] },
+      cut,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(result.instance.state, "sliced");
   });
 
@@ -184,20 +226,30 @@ describe("applyAction — preconditions", () => {
       capabilities: { isPeelable: true },
       statePrerequisites: { peel: "boiled" },
     });
-    const peel = makeAction({ id: "peel", requiredTargetCapability: "isPeelable", outputs: { transformedState: "peeled" } });
+    const peel = makeAction({
+      id: "peel",
+      requiredTargetCapability: "isPeelable",
+      outputs: { transformedState: "peeled" },
+    });
     const entities = new Map([
       ["potato", potatoWithWrongRule],
       ["egg", egg],
     ]);
 
     assert.throws(
-      () => applyAction({ entityId: "potato", state: "boiled", tags: [] }, peel, entities, NO_TOOLS),
+      () =>
+        applyAction({ entityId: "potato", state: "boiled", tags: [] }, peel, entities, NO_TOOLS),
       /forbidden transition/
     );
     // The exact same boiled -> peeled move is not just permitted for egg,
     // it's the ONLY way to satisfy egg's own statePrerequisites — proving
     // both entities' rules are held independently, with zero cross-talk.
-    const result = applyAction({ entityId: "egg", state: "boiled", tags: [] }, peel, entities, NO_TOOLS);
+    const result = applyAction(
+      { entityId: "egg", state: "boiled", tags: [] },
+      peel,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(result.instance.state, "peeled");
   });
 
@@ -207,12 +259,21 @@ describe("applyAction — preconditions", () => {
       capabilities: { isSeasonable: true },
       invalidTransitions: { mashed: ["raw"] },
     });
-    const salt = makeAction({ id: "salt", requiredTargetCapability: "isSeasonable", outputs: { addsTag: "salted" } });
+    const salt = makeAction({
+      id: "salt",
+      requiredTargetCapability: "isSeasonable",
+      outputs: { addsTag: "salted" },
+    });
     const entities = new Map([["potato", potato]]);
 
     // nextState stays "mashed" (unchanged) — never matches an entry that
     // only lists "raw" as forbidden from "mashed".
-    const result = applyAction({ entityId: "potato", state: "mashed", tags: [] }, salt, entities, NO_TOOLS);
+    const result = applyAction(
+      { entityId: "potato", state: "mashed", tags: [] },
+      salt,
+      entities,
+      NO_TOOLS
+    );
     assert.deepEqual(result.instance, { entityId: "potato", state: "mashed", tags: ["salted"] });
   });
 
@@ -264,14 +325,20 @@ describe("applyAction — preconditions", () => {
       () => applyAction(instance, action, entities, NO_TOOLS, {}, new Set(["water"])),
       /requires an available ingredient with capability "isFryingMedium"/
     );
-    assert.doesNotThrow(() => applyAction(instance, action, entities, NO_TOOLS, {}, new Set(["water", "oil"])));
+    assert.doesNotThrow(() =>
+      applyAction(instance, action, entities, NO_TOOLS, {}, new Set(["water", "oil"]))
+    );
   });
 
   test("requiredToolCapabilities checks ANY available tool asserting the capability, not one hardcoded id — the pot-vs-pan case", () => {
     const egg = makeEntity({ id: "egg" });
     const pot = makeEntity({ id: "pot", kind: "tool", capabilities: { isDeepVessel: true } });
     const pan = makeEntity({ id: "pan", kind: "tool", capabilities: { isDeepVessel: false } });
-    const saucepan = makeEntity({ id: "saucepan", kind: "tool", capabilities: { isDeepVessel: true } });
+    const saucepan = makeEntity({
+      id: "saucepan",
+      kind: "tool",
+      capabilities: { isDeepVessel: true },
+    });
     const action = makeAction({ id: "boil", requiredToolCapabilities: ["isDeepVessel"] });
     const entities = new Map([
       ["egg", egg],
@@ -320,7 +387,9 @@ describe("applyAction — preconditions", () => {
       /requires an available tool with capability "isDeepVessel"/
     );
     // Both present — passes.
-    assert.doesNotThrow(() => applyAction(instance, action, entities, new Set(["pot", "thermometer"])));
+    assert.doesNotThrow(() =>
+      applyAction(instance, action, entities, new Set(["pot", "thermometer"]))
+    );
   });
 });
 
@@ -335,7 +404,10 @@ describe("applyAction — parameters", () => {
       outputs: { transformedStateFromParameter: "shape" },
     });
 
-    assert.throws(() => applyAction(instance, action, entities, NO_TOOLS), /requires a "shape" parameter/);
+    assert.throws(
+      () => applyAction(instance, action, entities, NO_TOOLS),
+      /requires a "shape" parameter/
+    );
     assert.throws(
       () => applyAction(instance, action, entities, NO_TOOLS, { shape: "julienned" }),
       /only diced, sliced are valid/
@@ -347,7 +419,9 @@ describe("applyAction — parameters", () => {
   test("numericRange parameter: out-of-bounds and non-numeric both throw, in-range passes", () => {
     const action = makeAction({
       id: "fry",
-      parameters: [{ id: "durationSeconds", required: false, numericRange: { unit: "s", min: 1, max: 600 } }],
+      parameters: [
+        { id: "durationSeconds", required: false, numericRange: { unit: "s", min: 1, max: 600 } },
+      ],
       outputs: { transformedState: "fried" },
     });
 
@@ -359,13 +433,17 @@ describe("applyAction — parameters", () => {
       () => applyAction(instance, action, entities, NO_TOOLS, { durationSeconds: "not-a-number" }),
       /expected a number between 1 and 600/
     );
-    assert.doesNotThrow(() => applyAction(instance, action, entities, NO_TOOLS, { durationSeconds: "30" }));
+    assert.doesNotThrow(() =>
+      applyAction(instance, action, entities, NO_TOOLS, { durationSeconds: "30" })
+    );
   });
 
   test("an optional parameter that's simply absent doesn't throw", () => {
     const action = makeAction({
       id: "fry",
-      parameters: [{ id: "durationSeconds", required: false, numericRange: { unit: "s", min: 1, max: 600 } }],
+      parameters: [
+        { id: "durationSeconds", required: false, numericRange: { unit: "s", min: 1, max: 600 } },
+      ],
       outputs: { transformedState: "fried" },
     });
     assert.doesNotThrow(() => applyAction(instance, action, entities, NO_TOOLS));
@@ -378,7 +456,12 @@ describe("applyAction — outputs & conservation of mass", () => {
     const action = makeAction({ id: "salt", outputs: { addsTag: "salted" } });
     const entities = new Map([["potato", potato]]);
 
-    const once = applyAction({ entityId: "potato", state: "raw", tags: [] }, action, entities, NO_TOOLS);
+    const once = applyAction(
+      { entityId: "potato", state: "raw", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.deepEqual(once.instance.tags, ["salted"]);
 
     const twice = applyAction(once.instance, action, entities, NO_TOOLS);
@@ -401,16 +484,32 @@ describe("applyAction — outputs & conservation of mass", () => {
       ["egg_white", eggWhite],
     ]);
 
-    const peel = makeAction({ id: "peel", outputs: { spawnsTargetByproducts: true, destroysTarget: true } });
-    const peeled = applyAction({ entityId: "egg", state: "boiled", tags: [] }, peel, entities, NO_TOOLS);
+    const peel = makeAction({
+      id: "peel",
+      outputs: { spawnsTargetByproducts: true, destroysTarget: true },
+    });
+    const peeled = applyAction(
+      { entityId: "egg", state: "boiled", tags: [] },
+      peel,
+      entities,
+      NO_TOOLS
+    );
     assert.deepEqual(
       peeled.spawned.map((s) => s.entityId),
       ["egg_shell"],
       "PEEL should fall back to producedByproducts, not the separate-specific override"
     );
 
-    const separate = makeAction({ id: "separate", outputs: { spawnsTargetByproducts: true, destroysTarget: true } });
-    const separated = applyAction({ entityId: "egg", state: "raw", tags: [] }, separate, entities, NO_TOOLS);
+    const separate = makeAction({
+      id: "separate",
+      outputs: { spawnsTargetByproducts: true, destroysTarget: true },
+    });
+    const separated = applyAction(
+      { entityId: "egg", state: "raw", tags: [] },
+      separate,
+      entities,
+      NO_TOOLS
+    );
     assert.deepEqual(
       separated.spawned.map((s) => s.entityId),
       ["egg_shell", "egg_yolk", "egg_white"]
@@ -421,14 +520,21 @@ describe("applyAction — outputs & conservation of mass", () => {
     const egg = makeEntity({ id: "egg", producedByproducts: ["egg_yolk", "egg_shell"] });
     // egg_yolk can carry "pasteurized" onward; egg_shell can't (not a
     // meaningful concept for a shell) — the filter must drop it there.
-    const eggYolk = makeEntity({ id: "egg_yolk", possibleStates: ["raw"], possibleTags: ["pasteurized"] });
+    const eggYolk = makeEntity({
+      id: "egg_yolk",
+      possibleStates: ["raw"],
+      possibleTags: ["pasteurized"],
+    });
     const eggShell = makeEntity({ id: "egg_shell", possibleStates: ["raw"], possibleTags: [] });
     const entities = new Map([
       ["egg", egg],
       ["egg_yolk", eggYolk],
       ["egg_shell", eggShell],
     ]);
-    const separate = makeAction({ id: "separate", outputs: { spawnsTargetByproducts: true, destroysTarget: true } });
+    const separate = makeAction({
+      id: "separate",
+      outputs: { spawnsTargetByproducts: true, destroysTarget: true },
+    });
 
     const result = applyAction(
       { entityId: "egg", state: "raw", tags: ["pasteurized"] },
@@ -446,7 +552,11 @@ describe("applyAction — outputs & conservation of mass", () => {
     // The exact real-world case a user named: peel a dirty potato, THEN
     // wash it — the peel byproduct was already spawned by the time WASH
     // runs, so washing the potato's flesh cannot retroactively clean it.
-    const potato = makeEntity({ id: "potato", producedByproducts: ["potato_peel"], capabilities: { isWashable: true } });
+    const potato = makeEntity({
+      id: "potato",
+      producedByproducts: ["potato_peel"],
+      capabilities: { isWashable: true },
+    });
     const potatoPeel = makeEntity({
       id: "potato_peel",
       possibleStates: ["raw", "fried"],
@@ -458,12 +568,24 @@ describe("applyAction — outputs & conservation of mass", () => {
       ["potato", potato],
       ["potato_peel", potatoPeel],
     ]);
-    const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled", spawnsTargetByproducts: true } });
-    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
+    const peel = makeAction({
+      id: "peel",
+      outputs: { transformedState: "peeled", spawnsTargetByproducts: true },
+    });
+    const wash = makeAction({
+      id: "wash",
+      requiredTargetCapability: "isWashable",
+      outputs: { addsTag: "washed" },
+    });
     const fry = makeAction({ id: "fry", outputs: { transformedState: "fried" } });
 
     // Peeled BEFORE washing — the spawned peel inherits nothing.
-    const peelResult = applyAction({ entityId: "potato", state: "raw", tags: [] }, peel, entities, NO_TOOLS);
+    const peelResult = applyAction(
+      { entityId: "potato", state: "raw", tags: [] },
+      peel,
+      entities,
+      NO_TOOLS
+    );
     const dirtyPeel = peelResult.spawned.find((s) => s.entityId === "potato_peel")!;
     assert.deepEqual(dirtyPeel.tags, []);
 
@@ -485,7 +607,11 @@ describe("applyAction — outputs & conservation of mass", () => {
   });
 
   test("a byproduct spawned from an ALREADY-washed parent inherits 'washed' and needs no extra step", () => {
-    const potato = makeEntity({ id: "potato", producedByproducts: ["potato_peel"], capabilities: { isWashable: true } });
+    const potato = makeEntity({
+      id: "potato",
+      producedByproducts: ["potato_peel"],
+      capabilities: { isWashable: true },
+    });
     const potatoPeel = makeEntity({
       id: "potato_peel",
       possibleStates: ["raw", "fried"],
@@ -497,11 +623,23 @@ describe("applyAction — outputs & conservation of mass", () => {
       ["potato", potato],
       ["potato_peel", potatoPeel],
     ]);
-    const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled", spawnsTargetByproducts: true } });
-    const wash = makeAction({ id: "wash", requiredTargetCapability: "isWashable", outputs: { addsTag: "washed" } });
+    const peel = makeAction({
+      id: "peel",
+      outputs: { transformedState: "peeled", spawnsTargetByproducts: true },
+    });
+    const wash = makeAction({
+      id: "wash",
+      requiredTargetCapability: "isWashable",
+      outputs: { addsTag: "washed" },
+    });
     const fry = makeAction({ id: "fry", outputs: { transformedState: "fried" } });
 
-    const washed = applyAction({ entityId: "potato", state: "raw", tags: [] }, wash, entities, NO_TOOLS).instance;
+    const washed = applyAction(
+      { entityId: "potato", state: "raw", tags: [] },
+      wash,
+      entities,
+      NO_TOOLS
+    ).instance;
     const peelResult = applyAction(washed, peel, entities, NO_TOOLS);
     const cleanPeel = peelResult.spawned.find((s) => s.entityId === "potato_peel")!;
     assert.deepEqual(cleanPeel.tags, ["washed"]);
@@ -513,8 +651,16 @@ describe("applyAction — outputs & conservation of mass", () => {
   test("destroysTarget marks the result destroyed, but still reports the pre-destruction instance for logging", () => {
     const egg = makeEntity({ id: "egg" });
     const entities = new Map([["egg", egg]]);
-    const action = makeAction({ id: "crack", outputs: { destroysTarget: true, transformedState: "cracked" } });
-    const result = applyAction({ entityId: "egg", state: "raw", tags: [] }, action, entities, NO_TOOLS);
+    const action = makeAction({
+      id: "crack",
+      outputs: { destroysTarget: true, transformedState: "cracked" },
+    });
+    const result = applyAction(
+      { entityId: "egg", state: "raw", tags: [] },
+      action,
+      entities,
+      NO_TOOLS
+    );
     assert.equal(result.destroyed, true);
     assert.equal(result.instance.state, "cracked");
   });
@@ -552,7 +698,11 @@ describe("applyAction — outputs & conservation of mass", () => {
 
   test("combinesInto merges tags from BOTH instances (filtered), destroys both, spawns exactly one new instance", () => {
     const potato = makeEntity({ id: "fried_potato", possibleTags: ["salted"] });
-    const egg = makeEntity({ id: "beaten_egg", capabilities: { isCombinable: true }, possibleTags: ["salted"] });
+    const egg = makeEntity({
+      id: "beaten_egg",
+      capabilities: { isCombinable: true },
+      possibleTags: ["salted"],
+    });
     const mixture = makeEntity({
       id: "tortilla_mixture",
       possibleStates: ["combined"],
@@ -591,11 +741,16 @@ describe("applyAction — outputs & conservation of mass", () => {
 });
 
 describe("applyAction — HACCP / CCP enforcement", () => {
-  const eggEntity = makeEntity({ id: "egg_cracked", criticalControlPointsByAction: { fry: "egg_cooking" } });
+  const eggEntity = makeEntity({
+    id: "egg_cracked",
+    criticalControlPointsByAction: { fry: "egg_cooking" },
+  });
   const entities = new Map([["egg_cracked", eggEntity]]);
   const fry = makeAction({
     id: "fry",
-    parameters: [{ id: "durationSeconds", required: false, numericRange: { unit: "s", min: 0, max: 6000 } }],
+    parameters: [
+      { id: "durationSeconds", required: false, numericRange: { unit: "s", min: 0, max: 6000 } },
+    ],
     outputs: { transformedState: "fried" },
   });
   const instance: Instance = { entityId: "egg_cracked", state: "raw", tags: [] };
@@ -613,7 +768,16 @@ describe("applyAction — HACCP / CCP enforcement", () => {
     const ccp = makeCcp({ id: "egg_cooking", heldSeconds: 60, advisoryOnly: false });
     const ccps = new Map([["egg_cooking", ccp]]);
     assert.throws(
-      () => applyAction(instance, fry, entities, NO_TOOLS, { durationSeconds: "10" }, NO_INGREDIENTS, ccps),
+      () =>
+        applyAction(
+          instance,
+          fry,
+          entities,
+          NO_TOOLS,
+          { durationSeconds: "10" },
+          NO_INGREDIENTS,
+          ccps
+        ),
       /is below "egg_cooking"'s minimum hold/
     );
   });
@@ -621,13 +785,30 @@ describe("applyAction — HACCP / CCP enforcement", () => {
   test("meeting or exceeding the threshold produces no warning and doesn't throw", () => {
     const ccp = makeCcp({ id: "egg_cooking", heldSeconds: 60, advisoryOnly: false });
     const ccps = new Map([["egg_cooking", ccp]]);
-    const result = applyAction(instance, fry, entities, NO_TOOLS, { durationSeconds: "60" }, NO_INGREDIENTS, ccps);
+    const result = applyAction(
+      instance,
+      fry,
+      entities,
+      NO_TOOLS,
+      { durationSeconds: "60" },
+      NO_INGREDIENTS,
+      ccps
+    );
     assert.deepEqual(result.warnings, []);
   });
 
   test("referencing a CCP id that isn't in the loaded ccps map throws a self-diagnosing error", () => {
     assert.throws(
-      () => applyAction(instance, fry, entities, NO_TOOLS, { durationSeconds: "10" }, NO_INGREDIENTS, NO_CCPS),
+      () =>
+        applyAction(
+          instance,
+          fry,
+          entities,
+          NO_TOOLS,
+          { durationSeconds: "10" },
+          NO_INGREDIENTS,
+          NO_CCPS
+        ),
       /references unknown CriticalControlPoint "egg_cooking".*was ccps not loaded/
     );
   });
@@ -640,7 +821,16 @@ describe("applyAction — HACCP / CCP enforcement", () => {
     // declare durationSeconds at all — isolates the CCP check's OWN guard.
     const undeclaredFry = makeAction({ id: "fry", outputs: { transformedState: "fried" } });
     assert.throws(
-      () => applyAction(instance, undeclaredFry, entities, NO_TOOLS, { durationSeconds: "abc" }, NO_INGREDIENTS, ccps),
+      () =>
+        applyAction(
+          instance,
+          undeclaredFry,
+          entities,
+          NO_TOOLS,
+          { durationSeconds: "abc" },
+          NO_INGREDIENTS,
+          ccps
+        ),
       /is not a valid number.*refusing to proceed/
     );
   });
@@ -666,13 +856,25 @@ describe("applyAction — HACCP / CCP enforcement", () => {
 
     test("autonomous mode, explicitly overridden for this CCP id: warns, does not throw", () => {
       const policy: SafetyPolicy = { mode: "autonomous", humanOverrides: new Set(["egg_cooking"]) };
-      const result = applyAction(instance, fry, entities, NO_TOOLS, params, NO_INGREDIENTS, ccps, policy);
+      const result = applyAction(
+        instance,
+        fry,
+        entities,
+        NO_TOOLS,
+        params,
+        NO_INGREDIENTS,
+        ccps,
+        policy
+      );
       assert.equal(result.warnings.length, 1);
       assert.match(result.warnings[0], /autonomous mode: proceeding on explicit human override/);
     });
 
     test("autonomous mode, override for a DIFFERENT CCP id: still hard reject", () => {
-      const policy: SafetyPolicy = { mode: "autonomous", humanOverrides: new Set(["some_other_ccp"]) };
+      const policy: SafetyPolicy = {
+        mode: "autonomous",
+        humanOverrides: new Set(["some_other_ccp"]),
+      };
       assert.throws(
         () => applyAction(instance, fry, entities, NO_TOOLS, params, NO_INGREDIENTS, ccps, policy),
         /rejected by default/

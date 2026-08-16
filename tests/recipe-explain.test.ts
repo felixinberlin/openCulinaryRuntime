@@ -28,8 +28,16 @@ describe("explainRecipe — tools", () => {
   const pan = makeEntity({ id: "pan", kind: "tool", capabilities: { isFryingVessel: true } });
   const pot = makeEntity({ id: "pot", kind: "tool", capabilities: { isDeepVessel: true } });
   const egg = makeEntity({ id: "egg" });
-  const fry = makeAction({ id: "fry", requiredTools: ["pan"], outputs: { transformedState: "fried" } });
-  const boil = makeAction({ id: "boil", requiredToolCapabilities: ["isDeepVessel"], outputs: { transformedState: "boiled" } });
+  const fry = makeAction({
+    id: "fry",
+    requiredTools: ["pan"],
+    outputs: { transformedState: "fried" },
+  });
+  const boil = makeAction({
+    id: "boil",
+    requiredToolCapabilities: ["isDeepVessel"],
+    outputs: { transformedState: "boiled" },
+  });
   const entities = new Map([
     ["pan", pan],
     ["pot", pot],
@@ -44,7 +52,14 @@ describe("explainRecipe — tools", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
       availableTools: [],
-      sequence: [{ actionId: "fry", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "fry",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.tools.needed, ["pan"]);
@@ -55,7 +70,14 @@ describe("explainRecipe — tools", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
       availableTools: ["pan"],
-      sequence: [{ actionId: "fry", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "fry",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.tools.missing, []);
@@ -65,7 +87,14 @@ describe("explainRecipe — tools", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
       availableTools: ["pan"], // pan doesn't assert isDeepVessel — pot does
-      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.equal(report.tools.missingCapabilities.length, 1);
@@ -77,7 +106,14 @@ describe("explainRecipe — tools", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
       availableTools: ["pot"],
-      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.tools.missingCapabilities, []);
@@ -101,7 +137,14 @@ describe("explainRecipe — ingredients", () => {
     ]);
     const recipe = makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }], // no oil in this recipe at all
-      sequence: [{ actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "fry",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.equal(report.ingredients.missing.length, 1);
@@ -119,7 +162,14 @@ describe("explainRecipe — ingredients", () => {
         { id: "potato-1", entityId: "potato", state: "raw", tags: [] },
         { id: "oil-1", entityId: "oil", state: "liquid", tags: [] },
       ],
-      sequence: [{ actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: ["oil-1"] }],
+      sequence: [
+        {
+          actionId: "fry",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: ["oil-1"],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.ingredients.missing, []);
@@ -219,7 +269,14 @@ describe("explainRecipe — prep advisories (terminal starting state)", () => {
   test("an instance starting in a terminal state fires an advisory naming it", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "burned", tags: [] }],
-      sequence: [{ actionId: "boil", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.equal(report.prepAdvisories.length, 1);
@@ -230,7 +287,14 @@ describe("explainRecipe — prep advisories (terminal starting state)", () => {
   test("an instance starting in a normal (non-terminal) state fires no advisory", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
-      sequence: [{ actionId: "boil", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.prepAdvisories, []);
@@ -247,7 +311,11 @@ describe("explainRecipe — prep advisories (terminal starting state)", () => {
 });
 
 describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", () => {
-  const potato = makeEntity({ id: "potato", possibleStates: ["raw", "peeled"], capabilities: { isWashable: true } });
+  const potato = makeEntity({
+    id: "potato",
+    possibleStates: ["raw", "peeled"],
+    capabilities: { isWashable: true },
+  });
   const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled" } });
   const wash = makeAction({ id: "wash", outputs: { addsTag: "washed" } });
   const entities = new Map([["potato", potato]]);
@@ -259,7 +327,14 @@ describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", (
   test("PEEL with no prior WASH on a washable entity fires a heuristic advisory", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
-      sequence: [{ actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "peel",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.equal(report.prepAdvisories.length, 1);
@@ -271,8 +346,18 @@ describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", (
     const recipe = makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
       sequence: [
-        { actionId: "wash", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
-        { actionId: "peel", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
+        {
+          actionId: "wash",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+        {
+          actionId: "peel",
+          targetInstanceId: "potato-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
       ],
     });
     const report = explainRecipe(recipe, entities, actions);
@@ -284,7 +369,14 @@ describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", (
     const localEntities = new Map([["egg", eggEntity]]);
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
-      sequence: [{ actionId: "peel", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "peel",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, localEntities, actions);
     assert.deepEqual(report.prepAdvisories, []);
@@ -296,12 +388,21 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
   // actual numbers, not hardcoded to that exact file's contents).
   const potato = makeEntity({
     id: "potato",
-    thermophysical: { thermalConductivityWPerMK: 0.5, densityKgPerM3: 1080, specificHeatJPerKgK: 3730 },
+    thermophysical: {
+      thermalConductivityWPerMK: 0.5,
+      densityKgPerM3: 1080,
+      specificHeatJPerKgK: 3730,
+    },
     physicalDimensions: { typicalDiameterCm: { min: 5, max: 6.35 } },
   });
   const cut = makeAction({
     id: "cut",
-    parameters: [{ id: "shape", allowedValues: ["sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered"] }],
+    parameters: [
+      {
+        id: "shape",
+        allowedValues: ["sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered"],
+      },
+    ],
     outputs: { transformedStateFromParameter: "shape" },
   });
   const fry = makeAction({
@@ -309,7 +410,11 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     parameters: [
       { id: "oilTempC", numericRange: { unit: "celsius", min: 0, max: 300 } },
       { id: "durationSeconds", numericRange: { unit: "seconds", min: 0, max: 3600 } },
-      { id: "topCookingMethod", allowedValues: ["untouched", "basted", "covered", "flipped"], required: false },
+      {
+        id: "topCookingMethod",
+        allowedValues: ["untouched", "basted", "covered", "flipped"],
+        required: false,
+      },
     ],
     outputs: { transformedState: "fried" },
   });
@@ -319,15 +424,27 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     ["fry", fry],
   ]);
 
-  function friedPotatoRecipe(shape: string, oilTempC: string, durationSeconds: string, topCookingMethod?: string) {
+  function friedPotatoRecipe(
+    shape: string,
+    oilTempC: string,
+    durationSeconds: string,
+    topCookingMethod?: string
+  ) {
     return makeRecipe({
       initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
       sequence: [
-        { actionId: "cut", targetInstanceId: "potato-1", params: { shape }, availableIngredientInstanceIds: [] },
+        {
+          actionId: "cut",
+          targetInstanceId: "potato-1",
+          params: { shape },
+          availableIngredientInstanceIds: [],
+        },
         {
           actionId: "fry",
           targetInstanceId: "potato-1",
-          params: topCookingMethod ? { oilTempC, durationSeconds, topCookingMethod } : { oilTempC, durationSeconds },
+          params: topCookingMethod
+            ? { oilTempC, durationSeconds, topCookingMethod }
+            : { oilTempC, durationSeconds },
           availableIngredientInstanceIds: [],
         },
       ],
@@ -337,7 +454,10 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
   test("duration below even the fastest real case fires a strong advisory", () => {
     const report = explainRecipe(friedPotatoRecipe("diced", "175", "3"), entities, actions);
     const hit = report.timingAdvisories.find((a) => a.includes("FASTEST real"));
-    assert.ok(hit, `expected a FASTEST-case advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.ok(
+      hit,
+      `expected a FASTEST-case advisory, got: ${JSON.stringify(report.timingAdvisories)}`
+    );
     assert.match(hit!, /"diced" piece/);
   });
 
@@ -346,7 +466,10 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     // thick) cases are far apart at 175C — pick a duration in between.
     const report = explainRecipe(friedPotatoRecipe("diced", "175", "40"), entities, actions);
     const hit = report.timingAdvisories.find((a) => a.includes("UNCERTAIN"));
-    assert.ok(hit, `expected an UNCERTAIN-range advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.ok(
+      hit,
+      `expected an UNCERTAIN-range advisory, got: ${JSON.stringify(report.timingAdvisories)}`
+    );
   });
 
   test("duration comfortably above the slowest real case does NOT fire", () => {
@@ -356,7 +479,11 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
 
   test("topCookingMethod: basted narrows the window to one heated face, distinguishable from the no-signal case", () => {
     const noSignal = explainRecipe(friedPotatoRecipe("diced", "175", "3"), entities, actions);
-    const basted = explainRecipe(friedPotatoRecipe("diced", "175", "3", "basted"), entities, actions);
+    const basted = explainRecipe(
+      friedPotatoRecipe("diced", "175", "3", "basted"),
+      entities,
+      actions
+    );
     const noSignalHit = noSignal.timingAdvisories.find((a) => a.includes("FASTEST real"))!;
     const bastedHit = basted.timingAdvisories.find((a) => a.includes("FASTEST real"))!;
     assert.match(noSignalHit, /oil coverage not stated — both submerged and shallow considered/);
@@ -366,7 +493,10 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
   test("oilTempC at or below the fork-tender target fires a distinct, real 'can never reach it' advisory", () => {
     const report = explainRecipe(friedPotatoRecipe("sliced", "80", "600"), entities, actions);
     const hit = report.timingAdvisories.find((a) => a.includes("can NEVER reach doneness"));
-    assert.ok(hit, `expected the unreachable-target advisory, got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.ok(
+      hit,
+      `expected the unreachable-target advisory, got: ${JSON.stringify(report.timingAdvisories)}`
+    );
   });
 
   test("an entity with incomplete thermophysical data is silently skipped, not an error", () => {
@@ -375,7 +505,12 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     const recipe = makeRecipe({
       initialInventory: [{ id: "garlic-1", entityId: "garlic", state: "raw", tags: [] }],
       sequence: [
-        { actionId: "cut", targetInstanceId: "garlic-1", params: { shape: "sliced" }, availableIngredientInstanceIds: [] },
+        {
+          actionId: "cut",
+          targetInstanceId: "garlic-1",
+          params: { shape: "sliced" },
+          availableIngredientInstanceIds: [],
+        },
         {
           actionId: "fry",
           targetInstanceId: "garlic-1",
@@ -398,7 +533,10 @@ describe("explainRecipe — fry-timing-vs-geometry (cut-dimensions.ts + heat-pen
     // thick enough that 3s should still fire the FASTEST-case advisory.
     const report = explainRecipe(friedPotatoRecipe("halved", "175", "3"), entities, actions);
     const hit = report.timingAdvisories.find((a) => a.includes("FASTEST real"));
-    assert.ok(hit, `expected a FASTEST-case advisory for "halved", got: ${JSON.stringify(report.timingAdvisories)}`);
+    assert.ok(
+      hit,
+      `expected a FASTEST-case advisory for "halved", got: ${JSON.stringify(report.timingAdvisories)}`
+    );
     assert.match(hit!, /"halved" piece/);
   });
 });
@@ -414,7 +552,11 @@ describe("explainRecipe — actionKinds", () => {
     requiredIngredientCapabilities: ["isBoilingMedium"],
     outputs: { transformedState: "boiled" },
   });
-  const salt = makeAction({ id: "salt", actionKind: "instantaneous", outputs: { addsTag: "salted" } });
+  const salt = makeAction({
+    id: "salt",
+    actionKind: "instantaneous",
+    outputs: { addsTag: "salted" },
+  });
   const undated = makeAction({ id: "undated", outputs: {} }); // no actionKind set at all
   const entities = new Map([
     ["water", water],
@@ -433,8 +575,18 @@ describe("explainRecipe — actionKinds", () => {
         { id: "water-1", entityId: "water", state: "cold", tags: [] },
       ],
       sequence: [
-        { actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: ["water-1"] },
-        { actionId: "salt", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] },
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: ["water-1"],
+        },
+        {
+          actionId: "salt",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
       ],
     });
     const report = explainRecipe(recipe, entities, actions);
@@ -447,7 +599,14 @@ describe("explainRecipe — actionKinds", () => {
   test("an action with no actionKind set at all reports null, not a silent guess", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
-      sequence: [{ actionId: "undated", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "undated",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.actionKinds, [{ stepIndex: 0, actionId: "undated", actionKind: null }]);
@@ -456,7 +615,14 @@ describe("explainRecipe — actionKinds", () => {
   test("an unknown actionId is skipped (runRecipe's job to reject, not this report's)", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
-      sequence: [{ actionId: "nonexistent", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "nonexistent",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions);
     assert.deepEqual(report.actionKinds, []);
@@ -467,7 +633,11 @@ describe("explainRecipe — actionKinds", () => {
 // only, same scoping as actionKinds above.
 describe("explainRecipe — executionBounds", () => {
   const water = makeEntity({ id: "water", capabilities: { isBoilingMedium: true } });
-  const egg = makeEntity({ id: "egg", capabilities: { isBoilable: true }, criticalControlPointsByAction: { boil: "egg_cooking" } });
+  const egg = makeEntity({
+    id: "egg",
+    capabilities: { isBoilable: true },
+    criticalControlPointsByAction: { boil: "egg_cooking" },
+  });
   const boil = makeAction({
     id: "boil",
     actionKind: "continuous",
@@ -475,7 +645,11 @@ describe("explainRecipe — executionBounds", () => {
     requiredIngredientCapabilities: ["isBoilingMedium"],
     outputs: { transformedState: "boiled" },
   });
-  const salt = makeAction({ id: "salt", actionKind: "instantaneous", outputs: { addsTag: "salted" } });
+  const salt = makeAction({
+    id: "salt",
+    actionKind: "instantaneous",
+    outputs: { addsTag: "salted" },
+  });
   const entities = new Map([
     ["water", water],
     ["egg", egg],
@@ -484,10 +658,17 @@ describe("explainRecipe — executionBounds", () => {
     ["boil", boil],
     ["salt", salt],
   ]);
-  const ccps = new Map([[
-    "egg_cooking",
-    makeCcp({ id: "egg_cooking", heldC: 63, heldSeconds: 15, source: "test fixture — egg_cooking CCP" }),
-  ]]);
+  const ccps = new Map([
+    [
+      "egg_cooking",
+      makeCcp({
+        id: "egg_cooking",
+        heldC: 63,
+        heldSeconds: 15,
+        source: "test fixture — egg_cooking CCP",
+      }),
+    ],
+  ]);
 
   test("a continuous action's bound is reported when ccps is supplied", () => {
     const recipe = makeRecipe({
@@ -495,7 +676,14 @@ describe("explainRecipe — executionBounds", () => {
         { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
         { id: "water-1", entityId: "water", state: "cold", tags: [] },
       ],
-      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: ["water-1"] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: ["water-1"],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions, ccps);
     assert.equal(report.executionBounds.length, 1);
@@ -507,7 +695,14 @@ describe("explainRecipe — executionBounds", () => {
   test("omitting ccps entirely (existing call sites, unaffected) still reports a bound, just with no CCP floor", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
-      sequence: [{ actionId: "boil", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions); // no ccps argument at all
     assert.equal(report.executionBounds.length, 1);
@@ -517,7 +712,14 @@ describe("explainRecipe — executionBounds", () => {
   test("an instantaneous action never appears in executionBounds", () => {
     const recipe = makeRecipe({
       initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
-      sequence: [{ actionId: "salt", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "salt",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     const report = explainRecipe(recipe, entities, actions, ccps);
     assert.deepEqual(report.executionBounds, []);
@@ -526,7 +728,14 @@ describe("explainRecipe — executionBounds", () => {
   test("a step targeting a SPAWNED instance (not in initialInventory) is resolved via the spawnedEntityIds parameter", () => {
     const recipe = makeRecipe({
       initialInventory: [],
-      sequence: [{ actionId: "boil", targetInstanceId: "egg-9", params: {}, availableIngredientInstanceIds: [] }],
+      sequence: [
+        {
+          actionId: "boil",
+          targetInstanceId: "egg-9",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
+      ],
     });
     // Without spawnedEntityIds: silently skipped (egg-9 isn't in initialInventory).
     const withoutMap = explainRecipe(recipe, entities, actions, ccps);
@@ -555,7 +764,9 @@ describe("explainRecipe — allergenSummary", () => {
   const ccps = new Map();
 
   test("empty when no initialInventory entity carries a tracked allergen", () => {
-    const recipe = makeRecipe({ initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }] });
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
+    });
     assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, []);
   });
 
@@ -577,11 +788,16 @@ describe("explainRecipe — allergenSummary", () => {
         { id: "butter-1", entityId: "butter", state: "cold", tags: [] },
       ],
     });
-    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, ["egg", "milk"]);
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, [
+      "egg",
+      "milk",
+    ]);
   });
 
   test("an initialInventory entityId not present in the entities map is silently skipped, not thrown", () => {
-    const recipe = makeRecipe({ initialInventory: [{ id: "x-1", entityId: "unknown_entity", state: "raw", tags: [] }] });
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "x-1", entityId: "unknown_entity", state: "raw", tags: [] }],
+    });
     assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, []);
   });
 });

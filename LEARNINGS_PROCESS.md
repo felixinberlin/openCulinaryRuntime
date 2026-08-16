@@ -828,3 +828,32 @@ was made. Don't rewrite or delete old entries — append.
   `scientific_review_report.md`, `WORLD_MODEL_OPTIMIZATION.md`): kept for
   provenance, not left cluttering the repo root.
 
+## 2026-08-16
+
+### A fabricated cross-reference caught before it shipped, not after
+
+- **Writing `REFERENCES.md`'s TICKET 6 additions (`PAPER_NOTES_2608.04768.md`
+  — background-reading citations for a future ticket), a sentence claimed
+  the Sochacki et al. (2024) robotic-chef survey was "also independently
+  the source cited elsewhere in this repo for the frying-science/oil-
+  absorption discussion."** That specific claim was invented mid-sentence
+  — plausible-sounding (this repo genuinely does cite frying-science
+  sources, and Sochacki is a real, common surname in this exact
+  literature), not grounded in anything actually checked first. Caught
+  immediately, before the edit was finalized, by running the check that
+  should have come BEFORE writing the sentence, not after: `grep -i
+  sochacki` across `REFERENCES.md` and every `data/`/`src/` file — zero
+  hits, no such citation exists anywhere in this repo. Corrected in the
+  same change (the sentence removed) rather than left as a plausible-but-
+  false cross-reference for a future reader to trust.
+- **Worth logging as a real, current-session occurrence, not a
+  hypothetical this repo's discipline merely guards against** — this is
+  the identical failure shape `LEARNINGS_ENGINE.md`/this file have
+  flagged before in OTHER material (the frying-science doc's fabricated
+  bibliography; `WORLD_MODEL_OPTIMIZATION.md`'s inaccurate `COMBINE`
+  claim), just produced this time by this session's own writing rather
+  than an externally-supplied document. The lesson those earlier entries
+  drew — verify a specific, checkable claim before it ships, don't rely
+  on how plausible it sounds — applies exactly as much to a sentence
+  written five minutes ago as to a document written by someone else.
+

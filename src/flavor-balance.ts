@@ -136,6 +136,59 @@ export function counterbalancesInvolving(taste: PerceptualTarget): readonly Flav
   return FLAVOR_COUNTERBALANCES.filter((c) => c.suppressed === taste || c.by === taste);
 }
 
+const DILUTION_CITATION: Citation = {
+  source:
+    "The standard dilution / conservation-of-solute relation (general chemistry — the C₁V₁ = C₂V₂ mass-balance form, adding a zero-concentration diluent), not a culinary or food-science-specific claim",
+  confidence: "standard_reference",
+  note:
+    "Encountered applied to cooking specifically in PAPER_NOTES_2608.04768.md's analysis of Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026) — their equation (7), for their supervisory process's over-seasoning correction case. Cited here against the underlying physics itself (textbook, uncontroversial), NOT against that paper — the paper is where this repo found the CULINARY APPLICATION of a standard relation, not the source of the relation. See REFERENCES.md.",
+};
+
+/**
+ * Volume of neutral diluent needed to bring a solution from `currentConc`
+ * down to `targetConc`, by conservation of solute (mass of dissolved solute
+ * doesn't change when diluent — assumed zero-concentration — is added, only
+ * the volume it's dissolved in does). `TICKET 3` of `PAPER_NOTES_2608.04768.md`
+ * — see `DILUTION_CITATION` above for why the physics is cited independently
+ * of that paper.
+ *
+ * Concentration units are caller-defined but MUST match between
+ * `currentConc`/`targetConc` (e.g. both g salt per L water, or both a
+ * percentage) — this function has no notion of what the units mean, only
+ * that they're consistent. `currentVolume`'s unit is whatever unit the
+ * returned volume comes out in (liters in, liters of diluent needed out).
+ *
+ * REAL, STATED LIMIT, same "informational depth, not a formula that solves
+ * the whole problem" discipline this file's own bottom doc comment already
+ * holds for `FLAVOR_COUNTERBALANCES`: this assumes a well-mixed, homogeneous
+ * LIQUID solution — it does NOT apply to a dry-seasoned solid. An
+ * over-salted fried potato is not recoverable this way (there is no
+ * "volume" to dilute into; the salt is distributed unevenly across a solid
+ * surface, not dissolved in a bulk liquid) — the same category distinction
+ * `place.ts`'s own doc comment draws between a liquid MEDIUM and the solid
+ * food within it, applied here to seasoning instead of heat.
+ */
+export function dilutionVolumeToTarget(currentVolume: number, currentConc: number, targetConc: number): number {
+  if (currentVolume <= 0) {
+    throw new Error(`currentVolume must be positive, got ${currentVolume}.`);
+  }
+  if (currentConc < 0) {
+    throw new Error(`currentConc must be non-negative, got ${currentConc}.`);
+  }
+  if (targetConc <= 0) {
+    throw new Error(
+      `targetConc must be positive, got ${targetConc} — a target of zero or below would require infinite diluent, not a real dilution target.`
+    );
+  }
+  if (currentConc <= targetConc) {
+    // Already at or below target — nothing to dilute. Not an error: a
+    // caller checking "does this need correcting at all" should get a
+    // clean 0, not have to special-case this itself.
+    return 0;
+  }
+  return currentVolume * (currentConc / targetConc - 1);
+}
+
 /**
  * DEPTH LIMIT, stated explicitly (same discipline as every other
  * informational-only module in this vocabulary — see engine.ts's own file

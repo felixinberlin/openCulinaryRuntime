@@ -570,6 +570,21 @@ proven runnable, not just asserted.
       tests), `npm run validate` (all 12 real recipes, zero step
       errors), `tsc --noEmit`, and the full demo/capability-test sweep
       all clean.
+      \
+      **Extended 2026-08-16, TICKET 3 of `PAPER_NOTES_2608.04768.md`**:
+      `dilutionVolumeToTarget` — the REPAIR direction this file's own
+      counterbalance data never had. Given a real over-concentration
+      (e.g. an over-salted liquid), computes how much neutral diluent
+      brings it back to a target concentration, by conservation of
+      solute — the standard general-chemistry dilution relation
+      (`REFERENCES.md`), deliberately cited against the physics itself,
+      NOT the paper this technique was encountered applied to (a
+      preprint is the wrong confidence tier for uncontroversial textbook
+      physics — see `LEARNINGS_ENGINE.md` 2026-08-16). Explicitly does
+      NOT apply to a dry-seasoned solid (an over-salted fried potato is
+      not recoverable this way — no bulk liquid volume to dilute into),
+      stated in the function's own doc comment as the honest limit most
+      likely to be misapplied. 5 new unit tests.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
 - [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
@@ -1189,6 +1204,20 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       ground truth, not a second, parallel re-derivation of the spawn-id
       naming scheme. See `LEARNINGS_ENGINE.md` 2026-08-16 for the full
       reasoning on why the quick/wrong fix was rejected on sight.
+- [x] **`REFERENCES.md` TICKET 6 additions — closed 2026-08-16.** The
+      Song et al. (arXiv:2608.04768) citation itself updated to also cover
+      TICKET 2/3's use; four more background-reading citations added
+      under "Robotic / automated cooking systems" (Ma et al. 2011 — this
+      repo's own "Why this exists" framing predates it by fifteen years;
+      Yoneda et al. 2024's Statler and Mavrogiannis et al. 2024's
+      Cook2LTL — closest prior work to this repo's actual shape; Sochacki
+      et al. 2024's survey), named in `PAPER_NOTES_2608.04768.md` as
+      required reading before TICKET 4 (reachability) specifically, not
+      yet cited by any actual claim in `data/*.json`/`src/*.ts`. A
+      fabricated cross-reference in the first draft of this change
+      (a false claim that one of the four was "also independently the
+      source cited elsewhere in this repo") was caught and removed before
+      shipping — see `LEARNINGS_PROCESS.md` 2026-08-16.
 - [x] **`state` vs. `tags` modeling fix for `WASH` — closed 2026-08-15,
       found by a user correction, not self-discovered.** After the fix
       above, the user pointed out the wash/peel/cut order itself wasn't

@@ -86,6 +86,17 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   used in `src/altitude.ts`'s `atmosphericPressurePa`. Confidence:
   `standard_reference` — the same standard atmosphere model aviation,
   meteorology, and engineering reference tables are built on.
+- **Standard dilution / conservation-of-solute relation (general
+  chemistry)** — the C₁V₁ = C₂V₂ mass-balance form for diluting a solution
+  with a zero-concentration diluent, used in `src/flavor-balance.ts`'s
+  `dilutionVolumeToTarget` (TICKET 3, `PAPER_NOTES_2608.04768.md`).
+  Confidence: `standard_reference` — textbook, uncontroversial physics, not
+  a culinary or food-science-specific claim. Encountered applied to
+  cooking (over-seasoning correction) in Song, Huang, Sun, Tian, Wang & Li,
+  arXiv:2608.04768 (2026, "Robotic / automated cooking systems" section
+  above) — cited here against the underlying relation itself, deliberately
+  NOT against that paper, which is where this repo found the culinary
+  application, not the source of the physics.
 - **NIST Chemistry WebBook — Antoine equation coefficients for water**
   (A=8.07131, B=1730.63, C=233.426, valid 1–100°C) — water's own real
   vapor-pressure-vs-temperature curve, used in `src/altitude.ts`'s
@@ -471,6 +482,35 @@ it ever being mistaken for a safety citation.
   same paper (a real arithmetic looseness in its reported percentage
   improvements; an introduced-but-never-computed dataset-quality metric)
   that this repo does not rely on and should not be read as endorsing.
+
+Four more, named in `PAPER_NOTES_2608.04768.md` TICKET 6 as background
+reading, NOT yet cited by any claim in `data/*.json`/`src/*.ts` — listed
+here for the same reason the "Discussed, informs design reasoning" section
+above exists: real, relevant sources this repo's own docs point at, even
+before anything embeds them. Read before touching `ROADMAP.md`'s
+reachability-query work (`PAPER_NOTES_2608.04768.md` TICKET 4) specifically,
+per that ticket's own instruction.
+
+- **Ma, Yan, Fu & Zhao (2011)**, "A Chinese cooking robot for elderly and
+  disabled people," *Robotica* 29(6):843–852. This repo's own `README.md`/
+  `ROADMAP.md` "Why this exists" framing (cooking for someone who cannot
+  safely cook for themselves) is this paper's stated motivation, fifteen
+  years earlier — worth reading, and worth citing as such rather than
+  presenting the framing as novel to this repo.
+- **Yoneda, Fang, Li et al. (2024)**, "Statler: State-maintaining language
+  models for embodied reasoning," *Proc. IEEE ICRA*, Yokohama, pp. 15083–
+  15091. Closest prior work to this repo's actual shape (executable code
+  paired with an explicitly maintained world state, not an LLM asserting
+  world state directly — `ENGINE_INVARIANTS.md` #10).
+- **Mavrogiannis, Mavrogiannis & Aloimonos (2024)**, "Cook2LTL: Translating
+  cooking recipes to LTL formulae using large language models," *Proc.
+  IEEE ICRA*, Yokohama, pp. 17679–17686. Second-closest prior work: recipe
+  text compiled to an auditable intermediate representation, the same
+  broad move this repo's `RecipeScript`/Cooklang framing makes.
+- **Sochacki, Zhang, Abdulali & Iida (2024)**, "Towards practical robotic
+  chef: Review of relevant work and future challenges," *Journal of Field
+  Robotics* 41(5):1596–1616. Survey — the fastest route into the rest of
+  this literature.
 
 ## Simulation / robot-execution research
 

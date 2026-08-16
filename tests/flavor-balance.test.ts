@@ -5,6 +5,7 @@ import {
   FLAVOR_COUNTERBALANCES,
   FlavorCounterbalanceSchema,
   counterbalancesInvolving,
+  dilutionVolumeToTarget,
 } from "../src/flavor-balance.ts";
 
 describe("FLAVOR_COUNTERBALANCES", () => {
@@ -59,5 +60,36 @@ describe("counterbalancesInvolving", () => {
   test("a taste with no modeled pair returns an honest empty array, not an error", () => {
     assert.deepEqual(counterbalancesInvolving("umami"), []);
     assert.deepEqual(counterbalancesInvolving("neutral"), []);
+  });
+});
+
+// dilutionVolumeToTarget — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 3.
+describe("dilutionVolumeToTarget", () => {
+  test("exact-target no-op: already at targetConc requires zero diluent", () => {
+    assert.equal(dilutionVolumeToTarget(1, 10, 10), 0);
+  });
+
+  test("2x overshoot -> equal volume of diluent added (halves the concentration)", () => {
+    // 1L at concentration 10, target 5 (half): by conservation of solute,
+    // 10 units of solute in 1L must end up at 5 units/L -> 2L total -> 1L
+    // of diluent added. A direct hand-check of the formula, not just "some
+    // number came back".
+    assert.equal(dilutionVolumeToTarget(1, 10, 5), 1);
+  });
+
+  test("already below target -> 0, not a negative volume", () => {
+    assert.equal(dilutionVolumeToTarget(1, 3, 10), 0);
+  });
+
+  test("a real numeric case: 4x overshoot needs 3x the current volume in diluent", () => {
+    assert.equal(dilutionVolumeToTarget(2, 20, 5), 6); // 2 * (20/5 - 1) = 2*3 = 6
+  });
+
+  test("guards: non-positive currentVolume, negative currentConc, non-positive targetConc all throw", () => {
+    assert.throws(() => dilutionVolumeToTarget(0, 10, 5));
+    assert.throws(() => dilutionVolumeToTarget(-1, 10, 5));
+    assert.throws(() => dilutionVolumeToTarget(1, -1, 5));
+    assert.throws(() => dilutionVolumeToTarget(1, 10, 0));
+    assert.throws(() => dilutionVolumeToTarget(1, 10, -5));
   });
 });

@@ -837,3 +837,25 @@ was made. Don't rewrite or delete old entries — append.
   discovered a second time in the same session under a different name.
   Reproducing a known narrowness faithfully, and naming it as such, beats
   fixing it quietly in only one of two places that need to agree.
+
+### `dilutionVolumeToTarget` — citing the physics, not the paper that applied it (TICKET 3)
+
+- **Small, worth recording as a template for the next borrowed-equation
+  case: `PAPER_NOTES_2608.04768.md` TICKET 3 explicitly instructed "cite
+  against a standard reference... NOT against this paper — the paper is
+  where we found it applied to cooking, not the source of the physics,"
+  and that distinction turned out to matter for real, not just as a
+  citation-hygiene nicety.** The paper's equation (7) (Song et al.,
+  arXiv:2608.04768) is the textbook dilution/conservation-of-solute
+  relation (C₁V₁ = C₂V₂ form) — a preprint is genuinely the wrong
+  confidence tier to hang uncontroversial general-chemistry physics on,
+  even though it's exactly where this repo happened to encounter the
+  culinary application. `src/flavor-balance.ts`'s `DILUTION_CITATION`
+  cites the relation itself as `standard_reference`, with a note naming
+  the paper only as where the APPLICATION was found — keeping the
+  confidence tier honest to what's actually being claimed (a physical
+  law, not this specific unreviewed paper's authority) rather than
+  letting the paper's own `commonly_cited_unverified` tier (`REFERENCES.md`)
+  drag down a claim that deserves better. See `LEARNINGS_PROCESS.md`
+  2026-08-16 for a fabricated cross-reference caught and fixed in the
+  same TICKET 6 change.

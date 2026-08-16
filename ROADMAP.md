@@ -772,6 +772,39 @@ covered by what exists:**
       a place have any modeled doneness/burn consequence) remains real,
       separate, and still fully open, named explicitly in `remove.json`'s
       own `idleTimeScopeNote` rather than implied closed by this addition.
+- [x] **Tortilla FLIP physics, and the real link to FRY's `agitation`
+      parameter — closed 2026-08-16.** A direct user question ("is moving
+      potato pieces in oil the same logic as flipping a tortilla") plus a
+      critical review of a user-supplied external report (which got the
+      core physics WRONG — it modeled a mid-cook flip as equivalent to
+      simultaneous double-sided heating for the whole duration, the
+      physics of fully-submerged frying, not of a sequential flip).
+      `tortilla_mixture.json`/`tortilla_mixture_con_cebolla.json` gained a
+      REAL, computed `thermophysical` block (COMPUTED from THIS repo's
+      own `potato.json`/`egg.json` data via a real, cited 3:1 potato:egg
+      mass ratio and the same already-verified Choi-Okos component
+      equations, not the external report's ungrounded assumed
+      composition — see `REFERENCES.md`), plus a derived `physicalDimensions`
+      thickness. `scripts/tortilla-flip-physics-as-a-robot.ts`
+      (`npm run capability-test:tortilla-flip-physics`) reuses `heat-
+      penetration.ts`'s EXISTING slab model with ZERO code changes to
+      compute a real, honest BRACKET on the tortilla's center-doneness
+      time — `t_symmetric` (idealized both-faces-from-t=0, a real lower
+      bound) `<= t_actual_with_one_flip <= t_singleSided` (never flipped,
+      a real upper bound) — rather than a false-precision single number
+      for the exact one-flip case, which this repo's one-term
+      approximation genuinely cannot compute (it only exposes the CENTER
+      temperature, not the full spatial profile a real second stage would
+      need as its non-uniform initial condition). Formally names the
+      unifying concept as chemical engineering's "surface renewal theory"
+      (Danckwerts 1951/Higbie 1935, `REFERENCES.md`): stirring many small
+      pieces and flipping one large mass are the same operation — which
+      face is exposed to the heat source — at different scales. A real,
+      peer-reviewed contact heat-transfer coefficient for potato (512.2
+      W/(m²·K)) was also found and logged in `REFERENCES.md` as a
+      not-yet-embedded way to eventually tighten `heat-penetration.ts`'s
+      own stated Bi→∞ lower-bound caveat — not used here, named as a real
+      further possibility.
 - [ ] **Heat as a shared, time-varying property of a PLACE (pot/pan), not a
       per-action-call parameter on one ingredient.** Raised directly by the
       user while `SIMMER` was being built: "heat is a function inside a

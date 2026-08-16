@@ -905,3 +905,55 @@ was made. Don't rewrite or delete old entries — append.
   instead of quietly patched — see `ROADMAP.md`'s TICKET 4 entry and the
   "go back to the potato" work this same session continues into.
 
+### Critically reviewing a user-supplied document BEFORE coding from it — real content mixed with fabrication
+
+- **A user-supplied "tortilla thermal physics report" (2026-08-16) turned
+  out to be a genuine mix: real, correctly-quoted physics alongside
+  content that reads as fabricated** — and the only way to tell which was
+  which was checking each specific claim independently, not trusting the
+  document's own confident tone or its (fake) bracketed citation numbers
+  uniformly. The Choi-Okos component equations it quoted were REAL — they
+  exactly reproduced `potato.json`'s own already-independently-verified
+  carbohydrate equation, a genuine, checkable cross-match. Its
+  "Metadatos Técnicos" section, by contrast, referenced a source file
+  (`/src/simulation/physics/ThermalSystem.ts`) and a "Design System"
+  burner-animation feature that DO NOT EXIST anywhere in this repository
+  — simply false, not a matter of confidence tier. A document being right
+  about hard, checkable science (real equations) is NOT evidence it's
+  right about soft, repo-specific claims (what code exists) — these are
+  different questions requiring different checks, and conflating them
+  ("the math checks out, so the rest is probably fine too") would have
+  been a real, avoidable mistake.
+- **The document's own bracketed reference numbers (`[30]`, `[461]`,
+  etc.) had NO attached bibliography anywhere — a real, immediate
+  disqualifier for treating anything in it as "cited," independent of
+  whether the underlying claims later turned out to be true.** Worth
+  restating as a general rule, not specific to this document: a citation
+  marker with nothing behind it is not weaker evidence than no citation
+  at all — it's WORSE, because it reads as sourced when it isn't. This
+  repo's own `CitationSchema` has exactly two honest confidence tiers for
+  a reason; "cited by a document with no bibliography" is not a third,
+  hidden tier that gets to borrow the credibility of a real citation.
+- **The document's CENTRAL physical claim was subtly wrong in a way that
+  required actually understanding the underlying math, not just checking
+  numbers against known values** — it modeled "tortilla with one flip" as
+  physically equivalent to a slab heated symmetrically from BOTH faces
+  for the ENTIRE duration (the real physics of fully-submerged frying),
+  when a real flip is SEQUENTIAL: one face conducts for time t1, the
+  boundary condition switches, and stage two begins from a genuinely
+  NON-UNIFORM temperature profile the one-term approximation's own
+  uniform-initial-temperature assumption doesn't support reusing fresh.
+  The headline "4x faster, 75% time savings" number the document computed
+  was real arithmetic applied to the WRONG physical scenario — a
+  qualitatively-plausible-sounding, quantitatively-precise-looking result
+  that was still, underneath, answering a different question than the
+  one asked. Caught by working through what "symmetric heating from t=0"
+  and "flip at the midpoint" actually mean physically, not by finding an
+  arithmetic error — the arithmetic was fine; the physics it was applied
+  to wasn't what actually happens. Resolved not by fixing the document's
+  number, but by computing something more honest instead: a real BRACKET
+  (`scripts/tortilla-flip-physics-as-a-robot.ts`) using both the
+  (correct, already-existing) symmetric case and single-sided case as
+  real bounds, rather than presenting a false-precision single answer for
+  the case this repo's model genuinely cannot compute exactly.
+

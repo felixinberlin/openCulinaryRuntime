@@ -1261,3 +1261,52 @@ was made. Don't rewrite or delete old entries — append.
   it's actually being used for — `YOLK_TARGET_TEMP_C`'s own citation
   note says this directly rather than letting the strongest component
   imply more rigor for the whole table than it actually has.
+
+### Tortilla flip physics — a real bracket beats a false-precision single number, and zero new code was needed
+
+- **The actual missing piece for closing `tortilla_mixture.json`'s
+  long-standing `knownGap` note turned out to be DATA, not code** —
+  `heat-penetration.ts`'s slab-conduction model already fully supports
+  computing this (it's entity-agnostic, built for potato but never
+  restricted to it); `tortilla_mixture.json` simply had no
+  `thermophysical` block at all. Worth restating as a general pattern
+  this session keeps re-finding: before writing new physics, check
+  whether the existing physics already covers the new case and the real
+  gap is just unpopulated data — the same shape as onion reusing
+  `place.ts`/`heat-source.ts` with zero changes, or `altitude.ts`
+  composing with `place.ts` for free.
+- **Deriving `tortilla_mixture.json`'s composition from THIS repo's own
+  `potato.json`/`egg.json` data, instead of adopting the user-supplied
+  document's assumed 70/6/12/11/1% figures, produced a genuinely
+  MORE traceable number, not just a differently-sourced one** — every
+  step (the 3:1 mass ratio, the Choi-Okos component equations, the
+  water-component reuse of `water.json`'s own 4186 figure) is
+  independently checkable against something already in this repo. The
+  resulting specific heat (3713 J/(kg·K)) landed within ~6% of the
+  document's own unrelated-composition figure (3491) — a loose but real
+  sanity check that neither number is wildly implausible, without either
+  number needing to validate the other.
+- **`physicalDimensions.typicalDiameterCm`'s citation had to record a PAN
+  size assumption, not a tortilla-thickness measurement directly** — the
+  actually-needed number (slab thickness, for `heat-penetration.ts`) was
+  DERIVED from pan diameter + real mass + this entity's own just-computed
+  density, not looked up. Storing the derived thickness itself as a
+  second field would have created two numbers that could silently drift
+  out of sync if either input changed; storing the assumption
+  (`typicalDiameterCm`) and deriving thickness on demand (as
+  `scripts/tortilla-flip-physics-as-a-robot.ts` does) keeps exactly one
+  source of truth — the same "don't duplicate a derivable fact" principle
+  `execution-bounds.ts`'s CCP floor and `isTerminalState` already follow.
+- **Reporting a BRACKET (`t_symmetric <= t_actual <= t_singleSided`)
+  instead of a single computed number for the one-flip case is a
+  genuinely different engineering choice than this session's usual
+  "compute one honest number, name its limits in prose"** — here, the
+  honest answer for the exact question asked (one flip, halfway through)
+  literally isn't computable with this repo's existing one-term
+  approximation (which only exposes center temperature, not the full
+  spatial profile stage two would need as a real initial condition).
+  Rather than force a number out of a model that can't produce one
+  honestly, or skip the question entirely, bounding it with two numbers
+  the model CAN produce correctly is a real, useful, honest answer in its
+  own right — worth keeping as a named pattern for future cases where the
+  exact computation is out of reach but real bounds aren't.

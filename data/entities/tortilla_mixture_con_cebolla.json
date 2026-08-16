@@ -27,6 +27,16 @@
     "isFlippable": true,
     "isRestable": true
   },
+  "thermophysical": {
+    "densityKgPerM3": 1068,
+    "thermalConductivityWPerMK": 0.46,
+    "specificHeatJPerKgK": 3713,
+    "citation": {
+      "source": "Reuses tortilla_mixture.json's own just-computed values directly, not a fresh derivation — see that file's own citation for the full potato:egg 3:1 Choi-Okos derivation.",
+      "confidence": "commonly_cited_unverified",
+      "note": "A deliberate simplification: onion's real proportion in this dish is much smaller than potato/egg (roughly one onion per ~1kg potato), and onion.json's own composition (89% water) is similarly water-dominated to potato/egg's, so this repo treats its effect on the composite's bulk thermophysical properties as negligible rather than computing a third, separately-weighted composite for a likely-imperceptible difference — named explicitly as a simplification, not silently assumed identical."
+    }
+  },
   "sensory": {
     "taste": ["neutral", "sweet"],
     "texture": ["thick"],

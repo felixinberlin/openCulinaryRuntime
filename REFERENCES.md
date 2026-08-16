@@ -325,6 +325,54 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
 
 ## Culinary technique & food science literature
 
+- **Convergent Spanish tortilla de patatas recipe sources** (Spanish
+  Sabores, Kitchen Frau, and others already cross-checked in this repo)
+  — the commonly-cited ~1kg potato to ~6 large eggs (~350g) home-recipe
+  ratio, roughly 3:1 by mass. Used in `data/entities/tortilla_mixture.
+  json`'s `thermophysical` citation (added 2026-08-16) to derive a REAL
+  composite composition from this repo's own `potato.json`/`egg.json`
+  data, replacing a user-supplied external report's own unsourced,
+  ungrounded 70/6/12/11/1% assumption. Confidence:
+  `commonly_cited_unverified` — a real but genuinely variable home-recipe
+  proportion (real recipes range roughly 2:1 to 4:1), not a fixed
+  physical constant.
+- **Danckwerts, "Significance of Liquid-Film Coefficients in Gas
+  Absorption," *Industrial & Engineering Chemistry* (1951)**, building on
+  Higbie's penetration theory (1935) — the standard chemical-engineering
+  "surface renewal theory": periodically renewing which boundary surface
+  is exposed to a transfer medium changes the effective transfer rate.
+  Used descriptively (not computed) as the formal name for the real
+  mechanism connecting `fry.json`'s `agitation` parameter (stirring many
+  small pieces) and `tortilla_mixture.json`'s `FLIP` (turning one large
+  mass) — both are the same underlying operation at different scales.
+  Confidence: `standard_reference` — classical, textbook chemical
+  engineering theory, cited for the concept, not re-derived here.
+- **"Experimental and numerical study of heat and mass transfer during
+  contact heating of sliced potatoes"** (peer-reviewed, ScienceDirect,
+  2019) — a measured contact heat-transfer coefficient of 512.2 ± 5.8
+  W/(m²·K) for potato, and a finding that heating is actually rate-
+  limited by water evaporating at a moving boiling front forming an
+  insulating dry crust — a real, quantified alternative to `heat-
+  penetration.ts`'s own stated Bi→∞ (instant-surface-jump) simplification
+  and lower-bound caveat. NOT yet used to compute anything (the full
+  paper is paywalled; only the abstract-level figure above was verified)
+  — named here as a real, citable, NOT-yet-embedded possibility for
+  tightening that existing caveat, the same "discussed, not yet embedded"
+  discipline this file already applies to Di Lorenzo & Di Maio elsewhere.
+  Confidence: `standard_reference` for the coefficient itself
+  (peer-reviewed), though this repo has only verified it via a search
+  summary, not the primary text directly.
+- **Published oil-absorption figures for deep/par-fried potato (23-28%
+  at 160-180°C)** — checked 2026-08-16 while deriving `tortilla_mixture.
+  json`'s composition, and deliberately NOT used: this figure's real
+  scope is high-temperature deep/par-frying, a genuinely different
+  technique from `tortilla-de-patatas.json`'s own already-established
+  low-heat, long-duration confit-style potato frying — the same
+  scope-mismatch discipline `garlic_peel.json`'s clove-vs-bulk citation
+  already applies. `tortilla_mixture.json`'s composition omits oil as a
+  separately-weighted component for exactly this reason (no scope-matched
+  figure found), named as a real, probably-conservative gap rather than
+  borrowing the mismatched number.
 - **Kalogianni & Smith, "Effect of frying variables on French fry
   properties," *International Journal of Food Science and Technology*
   48(4):758–770 (2013)** — https://doi.org/10.1111/ijfs.12024 — peer-reviewed

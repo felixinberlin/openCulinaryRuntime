@@ -157,6 +157,12 @@ const heatPlaceAction = makeAction({
   requiredToolCapabilities: ["isDeepVessel"],
   outputs: {},
 });
+const removeAction = makeAction({
+  id: "remove",
+  verb: "REMOVE",
+  outputs: {},
+  parameters: [{ id: "removalMethod", required: false, allowedValues: ["slotted_spoon", "tongs", "strainer_drain", "poured_out"] }],
+});
 const placeBoilAction = makeAction({
   id: "boil",
   verb: "BOIL",
@@ -207,6 +213,7 @@ const placeActions = new Map([
   ["fill", fillAction],
   ["place_in", placeInAction],
   ["heat_place", heatPlaceAction],
+  ["remove", removeAction],
   ["boil", placeBoilAction],
   ["simmer", placeSimmerAction],
   ["fry", placeFryAction],
@@ -320,6 +327,93 @@ describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
     const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /unknown heat source "nonexistent"/);
+  });
+});
+
+// REMOVE — 2026-08-16, ROADMAP.md's "no verb for physically removing
+// something from a shared vessel" gap, closing garlic-oil-potatoes.json's
+// own removalNote.
+describe("runRecipe — REMOVE", () => {
+  function filledPotRecipe(sequence: RecipeScript["sequence"]) {
+    return makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "1.2", startTempC: "15" },
+        availableIngredientInstanceIds: [],
+      },
+      ...sequence,
+    ]);
+  }
+
+  test("removes a placed instance from placeContents, leaving co-located instances behind", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "place_in", targetInstanceId: "egg-2", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1", removalMethod: "tongs" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.deepEqual(result.placeContents.get("pot-1"), ["egg-2"]);
+  });
+
+  test("removing the only occupant leaves an empty (not missing) placeContents entry", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.deepEqual(result.placeContents.get("pot-1"), []);
+  });
+
+  test("rejected against a place that doesn't exist yet — same error shape as PLACE_IN's", () => {
+    const recipe = makePlaceRecipe([
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /FILL it first/);
+  });
+
+  test("rejected for an instance that was never PLACE_IN'd — a real authoring mistake, not a silent no-op", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /not currently there/);
+  });
+
+  test("rejected the SECOND time on the same instance — retrySafe: true means fails loudly, not that it's idempotent", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /not currently there/);
+  });
+
+  test("an unrecognized removalMethod value is rejected, same validation as placementMethod's", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1", removalMethod: "bare_hands" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /removalMethod: bare_hands/);
+  });
+
+  test("does not transform the removed instance's own state/tags — bookkeeping only, same as PLACE_IN", () => {
+    const recipe = filledPotRecipe([
+      { actionId: "place_in", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+      { actionId: "remove", targetInstanceId: "egg-1", params: { placeId: "pot-1" }, availableIngredientInstanceIds: [] },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.finalInventory.get("egg-1")?.state, "raw");
   });
 });
 

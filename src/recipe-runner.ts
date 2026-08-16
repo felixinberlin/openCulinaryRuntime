@@ -101,6 +101,19 @@ import { emptyPlace, pourInto, advanceTempSeconds, isAtTargetTemp, type PlaceSta
  * target per step, alternating hot/cold would need repeated `HEAT_PLACE`
  * calls with different targets in sequence, which this DOES technically now
  * support mechanically but has not been proven against that real recipe.
+ *
+ * **`REMOVE` added 2026-08-16**, the fourth PLACE-shaped verb, closing
+ * ROADMAP.md's own named "no verb for physically removing something from a
+ * shared vessel" gap — the exact case `garlic-oil-potatoes.json`'s
+ * `removalNote` names by id. `handleRemove` is `handlePlaceIn`'s direct
+ * inverse: takes `step.targetInstanceId` out of `placeContents[placeId]`,
+ * requires the place to exist AND the instance to actually currently be
+ * there (a real, catchable authoring mistake otherwise), does not touch the
+ * instance's own state/tags. Proven via `scripts/remove-from-place-as-a-
+ * robot.ts` (`npm run capability-test:remove-from-place`). Deliberately
+ * closes only the REMOVAL mechanism, not the adjacent, still-fully-open
+ * "elapsed idle time causes doneness/burn consequences" half of the same
+ * ROADMAP entry — see `remove.json`'s own `idleTimeScopeNote`.
  */
 
 export interface RecipeStepError {
@@ -260,6 +273,49 @@ function handlePlaceIn(
   log.push(
     `${action.verb} ${step.targetInstanceId} into place "${placeId}" (currently ${place.currentTempC.toFixed(1)}°C` +
       `${placementMethod ? `, ${placementMethod}` : ""}) — now shared by [${contents.join(", ")}]`
+  );
+}
+
+/** REMOVE — the inverse of PLACE_IN: take `step.targetInstanceId` out of a
+ *  place's shared contents, so it's no longer counted among the instances a
+ *  later HEAT_PLACE step's shared heat applies to. Same "bookkeeping only,
+ *  does not itself transform the instance's own state/tags" shape as
+ *  PLACE_IN — a later cooking step against the same (now un-placed)
+ *  instance still runs however it always would. */
+function handleRemove(
+  action: Action,
+  step: RecipeStep,
+  places: Map<string, PlaceState>,
+  placeContents: Map<string, string[]>,
+  log: string[]
+): void {
+  const placeId = requireParam(step.params, "placeId", action.verb);
+  const place = places.get(placeId);
+  if (!place) {
+    throw new Error(`${action.verb} requires place "${placeId}" to already exist — FILL it first.`);
+  }
+
+  const removalMethod = step.params.removalMethod;
+  const allowedRemovalMethods = action.parameters.find((p) => p.id === "removalMethod")?.allowedValues;
+  if (removalMethod !== undefined && allowedRemovalMethods && !allowedRemovalMethods.includes(removalMethod)) {
+    throw new Error(
+      `${action.verb} got "removalMethod: ${removalMethod}", but only ${allowedRemovalMethods.join(", ")} are valid.`
+    );
+  }
+
+  const contents = placeContents.get(placeId) ?? [];
+  if (!contents.includes(step.targetInstanceId)) {
+    throw new Error(
+      `${action.verb} cannot remove "${step.targetInstanceId}" from place "${placeId}" — it is not currently there ` +
+        `(never PLACE_IN'd, or already removed). Currently in "${placeId}": [${contents.join(", ") || "nothing"}].`
+    );
+  }
+
+  const remaining = contents.filter((id) => id !== step.targetInstanceId);
+  placeContents.set(placeId, remaining);
+  log.push(
+    `${action.verb} ${step.targetInstanceId} from place "${placeId}" (currently ${place.currentTempC.toFixed(1)}°C` +
+      `${removalMethod ? `, ${removalMethod}` : ""}) — now shared by [${remaining.join(", ") || "nothing"}]`
   );
 }
 
@@ -444,12 +500,14 @@ export function runRecipe(
 
     // PLACE STEPS — handled entirely outside applyAction's generic
     // instantaneous-transition model; see this file's own top doc comment.
-    if (action.id === "fill" || action.id === "place_in" || action.id === "heat_place") {
+    if (action.id === "fill" || action.id === "place_in" || action.id === "heat_place" || action.id === "remove") {
       try {
         if (action.id === "fill") {
           handleFill(action, step, instance, entities, availableTools, places, log);
         } else if (action.id === "place_in") {
           handlePlaceIn(action, step, entities, availableTools, places, placeContents, log);
+        } else if (action.id === "remove") {
+          handleRemove(action, step, places, placeContents, log);
         } else {
           handleHeatPlace(action, step, entities, availableTools, heatSources, places, placeContents, log);
         }

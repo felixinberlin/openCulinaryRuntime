@@ -46,6 +46,7 @@
     "capability-test:reachability": "tsx scripts/is-goal-still-reachable.ts",
     "capability-test:caramelize-onion": "tsx scripts/caramelize-onion-as-a-robot.ts",
     "capability-test:allergens": "tsx scripts/allergens-as-a-robot.ts",
+    "capability-test:remove-from-place": "tsx scripts/remove-from-place-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

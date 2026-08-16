@@ -1,0 +1,90 @@
+{
+  "id": "garlic_oil_potatoes_shared_pan",
+  "names": {
+    "en": "Garlic Oil Potatoes, Place-Aware (with REMOVE)",
+    "es": "Patatas al Ajillo Conscientes del Lugar (con retirada del ajo)"
+  },
+  "initialInventory": [
+    { "id": "garlic-1", "entityId": "garlic", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [], "quantity": { "kind": "precise", "amount": 0.3, "unit": "kg" } },
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "pinch",
+        "approxRangeGrams": { "min": 0.3, "max": 0.6 },
+        "citation": {
+          "source": "Commonly cited culinary conversion: 1 pinch ≈ 1/16 tsp of fine table salt",
+          "confidence": "commonly_cited_unverified",
+          "note": "Same figure garlic-oil-potatoes.json's own identical salt instance already uses."
+        }
+      }
+    }
+  ],
+  "availableTools": ["knife", "pan"],
+  "sequence": [
+    { "actionId": "peel", "targetInstanceId": "garlic-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "garlic-1", "params": { "shape": "halved" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "diced" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "fill",
+      "targetInstanceId": "oil-1",
+      "params": { "placeId": "pan-1", "toolEntityId": "pan", "massKg": "0.3", "startTempC": "20" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "heat_place",
+      "targetInstanceId": "oil-1",
+      "params": { "placeId": "pan-1", "heatSourceId": "gas", "targetTempC": "175", "tickSeconds": "15" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "garlic-1",
+      "params": { "placeId": "pan-1", "placementMethod": "lowered_by_hand" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "garlic-1",
+      "params": { "heatLevel": "medium", "durationSeconds": "240", "doneness": "brown", "oilTempC": "175", "placeId": "pan-1" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    {
+      "actionId": "infuse",
+      "targetInstanceId": "oil-1",
+      "params": { "heatLevel": "medium", "durationSeconds": "240" },
+      "availableIngredientInstanceIds": ["garlic-1"]
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "garlic-1",
+      "params": { "placeId": "pan-1", "removalMethod": "tongs" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "potato-1",
+      "params": { "placeId": "pan-1", "placementMethod": "lowered_by_hand" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "potato-1",
+      "params": { "heatLevel": "medium", "durationSeconds": "600", "oilTempC": "175", "placeId": "pan-1" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "The REAL, place-aware fix for the exact gap garlic-oil-potatoes.json's own removalNote named by id: 'no verb for physically remove this instance from the vessel... flagged rather than faked.' Built 2026-08-16 alongside data/actions/remove.json, mirroring fried-egg-shared-pan.json's own FILL/HEAT_PLACE/PLACE_IN pattern (not a replacement for garlic-oil-potatoes.json, which stays as-is — a deliberate sibling, same precedent as fried-egg-shared-pan.json alongside huevo-frito.json): oil is FILLed into pan-1 and HEAT_PLACEd to 175°C, garlic is PLACE_IN'd and FRIEd (oilTempC/placeId now genuinely checked, not just informational — recipe-runner.ts's assertPlaceReady requires pan-1 to actually be at FRY's own declared oilTempC minimum), the same still-frying garlic INFUSEs the oil, and THEN — the actual point of this recipe — REMOVE takes garlic-1 OUT of pan-1 before potato ever goes in, exactly matching the real technique's own instruction to not let it rest in the hot oil. potato-1 is PLACE_IN'd and FRIEd in the SAME still-hot, now garlic-infused oil.",
+    "removeProofNote": "Checkable directly in the run log: after REMOVE, placeContents['pan-1'] no longer lists garlic-1 (the log's own 'now shared by [...]' line shows only potato-1 once it's placed) — garlic-1 is not exposed to any further HEAT_PLACE ticks in this recipe (there are none after removal, but the mechanism is real: a longer recipe with additional HEAT_PLACE steps after this point would correctly no longer heat garlic-1 at all). See scripts/remove-from-place-as-a-robot.ts for the direct proof of REMOVE's rejection path (removing something never placed, or already removed) — this recipe only proves the success path, since npm run validate's end-to-end simulation requires every step to succeed.",
+    "scopeNote": "Deliberately does NOT attempt to also model 'idle time causes burning' (the adjacent, still-fully-open half of the same ROADMAP gap — see remove.json's own idleTimeScopeNote) — this recipe proves the REMOVAL mechanism works, not that skipping it would have been detected as a failure."
+  }
+}

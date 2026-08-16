@@ -729,19 +729,29 @@ covered by what exists:**
       `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
       deliberately-scoped-out deeper alternative, not silently implied
       closed. Still open: `WHISK`, `STEAM`, `ROAST`/`GRILL`, `MARINATE`,
-      `KNEAD`, `STRAIN`/`DRAIN`. **New name added 2026-08-15, found via a real
-      recipe bug**: `REMOVE`/`TAKE_OUT` — "physically take this instance
-      out of the vessel it's cooking in." `garlic-oil-potatoes.json`'s
-      original step order fried garlic, then left it sitting in the hot
-      oil through three more (unrelated) potato-prep steps — precisely
-      the real mistake a user's own described technique warns against
-      ("don't let it rest in the oil, burnt garlic tastes bad"), never
-      caught because nothing in this repo models elapsed idle time OR has
-      a verb for removing something from a shared vessel. Worked around
-      via step reordering (potato prep moved before garlic ever touches
-      the oil, so `FRY` potato is the step immediately after garlic
-      finishes) — a real improvement, but not the same thing as an actual
-      removal action; the gap itself is still open.
+      `KNEAD`, `STRAIN`/`DRAIN`.
+      **`REMOVE` closed 2026-08-16** (`data/actions/remove.json`, found
+      2026-08-15 via the exact real recipe bug this entry names —
+      `garlic-oil-potatoes.json` originally fried garlic, then left it
+      sitting in the hot oil through three unrelated potato-prep steps,
+      precisely the mistake a user's own described technique warns against
+      "don't let it rest in the oil, burnt garlic tastes bad"). The fourth
+      PLACE-shaped verb (`recipe-runner.ts`'s `handleRemove`, `place_in`'s
+      direct inverse): takes an instance out of a place's shared
+      `placeContents`, rejecting the removal if the place doesn't exist or
+      the instance isn't currently there. Proven two ways: the SUCCESS path
+      end-to-end via a new sibling recipe,
+      `data/recipes/garlic-oil-potatoes-shared-pan.json` (the real,
+      place-aware fix — `garlic-oil-potatoes.json` itself was deliberately
+      NOT migrated, see its own updated `removalNote`), and both
+      REJECTION paths (never-placed, removed-twice) via
+      `scripts/remove-from-place-as-a-robot.ts`
+      (`npm run capability-test:remove-from-place`). Deliberately closes
+      only the REMOVAL mechanism — the adjacent "nothing models elapsed
+      idle time" half of this same original gap (does staying too long in
+      a place have any modeled doneness/burn consequence) remains real,
+      separate, and still fully open, named explicitly in `remove.json`'s
+      own `idleTimeScopeNote` rather than implied closed by this addition.
 - [ ] **Heat as a shared, time-varying property of a PLACE (pot/pan), not a
       per-action-call parameter on one ingredient.** Raised directly by the
       user while `SIMMER` was being built: "heat is a function inside a

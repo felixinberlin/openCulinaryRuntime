@@ -1,0 +1,68 @@
+{
+  "id": "remove",
+  "verb": "REMOVE",
+  "names": {
+    "en": "Remove",
+    "es": "Retirar"
+  },
+  "requiredTools": [],
+  "requiredToolCapabilities": [],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "parameters": [
+    {
+      "id": "placeId",
+      "names": {
+        "en": "Place id",
+        "es": "Id del lugar"
+      },
+      "required": true,
+      "allowedValues": [
+        "pot-1",
+        "pot-2",
+        "pan-1",
+        "pan-2"
+      ]
+    },
+    {
+      "id": "removalMethod",
+      "names": {
+        "en": "Removal method",
+        "es": "Método de retirada"
+      },
+      "required": false,
+      "allowedValues": [
+        "slotted_spoon",
+        "tongs",
+        "strainer_drain",
+        "poured_out"
+      ]
+    }
+  ],
+  "outputs": {},
+  "duration": "fixed",
+  "precision": "required",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "Added 2026-08-16, closing ROADMAP.md's 'More common technique verbs' REMOVE/TAKE_OUT gap — named there directly from a real recipe bug: garlic-oil-potatoes.json originally fried garlic, then left it sitting in the hot oil through three unrelated potato-prep steps, exactly the mistake a user's own described technique warns against ('don't let it rest in the oil, burnt garlic tastes bad'), never caught because no verb existed for 'physically take this instance out of the vessel it's cooking in.' The inverse of place_in.json, handled the same way (src/recipe-runner.ts's handleRemove, outside applyAction's generic model, not a state/tag transformation — outputs: {}, same as PLACE_IN): removes the target from the named place's placeContents, so it's no longer counted among the instances a later HEAT_PLACE step's shared heat applies to. Requires the target to actually BE in that place first (checked against placeContents, not just that the place exists) — removing something never placed there, or already removed, is a real, catchable authoring mistake, not a silent no-op.",
+    "toolCapabilityNote": "Deliberately NO requiredToolCapabilities, unlike PLACE_IN's isVessel — the vessel itself already exists by the time anything could be removed from it (REMOVE's own handler fails if the named place doesn't exist), so there's nothing further to check there. A real, named gap left open: no removal-utensil concept (slotted spoon vs. tongs vs. a strainer) is actually REQUIRED or verified — removalMethod below records which was used, informationally, the same non-enforcement depth every other categorical parameter in this vocabulary already has.",
+    "removalMethodNote": "Four real, genuinely different techniques, not variants of the same motion: 'slotted_spoon'/'tongs' lift discrete solid pieces (garlic cloves, potato pieces) out while leaving the liquid medium behind — the direct case this verb was built for. 'strainer_drain' is the bulk equivalent (a whole batch poured through a strainer/colander at once, e.g. draining pasta or a full batch of fries) rather than individual-piece retrieval. 'poured_out' is the inverse case: the SOLID stays (or the vessel itself is inverted), the LIQUID medium is what's actually removed/discarded — e.g. draining excess oil off before serving. Informational only, same discipline as placementMethod/placementMethod-adjacent parameters elsewhere in this vocabulary.",
+    "idleTimeScopeNote": "This verb closes the REMOVAL half of the gap it was named for, deliberately NOT the other, larger half: ROADMAP.md's own framing named BOTH 'nothing models elapsed idle time' AND 'no removal verb' as missing. REMOVE gives a recipe a real way to say an instance has LEFT a place's shared heat — it does not itself compute or track how long something sat in a place before being removed, nor whether that idle time caused any doneness/burn consequence (that would need linking place.ts's own elapsed-time model to a placed instance's own cooking progress, a genuinely separate, larger, still-fully-open simulation gap, not silently implied closed by this addition).",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off act (lift this out, once) — the same reasoning place_in.json's identical note already gives for its own mirror-image action. Both discriminators agree.",
+    "retrySafeNote": "retrySafe: true for the SAME reason combine.json's is — not silently idempotent, but fails LOUDLY instead of silently repeating: once an instance is removed, it's no longer in placeContents, so a blind retry hits handleRemove's own 'is not currently in place' check and errors instead of duplicating or corrupting the place's contents list."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "The instance is physically no longer inside the named vessel — a camera or a human confirms it, no sensor threshold applies.",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "hot_liquid",
+      "severity": "high",
+      "note": "Lifting something out of a hot/boiling medium carries the same splash/scald risk as lowering something in (place_in.json's identical hazard) — hot oil or water clinging to the removed piece or utensil."
+    }
+  ],
+  "retrySafe": true
+}

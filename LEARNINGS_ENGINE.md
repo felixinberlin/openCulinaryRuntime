@@ -1165,3 +1165,54 @@ was made. Don't rewrite or delete old entries — append.
   contain the allergenic material, or was it separated out), not answered
   by a blanket "byproducts inherit the parent's allergens" rule, which
   would have been wrong here.
+
+### `REMOVE` — closing a named gap by building its sibling recipe, not rewriting the one that found it
+
+- **A real, previously-named gap (`garlic-oil-potatoes.json`'s own
+  `removalNote`, written 2026-08-15) gets closed by the mechanism it was
+  named for, but the recipe that FOUND the gap doesn't have to be the
+  recipe that PROVES the fix.** Migrating `garlic-oil-potatoes.json`
+  itself to `placeId`-aware `FILL`/`HEAT_PLACE`/`PLACE_IN` steps would
+  have meant reworking an already-working, already-validated recipe's
+  core mechanics (adding real oil-heating physics where a bare
+  `heatLevel` string sufficed before) — a real rewrite, not a small
+  patch, and a needless risk to something that already worked. Building
+  `garlic-oil-potatoes-shared-pan.json` as a NEW sibling file instead
+  (same dish, same real technique, actually place-aware) is the same
+  precedent `fried-egg-shared-pan.json` already set alongside
+  `huevo-frito.json` — worth restating as a general rule now that it's
+  happened twice: when a new mechanism makes an EXISTING recipe's
+  original approach newly express-able more accurately, the default move
+  is a new sibling proving it, not a retrofit risking what already works.
+- **`REMOVE`'s `retrySafe: true` required checking `retrySafe`'s own
+  doc comment carefully, not pattern-matching from `PLACE_IN`** — an
+  early instinct was `false` (mirroring `PEEL`'s `retrySafe: false`,
+  since both "remove an already-removed thing" and "peel an
+  already-peeled thing" sound like similar mistakes). But `retrySafe`'s
+  actual definition covers TWO different reasons for `true`: idempotent-
+  by-construction, OR fails loudly instead of silently duplicating. PEEL
+  is `false` because a blind retry SILENTLY spawns a second, physically
+  impossible byproduct — nothing stops it. REMOVE's blind retry hits a
+  real, loud, named error (`handleRemove`'s own "not currently there"
+  check) instead — the same shape `COMBINE`'s own `retrySafe: true`
+  already documents for exactly this reason. Two actions that both
+  "shouldn't be re-run carelessly" can still land on opposite `retrySafe`
+  values, because the field isn't asking "is re-running this a good
+  idea" — it's asking "does the SCHEMA/engine itself catch a blind retry,
+  or would it silently go wrong." Worth checking against the actual
+  definition every time, not the closest-looking existing example.
+- **Scoping `REMOVE` to close ONLY the removal mechanism, not the
+  adjacent "elapsed idle time" half of the same named gap, was a
+  deliberate act of restraint** — `ROADMAP.md`'s original entry named
+  both in one breath ("nothing models elapsed idle time OR has a verb
+  for removing"), and it would have been easy to treat closing one as
+  closing both. They're genuinely different-sized problems: REMOVE is a
+  bounded bookkeeping mechanism (which instances are in which place);
+  "does staying too long cause a doneness/burn consequence" needs a real
+  model linking `place.ts`'s elapsed-time machinery to an INSTANCE's own
+  cooking progress, which doesn't exist anywhere in this engine yet (no
+  per-instance temperature — see this file's own `REST` entry above).
+  Named explicitly as still-open in `remove.json`'s `idleTimeScopeNote`
+  and `ROADMAP.md`'s updated entry, the same "close what you actually
+  closed, name what you didn't" discipline this whole session has
+  applied everywhere else.

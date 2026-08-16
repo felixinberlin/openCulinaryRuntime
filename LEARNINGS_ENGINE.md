@@ -896,3 +896,67 @@ was made. Don't rewrite or delete old entries — append.
   the same as checking what the mechanism actually computes — run it,
   the same standard this session has applied to everything else, applied
   here to a sentence about the session's own code minutes after writing it.
+
+### `src/reachability.ts` — a search that reuses the existing graph exactly, and a design choice that made the search itself the audit tool
+
+- **TICKET 4's own instruction ("edges come from `allowedTransformations`,
+  `statePrerequisites`, and `invalidTransitions` — all three already
+  exist; do not invent a new graph representation") turned out to be
+  load-bearing, not just a style preference.** The temptation, once
+  `blockedBy` needed to name specific reasons (missing tool capability,
+  unsatisfied ingredient capability, ...), was to build a richer,
+  purpose-made graph structure that pre-computed all of this. Reusing
+  `Action`'s own fields directly instead — walking
+  `requiredTargetCapability`/`requiredTools`/`requiredToolCapabilities`/
+  `requiredIngredientCapabilities`/`statePrerequisites`/`invalidTransitions`
+  at search time, exactly the same checks `engine.ts`'s `applyAction`
+  makes — means the reachability search and the real engine can never
+  silently disagree about what's legal. A purpose-built graph
+  representation would have been a FOURTH source of truth alongside the
+  three the ticket named, the identical mistake `execution-bounds.ts`
+  and `isTerminalState` were both built earlier the same day specifically
+  to avoid (see those entries above) — the pattern held a fourth time.
+- **`destroysTarget`/`combinesInto` needed a genuinely different
+  treatment than every other blocked edge: a dead end with ZERO outgoing
+  edges, not just a blocked transition.** Every other `BlockingReason`
+  means "this specific edge doesn't exist, but the node it would have
+  led FROM still has other options." A `destroysTarget` action is
+  different in kind — once it fires, the ORIGINAL instance no longer
+  exists at all, so nothing further can ever happen to it, regardless of
+  what `invalidTransitions` says. Modeling this as `instance_destroyed`
+  and never pushing a successor node onto the BFS queue (rather than,
+  say, letting it produce a state that then gets explored normally) is
+  what makes "an egg separated into yolk/white can never become a whole
+  boiled egg again" the CORRECT answer for the right reason — not
+  because some closure forbids it, but because the thing being asked
+  about is gone. Conflating "forbidden transition" and "instance no
+  longer exists" would have been a real, subtle correctness bug in the
+  one case (`SEPARATE`/`CRACK`/`COMBINE`) this repo's own conservation-
+  of-mass rule already treats as structurally different from every other
+  action.
+- **A `requiredSecondaryCapability` (COMBINE-shaped) edge is recorded as
+  blocked and never explored, on purpose — this search does NOT attempt
+  to guess whether a second instance might plausibly be available.**
+  Tempting alternative: assume a suitable secondary instance exists
+  somewhere and explore past it optimistically. Rejected because it
+  would silently misrepresent a genuinely single-instance search as
+  answering a multi-instance question it has no actual information
+  about — the same "don't manufacture capability speculatively" discipline
+  `masideas.md`'s dead-capability lesson already established, applied to
+  a search result instead of a schema field this time.
+- **The search itself, run against real data, found two real gaps in
+  this repo's own `invalidTransitions` — worth recording as the concrete
+  payoff of building it, not a side effect.** See `LEARNINGS_PROCESS.md`
+  2026-08-16 for the verification discipline around both (checking the
+  ticket's own suggested example before trusting it; checking what the
+  tool actually reported before deciding whether to patch it). The
+  `egg.json` `"separated"` gap was small and directly analogous to an
+  already-established pattern, so it got fixed in the same change; the
+  `potato.json` gap (no `"fried"`/other-cooked-state keys in
+  `invalidTransitions` at all) is real but larger — deliberately left as
+  a named follow-up rather than a rushed patch, the same restraint
+  `potato.json`'s own 2026-08-15 correction (`LEARNINGS_PROCESS.md`) was
+  built on: a plausible-looking one-line fix, added under time pressure
+  and without the same dedicated real-technique check `egg.json` got, is
+  exactly how the ORIGINAL wrong `mashed → peeled` closure got into this
+  repo in the first place.

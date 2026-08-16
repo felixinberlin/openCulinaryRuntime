@@ -857,3 +857,51 @@ was made. Don't rewrite or delete old entries — append.
   on how plausible it sounds — applies exactly as much to a sentence
   written five minutes ago as to a document written by someone else.
 
+### `src/reachability.ts` (TICKET 4) — checking a suggested test case before building it, then trusting the tool's own output over intuition
+
+- **`PAPER_NOTES_2608.04768.md` TICKET 4 suggested a specific "good forcing
+  case" for a reachability dead-end demo: "a potato that has been mashed —
+  which INVALID_TRANSITIONS should close off from fried." Checked against
+  `data/entities/potato.json` before writing a single line of the demo
+  script, not trusted from the ticket's own prose.** It's factually wrong:
+  `mashed → fried` is deliberately LEGAL in this repo's already-audited
+  data (`mashNote`'s potato-cakes exception, closed 2026-08-13). This is
+  the SAME failure shape this file has now logged three times this
+  session in three different sources (a user-supplied frying-science
+  doc's fabricated bibliography; this session's own `REFERENCES.md`
+  sentence about Sochacki et al.; now a ticket's own suggested test case)
+  — worth naming as a pattern rather than three unrelated incidents: a
+  plausible-sounding claim about THIS repo's specific data is exactly the
+  category of thing that must be checked against the actual file, every
+  time, regardless of how authoritative-sounding the source is. Fixed by
+  using a different, verified dead end (`burned`, already proven terminal
+  by `isTerminalState` the same day) for the demo's "clean unreachable
+  case" instead.
+- **Having caught that, the search was then trusted over intuition when
+  it reported something genuinely surprising: `mashed potato → goal
+  "peeled"` came back REACHABLE.** The instinctive reaction was to treat
+  this as a bug in the new code and go looking for what was wrong with
+  `isGoalReachable`. It wasn't a bug — tracing the reported path
+  (`fry` then `peel`) by hand confirmed it's a real consequence of the
+  ACTUAL data: `potato.json` has no `"fried"` key in `invalidTransitions`
+  at all, so nothing stops `PEEL` from running on a fried potato. The
+  right response to a surprising-but-traceable result from a tool built
+  this same session is to verify the trace, not to assume the tool is
+  wrong because the answer feels unlikely — the identical discipline this
+  file has applied to external documents all session, applied here to
+  this session's own new code's own output.
+- **Deliberately did NOT patch the newly-found `potato.json` gap under
+  this ticket's scope, even though the fix would have been a plausible-
+  looking one line (`"fried": ["peeled"]`, mirroring `egg.json`'s already-
+  established fried-forbids-peeled entry).** Tracing it further (would
+  cut/diced/sliced states need the same treatment? does `baked` differ
+  from `fried` here? is there a real skin-on-fried-potato counter-
+  technique?) surfaced enough real uncertainty that a rushed, single-entry
+  fix risked repeating the EXACT mistake `potato.json`'s own 2026-08-15
+  correction (`ROADMAP.md` Phase 4, `606f056`/`7d497d4`/`3e2050a`) was
+  built to prevent: asserting a closure that sounds structurally
+  plausible without the same dedicated, per-transition real-technique
+  audit `egg.json` actually received. Named as a real, scoped follow-up
+  instead of quietly patched — see `ROADMAP.md`'s TICKET 4 entry and the
+  "go back to the potato" work this same session continues into.
+

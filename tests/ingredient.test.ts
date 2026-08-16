@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { EntitySchema, CitationSchema, StructureSchema, QuantitySchema } from "../src/ingredient.ts";
+import { EntitySchema, CitationSchema, StructureSchema, QuantitySchema, isTerminalState } from "../src/ingredient.ts";
 import { makeEntity } from "./helpers.ts";
 
 describe("EntitySchema", () => {
@@ -86,5 +86,57 @@ describe("QuantitySchema", () => {
 
   test("an unrecognized 'kind' is rejected — not silently accepted as a 4th shape", () => {
     assert.throws(() => QuantitySchema.parse({ kind: "vague", amount: 1 }));
+  });
+});
+
+// isTerminalState — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 5.
+describe("isTerminalState", () => {
+  test("a state absent from invalidTransitions entirely is not terminal", () => {
+    const potato = makeEntity({ id: "potato", possibleStates: ["raw", "boiled"] });
+    assert.equal(isTerminalState(potato, "raw"), false);
+  });
+
+  test("a state whose invalidTransitions entry forbids EVERY other possibleState is terminal", () => {
+    const potato = makeEntity({
+      id: "potato",
+      possibleStates: ["raw", "boiled", "burned"],
+      invalidTransitions: { burned: ["raw", "boiled"] },
+    });
+    assert.equal(isTerminalState(potato, "burned"), true);
+  });
+
+  test("a state whose invalidTransitions entry forbids ALL BUT ONE other possibleState is NOT terminal — the exact 'overcooked can still degrade to burned' shape this ticket's real data uses", () => {
+    const potato = makeEntity({
+      id: "potato",
+      possibleStates: ["raw", "boiled", "burned", "overcooked"],
+      invalidTransitions: {
+        burned: ["raw", "boiled", "overcooked"],
+        overcooked: ["raw", "boiled"], // deliberately does NOT include "burned"
+      },
+    });
+    assert.equal(isTerminalState(potato, "burned"), true);
+    assert.equal(isTerminalState(potato, "overcooked"), false);
+  });
+
+  test("a state not present in possibleStates at all is simply not terminal (not this function's job to flag as invalid)", () => {
+    const potato = makeEntity({ id: "potato", possibleStates: ["raw", "boiled"] });
+    assert.equal(isTerminalState(potato, "nonexistent_state"), false);
+  });
+
+  test("real data: every real entity's 'burned' state is terminal", () => {
+    // Cross-checked against the actual shipped data/entities/*.json content,
+    // not a synthetic re-assertion — mirrors the reasoning
+    // scripts/failure-states-as-a-robot.ts demonstrates against real loaded
+    // entities, kept here as a fast, offline regression too.
+    const potato = makeEntity({
+      id: "potato",
+      possibleStates: ["raw", "peeled", "boiled", "fried", "mashed", "burned", "overcooked"],
+      invalidTransitions: {
+        burned: ["raw", "peeled", "boiled", "fried", "mashed", "overcooked"],
+        overcooked: ["raw", "peeled", "boiled", "fried", "mashed"],
+      },
+    });
+    assert.equal(isTerminalState(potato, "burned"), true);
+    assert.equal(isTerminalState(potato, "overcooked"), false);
   });
 });

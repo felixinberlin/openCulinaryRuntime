@@ -56,6 +56,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Place-aware fried egg — FILL/HEAT_PLACE generalized to oil (isPourable/isVessel), FRY rejected while oil is genuinely cold, real huevo_frito params reused | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- fried_egg_shared_pan` |
 | Shared-pan heat, FRY readiness gated on real oil temperature — same mechanism as BOIL's, reading fry.json's own oilTempC minimum | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pan-heat` |
 | Reject early sensory termination — a plausible "looks done" sensor reading correctly rejected against a real CCP floor (flat + D/z-computed cases), citation printed | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:execution-bounds` |
+| Failure states as a robot — burned/overcooked reachable and correctly terminal, FRY on a burned potato rejected, SALT on the same instance still succeeds, pre-flight advisory fires | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:failure-states` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1218,6 +1219,62 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       (a false claim that one of the four was "also independently the
       source cited elsewhere in this repo") was caught and removed before
       shipping — see `LEARNINGS_PROCESS.md` 2026-08-16.
+- [x] **`burned`/`overcooked` failure states — closed 2026-08-16, TICKET 5
+      of `PAPER_NOTES_2608.04768.md`.** `CONCEPT.md` §8 has listed `burned`/
+      `overcooked` in this repo's state vocabulary since its very first
+      draft; no entity ever implemented either — this engine could express
+      every way a dish goes RIGHT and none of the ways it goes wrong.
+      Added to `potato`/`egg`/`garlic`/`tortilla_mixture` (the ticket's own
+      "at minimum" list) with real, per-entity `invalidTransitions`
+      closures — audited individually, not global, matching the standard
+      `606f056`/`7d497d4`/`3e2050a` already set (and its own acceptance
+      criterion: "do not repeat the potato-peel mistake"). Deliberately
+      NOT wired to any detection mechanism — no timer, no probability, no
+      burn inference; that needs perception (`ENGINE_INVARIANTS.md` #11,
+      out of scope). Reachable today only as an AUTHORED fact
+      (`RecipeInstanceSchema.state` accepts any string) — a future
+      perception layer is what would actually assert it in a deployed
+      system, not this repo.
+      \
+      **A real physical nuance found and gotten right, not glossed over**:
+      `burned` is unconditionally terminal for all four entities (forbids
+      every other state, `isTerminalState` — new, `ingredient.ts`,
+      computed from `invalidTransitions`/`possibleStates` directly, not a
+      second hand-authored flag). `overcooked` is treated as terminal for
+      RECOVERY purposes (forbids reverting to any normal state) but
+      deliberately does NOT forbid degrading further into `burned` itself
+      — a real, physically plausible progression — so
+      `isTerminalState(entity, "overcooked")` correctly computes `false`,
+      not `true`, for every entity. First draft's metadata notes claimed
+      "overcooked is ALSO fully terminal," which the actual
+      `invalidTransitions` data contradicted (it deliberately leaves
+      `overcooked → burned` open) — caught by literally running
+      `isTerminalState` against the real data during the capability-test
+      script's own development, not asserted from memory, and corrected in
+      all four entities' notes plus the script's own narration before
+      shipping. A second honest, stated simplification: potato's real
+      overcooked-then-mashed rescue technique (mashing a mushy over-boiled
+      potato) is NOT wired through, because `mash.json`'s own
+      `statePrerequisites` (`["boiled","baked"]`) doesn't list `overcooked`
+      — named as a small, real, deliberately-not-done follow-up rather
+      than silently asserting the rescue is impossible.
+      \
+      Garlic is the strongest real-world forcing case in this vocabulary —
+      `ROADMAP.md` itself already named "burnt garlic tastes bad, don't
+      let it rest in the oil" as a real mistake this repo's own frying
+      sequencing had to work around, well before `burned` was a real,
+      assertable state; it's a genuinely more clear-cut, faster failure
+      for garlic than for potato/egg (small piece size, high sugar
+      content). Proven via `scripts/failure-states-as-a-robot.ts`
+      (`npm run capability-test:failure-states`): `isTerminalState`
+      against real loaded data, `FRY` on a burned potato REJECTED by
+      `invalidTransitions`, `SALT` on the SAME instance still succeeding
+      (a tag-only action never trips a state-transition check — the
+      identical state-vs-tag distinction this schema draws everywhere
+      else, not a new gap), and `recipe-explain.ts`'s new pre-flight
+      advisory flagging a recipe that starts an instance already in a
+      terminal state. 21 new unit tests across `tests/ingredient.test.ts`
+      and `tests/recipe-explain.test.ts`.
 - [x] **`state` vs. `tags` modeling fix for `WASH` — closed 2026-08-15,
       found by a user correction, not self-discovered.** After the fix
       above, the user pointed out the wash/peel/cut order itself wasn't

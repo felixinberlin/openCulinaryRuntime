@@ -205,6 +205,47 @@ describe("explainRecipe — timing advisories", () => {
   });
 });
 
+// Terminal starting-state advisory — 2026-08-16, PAPER_NOTES_2608.04768.md TICKET 5.
+describe("explainRecipe — prep advisories (terminal starting state)", () => {
+  const potato = makeEntity({
+    id: "potato",
+    possibleStates: ["raw", "boiled", "burned"],
+    invalidTransitions: { burned: ["raw", "boiled"] },
+  });
+  const boil = makeAction({ id: "boil", outputs: { transformedState: "boiled" } });
+  const entities = new Map([["potato", potato]]);
+  const actions = new Map([["boil", boil]]);
+
+  test("an instance starting in a terminal state fires an advisory naming it", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "burned", tags: [] }],
+      sequence: [{ actionId: "boil", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.equal(report.prepAdvisories.length, 1);
+    assert.match(report.prepAdvisories[0], /"potato-1" \(potato\) starts in "burned"/);
+    assert.match(report.prepAdvisories[0], /TERMINAL state/);
+  });
+
+  test("an instance starting in a normal (non-terminal) state fires no advisory", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
+      sequence: [{ actionId: "boil", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] }],
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.deepEqual(report.prepAdvisories, []);
+  });
+
+  test("checked purely from initialInventory — independent of what the sequence does with it", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "burned", tags: [] }],
+      sequence: [], // no steps at all
+    });
+    const report = explainRecipe(recipe, entities, actions);
+    assert.equal(report.prepAdvisories.length, 1);
+  });
+});
+
 describe("explainRecipe — prep advisories (wash-before-peel/cut heuristic)", () => {
   const potato = makeEntity({ id: "potato", possibleStates: ["raw", "peeled"], capabilities: { isWashable: true } });
   const peel = makeAction({ id: "peel", outputs: { transformedState: "peeled" } });

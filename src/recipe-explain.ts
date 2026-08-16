@@ -1,4 +1,4 @@
-import type { Entity } from "./ingredient.ts";
+import { type Entity, isTerminalState } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
@@ -148,6 +148,26 @@ export function explainRecipe(
   const ingredientCapsNeeded = new Set<string>();
   const timingAdvisories: string[] = [];
   const prepAdvisories: string[] = [];
+
+  // Terminal starting-state check (TICKET 5, PAPER_NOTES_2608.04768.md) —
+  // "so recipe-explain.ts can say 'this state is unrecoverable' rather
+  // than silently listing zero options." Deliberately checked against
+  // initialInventory only, not every mid-recipe state (this file is
+  // execution-free — see this module's own top doc comment — it has no
+  // way to know an instance's state partway through the sequence without
+  // actually running it). isTerminalState is computed from
+  // invalidTransitions/possibleStates directly (ingredient.ts), not a
+  // second source of truth.
+  for (const item of recipe.initialInventory) {
+    const entity = entities.get(item.entityId);
+    if (entity && isTerminalState(entity, item.state)) {
+      prepAdvisories.push(
+        `"${item.id}" (${entity.id}) starts in "${item.state}" — a TERMINAL state for this entity (no ` +
+          `transformation can change its form/cooking state again, per invalidTransitions). If this is deliberate ` +
+          `(e.g. testing failure-recovery handling), fine; otherwise this is very likely an authoring mistake.`
+      );
+    }
+  }
 
   // Tracks, per recipe-local instance id, whether a WASH step has been seen
   // for it yet — for the heuristic below. Keyed on targetInstanceId, the

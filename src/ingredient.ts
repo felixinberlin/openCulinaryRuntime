@@ -433,3 +433,40 @@ export const EntitySchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 export type Entity = z.infer<typeof EntitySchema>;
+
+/**
+ * True when `state` has EVERY OTHER state in `entity.possibleStates`
+ * forbidden as a next transition, per `invalidTransitions` — i.e., no
+ * transformation could ever legally move this instance anywhere else.
+ * TICKET 5 of `PAPER_NOTES_2608.04768.md` (a "burned"/"overcooked" failure
+ * state is only useful as a modeled concept if something can actually
+ * recognize it's a dead end, per that ticket's own suggested `terminal:
+ * true` marker) — deliberately COMPUTED from the already-authored
+ * `invalidTransitions`/`possibleStates` data rather than a second,
+ * separately-maintained flag on each entity: a hand-authored `terminal:
+ * true` field could silently drift out of sync with the real transition
+ * rules the moment either list is edited without remembering to update
+ * the other, the exact "second, parallel source of truth" shape this
+ * repo's own `execution-bounds.ts` (2026-08-16) was just built to avoid
+ * for a different field — same reasoning, applied here.
+ *
+ * A state absent from `possibleStates` entirely is not this function's
+ * concern (a typo'd/hypothetical state — `scripts/validate.ts`'s own
+ * `invalidTransitions` cross-reference already catches that as a hard
+ * fail); this only answers "if an instance were legitimately in this
+ * state, could ANY transformation still apply to it."
+ *
+ * Deliberately does NOT mean "no action can be called on this instance at
+ * all" — `engine.ts`'s `applyAction` only consults `invalidTransitions`
+ * against the action's COMPUTED next state, so a tag-only action that
+ * never changes `state` (`SALT` on an already-`"burned"` potato, say) is
+ * still legal, the identical state-vs-tag distinction `engine.ts`'s own
+ * doc comment already draws for every other state. `isTerminalState`
+ * answers "can this instance's FORM/cooking state ever change again,"
+ * not "is every action rejected."
+ */
+export function isTerminalState(entity: Entity, state: string): boolean {
+  const forbidden = entity.invalidTransitions[state];
+  if (!forbidden) return false;
+  return entity.possibleStates.filter((s) => s !== state).every((s) => forbidden.includes(s));
+}

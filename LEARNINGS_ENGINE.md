@@ -859,3 +859,40 @@ was made. Don't rewrite or delete old entries — append.
   drag down a claim that deserves better. See `LEARNINGS_PROCESS.md`
   2026-08-16 for a fabricated cross-reference caught and fixed in the
   same TICKET 6 change.
+
+### `isTerminalState` — computed, not authored, and a claim caught wrong by actually running it (TICKET 5)
+
+- **TICKET 5 suggested a `terminal: true` marker "on states" — implemented
+  as a computed function instead of a new hand-authored field, on the same
+  reasoning `execution-bounds.ts` just established for `minSafeHoldSeconds`
+  earlier the same day: a second, separately-maintained flag can silently
+  drift out of sync with the real transition rules the moment either is
+  edited without remembering the other.** `isTerminalState(entity, state)`
+  derives terminality from `invalidTransitions`/`possibleStates` directly —
+  the SAME data already being authored for the forbidden-transition
+  closures themselves, not a duplicate claim layered on top. This is the
+  third time this exact "compute from the existing source, don't add a
+  parallel one" move has been the right call in one session (SIMMER's
+  `waterTempC` band read off its own declared parameter; `execution-bounds.ts`'s
+  CCP floor; now this) — worth naming as a general habit to reach for by
+  default, not something to re-derive from scratch the next time a "should
+  this be a new field or a computed check" question comes up.
+- **Building the capability-test script caught the exact kind of mistake
+  this whole session's discipline exists to catch, and it happened in
+  THIS session's own newly-written data, not an inherited or external
+  document.** The first draft of `potato.json`'s (and `egg.json`'s and
+  `tortilla_mixture.json`'s) `failureStateNote` asserted "'overcooked' is
+  ALSO treated as fully terminal here." Running `scripts/failure-states-
+  as-a-robot.ts` against the actual data — not just reasoning about the
+  JSON — printed `isTerminalState(potato, "overcooked") === false`,
+  directly contradicting that claim. The reason was already correct in a
+  LATER sentence of the same note (overcooked deliberately leaves the
+  transition to `burned` open) — the note was internally inconsistent, not
+  wrong about the underlying design, just wrong about summarizing its own
+  consequence. Fixed in all three affected entities' notes and the
+  script's own two narration lines before shipping, not left as a
+  passable-looking but inaccurate claim. The concrete lesson: writing an
+  accurate-sounding summary sentence about a mechanism's behavior is not
+  the same as checking what the mechanism actually computes — run it,
+  the same standard this session has applied to everything else, applied
+  here to a sentence about the session's own code minutes after writing it.

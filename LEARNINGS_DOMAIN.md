@@ -931,3 +931,56 @@ was made. Don't rewrite or delete old entries — append.
   like this has somewhere honest to live instead of being smoothed into
   a flat, over-general claim.
 
+## 2026-08-16
+
+### Failure states (`burned`/`overcooked`) — the real technique differences that determined each entity's closures
+
+- **The same real-technique-per-entity discipline `invalidTransitions`
+  already established (`potato.json`'s `mashed → fried` deliberately
+  staying legal for potato cakes) applied to a genuinely new axis: not
+  every entity's failure states should be closed off the same way, even
+  though all four (potato/egg/garlic/tortilla_mixture) got the identical
+  `burned`/`overcooked` VOCABULARY.** Concrete, checked distinctions, not
+  assumed uniform:
+  - **Potato** has a real, named rescue for `overcooked` (mashing an
+    over-boiled, mushy potato — the same real technique `mashNote`
+    already documents from a different starting point) that the OTHER
+    three entities genuinely don't have an equivalent of — stated as a
+    deliberate simplification in `potato.json`'s own note, not silently
+    treated the same as the others.
+  - **Egg**'s `overcooked` (the classic over-boiled-hard-egg case — a
+    commonly-described grey-tinged yolk surface, rubbery white) has no
+    comparable rescue once past it — deliberately phrased WITHOUT the
+    specific iron-sulfide chemistry mechanism (a real, well-known reaction,
+    but asserting the specific mechanism as fact would need its own
+    citation this session didn't do the lookup for) — the qualitative,
+    commonly-known-result framing was judged sufficient and honest without
+    it, the same tier this repo already uses for many similarly
+    well-established but individually-uncited culinary facts.
+  - **Garlic** is the sharpest, fastest, most commonly-known real case of
+    all four — small piece size and high sugar/protein content mean it
+    goes from toasted to bitterly burnt quickly, a fact this repo's OWN
+    `ROADMAP.md` had already named in passing ("don't let it rest in the
+    oil, burnt garlic tastes bad") describing a real sequencing problem
+    found while building `garlic-oil-potatoes.json`, well before `burned`
+    existed as an actual, assertable state — checked (`grep`) before
+    claiming this connection, not assumed from memory.
+  - **Tortilla mixture** (the composite dish) has no rescue at all for
+    either failure state, for a different, simpler reason than egg's: it's
+    the FINISHED dish, not an intermediate ingredient with further
+    processing options — closer in shape to "the meal is ruined" than to
+    "this component needs to be discarded and the recipe continues,"
+    named as the reason its own closure looks structurally like potato/
+    garlic's `burned` entry but for a different underlying cause.
+- **Deliberately did NOT assert the specific food-science mechanism behind
+  either failure state as a cited fact where doing so would have required
+  a lookup this session didn't do** (egg's grey-yolk-ring chemistry,
+  garlic's exact sugar/Maillard kinetics) — the QUALITATIVE claim
+  ("this is a real, commonly-known result/hazard") was judged sufficient
+  and left at that confidence tier, rather than dressing it up with an
+  unverified specific mechanism just to sound more rigorous. Matches this
+  repo's own established tier system (`REFERENCES.md`'s confidence levels)
+  applied by judgment in a case where citing at all would have cost real,
+  unbudgeted verification effort for a claim this repo doesn't actually
+  need at higher precision to be honest.
+

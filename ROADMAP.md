@@ -57,7 +57,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Shared-pan heat, FRY readiness gated on real oil temperature — same mechanism as BOIL's, reading fry.json's own oilTempC minimum | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pan-heat` |
 | Reject early sensory termination — a plausible "looks done" sensor reading correctly rejected against a real CCP floor (flat + D/z-computed cases), citation printed | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:execution-bounds` |
 | Failure states as a robot — burned/overcooked reachable and correctly terminal, FRY on a burned potato rejected, SALT on the same instance still succeeds, pre-flight advisory fires | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:failure-states` |
-| Is goal still reachable — real dead ends with named reasons, a surprising real gap found by pure graph search, a found path actually executed against the real engine, determinism verified | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:reachability` |
+| Is goal still reachable — real dead ends with named reasons, a real gap found by pure graph search then fixed (potato.json's invalidTransitionsAudit2026-08-16), a found path actually executed against the real engine, determinism verified | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:reachability` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1594,13 +1594,34 @@ domain facts.
       search: `mashed potato → goal "peeled"` reports reachable (via
       `mashed → fry → peel`), because `potato.json` has no `"fried"` key in
       `invalidTransitions` at all — unlike `egg.json`'s own already-audited
-      `fried`/`poached` forbidding `peeled`. Deliberately NOT patched here
-      (a proper fix needs the same dedicated, real-technique-checked audit
-      `egg.json` got on 2026-08-15, not a rushed one-line addition under a
-      different ticket's scope) — named as a real, concrete follow-up
-      instead, exactly the kind of question this ticket's own "why" section
-      says a reachability tool answers that the field currently answers
-      "empirically and expensively." A smaller, directly analogous, and
+      `fried`/`poached` forbidding `peeled`. NOT patched under this
+      ticket's own scope (a rushed one-line addition risked repeating the
+      exact mistake `potato.json`'s own 2026-08-15 correction was built to
+      prevent) — instead given the same dedicated, per-transition
+      real-technique audit `egg.json` got, the same day, as its own
+      separate follow-up: `potato.json`'s new
+      `invalidTransitionsAudit2026-08-16` closes 8 cut-shape states
+      (sliced/diced/julienne/chopped/minced/halved/quartered/grated)
+      forbidding `peeled` at HIGH confidence (structural — once
+      subdivided, no single whole piece remains, the direct mirror of
+      `egg.json`'s sliced/diced/chopped closure), plus `fried`/`baked`/
+      `par_fried` forbidding `peeled` at the SAME WEAKER "no counter-
+      technique found" tier `egg.json`'s own fried/poached-forbidding-
+      boiled entries use — named as such, not asserted with equal
+      confidence. Deliberately does NOT touch `boiled` (boil-in-jacket-
+      then-peel stays correctly legal — the real, verified reason this
+      repo corrected itself once already) and does NOT add shape-to-shape
+      closures (real progressive-cutting techniques exist —
+      halved→quartered→diced — and this session lacked the confidence to
+      verify which specific transitions are and aren't real; left
+      unasserted rather than guessed, a real, still-open gap named
+      honestly). `mashed → peeled` is now correctly unreachable —
+      `scripts/is-goal-still-reachable.ts`'s Case 1b kept as a permanent
+      regression check on this exact fix, not removed once "solved." See
+      `LEARNINGS_PROCESS.md`/`LEARNINGS_DOMAIN.md` 2026-08-16 for the full
+      reasoning. Exactly the kind of question this ticket's own "why"
+      section says a reachability tool answers that the field currently
+      answers "empirically and expensively." A smaller, directly analogous, and
       DID get fixed: `egg.json` was missing a `"separated"` closure
       forbidding `boiled`/`fried`/`poached` (the same "no shell/intact
       structure in play" reasoning already established for `fried`/

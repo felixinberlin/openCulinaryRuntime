@@ -984,3 +984,51 @@ was made. Don't rewrite or delete old entries — append.
   unbudgeted verification effort for a claim this repo doesn't actually
   need at higher precision to be honest.
 
+### `potato.json`'s `invalidTransitions` audit — which "processed → peeled" transitions are real, checked individually
+
+- **Two structurally DIFFERENT reasons a state can't revert to `"peeled"`,
+  not one blanket rule — getting this distinction right is the entire
+  point of this audit, the same distinction `egg.json`'s own 2026-08-15
+  audit already established for a different entity.** (1) Cut-shape
+  states (sliced/diced/julienne/chopped/minced/halved/quartered/grated) —
+  once the potato is subdivided into pieces, there is no single whole
+  piece left for PEEL to act on. This is a fact about GEOMETRY, true
+  regardless of any named technique existing or not, the same confidence
+  tier `egg.json`'s sliced/diced/chopped forbidding peeled already claims.
+  (2) `fried`/`baked`/`par_fried` — no comparable geometric argument
+  exists (the potato is still one piece); the claim here is weaker, "no
+  real named technique for peeling an already-fried/baked potato was
+  found on active search," the exact same weaker tier `egg.json`'s own
+  fried/poached-forbidding-BOILED entries (as opposed to its
+  fried/poached-forbidding-PEELED entries) already use. Recording BOTH
+  tiers explicitly in the same note, rather than picking one confidence
+  level for the whole batch, is what keeps this honest.
+- **`boiled` was deliberately left untouched, and the reasoning for WHY
+  it's different from `fried`/`baked` is a real physical distinction, not
+  an arbitrary carve-out** — boiling is a gentle, WET process; the skin
+  stays intact and separable by hand once cool enough to handle, which is
+  exactly why boil-in-jacket-then-peel is a real, common, already-verified
+  technique (`invalidTransitionsNote`, 2026-08-15). Frying/baking's dry/
+  oil heat measurably alters the skin's texture (crisping, dehydration,
+  browning) in a way boiling doesn't — a real, checkable difference, not
+  just "boiled already got corrected once so leave it alone."
+- **Deliberately did NOT attempt shape-to-shape closures (e.g. `diced`
+  forbidding `sliced`), even though the cut-shape → peeled closures above
+  made it tempting to keep going.** Real, named counter-examples exist:
+  progressive cutting (`halved` → `quartered` → further dicing) is a
+  genuine real technique, and CUT's own `statePrerequisites`
+  (`["washed","peeled"]`) already partially gates re-cutting via the
+  `washed` TAG mechanism in a way that's hard to reason about
+  transition-by-transition without real risk of asserting a closure
+  that's actually a legitimate technique — the exact failure mode this
+  whole audit exists to avoid repeating. Left unasserted, named as a real,
+  still-open gap in the entity's own note, rather than guessed at to look
+  more complete.
+- **This audit was triggered by a TOOL finding the gap (`src/reachability.ts`,
+  TICKET 4) rather than a person deciding to re-check `potato.json`
+  proactively** — worth noting as the concrete payoff of building a real
+  search over this repo's own data instead of only reasoning about it:
+  the exact kind of previously-invisible gap this repo's own manual
+  audits (however careful) are structurally prone to missing, found
+  mechanically instead.
+

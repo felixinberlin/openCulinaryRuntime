@@ -27,18 +27,20 @@ import { applyAction, type Instance } from "../src/engine.ts";
  *    celebrated technique). Checked directly (`data/entities/potato.json`)
  *    before building anything around it, not trusted from the ticket's own
  *    prose — see `LEARNINGS_PROCESS.md` 2026-08-16.
- * 2. Querying `mashed potato → goal "peeled"` (Case 1b below) reports
- *    REACHABLE — genuinely surprising, and a real, previously-invisible
- *    gap this tool found by pure graph search, not injected on purpose:
- *    `mashed → fried` (legal) → `fried → peeled` (potato.json has NO
- *    `"fried"` key in `invalidTransitions` at all, unlike `egg.json`'s
- *    already-audited `fried`/`poached` forbidding `peeled`). Deliberately
- *    NOT patched here — a proper fix needs the same dedicated,
- *    real-technique-checked audit `egg.json` got on 2026-08-15
- *    (`ROADMAP.md` Phase 4), not a rushed one-line addition under a
- *    different ticket's scope; named as a real, concrete follow-up
- *    instead. Case 1 uses a clean, already-verified dead end (`burned`)
- *    for the "unreachable, real reason" acceptance criterion instead.
+ * 2. Querying `mashed potato → goal "peeled"` (Case 1b below) ORIGINALLY
+ *    reported REACHABLE — genuinely surprising, and a real, previously-
+ *    invisible gap this tool found by pure graph search, not injected on
+ *    purpose: `mashed → fried` (legal) → `fried → peeled` (`potato.json`
+ *    had NO `"fried"` key in `invalidTransitions` at all, unlike
+ *    `egg.json`'s already-audited `fried`/`poached` forbidding `peeled`).
+ *    NOT patched under THIS ticket's scope (a rushed one-line addition
+ *    risked repeating the exact mistake `potato.json`'s own 2026-08-15
+ *    correction was built to prevent) — instead given the same dedicated,
+ *    per-transition real-technique audit `egg.json` got, the same day,
+ *    as its own separate follow-up (`potato.json`'s
+ *    `invalidTransitionsAudit2026-08-16`, `ROADMAP.md` Phase 4). Case 1b
+ *    below now correctly reports `reachable: false` — kept in this script
+ *    as a regression check on that fix, not removed once "solved."
  */
 
 const root = join(import.meta.dirname, "..");
@@ -86,7 +88,7 @@ if (!result1.reachable) {
   for (const r of result1.blockedBy) console.log(`  - ${describeReason(r)}`);
 }
 
-console.log('\n=== Case 1b: mashed potato, goal state "peeled" — a REAL, SURPRISING finding, not injected ===');
+console.log('\n=== Case 1b: mashed potato, goal state "peeled" — regression check on a real, now-fixed gap ===');
 const result1b = isGoalReachable({
   entity: potato,
   entities,
@@ -101,10 +103,14 @@ console.log(`reachable: ${result1b.reachable}`);
 if (result1b.reachable) {
   console.log(`path: ${result1b.path.map((s) => s.actionId).join(" -> ")}`);
   console.log(
-    "  This is genuinely reachable per the CURRENT data: mashed -> fry (legal, potato cakes) -> fried, then " +
-      'PEEL on "fried" is not blocked at all — potato.json has no "fried" key in invalidTransitions, unlike ' +
-      "egg.json's already-audited fried/poached-forbid-peeled entries. A real, previously-invisible gap this " +
-      "tool found by pure graph search — deliberately NOT patched here, see this file's own top doc comment."
+    "  UNEXPECTED: this was a real gap this tool originally found (mashed -> fry -> peel) and fixed via " +
+      "potato.json's invalidTransitionsAudit2026-08-16 — if this branch prints, that fix has regressed."
+  );
+} else {
+  console.log(
+    '  Correctly unreachable: "fried" now forbids "peeled" (potato.json\'s invalidTransitionsAudit2026-08-16) ' +
+      "— this Case originally reported TRUE (a real gap this tool found by pure graph search) before that fix; " +
+      "kept here as a permanent regression check, see this file's own top doc comment for the full story."
   );
 }
 

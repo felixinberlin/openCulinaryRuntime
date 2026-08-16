@@ -99,6 +99,43 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   used in `src/altitude.ts`'s `atmosphericPressurePa`. Confidence:
   `standard_reference` — the same standard atmosphere model aviation,
   meteorology, and engineering reference tables are built on.
+- **University of Exeter, Department of Physics and Astronomy, "Boiling
+  an Egg"** (Charles Williams' closed-form spherical transient-conduction
+  formula) — https://www.exeter.ac.uk/research-centres/theoretical-physics/boiling-an-egg/
+  — the egg-as-homogeneous-sphere heat-conduction formula and its stated
+  coagulation ranges (white 62-65°C, yolk 65-70°C). Used in
+  `src/egg-heat-penetration.ts`'s `secondsForYolkToReachTempC`. Verified
+  via direct lookup 2026-08-16. Confidence: `commonly_cited_unverified` —
+  a well-known, widely-reported physics popularization, not a
+  peer-reviewed primary derivation; the formula's own 0.76 constant is not
+  independently re-derived here.
+- **Cengel, *Heat and Mass Transfer: Fundamentals and Applications*** —
+  the standard heat-transfer-textbook specific heat value for a whole egg
+  (3.32 kJ/(kg·K)), used in a real worked egg-boiling-time example in that
+  text. Used in `data/entities/egg.json`'s `thermophysical.
+  specificHeatJPerKgK`. Confidence: `standard_reference` — corroborated
+  (not independently verified) against food-engineering literature on
+  liquid egg products reporting 2.6-3.7 kJ/(kg·K) depending on water
+  content, which 3.32 sits centrally within.
+- **EU Commission Regulation (EC) No 589/2008, Article 4** — the official
+  egg weight-grading bands (S <53g, M 53-63g, L 63-73g, XL ≥73g). Used to
+  shape (not directly set) `src/egg-doneness.ts`'s new `EGG_SIZE_GRAMS`
+  table — see that constant's own doc comment for why its actual gram
+  values are anchored to this repo's PRE-EXISTING "large ~50-60g"
+  assumption instead of the EU bands' literal values, a real reconciliation
+  choice, not a direct citation of this regulation's numbers.
+- **Di Lorenzo & Di Maio, "Periodic cooking of eggs," *Communications
+  Engineering* (Nature Portfolio, 2025)** — already listed in this file's
+  "Discussed, informs design reasoning" section below for its full
+  alternating-temperature technique; ALSO now used more narrowly here for
+  one specific number — its reported yolk denaturation temperature
+  (~65°C) anchors `src/egg-heat-penetration.ts`'s `YOLK_TARGET_TEMP_C.
+  soft`, the more recent, more rigorous figure over the older Exeter
+  page's own vaguer 65-70°C range. Confidence: `standard_reference` for
+  this specific figure (peer-reviewed) — see `YOLK_TARGET_TEMP_C`'s own
+  doc comment for why the OTHER two tiers (medium/hard) stay at the
+  weaker `commonly_cited_unverified` tier, being this repo's own
+  interpretation, not directly sourced from this paper.
 - **Standard dilution / conservation-of-solute relation (general
   chemistry)** — the C₁V₁ = C₂V₂ mass-balance form for diluting a solution
   with a zero-concentration diluent, used in `src/flavor-balance.ts`'s
@@ -548,13 +585,17 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   https://www.nature.com/articles/s44172-024-00334-w — the alternating
   100°C/30°C egg-cooking study discussed at length in conversation (see
   `ROADMAP.md`'s "Heat as a shared, time-varying property of a PLACE" entry
-  for the design implications). Unlike every source above, this one is
-  **not** cited from any `data/*.json` or `src/*.ts` file — the technique it
-  describes can't be represented by this engine yet (needs the unbuilt
-  multi-bath/time-varying-place mechanism), so nothing here claims to
-  implement it. Listed for the same transparency reason as everything
-  else: it genuinely informed this repo's design discussion, even though no
-  code or data currently encodes it.
+  for the design implications). The FULL alternating-bath technique it
+  describes still can't be represented by this engine (needs the unbuilt
+  multi-bath/time-varying-place mechanism) — that half of this entry is
+  unchanged. **Partially embedded 2026-08-16**: its reported yolk
+  denaturation temperature (~65°C) is now used directly in
+  `src/egg-heat-penetration.ts`'s `YOLK_TARGET_TEMP_C` — see the "Physical
+  constants" section above for that narrower citation. The paper's own
+  full two-material numerical PDE + Arrhenius-kinetics model remains
+  unimplemented and un-embedded, a real, much larger, separately-scoped
+  possibility, named explicitly in `egg-heat-penetration.ts`'s own doc
+  comment.
 
 ## Robotic / automated cooking systems
 

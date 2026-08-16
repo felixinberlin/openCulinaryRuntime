@@ -70,10 +70,11 @@
   "thermophysical": {
     "densityKgPerM3": 1030,
     "thermalConductivityWPerMK": 0.34,
+    "specificHeatJPerKgK": 3320,
     "citation": {
-      "source": "Choi & Okos (1986) predictive food-thermal-property model — see potato.json's identical citation",
+      "source": "Choi & Okos (1986) predictive food-thermal-property model — see potato.json's identical citation. specificHeatJPerKgK (3320 J/(kg*K), added 2026-08-16): Cengel, *Heat and Mass Transfer: Fundamentals and Applications* — the standard heat-transfer-textbook value for a whole egg (3.32 kJ/(kg*K)), used directly in that textbook's own worked egg-boiling-time example. Independently corroborated: food-engineering literature on liquid egg products (Ngadi & Icier, and similar), reports whole-egg-adjacent specific heat in the 2.6-3.7 kJ/(kg*K) range depending on water content — 3.32 sits centrally within that range, not an outlier pick.",
       "confidence": "standard_reference",
-      "note": "Recalled as typical whole-egg literature values, not re-derived from the Choi-Okos model against egg's actual composition in this session."
+      "note": "densityKgPerM3/thermalConductivityWPerMK recalled as typical whole-egg literature values, not re-derived from the Choi-Okos model against egg's actual composition in this session (unchanged from before). specificHeatJPerKgK is the one figure here actually traced to a specific named textbook rather than 'recalled as typical' — used by src/egg-heat-penetration.ts's Williams-formula spherical-conduction model (2026-08-16)."
     }
   },
   "sensory": {

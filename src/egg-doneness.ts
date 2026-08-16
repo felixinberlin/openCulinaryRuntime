@@ -137,6 +137,38 @@ export const EGG_SIZE_ADJUSTMENT_SECONDS: Readonly<Record<"small" | "medium" | "
   extra_large: 45,
 };
 
+/**
+ * Real gram values for `small`/`medium`/`large`/`extra_large` — added
+ * 2026-08-16 as input data for `egg-heat-penetration.ts`'s Williams-
+ * formula spherical conduction model, which needs an actual MASS to
+ * compute against (`EGG_SIZE_ADJUSTMENT_SECONDS` above only ever gave a
+ * seconds OFFSET, no gram value at all).
+ *
+ * A real reconciliation problem, named explicitly rather than glossed
+ * over: the EU's official egg-grading regulation (Commission Regulation
+ * (EC) No 589/2008, Article 4) gives S <53g, M 53-63g, L 63-73g, XL
+ * >=73g — clean, real, citable bands. But THIS file's own `EGG_BOIL_
+ * DONENESS` base table (above) already documents its own baseline
+ * assumption as "a 'large' egg (~50-60g)" — which sits much closer to
+ * the US grading scheme's "large" (56.7g minimum) than the EU's "large"
+ * band (63-73g). Picking the EU bands literally would have silently
+ * made "large" mean two different masses in the same file. Resolved for
+ * INTERNAL CONSISTENCY, not by re-deriving a new external citation:
+ * `large` is anchored at 55g (the midpoint of this file's own existing
+ * ~50-60g assumption), and the other three sizes are spaced using the
+ * EU regulation's real relative band structure around that anchor,
+ * rather than either grading scheme's absolute values. Confidence:
+ * `commonly_cited_unverified` for the anchor choice itself (a
+ * reconciliation, not a direct citation) even though the EU regulation
+ * it's shaped by is `standard_reference` — see REFERENCES.md.
+ */
+export const EGG_SIZE_GRAMS: Readonly<Record<"small" | "medium" | "large" | "extra_large", number>> = {
+  small: 45,
+  medium: 50,
+  large: 55, // anchor — matches this file's own EGG_BOIL_DONENESS base-table assumption
+  extra_large: 65,
+};
+
 /** `eggBoilDonenessRange`, adjusted for a real egg size instead of only
  *  ever assuming "large". Composes the base range with the offset table
  *  above rather than a second, separately-cited table — the offset is

@@ -1216,3 +1216,48 @@ was made. Don't rewrite or delete old entries — append.
   and `ROADMAP.md`'s updated entry, the same "close what you actually
   closed, name what you didn't" discipline this whole session has
   applied everywhere else.
+
+### Egg spherical conduction — checking dimensional analysis by hand before trusting a popularized formula
+
+- **A real, common failure mode with widely-reported physics formulas is
+  a hidden unit convention (CGS vs. SI, mass in grams vs. kg) that only
+  becomes obvious once you actually check it** — worth doing explicitly,
+  not assuming a formula "just works" with whatever units seem natural.
+  Checked by hand before writing any code: with M in kg, c in J/(kg·K),
+  rho in kg/m³, K in W/(m·K) — plain SI, the same units every other
+  `thermophysical` field in this repo already uses — Williams' formula's
+  prefactor comes out in SECONDS directly, no conversion factor needed.
+  That this worked out cleanly was a real finding, not a foregone
+  conclusion; it would have been a genuinely different (worse) situation
+  if it hadn't, and the doc comment says so explicitly rather than
+  presenting the clean result as if it were obviously going to happen.
+- **The by-hand cross-check against `EGG_BOIL_DONENESS` was done with
+  real arithmetic before writing the implementation, then verified again
+  by actually running the code** — both numbers matched exactly (408s/
+  450s/494s), which is the point: a hand-computed sanity check that
+  DISAGREES with the running code is a bug in one of the two, and this
+  session's practice throughout has been to resolve that disagreement
+  before moving on, not to trust whichever number looks more finished.
+- **Reporting three different outcomes (converges / near-miss / real
+  divergence) honestly, instead of rounding the finding to "the physics
+  checks out," is the same discipline this repo has applied to every
+  other cross-check this session** (onion's specific heat, the Denver
+  altitude check) — but this is the first time the THREE-WAY split
+  itself was the finding: not every prediction from a real, correctly-
+  implemented, dimensionally-checked formula has to match an empirical
+  table for the formula to be worth keeping. A named HYPOTHESIS for the
+  `hard`-tier divergence (real recipes overshoot the bare coagulation
+  threshold for a reliable margin, not a marginal result) is offered as
+  exactly that — a hypothesis, not asserted as settled — because this
+  repo has not verified it against a primary source.
+- **The newer (2025, peer-reviewed) and older (informal, widely-
+  reported) sources for the SAME physical fact — yolk denaturation
+  temperature — gave meaningfully different numbers, and the correct
+  move was to use the newer, more rigorous one for the input that
+  matters most (`soft`'s anchor) while being explicit that the other two
+  targets are this repo's OWN interpretation layered on top, not
+  smuggled in at the same confidence as the cited figure.** A citation
+  can be simultaneously real and only PARTIALLY authoritative for what
+  it's actually being used for — `YOLK_TARGET_TEMP_C`'s own citation
+  note says this directly rather than letting the strongest component
+  imply more rigor for the whole table than it actually has.

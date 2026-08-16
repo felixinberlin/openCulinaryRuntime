@@ -34,6 +34,7 @@
     "capability-test:fry-as-robot": "tsx scripts/fry-egg-as-a-robot.ts",
     "capability-test:fry-any-vessel": "tsx scripts/fry-with-any-vessel.ts",
     "capability-test:boil-at-altitude": "tsx scripts/boil-at-altitude.ts",
+    "capability-test:boil-egg-by-physics": "tsx scripts/boil-egg-by-physics.ts",
     "capability-test:fry-different-fats": "tsx scripts/fry-with-different-fats.ts",
     "capability-test:potato-prep-variants": "tsx scripts/potato-prep-variants.ts",
     "capability-test:cut-shape-dimensions": "tsx scripts/cut-shape-dimensions.ts",

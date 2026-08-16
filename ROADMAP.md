@@ -1598,6 +1598,38 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
         temperature half only; `EGG_BOIL_DONENESS`/`POTATO_BOIL_DONENESS`'s
         hold-time ranges remain sea-level-only, named explicitly rather
         than implied fixed.
+      - **A real, computed second method for egg-boiling time — closed
+        2026-08-16** (`src/egg-heat-penetration.ts`), directly answering
+        "check if there's any newer/other real math on this topic" against
+        `EGG_BOIL_DONENESS`'s own EMPIRICAL table (sourced from consumer
+        cooking guides, never independently computed). Implements Charles
+        Williams' closed-form spherical-conduction formula (University of
+        Exeter) — the whole-egg sibling of `heat-penetration.ts`'s
+        plane-slab model — with the dimensional analysis checked by hand
+        before implementing (plain SI units give seconds directly, no
+        hidden conversion factor). Cross-checked against the empirical
+        table for a real 55g "large" egg: `soft` converges INSIDE the
+        empirical range (408s computed vs. 360-420s empirical); `medium`
+        is a near-miss just under it (450s vs. 480-540s); `hard` diverges
+        substantially (494s vs. 660-780s) — reported honestly as all
+        three outcomes, not smoothed into one "it matches" claim (see that
+        file's own doc comment for the stated hypothesis on the `hard`
+        divergence). `YOLK_TARGET_TEMP_C`'s three targets are a REASONED
+        INTERPRETATION combining a 2025 peer-reviewed yolk-denaturation
+        figure (Di Lorenzo & Di Maio, `REFERENCES.md`) with the older
+        Exeter page's own coagulation range — flagged as an interpretation,
+        not presented as directly cited. `EGG_SIZE_GRAMS` (new, real gram
+        values for small/medium/large/extra_large) required reconciling
+        the EU's official grading bands against this repo's OWN
+        pre-existing "large ~50-60g" assumption, named explicitly rather
+        than silently picking one. Composes with `altitude.ts`'s
+        `waterBoilingPointC` for a real altitude-adjusted egg-boiling time
+        with zero changes to either file (`scripts/boil-egg-by-physics.ts`,
+        `npm run capability-test:boil-egg-by-physics`). Deliberately does
+        NOT implement the same paper's own full two-material numerical PDE
+        + Arrhenius-kinetics model (a genuinely different, much larger
+        class of physics than anything else in this repo attempts) —
+        named as a real, separately-scoped possibility, not attempted.
       - **Egg size adjustment — closed** (`egg-doneness.ts`'s
         `EGG_SIZE_ADJUSTMENT_SECONDS`/`eggBoilDonenessRangeForSize`,
         `boil.json`/`simmer.json`'s new `eggSize` parameter) — a real, cited

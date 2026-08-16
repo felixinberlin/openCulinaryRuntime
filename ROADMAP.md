@@ -1740,12 +1740,15 @@ Unstarted; depends on Phase 5's Cooklang parser (or a Python equivalent) and
 Phase 1's still-unbuilt `ParsedIngredientSchema` (`RecipeIngredientSchema`
 itself closed 2026-08-13 — see Phase 1).
 
-**Future possibility, not scoped (2026-08-16):** `recipi/` at the repo root
-holds an unsolicited prototype/proposal for parsing free-text recipe
+**Future possibility, not scoped (2026-08-16, consolidated into
+`RECIFINE_INTEGRATION_NOTES.md` the same day):** `recipi/` at the repo
+root holds an unsolicited prototype/proposal for parsing free-text recipe
 *instructions* (not just `recipeIngredient` strings — this phase never
 scoped that) via **ReciFine**, a pretrained NER model
 (github.com/nuhu-ibrahim/ReciFine, EACL 2026). Evaluated and deliberately
-shelved rather than built or deleted:
+shelved rather than built or deleted — see `RECIFINE_INTEGRATION_NOTES.md`
+for the full distilled reference (entity mapping, what's reusable vs.
+not, concrete un-shelving steps); summary below kept for quick reference:
 - **License blocker**: ReciFine is CC BY-NC 4.0 (NonCommercial); this repo
   is MIT and headed public. Depending on it would practically impose an NC
   restriction on anything downstream that uses the scraper, so it can't be

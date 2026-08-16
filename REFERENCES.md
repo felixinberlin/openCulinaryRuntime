@@ -226,6 +226,52 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   composition is essentially fully described by its acid concentration).
   Confidence: `standard_reference` (a real government regulatory
   document).
+- **USDA FoodData Central** (fdc.nal.usda.gov), raw onion — water 89g,
+  carbohydrate 9.3g, protein 1.1g, fat 0.1g per 100g, used in
+  `data/entities/onion.json`'s `composition.citation`. Confidence:
+  `standard_reference`, same not-checked-against-the-exact-current-FDC-
+  entry caveat as every other USDA composition citation in this file.
+- **Rapusas & Driscoll, "Thermophysical properties of fresh and dried
+  white onion slices"** (*Journal of Food Engineering*, 1995) and related
+  physical-properties-of-onion literature — density 970-1416 kg/m³,
+  thermal conductivity 0.12-0.54 W/(m·K), specific heat 0.87-4.01
+  kJ/(kg·K), each spanning fresh (high-moisture) to fully-dried onion.
+  `onion.json`'s `thermophysical.densityKgPerM3`/
+  `thermalConductivityWPerMK` use the FRESH endpoint (970 kg/m³, 0.54
+  W/(m·K)); `specificHeatJPerKgK` (3940 J/(kg·K)) is instead COMPUTED via
+  the same Choi & Okos (1986) two-component method `potato.json`'s
+  identical field uses, and lands close to this source's independently-
+  measured fresh-onion upper bound (4010 J/(kg·K)) — convergent evidence
+  from two different methods, noted explicitly in `onion.json`'s own
+  citation. Confidence: `standard_reference` for density/conductivity (a
+  real measured food-engineering study), same tier extended to the
+  computed specific heat given the cross-check.
+- **General kitchen-yield/weight-loss guidance on hand-peeling a whole
+  onion** (consumer cooking-conversion sources on onion peeling loss) —
+  ~7-10% weight loss from whole to peeled (papery skin plus root/stem
+  trim), used in `data/entities/onion_peel.json`'s
+  `typicalYieldFractionOfParent`. Confidence: `commonly_cited_unverified`
+  — deliberately NOT the ~37-38% figure common in onion-processing/
+  valorization literature (e.g. "Onion Peel: Turning a Food Waste into a
+  Resource," *Foods* 10(2):304, 2021), which measures industrial
+  processing waste (trimmed fleshy outer rings plus both root and stem
+  ends, not just the dry papery skin a home cook removes) — the same
+  scope-mismatch discipline already applied to `garlic_peel.json`'s
+  identical citation choice.
+- **J. Kenji López-Alt, Serious Eats, caramelized onion technique**
+  (secondary summaries checked: Tasting Table, "The Scientific Way Baking
+  Soda Helps Caramelized Onions Cook Faster"; the primary Serious Eats
+  article itself was not directly fetchable this session) — traditional
+  low-and-slow method up to ~45 minutes over very low heat; López-Alt's
+  faster method (~15-20 minutes) uses medium-high to high heat with
+  periodic water deglazing plus added sugar to compensate for less
+  natural-sugar development time; baking soda (up to ~1/4 tsp per pound)
+  raises surface pH and increases the Maillard browning rate by over 50%.
+  Used in `data/actions/caramelize.json`'s `durationSeconds` range and
+  `technique`/`bakingSodaAssisted` parameters. Confidence:
+  `commonly_cited_unverified` — a well-known food-science-literate
+  cooking authority reproduced across multiple secondary sources, not a
+  peer-reviewed primary study.
 
 ## Culinary technique & food science literature
 

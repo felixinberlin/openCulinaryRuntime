@@ -1063,3 +1063,55 @@ was made. Don't rewrite or delete old entries — append.
   full terminality) — applied here to a citation's own scope rather than
   to code.
 
+### Onion + `CARAMELIZE` — closing ROADMAP.md's named "onion" gap, 2026-08-16
+
+- **The same garlic bulk-vs-clove scope trap recurred, one search later,
+  for onion peel.** A first web search for "onion peel percentage"
+  surfaced a repeated ~37-38% figure across onion-processing/valorization
+  papers — checking what it actually measured (before using it, not
+  after) found the same pattern as garlic: it's industrial processing
+  waste (trimmed fleshy outer rings for size/appearance standardization,
+  plus both root and stem ends), not the dry papery skin a home cook
+  peels off by hand. A second, targeted search for hand-peeling weight
+  loss specifically found the real home-kitchen figure (~7-10%), used
+  instead — see `onion_peel.json`'s citation and `REFERENCES.md`. Worth
+  naming explicitly: this is now the SECOND time in this repo an
+  industrial byproduct-valorization paper's headline percentage was the
+  wrong scope for a home-kitchen-granularity entity — a pattern, not a
+  one-off, and a reason to actively distrust "waste percentage" figures
+  from that literature family without checking their scope first, going
+  forward.
+- **A first draft of `caramelize.json` wrongly assumed caramelizing
+  onions is always a low-heat process, before actually researching
+  timing/technique.** Real technique is genuinely split: the traditional
+  method (very low heat, up to ~45 minutes) coexists with J. Kenji
+  López-Alt's faster method (medium-high to high heat, periodically
+  deglazed with water, ~15-20 minutes) — both real, both named, opposite
+  choices of heat level for the identical named dish. Caught before
+  shipping by actually researching the technique rather than assuming
+  "caramelization = gentle = low heat" from general intuition; the
+  action's `heatLevel` parameter was corrected to keep `FRY`'s full
+  low/medium/high range (not narrowed to "low" only) specifically because
+  of this. The general lesson: a plausible physical intuition about a
+  named technique ("this must be gentle, it takes so long") is not a
+  substitute for checking whether real practitioners actually agree —
+  the same "verify against real technique, not intuition" discipline
+  `LEARNINGS_PROCESS.md`'s potato-peel correction already established,
+  caught here before it was ever wrong in shipped data rather than after.
+- **`CARAMELIZE` resolves, for one real case, the open design question
+  `fry.json`'s own `donenessNote` left unresolved for garlic**: "does a
+  meaningfully different browned outcome need a new verb, or just a
+  parameter?" The answer for garlic was left as an honest unresolved
+  tension (a `doneness` parameter, informational only, no new state).
+  Caramelized onion is the case where the SCRAMBLE-split-from-FRY /
+  `PAR_FRY` precedent actually applies: caramelized onion is a genuinely
+  different, independently-named finished dish (sweet, jammy, 15-45
+  minutes) from a simply sautéed onion (`fried`, a few minutes,
+  translucent-to-lightly-golden) — not a gentler path to the SAME result
+  the way `SIMMER` deliberately reaches `BOIL`'s shared `boiled` state.
+  The general lesson this reinforces: "does the outcome deserve its own
+  state" is decided by whether real cooks treat the two results as
+  different DISHES (garlic: not really — "browned garlic" isn't a
+  separate named preparation) vs. genuinely different named preparations
+  (onion: yes — nobody calls caramelized onions merely "fried onions").
+

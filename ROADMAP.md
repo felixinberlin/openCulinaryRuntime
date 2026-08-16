@@ -617,9 +617,12 @@ covered by what exists:**
       (see `LEARNINGS_DOMAIN.md` 2026-08-12) — this would need a genuinely different
       mechanism, not a stretched CCP.
 - [ ] **Far more staple ingredients/entities.** Still no flour, milk/cheese,
-      onion, herbs, sugar, vinegar/acid, or any protein besides egg. The
-      vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
-      chemistry) remains disproportionate to its ingredient BREADTH.
+      herbs, sugar, or any protein besides egg. (Onion closed 2026-08-16,
+      vinegar/acid closed 2026-08-15 — both corrected out of this line the
+      same change that closed them; see this bullet's own dated entries
+      below.) The vocabulary's technique DEPTH (HACCP, carryover cooking,
+      emulsion chemistry) remains disproportionate to its ingredient
+      BREADTH.
       **Partial progress 2026-08-14/15:** a second `isFryingMedium` entity
       (`sunflower_oil.json`, proving `fry.json`'s
       `requiredIngredientCapabilities` check was already substitutable —
@@ -631,6 +634,25 @@ covered by what exists:**
       existing safety check at `crispy_french_fries.json`'s 191°C
       finishing-fry target. Clarified butter/ghee, brown butter, and milk/
       cheese as their own entities remain real, unbuilt gaps.
+      **Onion closed 2026-08-16** (`data/entities/onion.json` +
+      `onion_peel.json`, `data/actions/caramelize.json` — a NEW verb, not
+      `FRY` + a parameter, see that file's own reasoning): full
+      `possibleStates`/`invalidTransitions` audited at the same per-entry
+      rigor as `potato.json`'s 2026-08-16 audit (cut-shapes forbid
+      `peeled` at HIGH confidence; `fried`/`baked`/`caramelized` at the
+      WEAKER tier; `boiled` deliberately left open — blanch-then-peel
+      pearl onions is real, common technique, the same carve-out
+      `potato.json` already established). Proven end-to-end via
+      `scripts/caramelize-onion-as-a-robot.ts`
+      (`npm run capability-test:caramelize-onion`). Still explicitly open:
+      `onion.json` deliberately does NOT set `isCombinableBase` — a real
+      "tortilla de patatas CON cebolla" recipe (the exact gap
+      `tortilla-de-patatas.json`'s own metadata names) needs `COMBINE`
+      generalized beyond its current fixed potato+egg shape, or a new
+      potato+onion pre-combine step; see `onion.json`'s
+      `combineScopeNote` for why that wasn't force-fit here. Flour,
+      milk/cheese (beyond plain butter), herbs, sugar, and any protein
+      besides egg remain unbuilt.
       **Triaged 2026-08-15 against a user-supplied Reddit thread**
       (r/Cooking, "Engineer brain struggling with cooking," 760 upvotes,
       219 comments — copy-pasted into the repo, moved to

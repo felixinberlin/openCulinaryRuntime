@@ -1,0 +1,127 @@
+{
+  "id": "caramelize",
+  "verb": "CARAMELIZE",
+  "names": {
+    "en": "Caramelize",
+    "es": "Caramelizar"
+  },
+  "requiredTools": [],
+  "requiredToolCapabilities": [
+    "isFryingVessel"
+  ],
+  "requiredTargetCapability": "isCaramelizable",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isFryingMedium"
+  ],
+  "parameters": [
+    {
+      "id": "heatLevel",
+      "names": {
+        "en": "Heat level",
+        "es": "Nivel de fuego"
+      },
+      "required": false,
+      "allowedValues": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "seconds",
+        "min": 900,
+        "max": 2700
+      }
+    },
+    {
+      "id": "agitation",
+      "names": {
+        "en": "Agitation",
+        "es": "Agitación"
+      },
+      "required": false,
+      "allowedValues": [
+        "undisturbed",
+        "occasional_nudge",
+        "constant_stir"
+      ]
+    },
+    {
+      "id": "technique",
+      "names": {
+        "en": "Technique",
+        "es": "Técnica"
+      },
+      "required": false,
+      "allowedValues": [
+        "low_and_slow",
+        "high_heat_deglazed"
+      ]
+    },
+    {
+      "id": "bakingSodaAssisted",
+      "names": {
+        "en": "Baking soda assisted",
+        "es": "Con bicarbonato"
+      },
+      "required": false,
+      "allowedValues": [
+        "true",
+        "false"
+      ]
+    },
+    {
+      "id": "doneness",
+      "names": {
+        "en": "Doneness",
+        "es": "Punto de caramelización"
+      },
+      "required": false,
+      "allowedValues": [
+        "soft_translucent",
+        "golden",
+        "deep_caramel"
+      ]
+    }
+  ],
+  "outputs": {
+    "transformedState": "caramelized",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 2700,
+  "metadata": {
+    "notes": "New verb, added 2026-08-16 alongside onion.json (the first, and currently only, entity with isCaramelizable). Deliberately its OWN action rather than FRY plus a doneness value — see onion.json's caramelizeNote for the full reasoning (the same 'does this warrant a new verb or just a parameter' question fry.json's own donenessNote already raised for garlic and left open; caramelized onion is the case where a new verb is actually warranted, the same SCRAMBLE-split-from-FRY / PAR_FRY precedent). requiredIngredientCapabilities/requiredToolCapabilities copied directly from fry.json — same physical requirement (a frying medium in a frying-capable vessel), just a slower, lower-and-more-patient process.",
+    "techniqueNote": "'low_and_slow' vs. 'high_heat_deglazed' names a real, well-documented technique fork, not an arbitrary enum: the traditional method (very low heat, minimal stirring, up to ~45 minutes) genuinely coexists with J. Kenji López-Alt's faster method (medium-high to high heat, periodically deglazing with a splash of water each time the fond threatens to catch, plus a small pinch of added sugar to compensate for less time to develop the onion's own natural sugars, ~15-20 minutes total) — both are real, corroborated, opposite choices of heatLevel for the same named dish, which is exactly why heatLevel keeps FRY's full low/medium/high range here rather than being narrowed to 'low' only (an earlier draft of this file wrongly assumed caramelizing is always low-heat before this technique fork was actually checked). Informational only, like every other parameter here — this records which technique was used, it does not itself drive durationSeconds/heatLevel to be consistent with the choice.",
+    "bakingSodaAssistedNote": "Also from López-Alt's method: baking soda raises the onion's surface pH, which measurably speeds the Maillard browning reaction (independently reported as a >50% increase in browning rate); more than about 1/4 teaspoon per pound of onion is reported to oversalt/over-soften the texture, so this is a real, bounded technique, not an unlimited accelerant. Kept as an informational boolean rather than a numeric dose parameter — this vocabulary has no generic 'add a pinch of X' mechanism, same depth limit as every other seasoning/additive fact recorded here without a dedicated action (see potato.json's fryingScienceNote for the same class of honesty limit).",
+    "durationSecondsNote": "900-2700s (15-45 minutes) spans both real cited methods: López-Alt's faster deglazed method (~15-20 min = 900-1200s) at the bottom, the traditional low-and-slow method (~30-45 min = 1800-2700s) at the top. Genuinely caramelized onion — deep amber, jammy, sweet — is not achievable much faster than the lower bound regardless of technique; this is not FRY's much wider, less specific 10s-30min range.",
+    "donenessNote": "Same informational-only, non-state-determining discipline as fry.json's doneness parameter (see that file's own donenessNote for why: ActionOutputsSchema has no default-value mechanism for a parameter-driven state, only one fixed transformedState OR one parameter-driven one per action) — CARAMELIZE's transformedState is fixed at 'caramelized' regardless of which doneness value is recorded; 'soft_translucent'/'golden' describe real intermediate waypoints on the way there (useful for a recipe wanting to record progress or an early stopping point) even though only 'deep_caramel' is what most recipes actually mean by 'caramelized onions'.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a genuinely open-ended, accumulating do-until process (color/texture threshold crossed by 'more of the same' low, patient heat over many minutes) — the same class as BOIL/SIMMER/FRY, not a bounded discrete act like CUT/PEEL. Both discriminators (elapsed-time dependence, unreliably-sensed completion) agree.",
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (2700s) — same convention as fry.json's/boil.json's identically-named notes: the top of an already-established real range doubles as a reasonable timeout ceiling, not a new number."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Color has progressed from raw/translucent through golden to a deep amber-brown, with a soft, jammy (not crisp or crunchy) texture",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "hot_surface",
+      "severity": "medium",
+      "note": "Extended pan/oil exposure at low-to-medium heat over many minutes — lower splatter risk than high-heat frying, but a real burn risk from prolonged contact and from the fond catching if left unattended too long"
+    }
+  ],
+  "retrySafe": true
+}

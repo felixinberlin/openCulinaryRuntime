@@ -1,0 +1,37 @@
+{
+  "id": "onion_peel",
+  "kind": "ingredient",
+  "names": {
+    "en": "Onion skin",
+    "es": "Piel de cebolla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": ["raw"],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "onion",
+    "min": 0.07,
+    "max": 0.1,
+    "citation": {
+      "source": "General kitchen-yield/weight-loss guidance on hand-peeling a whole onion (papery outer skin plus root/stem-end trim) reporting ~7-10% weight loss from whole to peeled — a HOME-KITCHEN, hand-peeling scope, deliberately NOT the ~37-38% figure commonly reported in onion-processing/valorization literature (e.g. industrial onion-peel-as-byproduct reviews on 'onion peel waste').",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same scope-mismatch discipline as garlic_peel.json's identical citation note: the ~37-38% industrial figure is a genuinely DIFFERENT physical scope, not a stronger/weaker version of the same fact — industrial onion processing waste typically also includes trimmed outer FLESHY rings (removed for size/appearance standardization) and both root and stem ends, not just the dry papery skin a home cook peels off by hand. Using the bulk industrial figure here would repeat the exact avoidable scope error garlic_peel.json's audit already caught and documented once this session. This 7-10% range is itself only a general kitchen-conversion source, not a peer-reviewed primary measurement — kept at the weaker 'commonly_cited_unverified' tier honestly, same as potato_peel.json/garlic_peel.json's own figures, rather than dressed up with the industrial source's more official-sounding citation trail. Unlike garlic_peel.json (pure dry skin only) or potato_peel.json (skin only), this range's real physical scope is slightly broader — it includes the trimmed root/stem ends alongside the papery skin, since that's what the source figure itself actually measures; named here rather than silently treated as skin-only."
+    }
+  },
+  "capabilities": {},
+  "sensory": {
+    "texture": ["papery", "brittle"],
+    "color": "brown"
+  },
+  "metadata": {
+    "isWaste": true,
+    "reusable": false,
+    "producedBy": ["peel"],
+    "notes": "Byproduct entity spawned when 'peel' is applied to onion.json (see EntitySchema.producedByproducts on onion) — same producedBy convention as potato_peel.json/garlic_peel.json/egg_shell.json. No reuse path modeled (allowedTransformations/capabilities left empty, same as garlic_peel.json): dry onion skin isn't a real culinary reuse candidate the way potato peel (crisps) is, though it IS a real source of vegetable-stock flavor/color and dye in some traditions — not modeled here since this vocabulary has no stock/infusion-from-solid-aromatics mechanism yet (a separate, unbuilt gap, not specific to onion)."
+  }
+}

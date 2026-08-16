@@ -1,0 +1,89 @@
+{
+  "id": "onion",
+  "kind": "ingredient",
+  "names": {
+    "en": "Onion",
+    "es": "Cebolla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 89,
+      "carbohydrate_g": 9.3,
+      "protein_g": 1.1,
+      "fat_g": 0.1
+    },
+    "citation": {
+      "source": "USDA FoodData Central (fdc.nal.usda.gov), raw onion",
+      "confidence": "standard_reference",
+      "note": "Same caveat as potato.json/garlic.json — not checked against the exact current FDC entry; onion composition also varies by variety (yellow/white/red/sweet) and storage time, same as garlic's cultivar caveat."
+    }
+  },
+  "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "burned", "overcooked"],
+  "possibleTags": ["salted"],
+  "allowedTransformations": ["peel", "cut", "grate", "boil", "fry", "bake", "caramelize", "salt"],
+  "statePrerequisites": {
+    "cut": "peeled",
+    "grate": "peeled",
+    "caramelize": ["sliced", "chopped"]
+  },
+  "invalidTransitions": {
+    "burned": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "overcooked"],
+    "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized"],
+    "sliced": ["peeled"],
+    "diced": ["peeled"],
+    "julienne": ["peeled"],
+    "chopped": ["peeled"],
+    "minced": ["peeled"],
+    "halved": ["peeled"],
+    "quartered": ["peeled"],
+    "grated": ["peeled"],
+    "fried": ["peeled"],
+    "baked": ["peeled"],
+    "caramelized": ["peeled"]
+  },
+  "producedByproducts": ["onion_peel"],
+  "capabilities": {
+    "isPeelable": true,
+    "isChoppable": true,
+    "isGratable": true,
+    "isBoilable": true,
+    "isFryable": true,
+    "isBakeable": true,
+    "isCaramelizable": true,
+    "isSeasonable": true,
+    "isWashable": false
+  },
+  "thermophysical": {
+    "densityKgPerM3": 970,
+    "thermalConductivityWPerMK": 0.54,
+    "specificHeatJPerKgK": 3940,
+    "citation": {
+      "source": "Density/thermal conductivity: Rapusas & Driscoll, \"Thermophysical properties of fresh and dried white onion slices\" (Journal of Food Engineering, 1995) and related physical-properties-of-onion literature — fresh (high-moisture) endpoint of a moisture-content-dependent range (density 970-1416 kg/m3, thermal conductivity 0.12-0.54 W/m*K spanning fresh-to-fully-dried); this entity uses the FRESH endpoint since raw onion is ~89% water. specificHeatJPerKgK is COMPUTED, same Choi & Okos (1986) two-component method potato.json's identical field already uses, not looked up: carbohydrate component cp at 50C reference (1632 J/(kg*K), potato.json's own already-cited value from the same equation) mass-weighted with water's 4186 J/(kg*K) by this file's own composition.nutrientsPer100g (water_g=89, carbohydrate_g=9.3, normalized over the tracked 98.3% since protein/fat aren't included) gives 3943.8 J/(kg*K), rounded to 3940.",
+      "confidence": "standard_reference",
+      "note": "The computed 3940 J/(kg*K) sits close to the literature's independently-reported fresh-onion upper bound (up to 4010 J/(kg*K) per the same fresh-to-dried moisture-dependent range cited above) — convergent evidence from two different methods (a composition-derived model vs. a direct measurement), not just one source repeated. Same two-component approximation limitation as potato.json's identical field: the untracked ~1.7% (protein+fat) means this isn't the complete six-component Choi-Okos calculation."
+    }
+  },
+  "sensory": {
+    "taste": ["pungent", "sweet"],
+    "texture": ["firm", "layered"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "cebolla",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Built 2026-08-16, directly closing ROADMAP.md's 'Far more staple ingredients/entities' gap (onion named explicitly as missing) and the real forcing case already named in tortilla-de-patatas.json's own metadata ('Onion-free (sin cebolla) — no onion entity exists in this vocabulary yet'). Modeled closely on potato.json/garlic.json's conventions: isWashable: false (like garlic, not potato) because onion is DRY-peeled — the papery outer skin comes off, it isn't scrubbed like a soil-covered potato. statePrerequisites.cut/grate: 'peeled' (unconditional, unlike potato's either-washed-or-peeled — onion has no washed path to begin with). possibleTags/salt: same orthogonal seasoning-vs-state pattern as potato.json/garlic.json.",
+    "grateNote": "isGratable + statePrerequisites.grate: 'peeled', reusing the shared GRATE action (data/actions/grate.json) potato.json's rösti/hash-brown use already established. A real, common technique in its own right for onion, not borrowed for convenience: grating (rather than mincing) onion is a standard way to work it into meatball/burger/meatloaf mixtures and marinades — releases more juice and produces a texture fine enough to disappear into the mixture rather than remain as visible pieces.",
+    "boiledPeeledNote": "Deliberately does NOT forbid 'boiled' -> 'peeled' in invalidTransitions, the SAME real exception potato.json's own audit already carved out for boil-in-jacket-then-peel — and onion has an even more direct, more common real-world case: blanching whole pearl/small onions briefly in boiling water specifically to LOOSEN the skin before peeling is a standard, widely-taught technique (the classic method for peeling large quantities of pearl onions for creamed onions or pickling), not a workaround. Boiling is also a real end state in its own right for onion (creamed onions, boiled pearl onions) independent of any peeling use.",
+    "caramelizeNote": "isCaramelizable + CARAMELIZE (data/actions/caramelize.json) is a NEW, DEDICATED verb, not FRY plus a doneness parameter — the same design question fry.json's own donenessNote already raised and left open for garlic ('a genuinely distinct browned-garlic state would need... a separate verb, like SCRAMBLE was split from FRY'). Caramelized onion is the textbook case where that split is actually warranted: it is a genuinely different, independently-named finished dish (sweet, jammy, deeply browned, 15-45 minutes of processing) from a simply sautéed/softened onion ('fried' here, translucent-to-lightly-golden, a few minutes), not a gentler path to the same result the way SIMMER intentionally reaches BOIL's same 'boiled' state. statePrerequisites.caramelize: ['sliced','chopped'] — real technique almost universally starts from sliced (thin half-moons, the standard prep) or chopped onion; diced/minced pieces are too small and burn before caramelizing evenly, and halved/quartered pieces are too large to render down uniformly — deliberately not opened to the full cut-shape set the way potato's boil/fry are.",
+    "invalidTransitionsAuditNote": "Audited individually 2026-08-16 at the SAME rigor as potato.json's 2026-08-16 dedicated audit (invalidTransitionsAudit2026-08-16 note there), not batch-asserted from a template — checked one entry at a time against real technique. Eight cut-shape states (sliced/diced/julienne/chopped/minced/halved/quartered/grated) forbid 'peeled' at HIGH confidence — structural: once subdivided, there is no single whole piece left to revert to 'peeled', the same geometric fact potato.json's identical entries rest on. 'fried'/'baked'/'caramelized' also forbid 'peeled', but at the SAME WEAKER 'no real counter-technique found on active search' tier potato.json's fried/baked/par_fried entries use — named as such, not presented with equal confidence. Deliberately does NOT forbid 'boiled' -> 'peeled' (see boiledPeeledNote above) and deliberately does NOT add shape-to-shape closures (e.g. diced forbidding sliced) — real progressive-cutting sequences exist and this audit did not have the confidence to individually verify which shape-to-shape transitions are and aren't real, so none were asserted rather than guessed, the identical open-gap discipline potato.json's own audit already named.",
+    "combineScopeNote": "Deliberately does NOT set isCombinableBase or add 'combine' to allowedTransformations, even though the natural next step — a real 'tortilla de patatas CON cebolla' variant recipe — is exactly the gap tortilla-de-patatas.json's own metadata names. data/actions/combine.json's own scopeNote is explicit that requiredTargetCapability/requiredSecondaryCapability/combinesInto are FIXED on that one action definition (potato + egg -> tortilla_mixture only), not a generic merge-any-two-isCombinable verb — and the real technique for onion in tortilla (sliced onion fried/confit-cooked together WITH the potato in the same oil, before either is combined with egg, not combined as a separate third ingredient afterward) would need a genuinely new composite entity and action chain (e.g. a potato+onion pre-combine step), not just flipping a capability flag on this entity. Named here as a real, concrete, still-open follow-up (see ROADMAP.md) rather than force-fit into COMBINE's current single-purpose shape.",
+    "failureStateNote": "'burned'/'overcooked' added following the same TICKET 5 (PAPER_NOTES_2608.04768.md) pattern as potato.json/garlic.json/egg.json/tortilla_mixture.json — see those files' identically-named notes for the full reasoning (no detection mechanism, reachable only as an authored fact). Onion, like garlic, is a real, commonly-known burn hazard specifically BECAUSE of caramelize.json's own long, high-sugar, low-supervision process — 'keep it low and slow or it burns instead of caramelizing' is exactly the failure this note exists to make assertable. 'burned' is unconditionally terminal (forbids every other state including 'overcooked'); 'overcooked' forbids reverting to every normal state but leaves the transition to 'burned' itself open (a real further progression), so isTerminalState(onion, 'overcooked') correctly computes false, matching every other TICKET-5 entity in this vocabulary."
+  }
+}

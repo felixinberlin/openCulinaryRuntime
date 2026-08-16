@@ -13,6 +13,16 @@
   "possibleStates": ["raw"],
   "allowedTransformations": [],
   "producedByproducts": [],
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "garlic",
+    "min": 0.01,
+    "max": 0.03,
+    "citation": {
+      "source": "General consumer/culinary sources on single-clove weight (typical peeled clove ~4-7g, papery skin commonly described as 'usually well under 0.1g') — a CLOVE-level estimate, deliberately NOT the ~24-25% figure commonly cited in garlic-processing/valorization literature (e.g. industrial garlic-peel-as-byproduct reviews reporting ~760g cloves + ~240g skin per 1kg of bulbs).",
+      "confidence": "commonly_cited_unverified",
+      "note": "That 24-25% industrial figure is a genuinely DIFFERENT physical scope, not a stronger/weaker version of the same fact: it's whole-BULB processing yield (every clove's skin PLUS the bulb's own outer papery wrapper layers, totaled across the whole head), while garlic.json (this entity's actual parent) is modeled at single-CLOVE granularity throughout this repo (see garlic.json's own thermophysical citation note: 'typical clove-tissue values'). Using the bulk figure for one clove would have been a real, avoidable scope-mismatch error — flagged explicitly rather than picking the more precise-looking number without checking what it actually measures. This clove-level range is correspondingly the WEAKER estimate of the two (no single primary source specifically measuring one clove's skin fraction was found), kept honest rather than dressed up with the bulk figure's larger, more official-sounding citation trail."
+    }
+  },
   "capabilities": {},
   "sensory": {
     "texture": ["papery", "brittle"],

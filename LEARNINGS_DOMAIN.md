@@ -1032,3 +1032,34 @@ was made. Don't rewrite or delete old entries — append.
   audits (however careful) are structurally prone to missing, found
   mechanically instead.
 
+### Yield/waste factors — the garlic bulk-vs-clove scope trap, checked before it became a real error
+
+- **A web search for "garlic clove skin percentage" returned a genuinely
+  authoritative-LOOKING figure (~24-25%, repeated across multiple
+  garlic-processing/valorization papers) that would have been a real,
+  significant error if used directly — checking WHAT it actually measured
+  before using it is what caught this, not the figure's own credibility.**
+  That 24-25% is whole-BULB industrial processing yield: every clove's
+  skin PLUS the bulb's own outer papery wrapper layers, totaled across an
+  entire head of garlic and expressed as a fraction of the whole bulb's
+  mass. `garlic.json` (this repo's actual entity, throughout) is modeled
+  at single-CLOVE granularity — its own thermophysical citation already
+  says so explicitly ("typical clove-tissue values"), a fact that had to
+  be actively checked, not assumed, before deciding which of two
+  plausible-sounding percentages was the right one. A second, much
+  smaller, more weakly-sourced estimate (a single clove's papery skin is
+  usually well under 0.1g against a ~4-7g peeled clove, roughly 1-3%) is
+  the one actually used — a real case of the MORE authoritative-looking
+  source being the WRONG one for this repo's actual unit of measurement,
+  not the less rigorous one.
+- **Worth stating the general lesson explicitly: "is this percentage
+  measuring the same THING my entity represents" is a real, separate
+  question from "is this percentage from a credible source," and both
+  have to be checked — a rigorous source measuring the wrong scope is not
+  more trustworthy than a rough estimate measuring the right one.** The
+  same category of check as `LEARNINGS_ENGINE.md`'s earlier entries about
+  not conflating two similar-looking but structurally different facts
+  (`FRY`'s `oilTempC` vs. `waterTempC`; `overcooked`'s partial vs. `burned`'s
+  full terminality) — applied here to a citation's own scope rather than
+  to code.
+

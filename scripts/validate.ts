@@ -46,12 +46,66 @@ function fail(msg: string) {
   console.error(`FAIL ${msg}`);
 }
 
+// typicalYieldFractionOfParent (ingredient.ts, "yield/waste factors" —
+// ROADMAP.md) cross-check, shared by both the flat producedByproducts
+// fallback and each byproductsByAction override below — same "hard fail on
+// a wrong reference, soft NOTE on an implausible sum" split every other
+// cross-reference check in this file already uses. A byproduct entity
+// without typicalYieldFractionOfParent at all is not itself an error (many
+// don't have a citable figure yet) — this only checks the ones that DO
+// claim one.
+//
+// The ~100%-of-parent-mass expectation is checked ONLY for a
+// `destroysTarget` action (`SEPARATE`/`CRACK` — the byproducts ARE the
+// entire former parent, nothing else is kept). A non-destroying action
+// (`PEEL`) transforms the parent in place and keeps the rest of its mass
+// AS the same (now-trimmed) instance, not as a separate byproduct entity —
+// its byproduct's fraction is legitimately small (e.g. potato_peel's
+// ~10-25%), and checking THAT against ~100% would be a real category
+// error (`isDestroyingAction` undefined/false skips the sum check
+// entirely, not a lenient bound).
+function checkYieldFractions(parent: Entity, byproductIds: string[], label: string, isDestroyingAction: boolean): void {
+  let sum = 0;
+  let allHaveFraction = byproductIds.length > 0;
+  for (const byproductId of byproductIds) {
+    const byproduct = entities.items.get(byproductId);
+    const yieldFraction = byproduct?.typicalYieldFractionOfParent;
+    if (!yieldFraction) {
+      allHaveFraction = false;
+      continue;
+    }
+    if (yieldFraction.ofParentEntityId !== parent.id) {
+      fail(
+        `entities/${byproductId}.json: typicalYieldFractionOfParent.ofParentEntityId is "${yieldFraction.ofParentEntityId}", ` +
+          `but it's spawned as a byproduct of "${parent.id}" (entities/${parent.id}.json's ${label})`
+      );
+    }
+    sum += (yieldFraction.min + yieldFraction.max) / 2;
+  }
+  if (isDestroyingAction && allHaveFraction && (sum < 0.85 || sum > 1.15)) {
+    console.log(
+      `NOTE entities/${parent.id}.json: ${label}'s byproducts' typicalYieldFractionOfParent values sum to ` +
+        `~${(sum * 100).toFixed(0)}% of parent mass (expected roughly 100% — this action destroys the target, ` +
+        `so its byproducts should account for the WHOLE former mass) — confirm this is deliberate.`
+    );
+  }
+}
+
 for (const entity of entities.items.values()) {
   for (const byproductId of entity.producedByproducts) {
     if (!entities.items.has(byproductId)) {
       fail(`entities/${entity.id}.json: producedByproducts references unknown entity "${byproductId}"`);
     }
   }
+  const nonOverriddenSpawningActions = entity.allowedTransformations
+    .map((id) => actions.items.get(id))
+    .filter((a): a is Action => !!a && a.outputs.spawnsTargetByproducts && !(a.id in entity.byproductsByAction));
+  checkYieldFractions(
+    entity,
+    entity.producedByproducts,
+    "producedByproducts",
+    nonOverriddenSpawningActions.some((a) => a.outputs.destroysTarget)
+  );
   for (const actionId of entity.allowedTransformations) {
     const action = actions.items.get(actionId);
     if (!action) {
@@ -100,6 +154,12 @@ for (const entity of entities.items.values()) {
         fail(`entities/${entity.id}.json: byproductsByAction["${actionId}"] references unknown entity "${byproductId}"`);
       }
     }
+    checkYieldFractions(
+      entity,
+      byproductIds,
+      `byproductsByAction["${actionId}"]`,
+      actions.items.get(actionId)?.outputs.destroysTarget === true
+    );
   }
   for (const [actionId, ccpId] of Object.entries(entity.criticalControlPointsByAction)) {
     if (!actions.items.has(actionId)) {

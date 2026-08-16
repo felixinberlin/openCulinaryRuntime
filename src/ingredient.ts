@@ -67,6 +67,43 @@ export const CitationSchema = z.object({
 });
 export type Citation = z.infer<typeof CitationSchema>;
 
+/**
+ * `producedByproducts`/`byproductsByAction` below (`EntitySchema`) record
+ * WHAT spawns when this entity's parent is processed — never HOW MUCH,
+ * `ROADMAP.md`'s own long-named "yield/waste factors" gap (e.g. how much
+ * of a potato's mass a peel actually is). This schema, placed on the
+ * BYPRODUCT entity itself (not the parent), closes that: a real, cited
+ * fraction of the PARENT's original mass this specific byproduct typically
+ * represents.
+ *
+ * A RANGE (`min`/`max`), not a single point value — real yield varies by
+ * cultivar/size/peeling method/individual specimen, the same "don't assert
+ * false precision" discipline `POTATO_BOIL_DONENESS`/`EGG_BOIL_DONENESS`
+ * already hold themselves to for timing ranges. `ofParentEntityId` is
+ * checked by `scripts/validate.ts` against the actual `producedByproducts`/
+ * `byproductsByAction` relationship that spawns this entity — a fraction
+ * relative to the wrong parent would be a real, silent error, not a
+ * cosmetic one.
+ *
+ * Deliberately data-only: nothing in `engine.ts`'s `applyAction` reads this
+ * to actually compute a spawned instance's real mass (this repo has no
+ * general quantity-tracking through the engine at all —
+ * `RecipeInstanceSchema.quantity` is only ever declared on
+ * `initialInventory`, never derived mid-recipe) — a real, named limit, not
+ * silently implied to be more than it is.
+ */
+export const YieldFractionSchema = z
+  .object({
+    /** The entity id this fraction is relative to — the parent this byproduct is actually spawned FROM (`scripts/validate.ts` cross-checks this against a real `producedByproducts`/`byproductsByAction` relationship). */
+    ofParentEntityId: z.string().min(1),
+    /** Typical fraction (0-1) of the parent's original mass this byproduct represents — a real cited range, e.g. `{ min: 0.10, max: 0.12 }` for "10-12%". */
+    min: z.number().positive().max(1),
+    max: z.number().positive().max(1),
+    citation: CitationSchema,
+  })
+  .refine((y) => y.min <= y.max, { message: "min must be <= max" });
+export type YieldFraction = z.infer<typeof YieldFractionSchema>;
+
 /** Chemical/nutritional composition. masideas.md §6 "Composition". */
 export const CompositionSchema = z
   .object({
@@ -416,6 +453,13 @@ export const EntitySchema = z.object({
    * An action id absent here falls back to the flat list.
    */
   byproductsByAction: z.record(z.string(), z.array(z.string())).default({}),
+  /** How much of a PARENT's mass this entity typically represents, when
+   *  this entity is itself a spawned byproduct — see `YieldFractionSchema`'s
+   *  own doc comment for the full reasoning. Optional: most entities are
+   *  never anyone's byproduct at all (not a gap, a real fact — e.g.
+   *  `potato.json` itself has no parent), and even a real byproduct entity
+   *  may not have this filled in yet if no citable figure has been found. */
+  typicalYieldFractionOfParent: YieldFractionSchema.optional(),
   /**
    * Per-action HACCP tie-in, keyed by action id -> CriticalControlPointSchema
    * id (thermal.ts, data/ccps/*.json) — e.g. egg.json: { fry: "egg_cooking",

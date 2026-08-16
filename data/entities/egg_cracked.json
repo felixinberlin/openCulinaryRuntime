@@ -33,6 +33,16 @@
     "scrambled": ["raw", "lightly_beaten", "beaten", "well_beaten"]
   },
   "producedByproducts": [],
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "egg",
+    "min": 0.88,
+    "max": 0.9,
+    "citation": {
+      "source": "Derived as the complement of egg_shell.json's own cited 10-12% shell fraction (1 - shell), not an independently sourced figure — CRACK spawns exactly egg_shell + egg_cracked (data/actions/crack.json's byproductsByAction), the yolk+white kept together rather than split, so this entity's mass is definitionally 'whatever the shell isn't.'",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same confidence tier as egg_shell.json's own figure, since this number is entirely derived from it — see that file for the actual source discussion."
+    }
+  },
   "criticalControlPointsByAction": {
     "fry": "egg_cooking",
     "scramble": "egg_cooking"

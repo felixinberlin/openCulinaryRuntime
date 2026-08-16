@@ -120,6 +120,35 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   matches, `commonly_cited_unverified` for chili_flakes (no generic
   "crushed dried chili flake" FDC entry exists; red/cayenne pepper used as
   the closest standard entry).
+- **FAO food composition/refuse tables** (fao.org/4/X5557E/x5557e0h.htm) —
+  potato's "Refuse in A.P. (As Purchased)" listed at 15%, the reference
+  point for `data/entities/potato_peel.json`'s `typicalYieldFractionOfParent`
+  (`ROADMAP.md`'s "yield/waste factors" gap, closed 2026-08-16). Confidence:
+  `commonly_cited_unverified` — verified via direct lookup of the table
+  itself, but not cross-checked against a second primary source, and the
+  10-25% range used in the data reflects real, separately-cited variance
+  by peeling method/potato size beyond this one table figure.
+- **Convergent egg-composition sources** (university food-science lecture
+  notes; commonly-tabulated egg-component-percentage figures reproduced
+  across baking/food-science references) — shell ~10-12%, white ~57-58%,
+  yolk ~30-33% of a whole egg's mass, used in `data/entities/egg_shell.json`/
+  `egg_yolk.json`/`egg_white.json`/`egg_cracked.json`'s
+  `typicalYieldFractionOfParent` (the three figures sum to ~100%,
+  corroborating each other; `egg_cracked.json`'s figure is derived as
+  `1 - shell`, not independently sourced). Confidence:
+  `commonly_cited_unverified` — multiple convergent secondary/tertiary
+  sources checked 2026-08-16, not one peer-reviewed primary source.
+- **Garlic single-clove skin weight (general consumer/culinary sources)** —
+  a peeled clove typically weighs ~4-7g with a papery skin usually well
+  under 0.1g, used in `data/entities/garlic_peel.json`'s
+  `typicalYieldFractionOfParent` (~1-3%). Confidence:
+  `commonly_cited_unverified`, the WEAKER of the two garlic-peel figures
+  found: deliberately NOT the ~24-25% figure common in garlic-processing/
+  valorization literature, which measures a genuinely different physical
+  scope (whole-BULB processing yield — every clove's skin plus the bulb's
+  own outer papery wrapper, totaled) than the single-CLOVE granularity
+  `garlic.json` is actually modeled at throughout this repo — see that
+  entity's own note for the full scope-mismatch reasoning.
 - **Choi & Okos (1986), "Effects of Temperature and Composition on the
   Thermal Properties of Foods"** — the standard predictive food-engineering
   model for deriving thermal conductivity/density/specific heat from

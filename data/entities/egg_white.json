@@ -26,6 +26,15 @@
   "possibleTags": ["pasteurized"],
   "allowedTransformations": ["mix"],
   "producedByproducts": [],
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "egg",
+    "min": 0.57,
+    "max": 0.58,
+    "citation": {
+      "source": "Same convergent egg-composition sources as egg_shell.json's identical citation — see that file's own note for the full source discussion and confidence tier.",
+      "confidence": "commonly_cited_unverified"
+    }
+  },
   "capabilities": {
     "isBlendable": true
   },

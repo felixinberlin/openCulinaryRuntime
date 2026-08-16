@@ -14,6 +14,16 @@
   "possibleTags": ["washed"],
   "allowedTransformations": ["wash", "fry", "mix"],
   "producedByproducts": [],
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "potato",
+    "min": 0.1,
+    "max": 0.25,
+    "citation": {
+      "source": "FAO, food composition/refuse tables (fao.org/4/X5557E/x5557e0h.htm) lists potato's 'Refuse in A.P. (As Purchased)' at 15% — the single reference-table figure. The wider 10-25% range reflects real, commonly-cited variance by peeling method (hand-knife vs. mechanical/abrasive peeler) and potato size/shape, not disagreement about the FAO figure itself.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Verified via direct lookup 2026-08-16 (the FAO table itself), not recalled — but the table is a general reference figure, not re-derived against this repo's own potato.json composition, and this repo has not cross-checked it against a second primary source the way some other citations here have been."
+    }
+  },
   "statePrerequisites": {
     "fry": "washed",
     "mix": "washed"

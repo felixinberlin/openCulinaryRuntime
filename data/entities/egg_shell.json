@@ -17,6 +17,16 @@
   "allowedTransformations": [],
   "producedByproducts": [],
   "byproductsByAction": {},
+  "typicalYieldFractionOfParent": {
+    "ofParentEntityId": "egg",
+    "min": 0.1,
+    "max": 0.12,
+    "citation": {
+      "source": "Convergent egg-composition sources (e.g. university food-science lecture notes; commonly-tabulated egg-component-percentage figures widely reproduced in baking/food-science references): shell ~10-12% of a whole large egg's mass, egg white ~57-58%, egg yolk ~30-33% — the three figures roughly sum to 100%, corroborating each other.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Multiple convergent secondary/tertiary sources checked 2026-08-16, not one single peer-reviewed primary source looked up directly — same tier as several other percentage-composition citations in this repo. See egg_yolk.json/egg_white.json for the matching complementary figures, and egg_cracked.json for the derived shell-complement figure."
+    }
+  },
   "capabilities": {},
   "sensory": {
     "texture": ["brittle"],

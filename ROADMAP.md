@@ -891,9 +891,42 @@ covered by what exists:**
       out-of-scope already for one case — `infuse.json`'s garlic-in-oil
       botulism note, `LEARNINGS_DOMAIN.md` 2026-08-12 — but nothing general exists:
       no "how long is this safe/good for" anywhere).
-- [ ] **Yield/waste factors** (edible-portion %, e.g. how much of a potato's
-      mass a peel actually is) — `producedByproducts` records WHAT spawns,
-      never HOW MUCH.
+- [x] **Yield/waste factors — closed 2026-08-16.** `producedByproducts`
+      recorded WHAT spawns, never HOW MUCH — `ingredient.ts`'s new
+      `YieldFractionSchema` (`Entity.typicalYieldFractionOfParent`, placed
+      on the BYPRODUCT entity itself) closes it: a real, cited range
+      (never a single guessed point value — real yield varies by cultivar/
+      size/method) of what fraction of the PARENT's mass this byproduct
+      typically represents. Populated on all 6 real byproduct entities:
+      `potato_peel` (10-25%, FAO refuse table), `garlic_peel` (1-3%, a
+      single-CLOVE estimate — deliberately NOT the ~24-25% figure common
+      in garlic-processing literature, which measures a whole-BULB
+      including outer wrapper layers, a genuinely different physical scope
+      than `garlic.json`'s own clove-level modeling; named explicitly as a
+      real scope-mismatch risk avoided, not silently picked for looking
+      more official), and `egg_shell`/`egg_yolk`/`egg_white`/`egg_cracked`
+      (10-12% / 30-33% / 57-58% / 88-90%, convergent egg-composition
+      sources — the first three sum to ~100%, corroborating each other;
+      `egg_cracked`'s figure is derived as `1 - shell`, not independently
+      sourced). See `REFERENCES.md` for all citations.
+      \
+      `scripts/validate.ts` cross-checks `ofParentEntityId` against the
+      REAL `producedByproducts`/`byproductsByAction` relationship (hard
+      fail on a mismatch — checked by deliberately breaking one and
+      confirming the fail fires, not just reasoning about the code), plus
+      a soft NOTE if a `destroysTarget` action's (`SEPARATE`/`CRACK`)
+      byproduct fractions don't sum to roughly 100%. That sum-check is
+      DELIBERATELY SKIPPED for a non-destroying action's byproducts
+      (`PEEL`) — a real, structural distinction found while writing the
+      check, not obvious going in: `PEEL` keeps most of the parent's mass
+      AS the same (now-trimmed) instance, not as a separate byproduct
+      entity, so a small byproduct fraction (potato_peel's 10-25%) is
+      correct, not a sign of missing data the way it would be for a
+      fully-destroyed egg. Deliberately data-only: nothing in
+      `engine.ts`'s `applyAction` reads this to compute a spawned
+      instance's actual mass — this repo has no general quantity-tracking
+      through the engine at all, named explicitly rather than implied.
+      4 new unit tests (`tests/ingredient.test.ts`).
 
 ## Phase 0 — Project scaffolding
 - [x] `package.json` + TypeScript toolchain — `tsx`, `tsc -p .`

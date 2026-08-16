@@ -960,3 +960,37 @@ was made. Don't rewrite or delete old entries — append.
   and without the same dedicated real-technique check `egg.json` got, is
   exactly how the ORIGINAL wrong `mashed → peeled` closure got into this
   repo in the first place.
+
+### `YieldFractionSchema` — the sum-sanity check's first version was wrong about WHICH actions it applies to
+
+- **The first draft of `scripts/validate.ts`'s "do these byproduct
+  fractions sum to ~100%" check ran unconditionally against every
+  byproduct group and immediately produced three false-positive NOTEs**
+  (potato_peel ~18%, garlic_peel ~2%, egg's flat `producedByproducts`
+  ~11%) — all real data, all correctly cited, none actually wrong. Running
+  `npm run validate` immediately after writing the check (not after
+  finishing the whole feature) caught this before it shipped as a
+  permanently-noisy check nobody would trust. The actual bug was a
+  category error in the check's own design: it assumed every byproduct
+  group represents the ENTIRE former parent, true for `SEPARATE`/`CRACK`
+  (`destroysTarget: true` — the byproducts ARE the whole thing, nothing
+  else survives) but false for `PEEL` (the parent persists as the SAME,
+  now-trimmed instance; the byproduct is only ever a small slice of it).
+  Fixed by keying the sum-check off the actual triggering action's
+  `outputs.destroysTarget`, not applying one rule to a structurally
+  different case that happened to share the same `byproductsByAction`
+  shape. Worth naming as a small, general lesson: a sanity check's
+  correctness depends on getting the SCOPE of what it's checking right,
+  not just the arithmetic — the arithmetic (`sum ≈ 1.0`) was never wrong,
+  the assumption about which cases it should even apply to was.
+- **`egg_cracked.json`'s yield fraction was deliberately DERIVED
+  (`1 - egg_shell`'s own cited range) rather than independently sourced**
+  — CRACK spawns exactly `egg_shell` + `egg_cracked` (yolk+white kept
+  together), so `egg_cracked`'s mass is definitionally "whatever the
+  shell isn't," and inventing a second, independently-sourced figure for
+  it would have risked the two NOT summing to 100% for no real reason
+  (measurement noise between two different searches, not a real
+  disagreement) — the identical "don't introduce a second, parallel
+  source of truth for a derivable fact" discipline this session applied
+  repeatedly to code (`execution-bounds.ts`'s CCP floor, `isTerminalState`)
+  applied here to a citation instead.

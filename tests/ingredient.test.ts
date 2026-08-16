@@ -1,7 +1,14 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { EntitySchema, CitationSchema, StructureSchema, QuantitySchema, isTerminalState } from "../src/ingredient.ts";
+import {
+  EntitySchema,
+  CitationSchema,
+  StructureSchema,
+  QuantitySchema,
+  YieldFractionSchema,
+  isTerminalState,
+} from "../src/ingredient.ts";
 import { makeEntity } from "./helpers.ts";
 
 describe("EntitySchema", () => {
@@ -44,6 +51,28 @@ describe("CitationSchema", () => {
     assert.doesNotThrow(() =>
       CitationSchema.parse({ source: "commonly taught", confidence: "commonly_cited_unverified" })
     );
+  });
+});
+
+// YieldFractionSchema — 2026-08-16, ROADMAP.md's "yield/waste factors" gap.
+describe("YieldFractionSchema", () => {
+  const base = { ofParentEntityId: "potato", citation: { source: "test fixture", confidence: "commonly_cited_unverified" as const } };
+
+  test("accepts a real range where min <= max", () => {
+    assert.doesNotThrow(() => YieldFractionSchema.parse({ ...base, min: 0.1, max: 0.25 }));
+  });
+
+  test("rejects min > max — not a real range", () => {
+    assert.throws(() => YieldFractionSchema.parse({ ...base, min: 0.5, max: 0.1 }));
+  });
+
+  test("rejects a fraction above 1 (more than 100% of the parent's mass) or non-positive", () => {
+    assert.throws(() => YieldFractionSchema.parse({ ...base, min: 0.1, max: 1.5 }));
+    assert.throws(() => YieldFractionSchema.parse({ ...base, min: 0, max: 0.1 }));
+  });
+
+  test("requires a citation and ofParentEntityId — not silently optional", () => {
+    assert.throws(() => YieldFractionSchema.parse({ min: 0.1, max: 0.2 }));
   });
 });
 

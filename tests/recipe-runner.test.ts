@@ -173,10 +173,35 @@ const placeSimmerAction = makeAction({
   parameters: [{ id: "waterTempC", required: false, numericRange: { unit: "celsius", min: 85, max: 96 } }],
 });
 
+// FRY/oil fixtures (2026-08-16 generalization) — reuse the SAME
+// requiredTargetCapability/requiredToolCapabilities strings fillAction/
+// heatPlaceAction already declare (fixtures don't need to mirror
+// data/entities/*.json's real isPourable/isVessel naming, only be
+// internally consistent) so fill/heat_place/place_in work unmodified
+// against a genuinely different medium/vessel, the same way the real
+// data files were generalized.
+const placeOil = makeEntity({
+  id: "place-oil",
+  aggregationState: "liquid",
+  capabilities: { isBoilingMedium: true }, // fixture reuse, see comment above
+  thermophysical: { specificHeatJPerKgK: 1970 }, // no boilingPointC — oil never boils
+});
+const placePan = makeEntity({ id: "place-pan", kind: "tool", capabilities: { isDeepVessel: true } }); // fixture reuse
+const placeFryAction = makeAction({
+  id: "fry",
+  verb: "FRY",
+  requiredTargetCapability: "isBoilable", // reuses placeEgg's existing capability
+  requiredIngredientCapabilities: ["isBoilingMedium"], // fixture reuse — see placeOil comment
+  outputs: { transformedState: "fried" },
+  parameters: [{ id: "oilTempC", required: false, numericRange: { unit: "celsius", min: 120, max: 200 } }],
+});
+
 const placeEntities = new Map([
   ["place-water", placeWater],
   ["place-egg", placeEgg],
   ["place-pot", placePot],
+  ["place-oil", placeOil],
+  ["place-pan", placePan],
 ]);
 const placeActions = new Map([
   ["fill", fillAction],
@@ -184,6 +209,7 @@ const placeActions = new Map([
   ["heat_place", heatPlaceAction],
   ["boil", placeBoilAction],
   ["simmer", placeSimmerAction],
+  ["fry", placeFryAction],
 ]);
 // 1000W at 100% efficiency (helpers.ts's default "ideal" heat source) — 1.2kg
 // water, specificHeatJPerKgK 4186: ΔT per 30s tick = (1000*30)/(1.2*4186) ≈ 5.97°C.
@@ -197,8 +223,9 @@ function makePlaceRecipe(sequence: RecipeScript["sequence"]): RecipeScript {
       { id: "water-1", entityId: "place-water", state: "cold", tags: [] },
       { id: "egg-1", entityId: "place-egg", state: "raw", tags: [] },
       { id: "egg-2", entityId: "place-egg", state: "raw", tags: [] },
+      { id: "oil-1", entityId: "place-oil", state: "cold", tags: [] },
     ],
-    availableTools: ["place-pot"],
+    availableTools: ["place-pot", "place-pan"],
     sequence,
     metadata: {},
   };
@@ -391,5 +418,53 @@ describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", ()
     const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /outside SIMMER's own declared 85-96°C band/);
+  });
+
+  test("FRY with a placeId that's below FRY's own declared oilTempC minimum is REJECTED, even though the plain ingredient-presence check would pass", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "oil-1",
+        params: { placeId: "pan-1", toolEntityId: "place-pan", massKg: "0.3", startTempC: "20" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "fry",
+        targetInstanceId: "egg-1",
+        params: { oilTempC: "175", placeId: "pan-1" },
+        availableIngredientInstanceIds: ["oil-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /below FRY's own declared 120°C minimum/);
+    assert.equal(result.finalInventory.get("egg-1")?.state, "raw");
+  });
+
+  test("FRY with a placeId that IS at/above FRY's own declared oilTempC minimum succeeds (no boilingPointC involved anywhere — the oil setpoint case, not a phase change)", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "oil-1",
+        params: { placeId: "pan-1", toolEntityId: "place-pan", massKg: "0.3", startTempC: "20" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "heat_place",
+        targetInstanceId: "oil-1",
+        params: { placeId: "pan-1", heatSourceId: "ideal", targetTempC: "175" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "fry",
+        targetInstanceId: "egg-1",
+        params: { oilTempC: "175", placeId: "pan-1" },
+        availableIngredientInstanceIds: ["oil-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.places.get("pan-1")?.currentTempC, 175);
+    assert.equal(result.finalInventory.get("egg-1")?.state, "fried");
   });
 });

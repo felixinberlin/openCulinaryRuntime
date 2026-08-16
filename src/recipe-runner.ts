@@ -78,10 +78,22 @@ import { emptyPlace, pourInto, advanceTempSeconds, isAtTargetTemp, type PlaceSta
  *   record of the SAME instance's real quantity/temperature, not a
  *   replacement for the existing (weaker) presence check.
  *
+ * **`FRY`/oil CLOSED the same day, shortly after**: `requiredTargetCapability`/
+ * `requiredToolCapabilities` on `fill`/`heat_place`/`place_in` generalized from
+ * `isBoilingMedium`/`isDeepVessel` to a genuinely medium-agnostic `isPourable`/
+ * `isVessel` (both water AND oil assert `isPourable`; pot/pan/saucepan/wok all
+ * assert `isVessel` — see `oil.json`'s/`pot.json`'s own notes on each), and
+ * `assertPlaceReady` gained a `fry` branch reading `fry.json`'s own declared
+ * `oilTempC` numericRange minimum (same "read the declaration, don't duplicate
+ * the number" discipline the `simmer` branch already used) — `place.ts`'s
+ * `advanceTempSeconds` had supported oil generically since 2026-08-14
+ * (`fry-egg-as-a-robot.ts`); this was purely the schema-level gate catching up.
+ * Proven via `scripts/shared-pan-heat-as-a-robot.ts` (`npm run
+ * capability-test:shared-pan-heat`) and `data/recipes/fried-egg-shared-pan.json`.
+ * `PAR_FRY` was NOT also wired (same shape, genuinely not done — named rather
+ * than implied covered).
+ *
  * Still NOT closed by this change, named rather than implied covered: no
- * `FRY`/oil case (would need a `fry`/`par_fry` place-readiness check
- * analogous to `boil`'s, `place.ts`'s `advanceTempSeconds` already supports
- * it generically — a close, real follow-up, not done here); no
  * `Instance.inProgressAction` or `toolLockBehavior`
  * (`WORLD_MODEL_OPTIMIZATION.md`'s design input, ROADMAP.md 2026-08-15); no
  * periodic/alternating-temperature recipe (the Di Lorenzo & Di Maio cited
@@ -347,6 +359,21 @@ function assertPlaceReady(action: Action, placeId: string, places: Map<string, P
       throw new Error(
         `${action.verb} references place "${placeId}", but it's at ${place.currentTempC.toFixed(1)}°C — outside SIMMER's own ` +
           `declared ${range.min}-${range.max}°C band. HEAT_PLACE it into range first.`
+      );
+    }
+  } else if (action.id === "fry") {
+    // 2026-08-16, the oil/FRY generalization of the BOIL check above: no
+    // single fixed "ready" temperature exists for oil the way boilingPointC
+    // does for water (a real, distinct KIND of true — see place.ts's own
+    // doc comment) — read FRY's own declared oilTempC numericRange's
+    // MINIMUM off the loaded action, same "don't duplicate the number"
+    // discipline the SIMMER branch above already uses, rather than
+    // hardcoding a threshold a second time.
+    const range = action.parameters.find((p) => p.id === "oilTempC")?.numericRange;
+    if (range && place.currentTempC < range.min) {
+      throw new Error(
+        `${action.verb} references place "${placeId}", but it's only at ${place.currentTempC.toFixed(1)}°C — below FRY's own ` +
+          `declared ${range.min}°C minimum. HEAT_PLACE it first.`
       );
     }
   }

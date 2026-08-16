@@ -17,7 +17,8 @@
   "capabilities": {
     "isFryingMedium": true,
     "isEmulsifier": true,
-    "isInfusable": true
+    "isInfusable": true,
+    "isPourable": true
   },
   "thermophysical": {
     "densityKgPerM3": 920,
@@ -39,6 +40,7 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "isFryingMedium makes oil satisfy FRY's requiredIngredientCapabilities (data/actions/fry.json) — 'used for cooking, frying' starts with frying specifically; a broader isCookingMedium/general-cooking capability can be added once a generic COOK verb exists. isEmulsifier makes oil satisfy EMULSIFY's requiredIngredientCapabilities (data/actions/emulsify.json, e.g. handmade alioli) — kept as its own flag rather than reusing isFryingMedium: physically the same fat, but a distinct culinary role (dispersed phase in an emulsion vs. a hot cooking medium), matching this codebase's one-capability-per-verb convention. isInfusable is the TARGET-side capability for data/actions/infuse.json — oil is what INFUSE acts on (it's the oil that 'becomes garlic-flavored'), unlike FRY/EMULSIFY where oil is the secondary ingredient satisfying someone else's requiredIngredientCapabilities."
+    "notes": "isFryingMedium makes oil satisfy FRY's requiredIngredientCapabilities (data/actions/fry.json) — 'used for cooking, frying' starts with frying specifically; a broader isCookingMedium/general-cooking capability can be added once a generic COOK verb exists. isEmulsifier makes oil satisfy EMULSIFY's requiredIngredientCapabilities (data/actions/emulsify.json, e.g. handmade alioli) — kept as its own flag rather than reusing isFryingMedium: physically the same fat, but a distinct culinary role (dispersed phase in an emulsion vs. a hot cooking medium), matching this codebase's one-capability-per-verb convention. isInfusable is the TARGET-side capability for data/actions/infuse.json — oil is what INFUSE acts on (it's the oil that 'becomes garlic-flavored'), unlike FRY/EMULSIFY where oil is the secondary ingredient satisfying someone else's requiredIngredientCapabilities.",
+    "isPourableNote": "Added 2026-08-16, closing fill.json's own scopeNote ('the oil-into-a-frying-vessel case... a real, close, deliberately NOT-done-here follow-up') the same day it was named. FILL/HEAT_PLACE (data/actions/*.json, src/recipe-runner.ts) previously required isBoilingMedium specifically — which oil correctly never has, oil doesn't boil at any real cooking temperature (see place.ts's own doc comment) — so pouring oil for FRY was unreachable through those verbs even though src/place.ts's advanceTempSeconds had already generalized to support it physics-wise since 2026-08-14 (scripts/fry-egg-as-a-robot.ts). isPourable is the genuinely shared, weaker fact both water and oil have (see water.json's identical isPourable note) that FILL/HEAT_PLACE now check instead."
   }
 }

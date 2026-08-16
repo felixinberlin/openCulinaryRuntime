@@ -40,6 +40,7 @@
     "capability-test:potato-heat-penetration": "tsx scripts/potato-heat-penetration.ts",
     "capability-test:play-recipe": "tsx scripts/play-recipe.ts",
     "capability-test:shared-pot-heat": "tsx scripts/shared-pot-heat-as-a-robot.ts",
+    "capability-test:shared-pan-heat": "tsx scripts/shared-pan-heat-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

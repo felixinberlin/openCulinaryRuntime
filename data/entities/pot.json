@@ -15,10 +15,12 @@
   "producedByproducts": [],
   "capabilities": {
     "isWashable": true,
-    "isDeepVessel": true
+    "isDeepVessel": true,
+    "isVessel": true
   },
   "metadata": {
     "notes": "Minimal tool entity, added so boil.json's requiredTools reference resolves. Same minimal-tool precedent as knife.json/pan.json/mixer.json.",
-    "isDeepVesselNote": "Added 2026-08-14 (action.ts's requiredToolCapabilities) directly in response to a real question: a robot with only a pan on hand (no pot) — does BOIL work? It didn't, because BOIL/SIMMER/PASTEURIZE all hardcoded requiredTools: ['pot'], an exact-id match with no substitution possible even in principle. isDeepVessel names the actual physical property that matters (enough depth/capacity to submerge food in liquid for wet-heat cooking), not the specific vessel — see saucepan.json for a second, genuinely different tool that also qualifies. pan.json deliberately does NOT get this capability (see its own metadata) — a typical shallow frying pan really can't submerge an egg, so the honest fix here is substitutability among vessels that actually work, not blanket interchangeability of every cooking tool."
+    "isDeepVesselNote": "Added 2026-08-14 (action.ts's requiredToolCapabilities) directly in response to a real question: a robot with only a pan on hand (no pot) — does BOIL work? It didn't, because BOIL/SIMMER/PASTEURIZE all hardcoded requiredTools: ['pot'], an exact-id match with no substitution possible even in principle. isDeepVessel names the actual physical property that matters (enough depth/capacity to submerge food in liquid for wet-heat cooking), not the specific vessel — see saucepan.json for a second, genuinely different tool that also qualifies. pan.json deliberately does NOT get this capability (see its own metadata) — a typical shallow frying pan really can't submerge an egg, so the honest fix here is substitutability among vessels that actually work, not blanket interchangeability of every cooking tool.",
+    "isVesselNote": "Added 2026-08-16, alongside pan.json/saucepan.json/wok.json — the FILL/PLACE_IN/HEAT_PLACE trio (data/actions/*.json) need a genuinely weaker, medium-agnostic fact than isDeepVessel: 'can this tool physically hold a poured liquid at all,' not 'is it deep enough to submerge food.' Every one of the four cooking vessels in this repo qualifies (that's what makes them vessels), whether or not they're also deep enough for BOIL specifically — see recipe-runner.ts's own top doc comment / ROADMAP.md's 2026-08-16 FRY/oil update for why this couldn't just reuse isDeepVessel (a pan genuinely isn't one, but genuinely can hold poured oil for FRY)."
   }
 }

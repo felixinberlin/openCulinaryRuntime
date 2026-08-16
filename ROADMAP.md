@@ -53,6 +53,8 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Boil water at real altitude (Madrid/Bogotá/La Paz) — real computed boiling point via ICAO+Antoine physics, composes with place.ts unchanged | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-at-altitude` |
 | Two eggs, one shared pot — FILL/PLACE_IN/HEAT_PLACE wired into recipe-runner.ts, real place.ts-backed shared temperature, BOIL's readiness gated on it | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- two_eggs_shared_pot` |
 | Shared-pot heat, boiling_start vs. cold_start — identical mechanism, real step-order difference, disproves "independent, unlinked applyAction calls" | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pot-heat` |
+| Place-aware fried egg — FILL/HEAT_PLACE generalized to oil (isPourable/isVessel), FRY rejected while oil is genuinely cold, real huevo_frito params reused | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- fried_egg_shared_pan` |
+| Shared-pan heat, FRY readiness gated on real oil temperature — same mechanism as BOIL's, reading fry.json's own oilTempC minimum | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pan-heat` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -746,14 +748,44 @@ covered by what exists:**
       2026-08-16 for the design tradeoffs (why runner-level, not
       `applyAction`-level; why the medium's shared temperature only, not the
       placed food's own internal temperature).
-      **Still NOT closed, named explicitly rather than implied covered**: no
+      **Still NOT closed, named explicitly rather than implied covered**: ~~no
       `FRY`/oil case (`fill.json`/`heat_place.json` both require
       `isBoilingMedium`, not `isFryingMedium` — `place.ts`'s own
       `advanceTempSeconds` already supports oil generically, per
       `fry-egg-as-a-robot.ts`, only this wiring doesn't yet — see
-      `fill.json`'s own `scopeNote`); the placed food's own internal
-      temperature is still not modeled (`heat-penetration.ts`'s separate,
-      potato-only concern, untouched); no `Instance.inProgressAction`/
+      `fill.json`'s own `scopeNote`)~~ **CLOSED 2026-08-16, same day, shortly
+      after the water/BOIL case**: `fill.json`/`place_in.json`/`heat_place.json`'s
+      `requiredTargetCapability`/`requiredToolCapabilities` generalized from
+      `isBoilingMedium`/`isDeepVessel` to a genuinely medium-agnostic
+      `isPourable`/`isVessel` — both `water.json` AND `oil.json` assert
+      `isPourable`, `pot`/`pan`/`saucepan`/`wok` all assert `isVessel` (see
+      either entity's own note for why this needed to be its own, weaker
+      shared capability rather than overloading the verb-specific ones).
+      `recipe-runner.ts`'s `assertPlaceReady` gained a `fry` branch reading
+      `fry.json`'s own declared `oilTempC` numericRange MINIMUM (same
+      "read the declaration, don't duplicate the number" discipline the
+      `simmer` branch already used) rather than a fixed ceiling the way
+      `boil`'s check uses `boilingPointC` — a deliberate, named distinction:
+      oil has no phase-change ceiling to clamp against, only a chosen
+      readiness floor. `place.ts`'s own `advanceTempSeconds` had already
+      supported oil generically since 2026-08-14 (`fry-egg-as-a-robot.ts`) —
+      this was purely the schema-level gate catching up to physics that
+      already worked underneath it. Proven via
+      `data/recipes/fried-egg-shared-pan.json` (a real place-aware variant of
+      `huevo-frito.json`, same 90s/runny/puntilla parameters) and
+      `scripts/shared-pan-heat-as-a-robot.ts` (`npm run
+      capability-test:shared-pan-heat`), which shows a `FRY` step REJECTED
+      while oil is still cold — even though the pre-existing
+      `availableIngredientInstanceIds` presence check alone would have let it
+      through — and accepted once `HEAT_PLACE` actually reaches 175°C. Two
+      new unit tests in `tests/recipe-runner.test.ts`.
+      **Still genuinely open**: `PAR_FRY` was NOT also wired (identical
+      shape, just not done — named rather than implied covered); the placed
+      food's own internal temperature is still not modeled
+      (`heat-penetration.ts`'s separate, potato-only concern, untouched); no
+      batch-size/thermal-mass coupling between a cold item dropped in and the
+      place's own tracked temperature (`fry-egg-as-a-robot.ts`'s own closing
+      note names this same gap, still open); no `Instance.inProgressAction`/
       `toolLockBehavior` (`WORLD_MODEL_OPTIMIZATION.md`'s design input, this
       same entry, 2026-08-15); no periodic/alternating-temperature recipe
       proven against the Di Lorenzo & Di Maio "Periodic cooking of eggs"

@@ -1,0 +1,55 @@
+{
+  "id": "fried_egg_shared_pan",
+  "names": {
+    "en": "Fried Egg, Place-Aware (real oil temperature)",
+    "es": "Huevo Frito Consciente del Lugar (temperatura real del aceite)"
+  },
+  "initialInventory": [
+    {
+      "id": "oil-1",
+      "entityId": "oil",
+      "state": "cold",
+      "tags": [],
+      "quantity": { "kind": "precise", "amount": 0.3, "unit": "kg" }
+    },
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] }
+  ],
+  "availableTools": ["pan"],
+  "sequence": [
+    {
+      "actionId": "fill",
+      "targetInstanceId": "oil-1",
+      "params": { "placeId": "pan-1", "toolEntityId": "pan", "massKg": "0.3", "startTempC": "20" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "heat_place",
+      "targetInstanceId": "oil-1",
+      "params": { "placeId": "pan-1", "heatSourceId": "gas", "targetTempC": "175", "tickSeconds": "15" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": { "placeId": "pan-1", "placementMethod": "lowered_by_hand" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "heatLevel": "high",
+        "durationSeconds": "90",
+        "yolkDoneness": "runny",
+        "edgeStyle": "crispy_lace_puntilla",
+        "oilTempC": "175",
+        "placeId": "pan-1"
+      },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "Built 2026-08-16, the FRY/oil sibling of two-eggs-shared-pot.json — the same FILL/HEAT_PLACE/PLACE_IN mechanism, generalized the same day from water-only (isBoilingMedium/isDeepVessel) to any isPourable medium in an isVessel tool (see fill.json's scopeNote, oil.json's isPourableNote). oilTempC: '175' on the FRY step is no longer just an unenforced informational parameter here: params.placeId makes recipe-runner.ts's assertPlaceReady require pan-1 to ACTUALLY be at or above fry.json's own declared oilTempC minimum (120°C) before FRY is allowed to run at all — reusing huevo-frito.json's exact real durationSeconds/yolkDoneness/edgeStyle values (90s, runny, puntilla) so this is a genuine place-aware variant of a real existing dish, not a synthetic mechanism demo.",
+    "scopeNote": "Deliberately omits SALT (unlike huevo-frito.json) — kept minimal and focused on proving the place mechanism generalizes to oil/FRY, not a complete serving recipe."
+  }
+}

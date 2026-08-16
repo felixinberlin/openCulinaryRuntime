@@ -15,7 +15,8 @@
   "producedByproducts": [],
   "capabilities": {
     "isWashable": true,
-    "isDeepVessel": true
+    "isDeepVessel": true,
+    "isVessel": true
   },
   "metadata": {
     "notes": "Added 2026-08-14 as the concrete proof, not just an assertion, that action.ts's requiredToolCapabilities actually generalizes BOIL/SIMMER/PASTEURIZE beyond the one hardcoded 'pot' id — a saucepan is a real, physically distinct vessel from pot.json (taller-sided, single long handle, typically smaller capacity) that a real kitchen genuinely treats as interchangeable with a pot for boiling/simmering/water-bath work, unlike pan.json's shallow frying pan (see that entity's noIsDeepVesselNote). See scripts/boil-with-any-deep-vessel.ts for BOIL actually executing against this entity, not just this file declaring the capability."

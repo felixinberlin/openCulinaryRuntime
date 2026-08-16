@@ -6,8 +6,8 @@
     "es": "Calentar el recipiente"
   },
   "requiredTools": [],
-  "requiredToolCapabilities": ["isDeepVessel"],
-  "requiredTargetCapability": "isBoilingMedium",
+  "requiredToolCapabilities": ["isVessel"],
+  "requiredTargetCapability": "isPourable",
   "validTargetKinds": ["ingredient"],
   "parameters": [
     {
@@ -41,7 +41,8 @@
   "metadata": {
     "notes": "Added 2026-08-16, the third of ROADMAP.md's FILL/PLACE_IN/HEAT_PLACE trio, and the one that actually closes 'heat is a function inside a place... it increases and decreases in time' for real: src/recipe-runner.ts's handler ticks src/place.ts's advanceTempSeconds forward in real (simulated) increments and polls isAtTargetTemp, the exact idiom scripts/boil-egg-as-a-robot.ts already proved by hand — made a reusable, declarative recipe.sequence step here instead of one-off procedural TypeScript. targetTempC defaults to the place's contents entity's thermophysical.boilingPointC when unset (same convenience default place.ts's own advanceHeatSeconds wrapper uses).",
     "notContinuousNote": "This is still ONE recipe.sequence step, not truly continuous — engine.ts/this whole codebase's atomicity limit (ROADMAP.md's separate 'transformations usually take time' entry) still applies to every OTHER action; HEAT_PLACE is the one exception that internally ticks real elapsed time, because place.ts's own energy-balance math is genuinely a function of time in a way BOIL/FRY's instantaneous transformedState never was. Does not imply that gap is closed generally.",
-    "sharedStateNote": "Once this step updates a placeId's PlaceState, every instance previously PLACE_IN'd into that same placeId (recipe-runner.ts's placeContents) is, by construction, AT the same currentTempC — not independently re-guessed per instance. This is the concrete mechanism closing 'two ingredients simmering in the same pot right now get independent, unlinked applyAction calls... not one shared temperature' — see recipe-runner.ts's own top doc comment."
+    "sharedStateNote": "Once this step updates a placeId's PlaceState, every instance previously PLACE_IN'd into that same placeId (recipe-runner.ts's placeContents) is, by construction, AT the same currentTempC — not independently re-guessed per instance. This is the concrete mechanism closing 'two ingredients simmering in the same pot right now get independent, unlinked applyAction calls... not one shared temperature' — see recipe-runner.ts's own top doc comment.",
+    "isPourableGeneralizationNote": "requiredTargetCapability generalized from isBoilingMedium to isPourable 2026-08-16, the same day, to let this heat OIL toward a real FRY setpoint (fry.json's oilTempC), not just water toward boiling — place.ts's own advanceTempSeconds already supported an arbitrary targetTempC/smokePointC-guarded setpoint since 2026-08-14 (fry-egg-as-a-robot.ts); this schema-level gate was the only thing still narrower than the physics underneath it. targetTempC's numericRange (20-250°C) already comfortably covers fry.json's own 120-200°C oilTempC band, so no range change was needed here."
   },
   "verification": {
     "method": "thermal",

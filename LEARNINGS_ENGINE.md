@@ -649,3 +649,50 @@ was made. Don't rewrite or delete old entries — append.
   implying more precision than actually exists — the same overclaiming risk
   every categorical/informational parameter in this codebase has to guard
   against, applied to a new mechanism instead of a new parameter this time.
+
+### Generalizing FILL/PLACE_IN/HEAT_PLACE to oil — the capability was wrong, not just narrow
+
+- **The FRY/oil follow-up named as "close" when the water/BOIL case closed
+  turned out to need a real capability fix, not just a copy-paste of the
+  water wiring with `isFryingMedium` substituted for `isBoilingMedium`.**
+  First instinct: give `fill.json`/`heat_place.json` a SECOND, parallel
+  `requiredTargetCapability`/`requiredToolCapabilities` pairing for oil, or
+  duplicate the three actions as `fill_oil`/`heat_place_oil`. Both are
+  wrong for the same reason: `requiredTargetCapability` is a single string
+  (`action.ts`), so there's no schema-level way to express "isBoilingMedium
+  OR isFryingMedium" on one action, and a duplicated verb would mean two
+  different action ids for the identical physical act of pouring a liquid
+  into a vessel — the SAME category error `LEARNINGS_ENGINE.md` 2026-08-13
+  already named for `transformedState`/`transformedStateFromParameter`
+  ("fixed by default, overridable per call" isn't a thing this schema
+  supports, and inventing a workaround around that absence is usually the
+  wrong move, not a missing feature to route around).
+- **The actual fix was recognizing `isBoilingMedium`/`isFryingMedium` were
+  never the right capability for FILL to check in the first place.** They
+  answer "is this ingredient usable AS THE MEDIUM FOR [boiling/frying]" —
+  a fact about a LATER verb (BOIL/FRY), not about the physical act of
+  pouring. FILL doesn't care what happens to the liquid afterward, only
+  that it's a real, pourable liquid — which water AND oil both genuinely
+  are, for the identical reason. Naming that fact directly (`isPourable`,
+  a new, deliberately WEAKER capability both entities now assert alongside
+  their existing verb-specific ones) fixed the design error instead of
+  working around its symptom, the same "capability vs. id" generalization
+  `isDeepVessel`/`isFryingVessel` already established for tools
+  (`LEARNINGS_ENGINE.md` 2026-08-14) — this is that same move applied one
+  layer over, to the MEDIUM side of the check rather than the vessel side.
+  `isVessel` (pot/pan/saucepan/wok) is the vessel-side sibling, same
+  reasoning: FILL/PLACE_IN/HEAT_PLACE need "can this hold poured contents
+  at all," which is weaker than and different from `isDeepVessel`'s
+  "deep enough to submerge food" or `isFryingVessel`'s frying-specific
+  shape — conflating either would have been the same kind of category
+  error, just on the tool side instead of the ingredient side.
+- **`assertPlaceReady`'s new `fry` branch reads a MINIMUM (`oilTempC`'s
+  `range.min`), not a fixed target the way the `boil` branch reads
+  `boilingPointC`** — worth stating as a deliberate asymmetry, not an
+  inconsistency: water has a real phase-change ceiling to check against
+  exactly once reached; oil has no such ceiling, only a chosen readiness
+  floor a cook (or a caller's `targetTempC`) picks freely above. Checking
+  `place.currentTempC < range.min` (not `!== ` or an exact match) is the
+  physically honest comparison — "hot enough or hotter" is what actually
+  matters for frying, unlike BOIL's "must have reached the one specific
+  temperature water can't exceed while still liquid."

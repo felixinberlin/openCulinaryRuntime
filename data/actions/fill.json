@@ -6,8 +6,8 @@
     "es": "Llenar"
   },
   "requiredTools": [],
-  "requiredToolCapabilities": ["isDeepVessel"],
-  "requiredTargetCapability": "isBoilingMedium",
+  "requiredToolCapabilities": ["isVessel"],
+  "requiredTargetCapability": "isPourable",
   "validTargetKinds": ["ingredient"],
   "parameters": [
     {
@@ -40,7 +40,7 @@
   "precision": "required",
   "metadata": {
     "notes": "Added 2026-08-16, ROADMAP.md's 'Heat as a shared, time-varying property of a PLACE' entry, closing the 'no FILL/POUR verb exists in data/actions/*.json' gap it named explicitly. Real, structural counterpart to src/place.ts's pourInto — src/recipe-runner.ts handles this action id specially (NOT via engine.ts's applyAction: pouring doesn't transform the target's own state/tags at all, it establishes a NEW, separate PlaceState record) — see recipe-runner.ts's own top doc comment for the full reasoning, including why the poured instance is deliberately NOT removed from inventory (unlike destroysTarget elsewhere): water in a pot is still real, present water, not consumed the way SEPARATE consumes an egg.",
-    "scopeNote": "requiredTargetCapability: isBoilingMedium scopes this to the water-into-a-deep-vessel case that scripts/boil-egg-as-a-robot.ts already proved by hand (place.ts's pourInto/advanceHeatSeconds) — the oil-into-a-frying-vessel case (isFryingMedium, requiredToolCapabilities: isFryingVessel) is a real, close, deliberately NOT-done-here follow-up, named rather than silently assumed covered; place.ts's advanceTempSeconds already supports it generically (see fry-egg-as-a-robot.ts), only this action/wiring doesn't yet.",
+    "scopeNote": "requiredTargetCapability was originally isBoilingMedium, requiredToolCapabilities originally [isDeepVessel] — scoping this action to the water-into-a-deep-vessel case scripts/boil-egg-as-a-robot.ts had already proved by hand, with the oil-into-a-frying-vessel case named as a deliberate, NOT-done-here follow-up. CLOSED the same day (2026-08-16): requiredTargetCapability is now isPourable (water.json AND oil.json both assert it — a genuinely medium-agnostic 'this can be poured' fact, weaker than isBoilingMedium/isFryingMedium on purpose, see either entity's own isPourableNote) and requiredToolCapabilities is now [isVessel] (pot/pan/saucepan/wok all assert it — see pot.json's isVesselNote). place.ts's advanceTempSeconds already supported oil generically since 2026-08-14 (fry-egg-as-a-robot.ts) — this was purely the schema-level gate catching up to physics that already worked. See scripts/shared-pan-heat-as-a-robot.ts / npm run capability-test:shared-pan-heat for the proof.",
     "placeIdNote": "allowedValues here is a closed, small placeholder set (pot-1/pot-2/pan-1/pan-2) rather than an open string, matching this schema's allowedValues-vs-numericRange split — a recipe-local place id is conceptually closer to an author-chosen label than a physical quantity. A recipe needing more than two concurrent places of one kind would need this list extended; not a real limitation found in practice yet, named honestly rather than silently assumed sufficient forever."
   },
   "verification": {

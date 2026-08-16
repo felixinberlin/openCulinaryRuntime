@@ -1,0 +1,59 @@
+{
+  "id": "fill",
+  "verb": "FILL",
+  "names": {
+    "en": "Fill",
+    "es": "Llenar"
+  },
+  "requiredTools": [],
+  "requiredToolCapabilities": ["isDeepVessel"],
+  "requiredTargetCapability": "isBoilingMedium",
+  "validTargetKinds": ["ingredient"],
+  "parameters": [
+    {
+      "id": "placeId",
+      "names": { "en": "Place id", "es": "Id del lugar" },
+      "required": true,
+      "allowedValues": ["pot-1", "pot-2", "pan-1", "pan-2"]
+    },
+    {
+      "id": "toolEntityId",
+      "names": { "en": "Tool entity id", "es": "Id de la herramienta" },
+      "required": true,
+      "allowedValues": ["pot", "saucepan", "pan", "wok"]
+    },
+    {
+      "id": "massKg",
+      "names": { "en": "Mass (kg)", "es": "Masa (kg)" },
+      "required": true,
+      "numericRange": { "unit": "kg", "min": 0.05, "max": 20 }
+    },
+    {
+      "id": "startTempC",
+      "names": { "en": "Starting temperature (°C)", "es": "Temperatura inicial (°C)" },
+      "required": false,
+      "numericRange": { "unit": "celsius", "min": 0, "max": 40 }
+    }
+  ],
+  "outputs": {},
+  "duration": "fixed",
+  "precision": "required",
+  "metadata": {
+    "notes": "Added 2026-08-16, ROADMAP.md's 'Heat as a shared, time-varying property of a PLACE' entry, closing the 'no FILL/POUR verb exists in data/actions/*.json' gap it named explicitly. Real, structural counterpart to src/place.ts's pourInto — src/recipe-runner.ts handles this action id specially (NOT via engine.ts's applyAction: pouring doesn't transform the target's own state/tags at all, it establishes a NEW, separate PlaceState record) — see recipe-runner.ts's own top doc comment for the full reasoning, including why the poured instance is deliberately NOT removed from inventory (unlike destroysTarget elsewhere): water in a pot is still real, present water, not consumed the way SEPARATE consumes an egg.",
+    "scopeNote": "requiredTargetCapability: isBoilingMedium scopes this to the water-into-a-deep-vessel case that scripts/boil-egg-as-a-robot.ts already proved by hand (place.ts's pourInto/advanceHeatSeconds) — the oil-into-a-frying-vessel case (isFryingMedium, requiredToolCapabilities: isFryingVessel) is a real, close, deliberately NOT-done-here follow-up, named rather than silently assumed covered; place.ts's advanceTempSeconds already supports it generically (see fry-egg-as-a-robot.ts), only this action/wiring doesn't yet.",
+    "placeIdNote": "allowedValues here is a closed, small placeholder set (pot-1/pot-2/pan-1/pan-2) rather than an open string, matching this schema's allowedValues-vs-numericRange split — a recipe-local place id is conceptually closer to an author-chosen label than a physical quantity. A recipe needing more than two concurrent places of one kind would need this list extended; not a real limitation found in practice yet, named honestly rather than silently assumed sufficient forever."
+  },
+  "verification": {
+    "method": "mass_change",
+    "description": "The vessel's contents mass increases by massKg; a scale under the vessel (or a flow meter on the pour) would confirm it directly.",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "spill",
+      "severity": "low",
+      "note": "Pouring a liquid into a vessel — spill/splash risk, lower than BOIL's (the liquid isn't yet hot at this step)."
+    }
+  ],
+  "retrySafe": false
+}

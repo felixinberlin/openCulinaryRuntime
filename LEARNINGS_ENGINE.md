@@ -570,3 +570,82 @@ was made. Don't rewrite or delete old entries — append.
   (all 12 real recipes still simulate end-to-end with zero step errors)
   and the full demo/capability-test sweep before considering this done,
   not just by reasoning about the JSON in isolation.
+
+## 2026-08-16
+
+### Wiring `place.ts` into the engine — why the runner, not `applyAction`, and why the medium's temperature only
+
+- **The "co-located instances sharing state" gap (`ROADMAP.md`'s "Heat as a
+  shared, time-varying property of a PLACE") turned out NOT to require
+  changing `engine.ts`'s `applyAction` at all — the instinct to generalize
+  `applyAction`'s signature (add a `place` argument, thread it through every
+  precondition check) would have been the wrong move.** `applyAction` is,
+  and should stay, a pure, instantaneous "one precondition check, one
+  immediate output" function — that's not an accidental limitation, it's
+  the same honest atomicity limit `ROADMAP.md`'s separate "transformations
+  usually take time" entry names for a reason. `advanceTempSeconds` is
+  fundamentally a different SHAPE of function: a loop over real elapsed
+  time, ticking toward a target. Bolting a continuous process onto a
+  function whose entire contract is "instantaneous" would have either
+  silently lied about what `applyAction` actually does, or forced a tick
+  loop inside `applyAction` itself, breaking every existing caller's mental
+  model of what one `applyAction` call means. Putting `FILL`/`PLACE_IN`/
+  `HEAT_PLACE` handling in `src/recipe-runner.ts` instead — a NEW dispatch
+  branch, outside `applyAction` — kept `applyAction`'s contract, every
+  existing test, and every existing `data/actions/*.json` file completely
+  untouched. `place.ts` had already independently arrived at this same
+  shape by necessity (`advanceTempSeconds` ticked in a `while` loop from
+  outside, in `scripts/boil-egg-as-a-robot.ts`, before any of this existed)
+  — the real lesson is that this session should have trusted that existing
+  precedent immediately instead of re-considering "should this be inside
+  `applyAction`" as an open question at all.
+- **`FILL` deliberately does NOT remove the poured ingredient instance from
+  inventory, even though every other consuming action in this codebase
+  (`destroysTarget`, `combinesInto`) does remove its target/secondary.**
+  First draft did remove it, reasoning "conservation of mass, the water is
+  now inside the pot, not a free-standing instance" — by analogy by
+  `SEPARATE`. That analogy is wrong: `SEPARATE` genuinely transforms an egg
+  into different things (yolk, white, shell) that didn't exist as separate
+  instances before. Pouring water into a pot doesn't transform the water
+  into anything — it's still real, present, identical water; only its
+  CONTAINER changed. Removing it from inventory also broke a very concrete,
+  real thing: existing `BOIL` steps' `availableIngredientInstanceIds`
+  presence check (unchanged since before this session) would have failed
+  with "no isBoilingMedium ingredient on hand" the moment `FILL` deleted the
+  only water instance a recipe had — a real regression risk that would have
+  silently forced every recipe wanting to use `FILL` to duplicate the water
+  instance somehow. Caught before shipping by actually tracing what
+  `data/recipes/two-eggs-shared-pot.json`'s later `BOIL` steps would see,
+  not just by reasoning about `FILL` in isolation — the same "trace the
+  actual consumer, don't just reason about the producer" discipline
+  `LEARNINGS_PROCESS.md` names elsewhere. `places`/`placeContents` ended up
+  as a strictly ADDITIVE, parallel record layered on top of the existing
+  (weaker) presence check, not a replacement for it — which is also more
+  honest about what actually changed: nothing about `availableIngredientInstanceIds`'s
+  semantics moved, a new, independent, opt-in check was added alongside it.
+- **`assertPlaceReady` (the new opt-in `BOIL`/`SIMMER` readiness check)
+  reads `SIMMER`'s temperature band off `action.parameters.find(p => p.id
+  === "waterTempC").numericRange` at runtime rather than hardcoding `85`/
+  `96` a second time.** Small, but worth naming as a pattern: `simmer.json`
+  already declared that exact range as its own parameter's `numericRange` —
+  writing `85`/`96` again in `recipe-runner.ts` would have created two
+  sources of truth for the identical fact, silently divergeable the next
+  time someone tunes `simmer.json`'s band without knowing a second copy
+  existed. Reading it off the loaded `Action` object instead means the
+  check is automatically still correct if that range is ever edited, zero
+  extra effort, and cost nothing to do the first time — worth defaulting to
+  "read the already-loaded declaration" over "duplicate the number" on
+  sight, not just when duplication is later discovered.
+- **Deliberately did NOT extend this to model the placed food's own
+  internal temperature (e.g. "the egg is now also warming toward the
+  water's temperature").** That's a real, physically true thing that isn't
+  modeled — but it's `heat-penetration.ts`'s existing, separate, narrower
+  (potato-only) concern, with its own real physics (thermal diffusivity,
+  not a simple shared-bath assumption) that doesn't generalize to egg for
+  free. Naming it as explicitly out of scope in three places
+  (`recipe-runner.ts`'s doc comment, `heat_place.json`'s metadata,
+  `shared-pot-heat-as-a-robot.ts`'s closing paragraph) rather than letting
+  "the egg is PLACE_IN'd into a place with a real temperature" read as
+  implying more precision than actually exists — the same overclaiming risk
+  every categorical/informational parameter in this codebase has to guard
+  against, applied to a new mechanism instead of a new parameter this time.

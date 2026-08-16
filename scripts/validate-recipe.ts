@@ -31,7 +31,7 @@ const root = join(import.meta.dirname, "..");
 const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
-loadHeatSources(join(root, "data", "heat-sources")); // loaded for parity with validate.ts's full canonical set; not consumed directly here
+const heatSources = loadHeatSources(join(root, "data", "heat-sources"));
 
 let raw: unknown;
 try {
@@ -85,7 +85,7 @@ if (explanation.prepAdvisories.length > 0) {
 }
 
 console.log("\n=== Running the recipe (ground truth) ===\n");
-const result = runRecipe(recipe, entities, actions, ccps);
+const result = runRecipe(recipe, entities, actions, ccps, undefined, heatSources);
 for (const line of result.log) console.log(line);
 
 console.log("\nFinal inventory:");

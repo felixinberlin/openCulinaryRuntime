@@ -2,7 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
 import { runRecipe } from "../src/recipe-runner.ts";
-import { makeEntity, makeAction } from "./helpers.ts";
+import { makeEntity, makeAction, makeHeatSource } from "./helpers.ts";
 import type { RecipeScript } from "../src/recipe.ts";
 
 /**
@@ -111,5 +111,285 @@ describe("runRecipe — unknown target/secondary instance (pre-existing behavior
     const result = runRecipe(recipe, entities, actions);
     assert.equal(result.errors.length, 1);
     assert.match(result.errors[0].message, /Unknown target instance "potato-99"/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FILL / PLACE_IN / HEAT_PLACE — 2026-08-16, ROADMAP.md's "Heat as a shared,
+// time-varying property of a PLACE" entry. See recipe-runner.ts's own top
+// doc comment for the full design reasoning; these tests are the concrete,
+// synthetic-fixture proof (independent of data/*.json's actual current
+// shape) that the mechanism itself behaves correctly.
+// ---------------------------------------------------------------------------
+
+const placeWater = makeEntity({
+  id: "place-water",
+  aggregationState: "liquid",
+  capabilities: { isBoilingMedium: true },
+  thermophysical: { boilingPointC: 100, specificHeatJPerKgK: 4186 },
+});
+const placeEgg = makeEntity({
+  id: "place-egg",
+  capabilities: { isBoilable: true, isSimmerable: true },
+});
+const placePot = makeEntity({ id: "place-pot", kind: "tool", capabilities: { isDeepVessel: true } });
+
+const fillAction = makeAction({
+  id: "fill",
+  verb: "FILL",
+  requiredTargetCapability: "isBoilingMedium",
+  requiredToolCapabilities: ["isDeepVessel"],
+  outputs: {},
+});
+const placeInAction = makeAction({
+  id: "place_in",
+  verb: "PLACE_IN",
+  requiredToolCapabilities: ["isDeepVessel"],
+  outputs: {},
+  parameters: [
+    { id: "placementMethod", required: false, allowedValues: ["dropped", "lowered_by_hand", "lowered_with_spoon"] },
+  ],
+});
+const heatPlaceAction = makeAction({
+  id: "heat_place",
+  verb: "HEAT_PLACE",
+  requiredTargetCapability: "isBoilingMedium",
+  requiredToolCapabilities: ["isDeepVessel"],
+  outputs: {},
+});
+const placeBoilAction = makeAction({
+  id: "boil",
+  verb: "BOIL",
+  requiredTargetCapability: "isBoilable",
+  requiredIngredientCapabilities: ["isBoilingMedium"],
+  outputs: { transformedState: "boiled" },
+});
+const placeSimmerAction = makeAction({
+  id: "simmer",
+  verb: "SIMMER",
+  requiredTargetCapability: "isSimmerable",
+  requiredIngredientCapabilities: ["isBoilingMedium"],
+  outputs: { transformedState: "boiled" },
+  parameters: [{ id: "waterTempC", required: false, numericRange: { unit: "celsius", min: 85, max: 96 } }],
+});
+
+const placeEntities = new Map([
+  ["place-water", placeWater],
+  ["place-egg", placeEgg],
+  ["place-pot", placePot],
+]);
+const placeActions = new Map([
+  ["fill", fillAction],
+  ["place_in", placeInAction],
+  ["heat_place", heatPlaceAction],
+  ["boil", placeBoilAction],
+  ["simmer", placeSimmerAction],
+]);
+// 1000W at 100% efficiency (helpers.ts's default "ideal" heat source) — 1.2kg
+// water, specificHeatJPerKgK 4186: ΔT per 30s tick = (1000*30)/(1.2*4186) ≈ 5.97°C.
+const idealHeatSource = new Map([["ideal", makeHeatSource({ id: "ideal" })]]);
+
+function makePlaceRecipe(sequence: RecipeScript["sequence"]): RecipeScript {
+  return {
+    id: "place-test-recipe",
+    names: { en: "Place test recipe" },
+    initialInventory: [
+      { id: "water-1", entityId: "place-water", state: "cold", tags: [] },
+      { id: "egg-1", entityId: "place-egg", state: "raw", tags: [] },
+      { id: "egg-2", entityId: "place-egg", state: "raw", tags: [] },
+    ],
+    availableTools: ["place-pot"],
+    sequence,
+    metadata: {},
+  };
+}
+
+describe("runRecipe — FILL/PLACE_IN/HEAT_PLACE", () => {
+  test("FILL creates a place; HEAT_PLACE advances it; two PLACE_IN'd instances share the identical resulting temperature", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "1.2", startTempC: "15" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1", placementMethod: "lowered_with_spoon" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-2",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "heat_place",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", heatSourceId: "ideal" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    const place = result.places.get("pot-1");
+    assert.ok(place);
+    assert.equal(place!.currentTempC, 100); // clamped at water's boilingPointC
+    assert.deepEqual(result.placeContents.get("pot-1"), ["egg-1", "egg-2"]);
+  });
+
+  test("FILL into an already-filled place is rejected (pourInto's own mixing-math limit)", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "1.2", startTempC: "15" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "fill",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "0.5", startTempC: "15" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /already contains/);
+  });
+
+  test("PLACE_IN into a place that doesn't exist yet is rejected", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "place_in",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /FILL it first/);
+  });
+
+  test("HEAT_PLACE against an unknown heatSourceId fails loudly, naming the id", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "fill",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "1.2", startTempC: "15" },
+        availableIngredientInstanceIds: [],
+      },
+      {
+        actionId: "heat_place",
+        targetInstanceId: "water-1",
+        params: { placeId: "pot-1", heatSourceId: "nonexistent" },
+        availableIngredientInstanceIds: [],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /unknown heat source "nonexistent"/);
+  });
+});
+
+describe("runRecipe — BOIL/SIMMER's opt-in params.placeId readiness check", () => {
+  function fillStep(startTempC: string) {
+    return {
+      actionId: "fill",
+      targetInstanceId: "water-1",
+      params: { placeId: "pot-1", toolEntityId: "place-pot", massKg: "1.2", startTempC },
+      availableIngredientInstanceIds: [],
+    };
+  }
+  function heatStep(targetTempC?: string) {
+    return {
+      actionId: "heat_place",
+      targetInstanceId: "water-1",
+      params: { placeId: "pot-1", heatSourceId: "ideal", ...(targetTempC ? { targetTempC } : {}) },
+      availableIngredientInstanceIds: [],
+    };
+  }
+
+  test("BOIL with a placeId that's not yet at boiling is REJECTED, even though the plain ingredient-presence check would pass", () => {
+    const recipe = makePlaceRecipe([
+      fillStep("15"),
+      {
+        actionId: "boil",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: ["water-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /not yet at 100°C boiling/);
+    // The egg must not have silently transitioned despite the rejection.
+    assert.equal(result.finalInventory.get("egg-1")?.state, "raw");
+  });
+
+  test("BOIL with a placeId that IS at boiling succeeds", () => {
+    const recipe = makePlaceRecipe([
+      fillStep("15"),
+      heatStep(),
+      {
+        actionId: "boil",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: ["water-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
+  });
+
+  test("a BOIL step with NO placeId is completely unaffected — pre-existing behavior unchanged", () => {
+    const recipe = makePlaceRecipe([
+      {
+        actionId: "boil",
+        targetInstanceId: "egg-1",
+        params: {},
+        availableIngredientInstanceIds: ["water-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
+  });
+
+  test("SIMMER with a placeId inside its own declared waterTempC band succeeds", () => {
+    const recipe = makePlaceRecipe([
+      fillStep("15"),
+      heatStep("90"), // inside SIMMER's declared 85-96 band
+      {
+        actionId: "simmer",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: ["water-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
+    assert.equal(result.finalInventory.get("egg-1")?.state, "boiled");
+  });
+
+  test("SIMMER with a placeId OUTSIDE its own declared waterTempC band is rejected, reading the band off the action's own parameters (not a duplicated constant)", () => {
+    const recipe = makePlaceRecipe([
+      fillStep("15"),
+      heatStep(), // heats all the way to 100°C — above SIMMER's 96°C ceiling
+      {
+        actionId: "simmer",
+        targetInstanceId: "egg-1",
+        params: { placeId: "pot-1" },
+        availableIngredientInstanceIds: ["water-1"],
+      },
+    ]);
+    const result = runRecipe(recipe, placeEntities, placeActions, new Map(), undefined, idealHeatSource);
+    assert.equal(result.errors.length, 1);
+    assert.match(result.errors[0].message, /outside SIMMER's own declared 85-96°C band/);
   });
 });

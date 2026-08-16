@@ -1,0 +1,46 @@
+{
+  "id": "place_in",
+  "verb": "PLACE_IN",
+  "names": {
+    "en": "Place in",
+    "es": "Colocar en"
+  },
+  "requiredTools": [],
+  "requiredToolCapabilities": ["isDeepVessel"],
+  "validTargetKinds": ["ingredient"],
+  "parameters": [
+    {
+      "id": "placeId",
+      "names": { "en": "Place id", "es": "Id del lugar" },
+      "required": true,
+      "allowedValues": ["pot-1", "pot-2", "pan-1", "pan-2"]
+    },
+    {
+      "id": "placementMethod",
+      "names": { "en": "Placement method", "es": "Método de colocación" },
+      "required": false,
+      "allowedValues": ["dropped", "lowered_by_hand", "lowered_with_spoon"]
+    }
+  ],
+  "outputs": {},
+  "duration": "fixed",
+  "precision": "required",
+  "metadata": {
+    "notes": "Added 2026-08-16, alongside fill.json/heat_place.json — the second half of ROADMAP.md's 'no FILL/PLACE verb' gap. Deliberately does NOT transform the placed instance's own state/tags (outputs: {} — no transformedState) — being physically located in a place is orthogonal to being cooked; a later BOIL/SIMMER/FRY step against the same instance still does the actual cooking transition, exactly as it did before this action existed. What this DOES do, handled specially by src/recipe-runner.ts (not via engine.ts's applyAction): record co-location in a runner-local placeContents map, the concrete mechanism behind boil.json/simmer.json's own 'two ingredients in the same pot share one heat' gap.",
+    "placementMethodNote": "Same parameter/allowedValues as boil.json's/simmer.json's identically-named placementMethod (see those files' own placementMethodNote for the full three-mechanism crack-risk reasoning) — promoted here to the action that actually models the physical moment of entry into the vessel, rather than being informational-only on the LATER cooking action. boil.json/simmer.json keep their own placementMethod parameter unchanged for recipes that don't use PLACE_IN at all — this isn't a replacement, it's the same real fact recordable at the more physically accurate step for recipes that DO use places.",
+    "sequencingNote": "PLACE_IN before HEAT_PLACE vs. HEAT_PLACE before PLACE_IN is now literally boil.json's startMethod distinction (cold_start vs. boiling_start) made expressible as real step ORDER for the first time, not just an informational parameter string — see scripts/ for a capability test proving both orders against the identical place/heat mechanism."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "The instance is physically inside the named vessel — a camera or a human confirms it, no sensor threshold applies.",
+    "confidence": "high"
+  },
+  "hazards": [
+    {
+      "type": "hot_liquid",
+      "severity": "high",
+      "note": "If the place already contains hot/boiling medium (a HEAT_PLACE step ran first), lowering something into it carries the same splash/scald risk as BOIL/SIMMER — see boil.json's placementMethod for the real, cited mitigation techniques this parameter records."
+    }
+  ],
+  "retrySafe": true
+}

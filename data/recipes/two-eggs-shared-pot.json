@@ -1,0 +1,64 @@
+{
+  "id": "two_eggs_shared_pot",
+  "names": {
+    "en": "Two Eggs, One Shared Pot (place-aware boil)",
+    "es": "Dos Huevos, Una Olla Compartida (hervido consciente del lugar)"
+  },
+  "initialInventory": [
+    {
+      "id": "water-1",
+      "entityId": "water",
+      "state": "cold",
+      "tags": [],
+      "quantity": { "kind": "precise", "amount": 1.2, "unit": "kg" }
+    },
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "egg-2", "entityId": "egg", "state": "raw", "tags": [] }
+  ],
+  "availableTools": ["pot", "bowl"],
+  "sequence": [
+    {
+      "actionId": "fill",
+      "targetInstanceId": "water-1",
+      "params": { "placeId": "pot-1", "toolEntityId": "pot", "massKg": "1.2", "startTempC": "15" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "heat_place",
+      "targetInstanceId": "water-1",
+      "params": { "placeId": "pot-1", "heatSourceId": "gas", "tickSeconds": "30" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": { "placeId": "pot-1", "placementMethod": "lowered_with_spoon" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-2",
+      "params": { "placeId": "pot-1", "placementMethod": "lowered_with_spoon" },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "boil",
+      "targetInstanceId": "egg-1",
+      "params": { "durationSeconds": "390", "yolkDoneness": "soft", "startMethod": "boiling_start", "placeId": "pot-1" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    {
+      "actionId": "boil",
+      "targetInstanceId": "egg-2",
+      "params": { "durationSeconds": "390", "yolkDoneness": "soft", "startMethod": "boiling_start", "placeId": "pot-1" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    { "actionId": "shock", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "shock", "targetInstanceId": "egg-2", "params": {}, "availableIngredientInstanceIds": [] }
+  ],
+  "metadata": {
+    "notes": "Built 2026-08-16 as the concrete, end-to-end proof for ROADMAP.md's 'Heat as a shared, time-varying property of a PLACE' entry, closing the exact sentence that entry used to describe the gap: 'Two ingredients simmering in the same pot right now get independent, unlinked applyAction calls each carrying their own waterTempC/durationSeconds guess, not one shared temperature.' Both eggs here are PLACE_IN'd into the identical placeId ('pot-1'), which is HEATed exactly ONCE — both BOIL steps then reference that same placeId, and src/recipe-runner.ts's assertPlaceReady requires the place to genuinely be at boiling point before either BOIL is allowed to proceed, not just trusting a per-call parameter. Run `npm run recipe -- two_eggs_shared_pot` (or read scripts/validate.ts's simulation output) and check the log: the HEAT_PLACE line names both egg-1 and egg-2 as 'shared by', at the SAME temperature, from ONE heating step, not two.",
+    "startMethodNote": "startMethod: 'boiling_start' on both BOIL steps is not just informational here the way boil.json's own startMethodNote otherwise describes it — it's now the LITERALLY TRUE description of what happened: HEAT_PLACE ran to completion (reaching 100°C) BEFORE either PLACE_IN step, so both eggs really did go into already-boiling water. See scripts/ for a capability-test script contrasting this against the cold_start order (PLACE_IN before HEAT_PLACE) using the identical mechanism.",
+    "scopeNote": "This recipe deliberately does not attempt PEEL/SALT — kept minimal and focused on proving the shared-place mechanism specifically, not a complete serving recipe; see data/recipes/soft-boiled-egg.json for the fuller single-egg version this reuses BOIL/SHOCK's exact same durationSeconds/yolkDoneness values from."
+  }
+}

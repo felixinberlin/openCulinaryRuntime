@@ -102,11 +102,18 @@ one, `smokePointC` as a hard-reject safety ceiling) — the physics half of
 tool instance (a pot/pan) with a real temperature that persists and evolves
 as a pure function of elapsed simulated time, reusing `estimatedPreheatSeconds`'s
 energy-balance approximation. Same standalone-module-before-engine-wiring
-precedent as `heat-source.ts`/`egg-doneness.ts`: `applyAction` does not
-consume it, and there is still no `FILL`/`PLACE` verb in `data/actions/*.json`
-— see `LEARNINGS_ENGINE.md` 2026-08-14 and `ROADMAP.md`'s same-dated update to that
-entry for exactly what's closed vs. still open. Proven via
-`tests/place.test.ts` and `npm run capability-test:boil-as-robot`/
+precedent as `heat-source.ts`/`egg-doneness.ts` initially — **but engine
+wiring itself followed 2026-08-16**: `src/recipe-runner.ts` (not
+`applyAction`, which stays unchanged) now recognizes three real verbs
+(`data/actions/fill.json`/`place_in.json`/`heat_place.json`) and tracks
+`places`/`placeContents` — the "instances co-located in one tool instance
+sharing its state" concept, plus an opt-in `params.placeId` readiness check
+on BOIL/SIMMER. See `LEARNINGS_ENGINE.md` 2026-08-14 and 2026-08-16, and
+`ROADMAP.md`'s "Heat as a shared, time-varying property of a PLACE" entry
+(2026-08-16 update) for exactly what's closed (`data/recipes/two-eggs-shared-pot.json`,
+`npm run capability-test:shared-pot-heat`) vs. still open (FRY/oil, the
+placed food's own internal temperature, periodic/alternating heating).
+Proven via `tests/place.test.ts` and `npm run capability-test:boil-as-robot`/
 `capability-test:fry-as-robot` (`scripts/boil-egg-as-a-robot.ts`/
 `scripts/fry-egg-as-a-robot.ts`).
 

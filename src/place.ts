@@ -12,23 +12,33 @@ import type { HeatSourceProfile } from "./heat-source.ts";
  * boil an egg" — see `scripts/boil-egg-as-a-robot.ts`).
  *
  * SCOPED DELIBERATELY NARROWER than that ROADMAP entry's full description,
- * and that narrowing is stated here rather than left implicit: this closes
+ * and that narrowing is stated here rather than left implicit: this closed
  * the PHYSICS half (a real temperature that persists on a tool instance and
  * evolves as a pure function of elapsed time, not a per-call guess) as a
  * standalone module — the same precedent `heat-source.ts` and
  * `egg-doneness.ts` set (real, cited, useful reference math, provable via a
  * script, BEFORE being wired into `engine.ts`'s core precondition checks).
- * It does NOT touch `applyAction`/`Instance` — there is still no engine
- * concept of "instances co-located in one tool instance sharing its state,"
- * no `FILL`/`POUR` or placement verb in `data/actions/*.json`, and BOIL's
- * `requiredIngredientCapabilities` check still only asks "is some water
- * available at all," never "is THIS pot's water actually at temperature."
- * That remaining half — wiring this into `applyAction`'s preconditions, and
- * giving FILL/PLACE real `Action` definitions — is real, structural,
- * `engine.ts`-shaped work, intentionally left for when a recipe actually
- * needs the engine itself to enforce it, not manufactured speculatively
- * here (seen `masideas.md`'s dead-capability problem too many times in
- * this repo's own history to repeat it deliberately).
+ * At the time this file was first written, it did NOT touch
+ * `applyAction`/`Instance` — no engine concept of "instances co-located in
+ * one tool instance sharing its state," no `FILL`/`POUR`/placement verb in
+ * `data/actions/*.json`, and BOIL's `requiredIngredientCapabilities` check
+ * only asking "is some water available at all," never "is THIS pot's water
+ * actually at temperature."
+ *
+ * **THAT REMAINING HALF CLOSED 2026-08-16** — not inside `applyAction`
+ * itself (still completely unchanged: `advanceTempSeconds` is a genuinely
+ * continuous, elapsed-time process that `applyAction`'s one-shot
+ * instantaneous-transition shape doesn't fit), but in
+ * `src/recipe-runner.ts`, which now recognizes three new real verbs
+ * (`data/actions/fill.json`/`place_in.json`/`heat_place.json`) and tracks
+ * `places`/`placeContents` alongside `Instance` inventory — the actual
+ * "instances co-located in one tool instance sharing its state" concept,
+ * plus an opt-in `params.placeId` readiness check on BOIL/SIMMER steps
+ * against this file's own `PlaceState`. See `recipe-runner.ts`'s own top
+ * doc comment for the full mechanism and `ROADMAP.md`'s "Heat as a shared,
+ * time-varying property of a PLACE" entry (2026-08-16 update) for what's
+ * still open (FRY/oil, the placed food's own internal temperature,
+ * periodic/alternating heating).
  *
  * GENERALIZED 2026-08-14 (`advanceTempSeconds`/`isAtTargetTemp`), once a
  * second real forcing case — frying, not just boiling — proved the

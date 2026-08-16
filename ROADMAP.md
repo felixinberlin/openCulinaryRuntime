@@ -51,6 +51,8 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Fry egg as a robot — oil heated to a real setpoint via place.ts's new target-temperature generalization, smoke-point safety rejection proven | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-as-robot` |
 | Fry with any vessel — pot correctly rejected, pan works, wok (never named by fry.json) also works | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-any-vessel` |
 | Boil water at real altitude (Madrid/Bogotá/La Paz) — real computed boiling point via ICAO+Antoine physics, composes with place.ts unchanged | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-at-altitude` |
+| Two eggs, one shared pot — FILL/PLACE_IN/HEAT_PLACE wired into recipe-runner.ts, real place.ts-backed shared temperature, BOIL's readiness gated on it | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- two_eggs_shared_pot` |
+| Shared-pot heat, boiling_start vs. cold_start — identical mechanism, real step-order difference, disproves "independent, unlinked applyAction calls" | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pot-heat` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -702,14 +704,63 @@ covered by what exists:**
       `scripts/boil-egg-as-a-robot.ts` (capability test — `npm run
       capability-test:boil-as-robot`), which ticks real 30s increments and
       polls `isAtBoiling` rather than trusting one precomputed total, the
-      concrete thing a robot's own control loop would need to do. **Still
-      NOT closed, named explicitly rather than implied covered**: `place.ts`
-      is a standalone module, same precedent as `heat-source.ts`/
-      `egg-doneness.ts` before it — `applyAction` does not consume it, there
-      is still no `FILL`/`POUR`/`PLACE` verb in `data/actions/*.json`, and
-      the "instances co-located in one tool instance sharing its state"
-      engine concept below is still unbuilt. Two ingredients simmering in
-      the same pot still get independent `applyAction` calls.
+      concrete thing a robot's own control loop would need to do. **Was:
+      still NOT closed** — `place.ts` was a standalone module, same
+      precedent as `heat-source.ts`/`egg-doneness.ts` before it —
+      `applyAction` did not consume it, there was no `FILL`/`POUR`/`PLACE`
+      verb in `data/actions/*.json`, and the "instances co-located in one
+      tool instance sharing its state" engine concept was unbuilt. Two
+      ingredients simmering in the same pot got independent `applyAction`
+      calls.
+      **THE ENGINE-WIRING HALF CLOSED 2026-08-16** — three real, cited-vocabulary
+      verbs (`data/actions/fill.json`, `place_in.json`, `heat_place.json`) plus
+      new handling in `src/recipe-runner.ts` (NOT `engine.ts`'s `applyAction`,
+      which stays completely unchanged — `advanceTempSeconds` is a genuinely
+      continuous, elapsed-time process that `applyAction`'s one-shot
+      instantaneous-transition shape doesn't fit; see recipe-runner.ts's own
+      top doc comment). `runRecipe` now carries `places: Map<placeId,
+      PlaceState>` and `placeContents: Map<placeId, instanceId[]>` — a real,
+      runner-local "co-located instances share one place's state" concept,
+      proven two ways: `data/recipes/two-eggs-shared-pot.json` (two eggs
+      `PLACE_IN`'d into one pot, `HEAT_PLACE`'d exactly ONCE, both `BOIL`
+      steps referencing that same `placeId` — `npm run recipe --
+      two_eggs_shared_pot`, also simulated by `npm run validate`) and
+      `scripts/shared-pot-heat-as-a-robot.ts` (`npm run
+      capability-test:shared-pot-heat`), which runs the SAME mechanism under
+      BOTH `boiling_start` and `cold_start` step orderings side by side —
+      `boil.json`'s `startMethod` parameter is, for the first time, actually
+      EXPRESSIBLE as real step order (PLACE_IN before vs. after HEAT_PLACE),
+      not just an informational string. `BOIL`/`SIMMER` steps that opt in via
+      a new `params.placeId` now get a REAL readiness check
+      (`recipe-runner.ts`'s `assertPlaceReady`) against the place's actual
+      `currentTempC` — reading SIMMER's own declared `waterTempC` numericRange
+      rather than a duplicated magic number — closing `simmer.json`'s own
+      long-standing `knownModelingGap` note ("doesn't actually know or enforce
+      that the water is holding 85-96°C, only that the number a caller
+      supplied falls in that band") for real, not just naming it. Fully
+      additive: a step that never sets `params.placeId` is completely
+      unaffected — every recipe authored before this change (all 12 prior
+      ones) still simulates identically; see `tests/recipe-runner.test.ts`'s
+      new "FILL/PLACE_IN/HEAT_PLACE" and "opt-in params.placeId readiness
+      check" describe blocks (11 new tests) and `LEARNINGS_ENGINE.md`
+      2026-08-16 for the design tradeoffs (why runner-level, not
+      `applyAction`-level; why the medium's shared temperature only, not the
+      placed food's own internal temperature).
+      **Still NOT closed, named explicitly rather than implied covered**: no
+      `FRY`/oil case (`fill.json`/`heat_place.json` both require
+      `isBoilingMedium`, not `isFryingMedium` — `place.ts`'s own
+      `advanceTempSeconds` already supports oil generically, per
+      `fry-egg-as-a-robot.ts`, only this wiring doesn't yet — see
+      `fill.json`'s own `scopeNote`); the placed food's own internal
+      temperature is still not modeled (`heat-penetration.ts`'s separate,
+      potato-only concern, untouched); no `Instance.inProgressAction`/
+      `toolLockBehavior` (`WORLD_MODEL_OPTIMIZATION.md`'s design input, this
+      same entry, 2026-08-15); no periodic/alternating-temperature recipe
+      proven against the Di Lorenzo & Di Maio "Periodic cooking of eggs"
+      case — mechanically `HEAT_PLACE` could now be called repeatedly with
+      alternating `targetTempC` values in one `recipe.sequence`, but that has
+      not been built or proven; recipe-runner.ts's own top doc comment names
+      this explicitly rather than implying it's covered.
       **Generalized beyond boiling, same day, once FRY needed it too**:
       `advanceHeatSeconds`/`isAtBoiling` only ever clamped at
       `contentsEntity.thermophysical.boilingPointC` — which oil (`fry.json`)
@@ -1430,6 +1481,38 @@ domain facts.
 Unstarted; depends on Phase 5's Cooklang parser (or a Python equivalent) and
 Phase 1's still-unbuilt `ParsedIngredientSchema` (`RecipeIngredientSchema`
 itself closed 2026-08-13 — see Phase 1).
+
+**Future possibility, not scoped (2026-08-16):** `recipi/` at the repo root
+holds an unsolicited prototype/proposal for parsing free-text recipe
+*instructions* (not just `recipeIngredient` strings — this phase never
+scoped that) via **ReciFine**, a pretrained NER model
+(github.com/nuhu-ibrahim/ReciFine, EACL 2026). Evaluated and deliberately
+shelved rather than built or deleted:
+- **License blocker**: ReciFine is CC BY-NC 4.0 (NonCommercial); this repo
+  is MIT and headed public. Depending on it would practically impose an NC
+  restriction on anything downstream that uses the scraper, so it can't be
+  wired in as-is — would need an explicit non-core, opt-in carve-out, or a
+  permissively-licensed alternative model/dataset found first.
+- **Incomplete against its own manifest** — `recipi/FILES_CREATED.txt`
+  lists 17 files; 5 are missing (`recifine_server.py`, `tsconfig.json`,
+  `examples/run-examples.ts`, `docker-compose.yml`, `Dockerfile.recifine`),
+  so nothing in it runs today.
+- **Only `parseRecipeWithReciFine()`/`mapReciFineToOCR()` in
+  `recipi/recipe-pipeline.ts` would be reusable if ever built** — its
+  `RecipeValidator`/`RecipeExecutor` reimplement a much weaker mock of
+  what `src/engine.ts` + `data/*.json` already do for real (flat
+  allowlists, one temp range per action, no state machine, no D/z-value
+  HACCP, no doneness models) and should be discarded in favor of the real
+  engine, not extended.
+- First statistical-ML dependency this repo would take on (a Flask
+  server + downloaded BERT weights) — every other planned satellite is
+  deterministic/rule-based, which is the discipline `CLAUDE.md`'s
+  "every factual claim traces to a real source" rule assumes; defensible
+  only if ReciFine's role stays a fuzzy front-end parser with this
+  phase's own validator as the actual gatekeeper, same lossy-input/
+  strict-engine split as the rest of this phase.
+Revisit once this repo/scraper satellite is more mature and a license
+question can be resolved deliberately, not as a default yes.
 
 ## Phase 8 — Satellite: Mobile reference app (React Native + Expo)
 Unstarted. Depends on a stable OCR JSON shape (has one, informally, via

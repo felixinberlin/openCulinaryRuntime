@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { loadEntities, loadActions, loadRecipes, loadCcps } from "../src/registry.ts";
+import { loadEntities, loadActions, loadRecipes, loadCcps, loadHeatSources } from "../src/registry.ts";
 import { runRecipe } from "../src/recipe-runner.ts";
 
 const recipeId = process.argv[2] ?? "salted_fried_potatoes";
@@ -9,6 +9,7 @@ const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const recipes = loadRecipes(join(root, "data", "recipes"));
 const ccps = loadCcps(join(root, "data", "ccps"));
+const heatSources = loadHeatSources(join(root, "data", "heat-sources"));
 
 const recipe = recipes.get(recipeId);
 if (!recipe) {
@@ -16,7 +17,7 @@ if (!recipe) {
 }
 
 console.log(`Running "${recipe.names.en}"\n`);
-const result = runRecipe(recipe, entities, actions, ccps);
+const result = runRecipe(recipe, entities, actions, ccps, undefined, heatSources);
 
 for (const line of result.log) console.log(line);
 

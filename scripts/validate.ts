@@ -217,7 +217,7 @@ for (const recipe of recipes.items.values()) {
 // concern — same severity as the schema/cross-reference checks above.
 if (entities.failed === 0 && actions.failed === 0 && ccps.failed === 0) {
   for (const recipe of recipes.items.values()) {
-    const result = runRecipe(recipe, entities.items, actions.items, ccps.items);
+    const result = runRecipe(recipe, entities.items, actions.items, ccps.items, undefined, heatSources.items);
     if (result.errors.length > 0) {
       for (const { step, message } of result.errors) {
         fail(`recipes/${recipe.id}.json: sequence step "${step.actionId}" on "${step.targetInstanceId}" failed to run: ${message}`);

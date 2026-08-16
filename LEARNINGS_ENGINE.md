@@ -1344,3 +1344,42 @@ was made. Don't rewrite or delete old entries — append.
   precision demo) would have been undermined by the wrong drain method —
   the fix wasn't just "add the missing step," it was "add the missing
   step consistently with what each specific recipe is actually for."
+
+### Periodic cooking of eggs — checking a mechanism's actual code before assuming the obvious approach works
+
+- **The naive plan ("just call `HEAT_PLACE` repeatedly with alternating
+  targets") was checked against `advanceTempSeconds`'s actual
+  implementation BEFORE being attempted, and it would have silently
+  failed** — the function has an explicit early return,
+  `if (place.currentTempC >= targetTempC) return place`, meaning a
+  target at or below the current temperature is a no-op, not a cooling
+  step. This isn't a bug to work around; it's a real, correct physical
+  fact this engine has always encoded (a `heatSourceProfile` is a
+  positive energy source — burners heat, they don't refrigerate) that
+  simply had never been exercised against a case that needed cooling
+  before. Worth restating the general habit this confirms: when a plan
+  depends on an existing function doing something specific, read that
+  function's actual code before building on top of it, not just its doc
+  comment or its name — `advanceTempSeconds` sounds generically
+  bidirectional; it isn't.
+- **The resulting design (two separately-maintained baths, not one
+  cycled pot) turned out to be MORE faithful to the real technique, not
+  a compromise forced by the limitation** — the paper's own real
+  protocol literally uses two baths and moves the egg between them; a
+  single pot whose temperature is cycled up and down would have been the
+  LESS accurate representation even if the engine could do it. Finding a
+  real engine constraint and discovering it happens to align with the
+  more realistic model is a genuinely good outcome, worth noticing
+  explicitly rather than treating the constraint as purely a limitation
+  to apologize for.
+- **`REST`'s own declared range got widened a second time (300-1800s to
+  120-1800s) for the same reason it was widened once already** — a real,
+  cited, new use case with a genuinely shorter duration than either
+  existing one. This is the SAME pattern `EGG_SIZE_ADJUSTMENT_SECONDS`
+  established for widening a range when a third real case appears,
+  applied here to a different field — worth treating "does an existing
+  numericRange need widening for a new real case" as a routine check
+  when reusing a shared verb for a new purpose, not something to
+  discover only when validation fails (which is what actually happened
+  here — caught by the schema's own required-range check on the first
+  real run, not anticipated in advance).

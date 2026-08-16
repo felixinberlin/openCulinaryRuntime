@@ -684,17 +684,29 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   https://www.nature.com/articles/s44172-024-00334-w — the alternating
   100°C/30°C egg-cooking study discussed at length in conversation (see
   `ROADMAP.md`'s "Heat as a shared, time-varying property of a PLACE" entry
-  for the design implications). The FULL alternating-bath technique it
-  describes still can't be represented by this engine (needs the unbuilt
-  multi-bath/time-varying-place mechanism) — that half of this entry is
-  unchanged. **Partially embedded 2026-08-16**: its reported yolk
-  denaturation temperature (~65°C) is now used directly in
-  `src/egg-heat-penetration.ts`'s `YOLK_TARGET_TEMP_C` — see the "Physical
-  constants" section above for that narrower citation. The paper's own
-  full two-material numerical PDE + Arrhenius-kinetics model remains
-  unimplemented and un-embedded, a real, much larger, separately-scoped
-  possibility, named explicitly in `egg-heat-penetration.ts`'s own doc
-  comment.
+  for the design implications). **Partially embedded 2026-08-16 (twice,
+  same day)**: its reported yolk denaturation temperature (~65°C) is used
+  directly in `src/egg-heat-penetration.ts`'s `YOLK_TARGET_TEMP_C` — see
+  the "Physical constants" section above for that narrower citation.
+  SEPARATELY, its actual 100°C/30°C/2-minute/32-minute alternating-bath
+  TECHNIQUE is now represented as a real, runnable recipe —
+  `data/recipes/periodic-cooking-of-eggs.json`, simulated end-to-end with
+  zero step errors, its own `narrate-recipe.ts`-computed total confirming
+  1920s = 32.0 minutes exactly. Represented as two separately-maintained
+  baths rather than one pot cycled between temperatures — a real,
+  structural necessity, not a stylistic choice: `place.ts`'s
+  `advanceTempSeconds` can only ever heat a place UP, with no
+  cooling/refrigeration concept anywhere in this vocabulary, so actively
+  cycling one pot down to 30°C repeatedly is not mechanically possible.
+  The paper's own full two-material numerical PDE + Arrhenius-kinetics
+  model — the actual mechanism BEHIND why alternating temperatures
+  produces the stated result — remains unimplemented and un-embedded, a
+  real, much larger, separately-scoped possibility, named explicitly in
+  `egg-heat-penetration.ts`'s own doc comment and
+  `periodic-cooking-of-eggs.json`'s own `knownGapsNote`: this repo
+  represents the real TECHNIQUE (the sequence of real temperatures and
+  real timing) faithfully, not the underlying physics that explains why
+  it works.
 
 ## Robotic / automated cooking systems
 

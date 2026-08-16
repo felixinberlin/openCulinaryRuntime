@@ -1,0 +1,488 @@
+{
+  "id": "periodic_cooking_of_eggs",
+  "names": {
+    "en": "Periodic Cooking of Eggs (alternating hot/cold water baths)",
+    "es": "Cocción Periódica de Huevos (baños alternos de agua caliente/fría)"
+  },
+  "initialInventory": [
+    {
+      "id": "egg-1",
+      "entityId": "egg",
+      "state": "raw",
+      "tags": []
+    },
+    {
+      "id": "water-1",
+      "entityId": "water",
+      "state": "cold",
+      "tags": []
+    },
+    {
+      "id": "water-2",
+      "entityId": "water",
+      "state": "cold",
+      "tags": []
+    }
+  ],
+  "availableTools": [
+    "pot"
+  ],
+  "sequence": [
+    {
+      "actionId": "fill",
+      "targetInstanceId": "water-1",
+      "params": {
+        "placeId": "pot-1",
+        "toolEntityId": "pot",
+        "massKg": "1.5",
+        "startTempC": "20"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "heat_place",
+      "targetInstanceId": "water-1",
+      "params": {
+        "placeId": "pot-1",
+        "heatSourceId": "gas",
+        "targetTempC": "100",
+        "tickSeconds": "15"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fill",
+      "targetInstanceId": "water-2",
+      "params": {
+        "placeId": "pot-2",
+        "toolEntityId": "pot",
+        "massKg": "1.5",
+        "startTempC": "30"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-1",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "place_in",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "placementMethod": "lowered_by_hand"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "rest",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "durationSeconds": "120"
+      },
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "remove",
+      "targetInstanceId": "egg-1",
+      "params": {
+        "placeId": "pot-2",
+        "removalMethod": "tongs"
+      },
+      "availableIngredientInstanceIds": []
+    }
+  ],
+  "metadata": {
+    "notes": "Real, direct proof against Di Lorenzo & Di Maio, \"Periodic cooking of eggs,\" Communications Engineering (Nature Portfolio, 2025) — https://www.nature.com/articles/s44172-024-00334-w — REFERENCES.md. The paper alternates an egg between a 100C and a 30C water bath every 2 minutes for 32 minutes, exploiting the real, different denaturation temperatures of albumen (~84C) and yolk (~65C, egg-heat-penetration.ts) to reach a fully-set white with a sous-vide-creamy yolk — a result neither a constant boil nor a constant sous-vide bath can produce. ROADMAP.md named this as the ONE real source in this repo with no corresponding data/code since 2026-08-14 (\"this repo's engine cannot express that recipe at all today, not even informationally\") — closed here.",
+    "twoBathsNote": "Represented as TWO SEPARATELY, PERSISTENTLY maintained pots (pot-1 FILLed and HEAT_PLACEd to 100C ONCE at the start; pot-2 FILLed with startTempC: 30 and never actively heated), not one pot cycled up and down between the two temperatures every 2 minutes — this is not a modeling shortcut, it is the SAME real mechanism the paper's own technique actually uses (literally two baths, the egg physically moved between them). It also happens to be the only mechanically possible representation in this engine today: place.ts's advanceTempSeconds can only ever HEAT a place UP toward a target (a real, checked structural fact — a heatSourceProfile is strictly a positive energy source; there is no cooling/refrigeration concept anywhere in this vocabulary), so actively cycling ONE pot's temperature down to 30C is not something this engine can do at all, let alone 8 times.",
+    "restAsDwellNote": "REST (durationSeconds: 120) represents each 2-minute dwell in whichever bath the egg was just PLACE_IN'd into — REST was already built as a general \"let real elapsed time pass\" mechanism (data/actions/rest.json) and egg.json gained isRestable specifically for this recipe (see egg.json's own restNote). Named honestly, not implied more rigorous than it is: REST's own elapsed-seconds bookkeeping is NOT formally coupled to place.ts's own tracked simulated clock for whichever pot the egg currently occupies — they are two separate, uncoupled notions of \"time passing\" in this recipe, a real, further gap this recipe does not close.",
+    "startPhaseAssumptionNote": "This recipe assumes the sequence starts in the HOT bath (the source material confirmed the 100C/30C temperatures and the 2-minute/32-minute timing, but did not specify which phase comes first or last) — a reasonable, STATED assumption, not a directly-cited fact. 16 segments of 120s each (8 hot + 8 cold, alternating) sum to exactly 1920s = 32 minutes, matching the paper's own total — checkable directly via recipe-narrator.ts's statedActiveDurationSeconds tally, not just asserted here.",
+    "knownGapsNote": "What this recipe does NOT close, named explicitly rather than implied covered: (1) the egg's own STATE stays \"raw\" throughout — this engine has no per-instance temperature or doneness tracking (the same limitation tortilla_mixture.json's rawStateHonestyNote and LEARNINGS_ENGINE.md 2026-08-16 already name), so the real result (a fully-set white, a creamy yolk) is not, and currently cannot be, reflected in the engine's own bookkeeping for this instance. (2) No CriticalControlPointSchema check ever fires — this recipe never calls BOIL/FRY/POACH/PASTEURIZE (the only actions egg.json wires to a CCP), so unlike every other egg recipe in this vocabulary, no food-safety threshold is verified here at all, a real, named difference from how this dish would need to be validated for actual safety, not just mechanism. (3) The cold bath's 30C is asserted via FILL's startTempC, not actively maintained by any modeled refrigeration process across the 4 times the egg re-enters it — place.ts has no batch-coupling between a hot object placed into a cooler medium and that medium's own tracked temperature (the same gap fry-egg-as-a-robot.ts's own closing note already names), so this recipe does not claim pot-2 would REALLY still be at exactly 30C after absorbing heat from a 100C egg four separate times — a real physical effect, left unmodeled and named, not hidden."
+  }
+}

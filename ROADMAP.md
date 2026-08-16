@@ -854,11 +854,12 @@ covered by what exists:**
       (Nature Portfolio), Feb 6 2025 —
       https://www.nature.com/articles/s44172-024-00334-w — alternates an egg
       between a 100°C and a 30°C water bath every 2 minutes for 32 minutes to
-      get a fully-set white with a sous-vide-creamy yolk. This repo's engine
-      cannot express that recipe at all today, not even informationally —
-      see `REFERENCES.md`'s "discussed, not yet embedded" section; this is
-      the one real source in this repo with no corresponding data/code
-      because the mechanism to hold it doesn't exist yet. Concretely
+      get a fully-set white with a sous-vide-creamy yolk. AT THE TIME THIS
+      ENTRY WAS WRITTEN, this repo's engine could not express that recipe
+      at all, not even informationally — **closed 2026-08-16**, see this
+      entry's own dated update below (`data/recipes/periodic-cooking-of-
+      eggs.json`) for what's real now vs. what honestly still isn't.
+      Concretely
       confirmed by the code itself too, not just conceptually true:
       `pan.json` already lists
       `possibleStates: ["hot", "cold"]` with ZERO actions or engine support
@@ -980,12 +981,46 @@ covered by what exists:**
       place's own tracked temperature (`fry-egg-as-a-robot.ts`'s own closing
       note names this same gap, still open); no `Instance.inProgressAction`/
       `toolLockBehavior` (`WORLD_MODEL_OPTIMIZATION.md`'s design input, this
-      same entry, 2026-08-15); no periodic/alternating-temperature recipe
-      proven against the Di Lorenzo & Di Maio "Periodic cooking of eggs"
-      case — mechanically `HEAT_PLACE` could now be called repeatedly with
-      alternating `targetTempC` values in one `recipe.sequence`, but that has
-      not been built or proven; recipe-runner.ts's own top doc comment names
-      this explicitly rather than implying it's covered.
+      same entry, 2026-08-15).
+      **The periodic/alternating-temperature recipe CLOSED 2026-08-16** —
+      `data/recipes/periodic-cooking-of-eggs.json`, the real, direct proof
+      against Di Lorenzo & Di Maio's "Periodic cooking of eggs" case, and the
+      LAST item this entry's own opening paragraph named as "the one real
+      source in this repo with no corresponding data/code" — a genuinely
+      real gap closed, not a hypothetical filled in. First, an honest
+      structural finding, checked directly against `place.ts`'s own code
+      before assuming the naive approach ("just call `HEAT_PLACE` with
+      alternating targets") would work: it wouldn't — `advanceTempSeconds`
+      can ONLY ever heat a place UP toward a target (a silent no-op if the
+      target is at or below the current temperature, since a
+      `heatSourceProfile` is strictly a positive energy source; there is no
+      cooling/refrigeration concept anywhere in this vocabulary), so cycling
+      ONE pot's temperature down to 30°C 8 times is not mechanically
+      possible at all. Built instead — and more faithfully to the real
+      technique — as TWO SEPARATELY, PERSISTENTLY maintained pots (one
+      `FILL`ed+`HEAT_PLACE`d to 100°C once; one `FILL`ed with `startTempC:
+      30` and never actively heated), with the egg physically moved between
+      them 16 times via `PLACE_IN`/`REMOVE`, each 2-minute dwell represented
+      by `REST` (which required `egg.json` gaining `isRestable` for the
+      first time, and `rest.json`'s own `durationSeconds` range being
+      honestly WIDENED from 300-1800s to 120-1800s for this real, cited,
+      shorter third use case — see that file's own updated
+      `durationSecondsNote`). Simulated end-to-end with zero step errors
+      (51 steps) on the first run; `narrate-recipe.ts`'s own computed
+      `statedActiveDurationSeconds` independently confirms the total sums
+      to exactly 1920s = 32.0 minutes, matching the paper's own stated
+      total, not just asserted in prose. Three real, honestly-named
+      limitations this recipe does NOT close, in its own `knownGapsNote`:
+      the egg's own engine STATE stays `"raw"` throughout (no per-instance
+      temperature tracking exists anywhere in this engine, the same
+      limitation `tortilla_mixture.json`'s `rawStateHonestyNote` already
+      names); no CCP ever fires (this recipe never calls
+      `BOIL`/`FRY`/`POACH`/`PASTEURIZE`, so — unlike every other egg recipe
+      in this vocabulary — no food-safety threshold is verified here at
+      all); and the cold bath's 30°C is asserted via `FILL`'s `startTempC`,
+      not actively re-verified as still holding after repeatedly absorbing
+      heat from a hot egg (the same missing hot-object-into-cooler-medium
+      coupling `fry-egg-as-a-robot.ts`'s own closing note already names).
       **Generalized beyond boiling, same day, once FRY needed it too**:
       `advanceHeatSeconds`/`isAtBoiling` only ever clamped at
       `contentsEntity.thermophysical.boilingPointC` — which oil (`fry.json`)

@@ -1,0 +1,44 @@
+{
+  "id": "tortilla_mixture_con_cebolla",
+  "kind": "ingredient",
+  "names": {
+    "en": "Tortilla mixture (with onion)",
+    "es": "Mezcla de tortilla (con cebolla)"
+  },
+  "aggregationState": "paste",
+  "structure": {
+    "composite": true,
+    "components": ["potato", "onion", "egg"]
+  },
+  "possibleStates": ["raw", "fried", "burned", "overcooked"],
+  "possibleTags": ["flipped", "salted"],
+  "allowedTransformations": ["fry", "flip"],
+  "invalidTransitions": {
+    "burned": ["raw", "fried", "overcooked"],
+    "overcooked": ["raw", "fried"]
+  },
+  "producedByproducts": [],
+  "criticalControlPointsByAction": {
+    "fry": "egg_cooking"
+  },
+  "capabilities": {
+    "isFryable": true,
+    "isFlippable": true
+  },
+  "sensory": {
+    "taste": ["neutral", "sweet"],
+    "texture": ["thick"],
+    "color": "pale yellow"
+  },
+  "cooklang": {
+    "canonicalToken": "tortilla_con_cebolla",
+    "spiceLock": false
+  },
+  "metadata": {
+    "producedBy": ["combine_con_cebolla"],
+    "notes": "A DELIBERATELY SEPARATE entity from tortilla_mixture.json, not the same entity reused — the honest reason ROADMAP.md named this as a real, unbuilt gap rather than something a capability flag could paper over: structure.components ['potato','onion','egg'] genuinely differs from plain tortilla_mixture's ['potato','egg'], and this repo's own structure.composite/components field exists specifically to keep that kind of compositional fact truthful, not collapse two different dishes into one entity id for convenience. Everything else (possibleStates/possibleTags/invalidTransitions/capabilities/criticalControlPointsByAction) mirrors tortilla_mixture.json exactly — see that entity's own notes for the reasoning behind each, unchanged here: the egg-risk CCP, the flipped-as-tag-not-state choice, the known one-side-vs-both-sides-fried gap, and the burned/overcooked TICKET-5 entries all apply identically, since egg's contribution to this composite is physically the same regardless of what else is mixed in with the potato.",
+    "sensoryNote": "taste gains 'sweet' (kept alongside 'neutral', not replacing it) relative to plain tortilla_mixture.json — a direct, real consequence of the onion having been caramelized/confit-fried into the base before combining, not an arbitrary difference between the two entities.",
+    "knownGap": "Same as tortilla_mixture.json's identical field: FRY applied twice (before/after FLIP) both just set the fixed state 'fried', with no way to distinguish one side fried from both sides fully cooked.",
+    "failureStateNote": "'burned'/'overcooked' mirror tortilla_mixture.json's identical TICKET-5 entries — see that file's own note for the full reasoning (unconditionally terminal 'burned', 'overcooked' leaves 'burned' reachable, isTerminalState correctly computes false for 'overcooked')."
+  }
+}

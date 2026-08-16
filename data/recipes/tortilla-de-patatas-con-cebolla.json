@@ -1,0 +1,78 @@
+{
+  "id": "tortilla_de_patatas_con_cebolla",
+  "names": {
+    "en": "Spanish Tortilla (con cebolla)",
+    "es": "Tortilla de Patatas (con cebolla)"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "onion-1", "entityId": "onion", "state": "raw", "tags": [] },
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "pinch",
+        "approxRangeGrams": { "min": 0.3, "max": 0.6 },
+        "citation": {
+          "source": "Commonly cited culinary conversion: 1 pinch ≈ 1/16 tsp of fine table salt",
+          "confidence": "commonly_cited_unverified",
+          "note": "Same imprecise-by-convention figure tortilla-de-patatas.json's own identical salt instance already uses."
+        }
+      }
+    }
+  ],
+  "availableTools": ["knife", "pan", "bowl"],
+  "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "onion-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "onion-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "combine_potato_onion",
+      "targetInstanceId": "potato-1",
+      "secondaryInstanceId": "onion-1",
+      "params": {},
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "potato_onion_mixture-3",
+      "params": { "heatLevel": "low", "oilTempC": "135", "durationSeconds": "1500" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "crack", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "beat", "targetInstanceId": "egg_cracked-5", "params": { "intensity": "beaten" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "salt", "targetInstanceId": "egg_cracked-5", "params": { "timing": "before_cooking" }, "availableIngredientInstanceIds": ["salt-1"] },
+    {
+      "actionId": "combine_con_cebolla",
+      "targetInstanceId": "potato_onion_mixture-3",
+      "secondaryInstanceId": "egg_cracked-5",
+      "params": {},
+      "availableIngredientInstanceIds": []
+    },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "tortilla_mixture_con_cebolla-6",
+      "params": { "heatLevel": "medium", "durationSeconds": "180" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "flip", "targetInstanceId": "tortilla_mixture_con_cebolla-6", "params": {}, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "fry",
+      "targetInstanceId": "tortilla_mixture_con_cebolla-6",
+      "params": { "heatLevel": "medium", "durationSeconds": "120" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    }
+  ],
+  "metadata": {
+    "notes": "The onion variant tortilla-de-patatas.json's own metadata named as a real gap ('Onion-free (sin cebolla) — no onion entity exists in this vocabulary yet'), now closed 2026-08-16. WASH/PEEL/CUT the potato AND separately PEEL/CUT the onion (both sliced); COMBINE_POTATO_ONION merges the two RAW sliced instances into one potato_onion_mixture (real technique: cooked together from raw, not fried separately then merged — see that action's own sequencingNote); FRY the joint mixture once (low heat, long duration, confit-style — 1500s, longer than the onion-free recipe's 900s potato-only fry, since a real potato+onion confit genuinely takes longer, both softening together); CRACK/BEAT/SALT the egg exactly as in the plain recipe; COMBINE_CON_CEBOLLA merges the fried mixture with beaten egg into tortilla_mixture_con_cebolla; FRY/FLIP/FRY as in the plain recipe.",
+    "instanceIdNote": "targetInstanceId 'potato_onion_mixture-3'/'egg_shell-4'(unused directly)/'egg_cracked-5'/'tortilla_mixture_con_cebolla-6' are runtime-spawned ids (recipe-runner.ts's global spawnCounter, incremented once per spawn event across the WHOLE recipe, not per entity type) — hand-derived by walking the sequence in order: peel(potato) spawns potato_peel-1, peel(onion) spawns onion_peel-2, combine_potato_onion spawns potato_onion_mixture-3, crack(egg) spawns egg_shell-4 then egg_cracked-5, combine_con_cebolla spawns tortilla_mixture_con_cebolla-6. Verified by actually running this recipe through npm run validate's real end-to-end simulation (recipe-runner.ts's runRecipe), not just asserted — see tortilla-de-patatas.json's own identically-shaped note for why spawned ids can't be verified statically.",
+    "durationNote": "The joint potato+onion fry's 1500s (25 minutes) sits within data/actions/fry.json's own wide 10s-1800s range and is longer than the plain recipe's potato-only 900s — a real, deliberate difference: onion releases significant water as it cooks down, and a genuine potato-and-onion confit for tortilla typically runs longer than potato alone to let both soften fully without either burning, consistent with caramelize.json's own 900-2700s citation for onion specifically (this step doesn't reach full caramelization — deep golden, not jammy-brown — but shares the same slow, patient low-heat logic)."
+  }
+}

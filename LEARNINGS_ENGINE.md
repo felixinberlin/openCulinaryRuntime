@@ -994,3 +994,57 @@ was made. Don't rewrite or delete old entries — append.
   source of truth for a derivable fact" discipline this session applied
   repeatedly to code (`execution-bounds.ts`'s CCP floor, `isTerminalState`)
   applied here to a citation instead.
+
+### `COMBINE` reused twice — the "fixed pairing, shared capability" shape genuinely doesn't scale to a third combination without a real, named gap
+
+- **Building "tortilla de patatas con cebolla" (onion.json's own
+  `combinePotatoOnionNote`) surfaced a structural limit `combine.json`'s
+  original design decision was always going to hit eventually**:
+  `requiredTargetCapability`/`requiredSecondaryCapability`/`combinesInto`
+  being FIXED per action (deliberate, see `combine.json`'s `scopeNote`,
+  written 2026-08-12) means every new pairing needs its own action file —
+  fine, that scaled cleanly to a second (`combine_potato_onion.json`)
+  and third (`combine_con_cebolla.json`) action. What does NOT scale for
+  free is capability REUSE: `combine_con_cebolla.json` had to reuse
+  `potato.json`'s existing `isCombinableBase` flag on the new
+  `potato_onion_mixture.json` entity (both are legitimately "a valid base
+  to pour beaten egg over"), and reuse `egg_cracked.json`'s existing
+  `isCombinableAddition` flag too (egg's role is identical either way) —
+  but `engine.ts`'s capability check only ever verifies "does the target
+  assert this flag true," never "is the target the SPECIFIC entity this
+  action was actually designed for." The result: nothing in the schema
+  stops a malformed recipe from calling the ORIGINAL `combine.json`
+  against a `potato_onion_mixture` instance (both assert
+  `isCombinableBase`) — it would still execute, silently discarding the
+  onion-composition fact `structure.components` exists to preserve.
+- **Deliberately NOT fixed by adding a real per-entity-identity check to
+  `applyAction`** — that's a bigger, more invasive engine change
+  (checking target ENTITY ID, not just capability presence, which would
+  also mean auditing every OTHER capability-based check in this engine
+  for the same theoretical looseness) than this feature's actual scope
+  warranted. Named instead, honestly, in `potato_onion_mixture.json`'s
+  own `capabilityAmbiguityNote` and `ROADMAP.md` — the same "name the
+  gap rather than silently risk it, but don't over-engineer a fix nobody
+  asked for" discipline `LEARNINGS_ENGINE.md`'s TICKET 4 entries above
+  already established for `mashed potato -> fried -> peeled`. Worth
+  restating as the general lesson: a capability system that checks
+  "presence of a flag" rather than "identity of an instance" is a
+  genuine, permanent trade-off (cheap, substitutable, exactly what makes
+  `requiredIngredientCapabilities`/`requiredToolCapabilities` useful
+  elsewhere in this repo) — and every new REUSE of an existing capability
+  flag for a second, different fixed pairing is a new, real place that
+  trade-off can bite, not just a one-time cost paid when the flag was
+  first introduced.
+- **The two-stage chain itself (combine raw, THEN fry, rather than fry
+  each separately and combine after) was a real technique decision, not
+  an implementation convenience** — checked against how tortilla de
+  patatas con cebolla is actually made (potato and onion confit-fried
+  together in the same oil) before designing `combine_potato_onion.json`
+  to fire on RAW sliced instances rather than mirroring `combine.json`'s
+  own fried-first prerequisite. Getting this backwards (combining two
+  already-separately-fried instances) would have been schema-valid and
+  would have run without error, but would not have matched real cooking
+  practice — the same "verify against real technique before encoding it"
+  discipline this whole session has applied to every `invalidTransitions`
+  entry, extended here to a whole action's sequencing, not just one
+  forbidden edge.

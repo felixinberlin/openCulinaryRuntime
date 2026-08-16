@@ -1,0 +1,43 @@
+{
+  "id": "potato_onion_mixture",
+  "kind": "ingredient",
+  "names": {
+    "en": "Potato and onion mixture",
+    "es": "Mezcla de patata y cebolla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": true,
+    "components": ["potato", "onion"]
+  },
+  "possibleStates": ["raw", "fried", "burned", "overcooked"],
+  "possibleTags": ["salted"],
+  "allowedTransformations": ["fry", "combine_con_cebolla"],
+  "statePrerequisites": {
+    "combine_con_cebolla": "fried"
+  },
+  "invalidTransitions": {
+    "burned": ["raw", "fried", "overcooked"],
+    "overcooked": ["raw", "fried"]
+  },
+  "producedByproducts": [],
+  "capabilities": {
+    "isFryable": true,
+    "isCombinableBase": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["soft"],
+    "color": "pale"
+  },
+  "cooklang": {
+    "canonicalToken": "patata_cebolla",
+    "spiceLock": false
+  },
+  "metadata": {
+    "producedBy": ["combine_potato_onion"],
+    "notes": "The second composite entity in this repo to populate structure.composite/components (after tortilla_mixture.json), added 2026-08-16 for the real tortilla-de-patatas-con-cebolla chain. Spawned RAW (combine_potato_onion.json's own sequencingNote — real technique combines sliced potato + sliced onion BEFORE either is fried, cooking them together afterward in one shallow-fry step), then statePrerequisites.combine_con_cebolla: 'fried' requires that single joint fry to actually happen before this mixture can be combined a second time with beaten egg — the direct sibling of potato.json's own statePrerequisites.combine: 'fried' for the plain (onion-free) recipe.",
+    "capabilityAmbiguityNote": "A real, named cross-capability ambiguity, not silently glossed over: this entity asserts isCombinableBase: true, the SAME flag potato.json asserts — both data/actions/combine.json (potato+egg -> tortilla_mixture) and data/actions/combine_con_cebolla.json (potato_onion_mixture+egg -> tortilla_mixture_con_cebolla) check for that one flag on their target, and requiredSecondaryCapability isCombinableAddition on both actions is satisfied by the same egg_cracked instance either way. Nothing in engine.ts's capability check distinguishes 'this specific isCombinableBase instance is a potato_onion_mixture, not a plain potato' — a recipe author (or a future planner) could mistakenly call the ORIGINAL combine.json with THIS entity as its target, which would still execute (both capability checks pass) but silently spawn plain tortilla_mixture (components ['potato','egg']) from an instance that actually contains fried onion too, losing the composition-honesty distinction structure.components exists to preserve. Fixing this for real would need engine.ts to check target ENTITY IDENTITY per action, not just capability presence — a bigger, more invasive change than this ticket's scope; named here rather than silently risked. Same category of already-accepted limitation as requiredIngredientCapabilities' own doc comment (checked for presence only, never which SPECIFIC instance).",
+    "failureStateNote": "'burned'/'overcooked' mirror tortilla_mixture.json's identical TICKET-5 entries exactly (same reasoning: a joint potato+onion confit-fry left too long or too hot is a real, plausible failure, not hypothetical) — 'burned' unconditionally terminal, 'overcooked' leaves the transition to 'burned' open, so isTerminalState(potato_onion_mixture, 'overcooked') correctly computes false, same as every other TICKET-5 entity in this vocabulary."
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "combine_potato_onion",
+  "verb": "COMBINE",
+  "names": {
+    "en": "Combine (potato + onion)",
+    "es": "Combinar (patata + cebolla)"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isCombinableBase",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [],
+  "requiredSecondaryCapability": "isCombinableWithPotato",
+  "parameters": [],
+  "outputs": {
+    "combinesInto": "potato_onion_mixture",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "A SECOND, genuinely different COMBINE-shaped action from data/actions/combine.json, added 2026-08-16 for the real tortilla-de-patatas-con-cebolla chain (see onion.json's combinePotatoOnionNote / potato.json's identically-named note for the full picture). Target: potato (isCombinableBase, the SAME flag combine.json also checks — reused deliberately, both actions agree potato is a valid base for a fixed pairing). Secondary: onion (isCombinableWithPotato — a DEDICATED capability, NOT egg_cracked.json's isCombinableAddition, specifically so this action and combine.json can never be satisfied by the wrong secondary ingredient by accident).",
+    "toolNote": "requiredTools: [] — deliberately empty, unlike combine.json's ['bowl']. combine.json's bowl requirement is real (beaten egg is poured over already-fried potato in a bowl before returning to the pan); this action instead represents raw sliced potato and raw sliced onion simply being placed together, typically directly in the pan they'll be fried in — no intermediate mixing vessel is a real step here.",
+    "sequencingNote": "Deliberately happens BEFORE frying (potato.json's statePrerequisites.combine_potato_onion: 'sliced', not 'fried') — the real technique this chain models is potato and onion cooked TOGETHER from raw in the same oil (a slow, confit-style shallow fry), not fried separately and merged afterward. This is why a second, dedicated action was needed rather than reusing combine.json's shape with different capability names: the STATE at which the two ingredients are combined is itself a real, different fact, not just which two entities are involved.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as combine.json's identical note — a single one-off assembly of two instances into one; both discriminators agree."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Sliced potato and sliced onion pieces are physically together in one vessel, ready to be fried as a single mixture",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "impact_force",
+      "severity": "low",
+      "note": "Handling raw sliced pieces, minimal"
+    }
+  ],
+  "retrySafe": true
+}

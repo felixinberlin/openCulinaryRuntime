@@ -644,15 +644,33 @@ covered by what exists:**
       pearl onions is real, common technique, the same carve-out
       `potato.json` already established). Proven end-to-end via
       `scripts/caramelize-onion-as-a-robot.ts`
-      (`npm run capability-test:caramelize-onion`). Still explicitly open:
-      `onion.json` deliberately does NOT set `isCombinableBase` — a real
-      "tortilla de patatas CON cebolla" recipe (the exact gap
-      `tortilla-de-patatas.json`'s own metadata names) needs `COMBINE`
-      generalized beyond its current fixed potato+egg shape, or a new
-      potato+onion pre-combine step; see `onion.json`'s
-      `combineScopeNote` for why that wasn't force-fit here. Flour,
-      milk/cheese (beyond plain butter), herbs, sugar, and any protein
-      besides egg remain unbuilt.
+      (`npm run capability-test:caramelize-onion`).
+      **"Tortilla de patatas CON cebolla" closed the same day, once
+      actually asked for**: `data/actions/combine_potato_onion.json` +
+      `combine_con_cebolla.json` (two NEW, genuinely distinct
+      `COMBINE`-shaped actions, not a generalization of the original
+      `combine.json`, which stays untouched — see its own `scopeNote`)
+      chain `potato` + `onion` (raw, both sliced — real technique cooks
+      them together from raw, not fried separately then merged) into
+      `potato_onion_mixture.json`, fried once, then combined a second
+      time with beaten egg into `tortilla_mixture_con_cebolla.json` — a
+      genuinely distinct composite entity (`structure.components`
+      `['potato','onion','egg']`), not the onion-free `tortilla_mixture`
+      relabeled. `onion.json` got a dedicated `isCombinableWithPotato`
+      capability rather than reusing `egg_cracked.json`'s
+      `isCombinableAddition`, specifically so the original `combine.json`
+      can never accept an onion instance by accident. One real, named,
+      NOT-closed cross-capability ambiguity remains: both `combine.json`
+      and `combine_con_cebolla.json` share `requiredTargetCapability:
+      isCombinableBase`, so nothing in the engine itself stops a
+      malformed recipe from calling the wrong one against the wrong
+      target — see `potato_onion_mixture.json`'s own
+      `capabilityAmbiguityNote`. Proven end-to-end via
+      `data/recipes/tortilla-de-patatas-con-cebolla.json`
+      (`npm run recipe -- tortilla_de_patatas_con_cebolla`), simulated
+      with zero step errors by `npm run validate`. Flour, milk/cheese
+      (beyond plain butter), herbs, sugar, and any protein besides egg
+      remain unbuilt.
       **Triaged 2026-08-15 against a user-supplied Reddit thread**
       (r/Cooking, "Engineer brain struggling with cooking," 760 upvotes,
       219 comments — copy-pasted into the repo, moved to

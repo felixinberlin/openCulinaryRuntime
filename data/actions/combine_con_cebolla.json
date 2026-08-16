@@ -1,0 +1,44 @@
+{
+  "id": "combine_con_cebolla",
+  "verb": "COMBINE",
+  "names": {
+    "en": "Combine (potato+onion + egg)",
+    "es": "Combinar (patata y cebolla + huevo)"
+  },
+  "requiredTools": [
+    "bowl"
+  ],
+  "requiredTargetCapability": "isCombinableBase",
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [],
+  "requiredSecondaryCapability": "isCombinableAddition",
+  "parameters": [],
+  "outputs": {
+    "combinesInto": "tortilla_mixture_con_cebolla",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "The SECOND stage of the tortilla-de-patatas-con-cebolla chain (see data/actions/combine_potato_onion.json for the first stage). Target: potato_onion_mixture (already fried, isCombinableBase). Secondary: egg_cracked (isCombinableAddition — the SAME capability data/actions/combine.json's own secondary check uses, deliberately reused rather than given a third dedicated flag, since egg's role here is identical to the onion-free recipe: beaten egg poured over an already-fried base. See data/entities/potato_onion_mixture.json's capabilityAmbiguityNote for the real, named risk this reuse creates.",
+    "toolNote": "requiredTools: ['bowl'] — same real technique as combine.json (pour the beaten egg over the fried mixture in a bowl before returning it to the pan), unlike combine_potato_onion.json's tool-free first stage.",
+    "scopeNote": "Same fixed-pairing discipline as combine.json's own scopeNote: requiredTargetCapability/requiredSecondaryCapability/combinesInto are FIXED to this one specific combination (potato_onion_mixture + egg -> tortilla_mixture_con_cebolla), not a generalization of COMBINE into a lookup system. A future third variant (e.g. adding bell pepper) would define its own action the same way this one was added alongside combine.json rather than either being touched.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as combine.json's identical note — a single one-off assembly of two instances into one; both discriminators agree."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "A single homogeneous mixture present where fried potato-and-onion and beaten egg were a moment ago",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "impact_force",
+      "severity": "low",
+      "note": "Bowl handling, minimal"
+    }
+  ],
+  "retrySafe": true
+}

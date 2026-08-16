@@ -325,6 +325,41 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
 
 ## Culinary technique & food science literature
 
+- **Binner, Jardine & Renard, "Cell wall modifications during cooking of
+  potatoes and sweet potatoes," *Journal of the Science of Food and
+  Agriculture* 80(2):216-218 (2000)** — peer-reviewed: cooking
+  progressively demethylates and solubilizes pectin in the potato
+  cell-wall middle lamella, weakening cell-to-cell adhesion and causing
+  real cell separation, i.e. a cooking potato piece gets progressively
+  more mechanically fragile as cooking proceeds. Used in `fry.json`'s
+  `agitationNote` and `potato.json`'s `brokenTagNote` (added 2026-08-16,
+  answering a direct user question about why over-stirred fried potato
+  breaks apart). Confidence: `standard_reference` (peer-reviewed) for the
+  cell-wall-softening fact itself; the further step ("therefore
+  mechanical agitation breaks it") is this repo's OWN reasoned inference
+  on top of that fact, not something found directly stated in the paper —
+  flagged as such in both citing files, not presented as directly cited.
+- **"Swelling, Softening and Elastocapillary Adhesion of Cooked Pasta"**
+  (arXiv preprint) — a real, serious physics treatment of swollen,
+  softened starchy surfaces adhering to each other via capillary forces.
+  Used in `fry.json`'s `agitationNote` as an ANALOGY for why undisturbed
+  potato pieces stick together — explicitly NOT direct potato evidence
+  (the paper is about pasta), the same scope-mismatch discipline
+  `garlic_peel.json`'s clove-vs-bulk citation already applies. Confidence:
+  `commonly_cited_unverified` for the by-analogy application to potato,
+  even though the underlying physics paper itself is a real, serious
+  academic treatment.
+- **General starch gelatinization / surface-adhesion mechanism** (standard
+  food-science-textbook-level starch chemistry: gelatinized surface
+  starch releases soluble amylose that behaves as a viscous, adhesive
+  paste at any point of static contact lacking an oil barrier) — used
+  alongside the two citations above in `fry.json`'s `agitationNote`.
+  Confidence: `commonly_cited_unverified` — several web sources located
+  during research made suspiciously precise-sounding claims (specific
+  covalent-bonding mechanisms, exact gelatinization-peak temperatures)
+  that were NOT used here; this citation deliberately stays at the
+  general, textbook-level mechanism rather than repeating unverified
+  numeric specifics from low-confidence sources.
 - **Convergent Spanish tortilla de patatas recipe sources** (Spanish
   Sabores, Kitchen Frau, and others already cross-checked in this repo)
   — the commonly-cited ~1kg potato to ~6 large eggs (~350g) home-recipe

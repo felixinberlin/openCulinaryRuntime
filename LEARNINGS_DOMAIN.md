@@ -1158,3 +1158,33 @@ was made. Don't rewrite or delete old entries — append.
   case (raw whipped white as an ingredient someone would actually want
   pasteurized) made the gap concrete instead of hypothetical.
 
+### FRY's `agitation` — one everyday observation, two unrelated real mechanisms
+
+- **"Stirred potato pieces stick when left alone, break when stirred too
+  much" reads like one texture phenomenon but is actually two
+  independent physical mechanisms with two different citation tiers** —
+  worth naming as a general pattern: a single everyday kitchen
+  observation doesn't have to have one cause, and forcing it into one
+  citation would have understated (or overstated) the confidence of
+  whichever half was actually weaker. Sticking is textbook-level starch
+  chemistry (undisturbed contact + gelatinized surface starch + no oil
+  barrier); breaking traces to a real, peer-reviewed, but narrower fact
+  (Binner et al. 2000's cell-wall pectin solubilization) plus this
+  repo's OWN inferential leap connecting that fact to mechanical
+  agitation specifically — a real, named difference in how solid each
+  half of the "same" observation actually is.
+- **`broken` becoming a TAG rather than a new state or a `burned`/
+  `overcooked`-style addition was decided by asking whether it's
+  mutually exclusive with the entity's existing states, not by
+  pattern-matching the most recent precedent** — `burned`/`overcooked`
+  are states because a piece really can't be simultaneously `fried` and
+  `burned` in the sense this schema means it (one supersedes the other
+  as the piece's overall form); `broken` is different — a piece is
+  still, physically, `fried` (or `raw`, or any other state) AND broken
+  at the same time, the same orthogonal-fact shape `washed` already
+  demonstrated when it moved off `possibleStates` onto `possibleTags` in
+  this exact file. Worth restating: TICKET 5's "reachable only as an
+  authored fact, no detection mechanism" discipline generalizes to tags
+  too, not just states — the state-vs-tag question and the
+  authored-vs-derived question are two separate axes, not one choice.
+

@@ -805,6 +805,26 @@ covered by what exists:**
       not-yet-embedded way to eventually tighten `heat-penetration.ts`'s
       own stated Bi→∞ lower-bound caveat — not used here, named as a real
       further possibility.
+- [x] **FRY's `agitation` parameter — real science, closed 2026-08-16.**
+      The other half of the same investigation thread as the flip physics
+      above: why undisturbed fried potato pieces stick together, and why
+      over-stirred ones break apart. Two genuinely different mechanisms,
+      each with its own real citation, added to `fry.json`'s new
+      `agitationNote`: STICKING is starch gelatinization releasing an
+      adhesive soluble-starch paste at any unlubricated point of static
+      contact (textbook-level, `commonly_cited_unverified`, plus a real
+      but scope-flagged pasta-adhesion physics paper cited by analogy);
+      BREAKING traces to Binner et al. (2000, peer-reviewed) — cooking
+      progressively solubilizes cell-wall pectin, weakening cell-to-cell
+      adhesion — with the "therefore stirring breaks it" step named
+      explicitly as this repo's OWN inference, not directly cited.
+      `potato.json` gained a new `broken` possible TAG (not a state — a
+      piece can be simultaneously `fried` and `broken`, an orthogonal
+      structural fact, the same distinction `washed` was moved across
+      earlier) — TICKET-5-shaped, reachable only as an authored fact, no
+      detection mechanism, matching `burned`/`overcooked`'s own discipline
+      exactly. Deliberately NOT added to `onion.json`/`garlic.json` (also
+      cut+fried) in this pass — named as a real, still-open extension.
 - [ ] **Heat as a shared, time-varying property of a PLACE (pot/pan), not a
       per-action-call parameter on one ingredient.** Raised directly by the
       user while `SIMMER` was being built: "heat is a function inside a

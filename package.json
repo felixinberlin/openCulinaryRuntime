@@ -59,6 +59,7 @@
     "capability-test:planner": "tsx scripts/planner-as-a-robot.ts",
     "capability-test:roast": "tsx scripts/roast-any-vegetable-as-a-robot.ts",
     "capability-test:steam": "tsx scripts/steam-as-a-robot.ts",
+    "capability-test:grill": "tsx scripts/grill-any-vegetable-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

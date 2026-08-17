@@ -1,0 +1,52 @@
+{
+  "id": "grilled_potatoes_and_onions",
+  "names": {
+    "en": "Grilled Potatoes and Onions",
+    "es": "Patatas y Cebolla a la Parrilla"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "onion-1", "entityId": "onion", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": { "kind": "imprecise", "descriptor": "to_taste", "citation": { "source": "Commonly cited culinary convention — salt to taste", "confidence": "commonly_cited_unverified" } }
+    }
+  ],
+  "availableTools": ["knife", "pot", "grill"],
+  "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "quartered" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "simmer",
+      "targetInstanceId": "potato-1",
+      "params": { "durationSeconds": "420" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    { "actionId": "drain", "targetInstanceId": "potato-1", "params": { "method": "wire_rack" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "grill",
+      "targetInstanceId": "potato-1",
+      "params": { "grillTempC": "218", "durationSeconds": "1500" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "peel", "targetInstanceId": "onion-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "onion-1", "params": { "shape": "quartered" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "grill",
+      "targetInstanceId": "onion-1",
+      "params": { "grillTempC": "218", "durationSeconds": "600" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] },
+    { "actionId": "salt", "targetInstanceId": "onion-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "Real, cited technique (see data/actions/grill.json's own notes and REFERENCES.md): potato is parboiled first (a plain SIMMER, gentler on the pieces than a rolling BOIL, matching this repo's own simmer.json precedent — not the alkaline variant, which is a real but genuinely different, separately-cited technique, see crispy-roast-potatoes.json) so its pre-gelatinized surface starch crisps and browns quickly on the grill's high dry heat; onion goes straight onto the grill raw-cut, no parboil, matching real technique for both. durationSeconds (1500s potato, 600s onion) sit at realistic points within each entity's own grillNote-cited range, not arbitrary picks — onion cooks faster on a direct grill than a parboiled potato chunk."
+  }
+}

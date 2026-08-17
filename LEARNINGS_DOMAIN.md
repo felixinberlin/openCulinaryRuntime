@@ -1400,3 +1400,29 @@ was made. Don't rewrite or delete old entries — append.
   not to manufacture a scenario that doesn't correspond to any real
   authored recipe.
 
+### GRILL — when two verbs' declared numeric ranges SHOULD overlap, and proving a distinction by checking both rejection directions
+
+- **`GRILL`'s temperature range was deliberately left overlapping
+  `ROAST`'s (191-232°C vs. 204-232°C), and resisting the instinct to
+  separate them artificially (e.g. "grill runs hotter") was the correct,
+  checked call, not a missed opportunity for a cleaner-looking pair of
+  ranges.** Real convergent sources for both techniques cite comparably
+  high, overlapping temperature bands — the actual distinguishing
+  physical fact is DIRECT vs. ENCLOSED heat delivery, not a temperature
+  difference that doesn't exist in the real technique. Inventing a
+  temperature split to make the two verbs "look" more different would
+  have been fabricating a distinction this repo's own citation discipline
+  doesn't support — named explicitly in `grill.json`'s own
+  `temperatureNote` rather than left as an unexplained near-miss a reader
+  might assume was an authoring inconsistency.
+- **Proving two verbs are mechanically distinct is stronger checked BOTH
+  directions, not one.** It would have been easy to prove only "GRILL
+  rejects an oven-only kitchen" and call the distinction demonstrated —
+  but that alone doesn't rule out `ROAST` secretly accepting a grill too
+  (e.g. if `oven`'s `requiredTools` entry had been copy-paste-forgotten
+  somewhere). Checking the SYMMETRIC case (`ROAST` also correctly
+  rejecting a grill-only kitchen) in the same capability-test script is
+  what actually proves the two tools are exclusive alternatives, not
+  just that one direction happens to work — a cheap, worthwhile addition
+  once the first check was already being written.
+

@@ -831,6 +831,17 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `citationNote`, the same real piece-size-dependent-range discipline
   `roast.json`'s own timing already uses. Confidence:
   `commonly_cited_unverified`.
+- **Convergent consumer grilling sources on potato/onion direct-heat
+  temperature and timing** (Bonappeteach, A Couple Cooks, Barbecue
+  Bible, Linger, Napoleon, The Kitchn, Grilling Dude, Plays Well With
+  Butter, and others independently checked) — 191-232°C (375-450°F)
+  direct heat for both; potato commonly parboiled 5-10 minutes first
+  (pre-gelatinized surface starch crisps faster on the grill's high dry
+  heat) then grilled 15-30 minutes; onion rounds/wedges grilled directly
+  without parboiling, 8-15 minutes total. Used in `data/actions/grill.json`
+  (added 2026-08-17, `ROADMAP.md`'s "More common technique verbs" gap) —
+  `grillTempC`/`durationSeconds` ranges and their own `temperatureNote`/
+  `durationNote`. Confidence: `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

@@ -1,0 +1,22 @@
+{
+  "id": "grill",
+  "kind": "tool",
+  "names": {
+    "en": "Grill",
+    "es": "Parrilla"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17 for GRILL (data/actions/grill.json) — a real, physically distinct heat source from oven.json: direct, open, radiant/conductive heat from below (charcoal/gas grates), not an enclosed convection cavity, producing real char marks and smoke flavor an oven cannot. possibleStates deliberately empty, allowedTransformations deliberately empty, matching every other tool entity's honest 'zero per-instance state in this engine' baseline (see oven.json's own deadStatesNote for the cautionary example of NOT keeping this honest)."
+  }
+}

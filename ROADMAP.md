@@ -66,6 +66,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | The actual planner — full tortilla_de_patatas planned end to end from a bare RecipeIntent (zero hand-authored steps), spawn ids correctly predicted, run against the real recipe-runner.ts with zero errors; plus a real closed-loop-replanning failure case against real data | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:planner` |
 | **Crispy roast potatoes** (real alkaline-parboil technique — ROAST + ALKALINE_PARBOIL + baking_soda.json, generalizes across potato/garlic/onion, real BAKE-vs-ROAST mechanical distinction proven) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- crispy_roast_potatoes` / `npm run capability-test:roast` |
 | **Easy-peel steamed egg** (STEAM — genuinely different verb from BOIL, own state for potato backed by a real measured vitamin-retention difference, egg's widened statePrerequisites proven load-bearing, real HACCP wiring + an honest unreachable-shortfall finding) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- easy_peel_steamed_egg` / `npm run capability-test:steam` |
+| **Grilled potatoes and onions** (GRILL — mechanically distinct tool from ROAST, both directions of rejection proven, generalizes across potato/garlic/onion, real parboil-vs-direct technique difference wired correctly) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- grilled_potatoes_and_onions` / `npm run capability-test:grill` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -787,8 +788,9 @@ covered by what exists:**
       deliberately-scoped-out deeper alternative, not silently implied
       closed. **`ROAST` closed 2026-08-17** — see this same bullet's own
       dated entry further down. **`STEAM` closed 2026-08-17** — see this
-      same bullet's own dated entry, further down still. Still open:
-      `GRILL`, `MARINATE`, `KNEAD`.
+      same bullet's own dated entry, further down still. **`GRILL`
+      closed 2026-08-17**, same day — see this same bullet's own dated
+      entry, further down again. Still open: `MARINATE`, `KNEAD`.
       **`DRAIN` closed 2026-08-16** (`data/actions/drain.json`) — resolves
       the "does `REMOVE`'s own `strainer_drain`/`poured_out`
       `removalMethod` values already cover this" question this same entry
@@ -965,6 +967,40 @@ covered by what exists:**
       — `durationSeconds` stays a plain declared range on `steam.json`
       itself, not a cited per-piece-size lookup the way `BOIL`'s
       `pieceSize` parameter has.
+      \
+      **`GRILL` closed 2026-08-17**, the same day, alongside a new
+      `grill.json` tool entity (`data/actions/grill.json`) — the direct,
+      open, radiant/conductive-heat sibling of `ROAST`/`BAKE`, real char
+      marks and smoke flavor neither an oven nor a stovetop pan can
+      produce, the same "genuinely different named dish" test that
+      already justified `ROAST` over a `BAKE` parameter and `CARAMELIZE`
+      over a `FRY` parameter. Generalizes across the SAME three real
+      entities `ROAST` already proved (potato, garlic — the whole
+      unpeeled bulb, foil-wrapped on the grates instead of in the oven,
+      onion), not built against potato alone. Proven as a real,
+      mechanical distinction from `ROAST`, not just a differently-worded
+      verb: `GRILL` requires `requiredTools: ["grill"]` and correctly
+      REJECTS an oven-only kitchen; `ROAST` requires `["oven"]` and
+      correctly rejects a grill-only one — both directions checked, not
+      assumed (`scripts/grill-any-vegetable-as-a-robot.ts`'s own step 2).
+      `grillTempC`'s 191-232°C range deliberately overlaps `ROAST`'s own
+      204-232°C band — both are real, comparably high-heat techniques,
+      DIRECT-vs-enclosed heat delivery (not the temperature number
+      itself) is the actual distinguishing physical fact, named
+      explicitly rather than left to look like an arbitrary near-miss.
+      Real potato technique (parboil first, then grill — pre-gelatinized
+      surface starch crisps faster on direct dry heat) and real onion
+      technique (straight onto the grill, no parboil) both wired
+      correctly and differently in `data/recipes/grilled-potatoes-and-
+      onions.json` (simulated end-to-end with zero step errors, `npm run
+      recipe -- grilled_potatoes_and_onions`) — proven via
+      `npm run capability-test:grill`
+      (`scripts/grill-any-vegetable-as-a-robot.ts`). Zero new engine code
+      — a pure data/schema-population addition, the same shape as
+      `ROAST`/`CARAMELIZE`/`DRAIN` before it. Still NOT closed: no
+      `place.ts`/`heat-source.ts` wiring (same honest gap `ROAST`/`BAKE`
+      already carry); no char/smoke-flavor modeling beyond the
+      `verification.description` string.
 - [x] **Tortilla FLIP physics, and the real link to FRY's `agitation`
       parameter — closed 2026-08-16.** A direct user question ("is moving
       potato pieces in oil the same logic as flipping a tortilla") plus a

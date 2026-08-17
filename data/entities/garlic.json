@@ -23,18 +23,19 @@
     }
   },
   "allergens": [],
-  "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "coarse", "fine_paste", "emulsified", "burned", "overcooked"],
+  "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "grilled", "coarse", "fine_paste", "emulsified", "burned", "overcooked"],
   "possibleTags": ["salted"],
-  "allowedTransformations": ["peel", "cut", "boil", "fry", "bake", "roast", "salt", "crush", "emulsify"],
+  "allowedTransformations": ["peel", "cut", "boil", "fry", "bake", "roast", "grill", "salt", "crush", "emulsify"],
   "statePrerequisites": {
     "cut": "peeled",
     "crush": "peeled",
     "emulsify": "fine_paste"
   },
   "invalidTransitions": {
-    "burned": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "coarse", "fine_paste", "emulsified", "overcooked"],
-    "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "coarse", "fine_paste", "emulsified"],
-    "roasted": ["peeled"]
+    "burned": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "grilled", "coarse", "fine_paste", "emulsified", "overcooked"],
+    "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "roasted", "grilled", "coarse", "fine_paste", "emulsified"],
+    "roasted": ["peeled"],
+    "grilled": ["peeled"]
   },
   "producedByproducts": ["garlic_peel"],
   "storageLifeByState": {
@@ -54,6 +55,7 @@
     "isFryable": true,
     "isBakeable": true,
     "isRoastable": true,
+    "isGrillable": true,
     "isSeasonable": true,
     "isWashable": false,
     "isCrushable": true,
@@ -83,6 +85,7 @@
     "halvedNote": "Added 2026-08-15, directly answering a user's real technique for garlic-oil-potatoes.json: whole cloves cut in half (not sliced/chopped) is the classic real preparation for frying-then-discarding-or-reserving garlic in oil — large enough pieces to remove cleanly and completely from the hot oil (the actual reason it matters: this repo still has no verb representing 'take this instance out of the vessel,' see that recipe's own removalNote, and coarse halves are far more realistically removable by hand/spoon than a fine chop that would scatter through the oil and be impossible to fully retrieve).",
     "flavorChemistryNote": "Source: Eric Block, \"Garlic and Other Alliums: The Lore and the Science\" (Royal Society of Chemistry, 2010) — the standard reference on Allium organosulfur chemistry; also accessibly covered in Harold McGee's \"On Food and Cooking\" — this repo has not re-verified the claim against either text directly in this session, recalled with reasonable confidence as well-established biochemistry, not a novel or uncertain claim. Garlic's characteristic pungency (allicin) doesn't exist in the intact clove — alliinase enzyme only converts alliin to allicin once cell walls rupture, i.e. when CUT or CRUSH actually happens. Chopped/minced/crushed garlic is measurably more pungent than sliced for exactly this reason (more ruptured cells per gram — a mortar-crushed fine_paste ruptures far more than a knife ever does), and taste onset is delayed a few seconds after cutting as the reaction proceeds. Not modeled here — neither CUT's 'shape' nor CRUSH's 'fineness' parameter affects flavor intensity in this schema yet — but worth citing since it's the clearest concrete example in this vocabulary so far of a mechanical action being a real chemical transition boundary (CLAUDE_DEV_CTX.md pillar 3), not just a shape change. It's also *why* a mortar-crushed fine_paste is what EMULSIFY requires (see statePrerequisites.emulsify) rather than just knife-minced garlic: maximizing rupture is exactly what makes the paste's alliaceous compounds available to help stabilize the emulsion at all. sensory.taste: 'pungent' added to SensoryPropertiesSchema's taste enum 2026-08-13 specifically because this note flagged the gap — allicin's sharpness is a trigeminal/chemesthetic sensation (like capsaicin in chili, piperine in black pepper), not one of the five basic tastes; 'umami' alone was the closest available value, not the correct one. Kept 'umami' alongside it here since cooked garlic genuinely does carry real savory depth too — both apply, not a replacement of one for the other.",
     "roastNote": "isRoastable + ROAST (data/actions/roast.json), added 2026-08-17. Real roasted garlic is typically the WHOLE bulb (this entity's own 'raw' state, unpeeled — the papery skin stays on and is squeezed away afterward), oil drizzled over a cut top, not individually peeled/cut cloves the way FRY/CRUSH/EMULSIFY need — a genuinely different real preparation from every other garlic technique this vocabulary already models, and the reason ROAST correctly has no statePrerequisites entry (callable from 'raw' directly, unlike CUT/CRUSH which both require 'peeled' first).",
+    "grillNote": "isGrillable + GRILL (data/actions/grill.json), added 2026-08-17 — the direct-fire sibling of the same whole-bulb roastNote technique above (foil-wrapped whole bulb on the grill grates instead of in the oven), real, common, and equally callable from 'raw' directly for the identical reason.",
     "failureStateNote": "'burned'/'overcooked' added 2026-08-16 (TICKET 5, PAPER_NOTES_2608.04768.md) — see potato.json's identically-named note for the full reasoning this mirrors (no detection mechanism, reachable only as an authored fact). Garlic is arguably the STRONGEST real-world forcing case for this whole ticket in this vocabulary: garlic's high sugar/protein content relative to its small piece size means it goes from perfectly toasted to bitterly burnt very quickly in hot oil — a real, commonly-known cooking hazard already named directly in this repo's own ROADMAP.md ('don't let it rest in the oil, burnt garlic tastes bad'), just never previously a real, assertable state. Fully terminal, no exception — unlike potato's overcooked-then-mashed rescue, there is no real technique that salvages burnt garlic; it is simply discarded. 'overcooked' (past golden/toasted but not yet charred — dulled flavor, harsher bitterness starting) is a real but less sharply and less commonly named distinction for garlic specifically than for potato/egg, added here for vocabulary consistency across all four TICKET-5 entities rather than because it has an equally strong individual naming precedent."
   }
 }

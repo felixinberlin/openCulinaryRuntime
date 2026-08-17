@@ -1,0 +1,69 @@
+{
+  "id": "grill",
+  "verb": "GRILL",
+  "names": {
+    "en": "Grill",
+    "es": "Asar a la parrilla"
+  },
+  "requiredTools": ["grill"],
+  "requiredTargetCapability": "isGrillable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isFryingMedium"],
+  "parameters": [
+    {
+      "id": "grillTempC",
+      "names": {
+        "en": "Grill temperature",
+        "es": "Temperatura de la parrilla"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "celsius",
+        "min": 191,
+        "max": 232
+      }
+    },
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "seconds",
+        "min": 480,
+        "max": 1800
+      }
+    }
+  ],
+  "outputs": {
+    "transformedState": "grilled",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 1800,
+  "metadata": {
+    "notes": "The real, distinct sibling of ROAST/BAKE, not a duplicate — same 'genuinely different named dish, not the same technique at a different setting' test onion.json's CARAMELIZE and potato.json's/garlic.json's/onion.json's own ROAST additions already applied: GRILL is real, DIRECT, open radiant/conductive heat (charcoal/gas grates, requiredTools: ['grill']), producing real char marks and smoke flavor neither an oven (BAKE/ROAST) nor a stovetop pan (FRY) can — a genuinely different real dish class ('grilled vegetables'), not roasted vegetables under a different name. requiredIngredientCapabilities: ['isFryingMedium'] mirrors ROAST's own reasoning (real technique brushes/coats with oil before grilling, both for flavor and to prevent sticking/aid char) — the same real, checkable distinction from a theoretical 'dry grilling' this repo doesn't attempt to model.",
+    "temperatureNote": "191-232°C (375-450°F) direct heat — the commonly-cited range across multiple independently-checked consumer grilling sources for both potato and onion (REFERENCES.md), overlapping ROAST's own 204-232°C band on purpose: both are real, comparably high-heat techniques, the DIRECT-vs-enclosed heat delivery is the actual distinguishing physical fact, not the temperature number itself.",
+    "durationNote": "480-1800s (8-30 minutes) — a real range reflecting genuine ingredient/prep dependency, not a single point figure: onion rounds/wedges commonly run 8-15 minutes total (both sides); potato (usually parboiled first — see alkaline_parboil.json/potato.json's own statePrerequisites, though a plain BOIL/SIMMER parboil is the more commonly-cited prerequisite for grilling specifically, not the alkaline variant) commonly runs 15-30 minutes. Same 'be flexible with measures' discipline roast.json's own durationNote already applies.",
+    "statePrerequisitesNote": "Deliberately NO statePrerequisites entry on this action itself — like ROAST, real technique varies by ingredient (see each entity's own grillNote for what it specifically requires/recommends).",
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-grilling an already-finished result risks drying out/burning, the same caveat every high-heat cooking action in this vocabulary already carries.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's/roast.json's identical classification — a real, elapsed-time thermal process. No place.ts/heat-source.ts wiring exists (grill.json has no thermophysical data, the same honest gap oven.json's own actionKindNote already names for its own tool) — applyAction executes it atomically today."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Visible char/grill marks on the surface, tender when pierced — a real, ADDITIONAL criterion (char marks) neither BAKE's nor ROAST's own verification needs",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "hot_surface",
+      "severity": "high",
+      "note": "Open flame/hot grates — direct burn risk, plus real fire/flare-up risk from dripping oil that neither an oven nor a stovetop pan carries"
+    }
+  ],
+  "retrySafe": true
+}

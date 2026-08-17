@@ -259,6 +259,27 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `composition.citation`, rather than looked up from a food-composition
   table. The one figure in this repo that's exactly derivable rather than
   empirical, since table salt is essentially pure NaCl by definition.
+- **Convergent culinary conversion references** (gramsinacup.com,
+  culinaryconverters.com, and others independently checked) — the real,
+  well-known grams-per-teaspoon figures for three real salt products:
+  fine table salt (~6g/tsp), Diamond Crystal kosher salt (~3g/tsp),
+  Morton kosher salt (~5g/tsp). Used in `data/entities/salt.json`'s and
+  `data/entities/kosher_salt.json`'s new `domainFacts.gramsPerTeaspoon`
+  (added 2026-08-17, closing ROADMAP.md's own long-named "Salt/pepper
+  crystal/grind size as distinct products" gap, and extending
+  `EntitySchema.domainFacts` from `CriticalControlPointSchema`-only to
+  entities in the same change once this real second forcing case
+  existed). Confidence: `commonly_cited_unverified` — real, convergent,
+  but not independently re-verified against a primary manufacturer
+  spec.
+- **Aqua-Calc volume-to-weight data and convergent consumer culinary
+  sources on Maldon-style flaky sea salt** — roughly a third to half the
+  density of fine table salt by volume, though sources checked this
+  session disagreed by roughly 2x on the exact figure. Used in
+  `data/entities/flaky_salt.json`'s `domainFacts.gramsPerTeaspoon`
+  (2-3g/tsp) — presented as an honestly wide range this session could
+  not further converge, not a confident precise figure. Confidence:
+  `commonly_cited_unverified`.
 - **International Olive Council (IOC) trade standard density range**
   (~0.910–0.916 g/cm³ at 20°C for olive oil) — used in `oil.json`'s
   `thermophysical.citation`, since every recipe in this repo naming "oil"

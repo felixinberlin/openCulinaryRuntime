@@ -28,6 +28,18 @@
     "dissolve": ["dry", "wet"]
   },
   "producedByproducts": [],
+  "domainFacts": {
+    "gramsPerTeaspoon": {
+      "value": 6,
+      "unit": "g/tsp",
+      "citation": {
+        "source": "Convergent culinary conversion references (gramsinacup.com, culinaryconverters.com, and others independently checked) — fine table salt's real, commonly-cited volume-to-mass conversion",
+        "confidence": "commonly_cited_unverified",
+        "note": "The direct comparison point for kosher_salt.json's/flaky_salt.json's own domainFacts.gramsPerTeaspoon entries — a REAL, roughly 2-3x difference by crystal size, not a rounding error, for the SAME sodium-chloride substance. See ROADMAP.md's 'Salt/pepper crystal/grind size' closure for the full reasoning."
+      },
+      "verified": false
+    }
+  },
   "capabilities": {
     "isDissolvable": true,
     "isSeasoning": true,
@@ -59,6 +71,7 @@
     "casNumber": "7647-14-5",
     "notes": "spiceLock reflects CLAUDE_DEV_CTX.md's Cooklang interop rule: '='-prefixed quantities don't scale linearly with recipe size — salt is the canonical example.",
     "capabilityNote": "isSaltySeasoning added 2026-08-13, alongside the generic isSeasoning, when black_pepper.json/chili_flakes.json were added as the first other isSeasoning entities: data/actions/salt.json's requiredIngredientCapabilities now checks isSaltySeasoning specifically, not the generic isSeasoning — otherwise SALT would have silently accepted pepper or chili flakes as satisfying 'a salt-like ingredient is present' the moment a second isSeasoning entity existed. isSeasoning itself stays true here too, for a genuinely different purpose: 'is this entity a seasoning at all' (useful for a future generic query), distinct from 'is this entity THE seasoning this specific verb needs'.",
+    "crystalSizeNote": "Added 2026-08-17, closing ROADMAP.md's own long-named 'Salt/pepper crystal/grind size as distinct products' gap: this entity is specifically FINE table salt — see the new kosher_salt.json (coarser, less dense) and flaky_salt.json (a real, distinct FINISHING product, not typically used during cooking at all) for the other two real, named products that gap called out. All three assert isSaltySeasoning and are fully interchangeable wherever this repo's SALT verb is called for — this engine has no volume-vs-mass conversion computation anywhere (QuantitySchema's own 'precise' kind never converts between its own units), so the three entities are schema-equivalent substitutes today; domainFacts.gramsPerTeaspoon exists to make the REAL, uncomputed difference between them a structured, queryable fact rather than silently absent.",
     "todo": "RESOLVED 2026-08-13, kept for history: isDissolvable was previously asserted true with allowedTransformations empty, exactly the dead-declaration gap this note used to flag. data/actions/dissolve.json now exists; allowedTransformations/statePrerequisites above are wired to it. Found during a full audit that diffed every entity's asserted-true capabilities against every action's requiredTargetCapability/requiredIngredientCapabilities/requiredSecondaryCapability — the same 'checked, not assumed' discipline that found pan.json's dead hot/cold states and potato.json's dead 'mashed' state earlier the same day."
   }
 }

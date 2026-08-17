@@ -1,0 +1,62 @@
+{
+  "id": "flaky_salt",
+  "kind": "ingredient",
+  "names": {
+    "en": "Flaky sea salt",
+    "es": "Sal en escamas"
+  },
+  "aggregationState": "granular",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "chemicalFormula": "NaCl",
+    "nutrientsPer100g": {
+      "sodium_mg": 39337
+    },
+    "citation": {
+      "source": "Computed from IUPAC standard atomic weights (Na 22.98977, Cl 35.453) — identical to salt.json's own citation. Chemically the same substance as table/kosher salt; flaky sea salt is a real, distinct PRODUCT by crystal structure and real-world USE, not composition.",
+      "confidence": "standard_reference",
+      "note": "Per-gram sodium content is identical to salt.json/kosher_salt.json — see domainFacts.gramsPerTeaspoon below for the real, structured volume difference."
+    }
+  },
+  "allergens": [],
+  "possibleStates": ["dry"],
+  "allowedTransformations": [],
+  "statePrerequisites": {},
+  "producedByproducts": [],
+  "domainFacts": {
+    "gramsPerTeaspoon": {
+      "value": { "min": 2, "max": 3 },
+      "unit": "g/tsp",
+      "citation": {
+        "source": "Convergent culinary/reference sources on Maldon-style flaky sea salt (aqua-calc volume-to-weight data; convergent consumer culinary sources independently checked) — roughly a third to half the density of fine table salt",
+        "confidence": "commonly_cited_unverified",
+        "note": "The widest real crystal-size effect of the three salt entities in this repo (compare salt.json's 6g/tsp, kosher_salt.json's 3-5g/tsp) — large, hollow, pyramidal flakes trap the most air of any of the three. Sources checked this session disagreed on the exact figure by roughly 2x (some citing ~2g/tsp, one cup-weight-derived figure implying closer to 6g/tsp) — presented as a real, honestly wide range rather than a single number this session couldn't actually converge on, not a confident precise figure."
+      },
+      "verified": false
+    }
+  },
+  "capabilities": {
+    "isDissolvable": false,
+    "isSeasoning": true,
+    "isSaltySeasoning": true,
+    "isChoppable": false,
+    "isWashable": false
+  },
+  "sensory": {
+    "taste": ["salty"],
+    "texture": ["flaky", "crunchy", "crystalline"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "sal_escamas",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "flaky sea salt, finishing salt (e.g. Maldon)",
+    "notes": "Added 2026-08-17, closing ROADMAP.md's own long-named 'Salt/pepper crystal/grind size as distinct products' gap — the third, most texturally distinct real salt product this vocabulary names: large, thin, irregular pyramidal flakes (real seawater evaporation product), prized specifically for the CRUNCH they retain rather than dissolving into a dish. isDissolvable: false (explicit, not just omitted, unlike salt.json/kosher_salt.json's true) — a real, deliberate difference: this product is essentially never used the way table/kosher salt are (stirred into a dissolving medium during cooking); it's sprinkled on AFTER, specifically to be felt, not dissolved.",
+    "usageNote": "Real technique almost universally uses this as a FINISHING salt — sprinkled on a completed dish (data/actions/salt.json's own timing parameter would realistically only ever be 'after_cooking' for this entity, though nothing in this schema enforces that restriction; a real, named, deliberately unenforced gap, the same depth limit every other categorical technique fact in this vocabulary already has) — not a during-cooking seasoning or a brine/dissolving-medium ingredient the way salt.json/kosher_salt.json commonly are."
+  }
+}

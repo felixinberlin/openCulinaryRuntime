@@ -41,6 +41,45 @@ describe("EntitySchema", () => {
     assert.equal((e.capabilities as any).isFooBarable, true);
   });
 
+  // domainFacts — 2026-08-17, extending ROADMAP.md's "Structured DomainFact/
+  // PhysicalProperty records" gap from CriticalControlPointSchema to
+  // EntitySchema, once a real second forcing case existed
+  // (kosher_salt.json's/flaky_salt.json's real gramsPerTeaspoon figures).
+  test("domainFacts defaults to {} — every entity file written before this field existed needs no change", () => {
+    const e = makeEntity({ id: "salt" });
+    assert.deepEqual(e.domainFacts, {});
+  });
+
+  test("domainFacts accepts a real, typed, cited numeric fact keyed by an author-chosen id", () => {
+    const e = makeEntity({
+      id: "kosher_salt",
+      domainFacts: {
+        gramsPerTeaspoon: {
+          value: { min: 3, max: 5 },
+          unit: "g/tsp",
+          citation: { source: "test fixture", confidence: "commonly_cited_unverified" },
+          verified: false,
+        },
+      },
+    });
+    assert.deepEqual(e.domainFacts.gramsPerTeaspoon.value, { min: 3, max: 5 });
+  });
+
+  test("a malformed domainFacts entry (missing unit) is rejected — Zod validation, not a silent pass", () => {
+    assert.throws(() =>
+      makeEntity({
+        id: "salt",
+        domainFacts: {
+          someFact: {
+            value: 6,
+            citation: { source: "test", confidence: "standard_reference" },
+            verified: true,
+          },
+        } as any,
+      })
+    );
+  });
+
   test("kind distinguishes ingredient from tool", () => {
     const knife = makeEntity({ id: "knife", kind: "tool" });
     assert.equal(knife.kind, "tool");

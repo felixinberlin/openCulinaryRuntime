@@ -1667,3 +1667,41 @@ was made. Don't rewrite or delete old entries — append.
   problem, named explicitly (`runRecipeFromIntent` refuses a `combine`
   goal up front, loudly, rather than silently producing a plan that could
   break in a way that's hard to trace back to its actual cause).
+
+### `EntitySchema.domainFacts` — the "wait for a second real case" discipline paying off exactly as predicted
+
+- **2026-08-17, same day `DomainFactSchema` was deliberately scoped OUT of
+  `EntitySchema` (a repo-wide grep found no second real case at the
+  time), a genuine second real case showed up on its own — salt crystal
+  size — and extending the field at that point, not before, is worth
+  recording as the discipline actually working, not just a stated
+  principle.** The tempting shortcut, back when `domainFacts` was first
+  built, would have been adding it to `EntitySchema` "while I'm in
+  here anyway, it'll probably be useful." That would have shipped a
+  field with zero real data in it — exactly the declared-but-dead shape
+  this repo has caught and fixed multiple times (`pan.json`'s hot/cold,
+  `oven.json`'s off/preheating/hot, `potato.json`'s mashed). Waiting
+  meant the SAME session that raised the deferred question also answered
+  it, with a real, checkable forcing case (kosher/flaky salt's own real,
+  cited grams-per-teaspoon figures) rather than an invented one — the
+  clean version of "build it when something real needs it," not just an
+  excuse to defer indefinitely.
+- **The grams-per-teaspoon fact turned up a real, useful distinction
+  between two physical quantities this repo already had a field for and
+  one it didn't: `thermophysical.densityKgPerM3` (already present on
+  salt.json/kosher_salt.json) is the SOLID CRYSTAL density — a property
+  of sodium chloride itself, identical across all three salt entities —
+  while the real, teaspoon-level difference between them is BULK/poured
+  density (how much air sits between larger, irregular crystals in a
+  measuring spoon), a genuinely different physical quantity this repo
+  had no field for at all.** Reusing `thermophysical.densityKgPerM3` for
+  the bulk-density fact would have been a real category error (the exact
+  same "material fact vs. bulk-behavior fact" distinction, just not
+  previously named) — checked directly before reaching for the existing
+  field, not assumed to be the same number by proximity. `domainFacts`
+  turned out to be the right home for the NEW quantity precisely because
+  it doesn't presume a fixed unit or a single physical dimension the way
+  a dedicated schema field (like `ThermophysicalPropertiesSchema`) would
+  have — worth noting as a real, useful property of `DomainFactSchema`'s
+  own design (a bare `{value, unit, citation, verified}` shape), not
+  just its citation discipline.

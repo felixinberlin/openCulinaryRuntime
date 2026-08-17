@@ -1,6 +1,11 @@
 import { join } from "node:path";
-import { loadActions, loadRecipes, loadCcps } from "../src/registry.ts";
-import { answerAboutParameter, answerAboutDomainFact } from "../src/query.ts";
+import { loadActions, loadRecipes, loadCcps, loadEntities } from "../src/registry.ts";
+import {
+  answerAboutParameter,
+  answerAboutDomainFact,
+  answerAboutEntityDomainFact,
+} from "../src/query.ts";
+import type { DomainFact } from "../src/ingredient.ts";
 
 /**
  * A real query interface, not a demo of one — usage:
@@ -15,9 +20,24 @@ import { answerAboutParameter, answerAboutDomainFact } from "../src/query.ts";
  * (`ROADMAP.md`'s "Structured DomainFact/PhysicalProperty records" gap):
  *   npx tsx scripts/ask.ts fact <ccpId> <factId>
  * e.g. npx tsx scripts/ask.ts fact egg_cooking eggYolkCoagulationTemp
+ *
+ * A third mode, added the same day `EntitySchema` gained its own
+ * `domainFacts` field:
+ *   npx tsx scripts/ask.ts entity-fact <entityId> <factId>
+ * e.g. npx tsx scripts/ask.ts entity-fact kosher_salt gramsPerTeaspoon
  */
 
 const root = join(import.meta.dirname, "..");
+
+function printFact(label: string, fact: DomainFact): void {
+  const value = typeof fact.value === "number" ? String(fact.value) : `${fact.value.min}-${fact.value.max}`;
+  console.log(label);
+  console.log(`  value: ${value} ${fact.unit}`);
+  console.log(`  verified: ${fact.verified}`);
+  console.log(`  citation: ${fact.citation.source} (${fact.citation.confidence})`);
+  if (fact.citation.note) console.log(`  citation note: ${fact.citation.note}`);
+  if (fact.note) console.log(`  note: ${fact.note}`);
+}
 
 if (process.argv[2] === "fact") {
   const [, ccpId, factId] = process.argv.slice(2);
@@ -31,15 +51,23 @@ if (process.argv[2] === "fact") {
     console.error(`No CCP "${ccpId}" with domainFacts entry "${factId}" found.`);
     process.exit(1);
   }
-  const { fact } = answer;
-  const value =
-    typeof fact.value === "number" ? String(fact.value) : `${fact.value.min}-${fact.value.max}`;
-  console.log(`${answer.ccpNameEn} (${answer.ccpId}).domainFacts.${answer.factId}`);
-  console.log(`  value: ${value} ${fact.unit}`);
-  console.log(`  verified: ${fact.verified}`);
-  console.log(`  citation: ${fact.citation.source} (${fact.citation.confidence})`);
-  if (fact.citation.note) console.log(`  citation note: ${fact.citation.note}`);
-  if (fact.note) console.log(`  note: ${fact.note}`);
+  printFact(`${answer.ccpNameEn} (${answer.ccpId}).domainFacts.${answer.factId}`, answer.fact);
+  process.exit(0);
+}
+
+if (process.argv[2] === "entity-fact") {
+  const [, entityId, factId] = process.argv.slice(2);
+  if (!entityId || !factId) {
+    console.error("Usage: npx tsx scripts/ask.ts entity-fact <entityId> <factId>");
+    process.exit(1);
+  }
+  const entities = loadEntities(join(root, "data", "entities"));
+  const answer = answerAboutEntityDomainFact(entities, entityId, factId);
+  if (!answer) {
+    console.error(`No entity "${entityId}" with domainFacts entry "${factId}" found.`);
+    process.exit(1);
+  }
+  printFact(`${answer.entityNameEn} (${answer.entityId}).domainFacts.${answer.factId}`, answer.fact);
   process.exit(0);
 }
 
@@ -47,7 +75,8 @@ const [actionId, parameterId] = process.argv.slice(2);
 if (!actionId || !parameterId) {
   console.error(
     "Usage: npx tsx scripts/ask.ts <actionId> <parameterId>\n" +
-      "   or: npx tsx scripts/ask.ts fact <ccpId> <factId>"
+      "   or: npx tsx scripts/ask.ts fact <ccpId> <factId>\n" +
+      "   or: npx tsx scripts/ask.ts entity-fact <entityId> <factId>"
   );
   process.exit(1);
 }

@@ -1,7 +1,7 @@
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
-import type { DomainFact } from "./ingredient.ts";
+import type { DomainFact, Entity } from "./ingredient.ts";
 
 /**
  * A real query interface over the structured domain data — the answer to
@@ -119,4 +119,31 @@ export function answerAboutDomainFact(
   const fact = ccp.domainFacts[factId];
   if (!fact) return undefined;
   return { ccpId: ccp.id, ccpNameEn: ccp.names.en, factId, fact };
+}
+
+/**
+ * The `EntitySchema.domainFacts` sibling of `answerAboutDomainFact` above
+ * — `ingredient.ts`'s `EntitySchema.domainFacts`, extended to entities
+ * 2026-08-17 once a real second forcing case existed
+ * (`kosher_salt.json`'s/`flaky_salt.json`'s real, cited
+ * grams-per-teaspoon figures). Same shape, same reasoning, a different
+ * source map.
+ */
+export interface EntityDomainFactAnswer {
+  entityId: string;
+  entityNameEn: string;
+  factId: string;
+  fact: DomainFact;
+}
+
+export function answerAboutEntityDomainFact(
+  entities: Map<string, Entity>,
+  entityId: string,
+  factId: string
+): EntityDomainFactAnswer | undefined {
+  const entity = entities.get(entityId);
+  if (!entity) return undefined;
+  const fact = entity.domainFacts[factId];
+  if (!fact) return undefined;
+  return { entityId: entity.id, entityNameEn: entity.names.en, factId, fact };
 }

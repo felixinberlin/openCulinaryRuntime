@@ -689,6 +689,25 @@ export const EntitySchema = z.object({
    * irrelevant for them.
    */
   storageLifeByState: z.record(z.string(), StorageLifeSchema).default({}),
+  /**
+   * Structured, typed reference facts about this entity that don't fit any
+   * other dedicated field (`DomainFactSchema`, `ROADMAP.md`'s "Structured
+   * DomainFact/PhysicalProperty records" gap) — the `EntitySchema` sibling
+   * of `CriticalControlPointSchema.domainFacts` (`thermal.ts`, closed
+   * 2026-08-17), extended here 2026-08-17 once a SECOND real forcing case
+   * existed (`kosher_salt.json`'s/`flaky_salt.json`'s real, cited
+   * grams-per-teaspoon figures — a real, checkable, safety-adjacent
+   * volume-vs-mass fact, not a speculative addition; see
+   * `LEARNINGS_ENGINE.md` 2026-08-17 for why this field was deliberately
+   * NOT added here the first time, before a second real case existed).
+   * Keyed by an author-chosen fact id (e.g. `"gramsPerTeaspoon"`).
+   * Optional and defaults to `{}` — every entity file written before this
+   * field existed needs no change; `engine.ts`'s `applyAction` never reads
+   * this (it has no concept of volume-to-mass conversion at all), so
+   * adding an entry can never change what a recipe step does or doesn't
+   * pass.
+   */
+  domainFacts: z.record(z.string(), DomainFactSchema).default({}),
   capabilities: CapabilitiesSchema.default({}),
   physicalDimensions: PhysicalDimensionsSchema.optional(),
   thermophysical: ThermophysicalPropertiesSchema.optional(),

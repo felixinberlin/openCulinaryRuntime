@@ -68,6 +68,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Easy-peel steamed egg** (STEAM — genuinely different verb from BOIL, own state for potato backed by a real measured vitamin-retention difference, egg's widened statePrerequisites proven load-bearing, real HACCP wiring + an honest unreachable-shortfall finding) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- easy_peel_steamed_egg` / `npm run capability-test:steam` |
 | **Grilled potatoes and onions** (GRILL — mechanically distinct tool from ROAST, both directions of rejection proven, generalizes across potato/garlic/onion, real parboil-vs-direct technique difference wired correctly) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- grilled_potatoes_and_onions` / `npm run capability-test:grill` |
 | **Quick-pickled onions** (MARINATE — mechanically distinct from ACID via a real duration requirement, generalizes across onion/garlic/egg with three genuinely different real timescales from 30 minutes to 10 days) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- quick_pickled_onions` / `npm run capability-test:marinate` |
+| **Salt crystal/grind size** (kosher_salt.json/flaky_salt.json — real, cited grams-per-teaspoon differences, EntitySchema.domainFacts extended from CCP-only to entities on a real second forcing case, queryable via `npm run ask -- entity-fact`) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:salt-crystal-size` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -605,10 +606,58 @@ proven runnable, not just asserted.
       `requiredIngredientCapabilities` to identify WHICH specific instance
       satisfied the check, not just that one did. Out of scope while engine
       work is explicitly paused; the 3 separate verbs work correctly today.
-- [ ] Salt/pepper crystal/grind size as distinct products (fine vs. coarse vs.
-      kosher salt; whole vs. cracked vs. ground pepper is partially modeled —
-      `black_pepper.json` starts "whole", `CRUSH` reaches "cracked"/"ground" —
-      but salt itself is still one undifferentiated entity).
+- [x] **Salt crystal/grind size as distinct products — closed 2026-08-17.**
+      (Pepper's own whole/cracked/ground progression was already
+      partially modeled via `CRUSH` before this session and is
+      untouched — this closes the salt half specifically, which this
+      entry's own original wording named as the actually-missing piece:
+      "salt itself is still one undifferentiated entity.") Two new real
+      entities, `kosher_salt.json` and `flaky_salt.json`
+      (Maldon-style finishing salt), alongside `salt.json` (now
+      explicitly documented as fine TABLE salt) — all three assert the
+      identical `isSaltySeasoning` capability and are fully
+      interchangeable wherever `SALT` is called for, correctly: this
+      engine has no volume-to-mass computation anywhere to catch a real
+      substitution error, so nothing SHOULD reject the substitution
+      either — proven directly, not assumed
+      (`scripts/salt-crystal-size-as-a-robot.ts`'s own step 1).
+      \
+      The real substance of this gap — three genuinely different
+      grams-per-teaspoon figures for the identical sodium-chloride
+      substance (table salt ~6g/tsp, kosher salt 3-5g/tsp depending on
+      brand, flaky sea salt 2-3g/tsp — a real, well-known professional-
+      kitchen fact, checked via convergent sources, `REFERENCES.md`) —
+      is what actually forced a real engine decision, not just three new
+      data files: `EntitySchema` gained its own `domainFacts` field
+      (`ingredient.ts`), extending `DomainFactSchema` beyond
+      `CriticalControlPointSchema`-only for the first time since it was
+      closed 2026-08-16. That closure deliberately did NOT extend to
+      `EntitySchema` at the time — a repo-wide grep found no second real
+      case then (`LEARNINGS_ENGINE.md` 2026-08-17) — and this is exactly
+      that second real case, arriving organically rather than being
+      speculatively pre-built. `src/query.ts` gained the matching
+      `answerAboutEntityDomainFact` (the `EntitySchema` sibling of the
+      existing `answerAboutDomainFact`) and `scripts/ask.ts` a new
+      `entity-fact` subcommand (`npm run ask -- entity-fact kosher_salt
+      gramsPerTeaspoon`), both proven, not just added
+      (`npm run capability-test:salt-crystal-size`). `flaky_salt.json`
+      also carries a real, correct, DIFFERENT fact: `isDissolvable:
+      false` (explicit, not omitted) — real technique uses it almost
+      exclusively as a finishing salt, sprinkled on for crunch after
+      cooking, not dissolved into a cooking medium the way table/kosher
+      salt commonly are. 3 new unit tests
+      (`tests/ingredient.test.ts`). Still NOT closed, named rather than
+      implied covered: no automatic volume-to-mass conversion anywhere
+      in this engine (`QuantitySchema`'s `"precise"` kind never converts
+      between its own units — the real risk this gap makes VISIBLE and
+      QUERYABLE, not prevented); `flaky_salt.json`'s `isDissolvable:
+      false` is not cross-checked against `SALT`'s own
+      `requiredIngredientCapabilities` (it would still nominally accept
+      a flaky-salt "dissolve into a brine" use case that isn't realistic
+      technique — a real, named simplification); brand-level granularity
+      within kosher salt (Diamond Crystal vs. Morton specifically) is
+      deliberately NOT modeled as separate entities, presented as a real,
+      honest combined range instead.
 
 **Known-large, not yet started — flagged so the gap is visible, not implied
 covered by what exists:**

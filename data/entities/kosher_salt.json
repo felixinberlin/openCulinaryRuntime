@@ -1,0 +1,75 @@
+{
+  "id": "kosher_salt",
+  "kind": "ingredient",
+  "names": {
+    "en": "Kosher salt",
+    "es": "Sal kosher"
+  },
+  "aggregationState": "granular",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "chemicalFormula": "NaCl",
+    "nutrientsPer100g": {
+      "sodium_mg": 39337
+    },
+    "citation": {
+      "source": "Computed from IUPAC standard atomic weights (Na 22.98977, Cl 35.453) — identical to salt.json's own citation. Chemically the SAME substance as table salt (sodium chloride); kosher salt is a real, distinct PRODUCT only by crystal size/shape, not composition.",
+      "confidence": "standard_reference",
+      "note": "Per-gram sodium content is identical to salt.json — the real difference this entity exists to represent is per-VOLUME (teaspoon/tablespoon), not per-gram. See domainFacts.gramsPerTeaspoon below."
+    }
+  },
+  "allergens": [],
+  "possibleStates": ["dry", "wet", "dissolved"],
+  "allowedTransformations": ["dissolve"],
+  "statePrerequisites": {
+    "dissolve": ["dry", "wet"]
+  },
+  "producedByproducts": [],
+  "domainFacts": {
+    "gramsPerTeaspoon": {
+      "value": { "min": 3, "max": 5 },
+      "unit": "g/tsp",
+      "citation": {
+        "source": "Convergent culinary conversion references (gramsinacup.com, culinaryconverters.com, and others independently checked) — the real, well-known Diamond Crystal (~3g/tsp) vs. Morton (~5g/tsp) brand difference for kosher salt specifically",
+        "confidence": "commonly_cited_unverified",
+        "note": "A real range, not a single figure, BECAUSE the two major US kosher-salt brands genuinely differ from each other by nearly 2x — a fact real professional recipe developers work around by specifying the brand or a weight measurement directly (see this entity's own metadata note). Roughly half table salt's own 6g/tsp (salt.json's identical domainFacts entry) at the low end — a real, potentially significant over/under-salting risk if a recipe author assumes 1:1 volume substitution."
+      },
+      "verified": false
+    }
+  },
+  "capabilities": {
+    "isDissolvable": true,
+    "isSeasoning": true,
+    "isSaltySeasoning": true,
+    "isChoppable": false,
+    "isWashable": false
+  },
+  "thermophysical": {
+    "densityKgPerM3": 2170,
+    "meltingPointC": 801,
+    "boilingPointC": 1413,
+    "citation": {
+      "source": "CRC Handbook of Chemistry and Physics — standard reference values for sodium chloride, identical to salt.json's own citation",
+      "confidence": "standard_reference",
+      "note": "This is the SOLID CRYSTAL density (mass per unit volume of the crystal itself), unaffected by crystal size/shape — NOT the same physical quantity as domainFacts.gramsPerTeaspoon's real BULK/poured density (mass per unit volume of a measuring spoon, which depends heavily on how much air sits between larger, irregular crystals). Kept identical to salt.json on purpose — the crystal-level physics genuinely doesn't differ; only the real-world measuring-spoon behavior does."
+    }
+  },
+  "sensory": {
+    "taste": ["salty"],
+    "texture": ["granular", "crystalline", "coarse"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "sal_kosher",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "kosher salt, koshering salt",
+    "casNumber": "7647-14-5",
+    "notes": "Added 2026-08-17, closing ROADMAP.md's own long-named 'Salt/pepper crystal/grind size as distinct products' gap — real, LARGER, flatter/more irregular crystals than fine table salt (traditionally used to draw moisture out of meat in the koshering process, hence the name — not itself certified kosher in the religious-dietary sense). isSaltySeasoning (shared with salt.json) makes it a fully interchangeable substitute wherever this repo's SALT verb is called for — this engine has no volume-vs-mass computation to get wrong, so the real substitution risk (see domainFacts.gramsPerTeaspoon) lives entirely in the cited data, not in any enforced check.",
+    "brandVarianceNote": "The single most commonly-cited practical fact about kosher salt in professional cooking: Diamond Crystal and Morton, the two dominant US brands, are NOT interchangeable teaspoon-for-teaspoon with each other, let alone with table salt — Diamond Crystal's hollow, pyramidal crystals pack far less densely than Morton's flatter, denser ones. Real professional recipe developers increasingly specify salt by WEIGHT or by brand name specifically to avoid this — this entity does not model brand as a separate sub-type (a real, further granularity this repo doesn't attempt), instead presenting the honest combined range."
+  }
+}

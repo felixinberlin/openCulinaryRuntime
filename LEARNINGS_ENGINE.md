@@ -1550,3 +1550,120 @@ was made. Don't rewrite or delete old entries — append.
   checkmark — the same "don't manufacture a proof, name what can't be proven"
   discipline this repo has applied to citations elsewhere, now applied to a
   test case.
+
+### `src/planner.ts` — closing all five named planner gaps in one session, and what checking-before-building found
+
+- **2026-08-17.** Asked to "close the gaps" against a five-item list this
+  session itself had just named (path->RecipeScript, `RecipeIntentSchema`,
+  cost-aware search, multi-instance/COMBINE, closed-loop replanning) —
+  worth recording the ORDER these were tackled in and why: gap 5 (path
+  conversion) first, because gaps 2 and 4 both structurally NEED it
+  (`planIntent` and `runRecipeFromIntent` both call `stepsToRecipeSteps`
+  internally); gap 1 (multi-instance) fourth, deliberately AFTER checking
+  real engine behavior rather than assumed, since it turned out to need
+  far less new machinery than expected once that check happened (below).
+  Sequencing by real dependency, not by the order the gaps were originally
+  listed, avoided building something twice.
+- **The single biggest scope-reducing finding: `engine.ts`'s
+  `requiredSecondaryCapability` check is ENTITY-level only, and NEVER
+  inspects the secondary instance's current STATE — checked by reading
+  `applyAction` directly before designing `planCombine`, not assumed from
+  the field's name.** The naive plan going in was a "product-state search"
+  tracking two instances' states simultaneously (the shape a real
+  multi-instance planner eventually needs). Reading the actual check
+  (`secondaryEntity.capabilities[action.requiredSecondaryCapability] ===
+  true`, no `statePrerequisites` lookup anywhere on that branch) — and
+  confirming `egg_cracked.json` has no `combine` key in its own
+  `statePrerequisites` either — showed the secondary instance's STATE is
+  never enforced at all today. That collapsed the real search space from
+  "track two evolving state machines" down to "is the capability already
+  true, or one spawn-hop away" — a small, bounded search
+  (`planSecondaryRole`), not the larger mechanism originally assumed
+  necessary. Worth restating as a general lesson (a close cousin of the
+  `requiredIngredientCapabilities` gap this same file already named
+  2026-08-12): before designing a search around a precondition, read what
+  the precondition ACTUALLY checks, not what its name implies it checks —
+  the implied scope and the real scope diverged here in a way that
+  directly determined how much code needed writing.
+- **That the engine doesn't enforce a secondary instance's state (e.g. a
+  RAW egg would satisfy COMBINE just as well as a beaten one, per the
+  actual code) is left as a real, honestly-named LIMITATION, not "fixed"
+  by the planner pretending otherwise — but the planner still produces
+  realistic output anyway, via a genuinely optional lever
+  (`secondaryDesiredState`).** This is worth naming as its own small
+  design principle: a planner sitting on top of an engine with a real gap
+  doesn't have to choose between exposing that gap (producing a
+  technically-legal-but-silly plan) or silently overclaiming precision the
+  engine doesn't have — giving the CALLER an opt-in way to ask for the
+  realistic behavior, defaulting to the engine's own actual (weaker)
+  guarantee, is honest in both directions at once.
+- **`recipe-runner.ts`'s real spawn-id scheme is a single GLOBAL counter
+  across every entity type, NOT per-entity-type — confirmed by reading the
+  code (`` `${spawned.entityId}-${++spawnCounter}` `` with ONE shared
+  `spawnCounter`) and independently cross-checked against a real recipe
+  file before relying on it.** The wrong, easy-to-assume alternative
+  (per-entity-type numbering, the convention `recipe-scaffold.ts` actually
+  DOES use for `initialInventory` ids) would have produced wrong
+  predictions the very first time two different entity types spawned in
+  the same recipe. Cross-checked against `tortilla-de-patatas.json`'s own
+  real, hand-authored `"egg_cracked-3"`/`"tortilla_mixture-4"` — those
+  numbers only make sense under the global-counter theory (potato_peel
+  takes 1, egg_shell takes 2, egg_cracked takes 3, tortilla_mixture takes
+  4) — turning a design assumption into a verified fact before writing
+  `SpawnIdTracker` around it, not after. General lesson: two superficially
+  similar id-numbering conventions can coexist in the same codebase for
+  different purposes (author-facing scaffold ids vs. runtime-spawned
+  ids) — "this repo numbers things per-entity-type" was true for ONE of
+  them and false for the other; checking which convention actually
+  applies to the thing being predicted, not just "does this repo have a
+  numbering convention," is what avoided a real, silent bug.
+- **A refactor of already-tested, working code (`isGoalReachable`) was
+  done via strict extract-method, not rewrite, specifically so the
+  existing test suite could PROVE zero behavior change rather than the
+  refactor being trusted by inspection.** `enumerateEdges` is the exact
+  loop body `isGoalReachable` already had, moved verbatim into its own
+  function and called back into; every one of `tests/reachability.test.ts`'s
+  existing assertions (plus `capability-test:reachability`'s own printed
+  output) was re-run and diffed against pre-refactor behavior before
+  building anything else on top of the extraction. Worth stating
+  precisely why this mattered here specifically: `planLowestCost` NEEDED
+  the identical precondition logic `isGoalReachable` uses (same
+  `required*` checks, same `invalidTransitions` closure, same parameter
+  fan-out) — the tempting shortcut was a second, independent
+  implementation "close enough" to the original, which is exactly the
+  kind of silently-divergible duplication this repo has repeatedly caught
+  and fixed elsewhere (`oilTempC`'s two-threshold near-miss,
+  `execution-bounds.ts`'s own stated discipline against it). Extracting
+  and reusing cost nothing extra and removed the divergence risk entirely.
+- **A real, checked property of the resulting system, not just an
+  implementation detail: planning and execution are consistent BY
+  CONSTRUCTION whenever they read the same available-tools/ingredients
+  set — which surfaced as a genuine design problem while building
+  `runRecipeFromIntent`'s own test coverage.** Since `enumerateEdges`
+  (planning) and `applyAction` (execution) check identical preconditions
+  from identical data, a step the planner includes in a path is
+  GUARANTEED to succeed when immediately executed against the same world
+  — meaning `runRecipeFromIntent`, as first drafted, had no way to ever
+  actually exercise its own replanning branch through its public API,
+  since `intent.availableTools` was the only tool-availability input
+  anywhere in the signature. This is a case where trying to WRITE THE
+  TEST first (or at least sketch it) surfaced a real design gap that
+  writing the implementation alone hadn't — the fix
+  (`executionAvailableTools`/`executionAvailableIngredientEntityIds`,
+  optional overrides distinct from what `planIntent` assumed) is also
+  independently the RIGHT real-world feature ("a robot discovers mid-run
+  that a tool it expected is missing"), not a testing hack bolted on
+  after the fact — the two motivations pointed at the identical fix.
+- **Replanning was deliberately scoped to single-instance goals only, and
+  the REASON is a real, specific mechanism, not a vague "combine is
+  harder": splicing a replanned sub-path can change how many instances get
+  spawned partway through execution, which could silently invalidate a
+  LATER, already-baked-in `COMBINE` step's hardcoded `secondaryInstanceId`
+  reference** (the very `SpawnIdTracker` prediction problem two entries
+  above, but now happening mid-run instead of at plan time, where there's
+  no second chance to recompute it before the reference is used). Solving
+  this generally needs downstream instance REFERENCES to be re-resolved
+  after a replan, not just a fresh `isGoalReachable` call — a real, larger
+  problem, named explicitly (`runRecipeFromIntent` refuses a `combine`
+  goal up front, loudly, rather than silently producing a plan that could
+  break in a way that's hard to trace back to its actual cause).

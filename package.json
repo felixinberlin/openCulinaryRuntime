@@ -56,6 +56,7 @@
     "capability-test:poach-any-vessel": "tsx scripts/poach-with-any-vessel.ts",
     "capability-test:storage-life": "tsx scripts/storage-life-as-a-robot.ts",
     "capability-test:domain-facts": "tsx scripts/domain-fact-as-a-robot.ts",
+    "capability-test:planner": "tsx scripts/planner-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

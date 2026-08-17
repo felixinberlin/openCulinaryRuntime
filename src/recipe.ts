@@ -62,3 +62,66 @@ export const RecipeScriptSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 export type RecipeScript = z.infer<typeof RecipeScriptSchema>;
+
+/**
+ * `RecipeIntentSchema` — `ROADMAP.md` Phase 4.5's own named authoring
+ * format, closed 2026-08-17 alongside `src/planner.ts`'s `planIntent`.
+ * Exactly the framing that entry already committed to: "goals/
+ * constraints... replacing hand-authored `RecipeScript` as the AUTHORING
+ * format. `RecipeScriptSchema` itself doesn't go away — it becomes the
+ * planner's grounded output."
+ *
+ * One goal per targeted instance, resolved by `planner.ts`'s `planIntent`
+ * IN ARRAY ORDER — a real, stated simplification, not a general
+ * constraint solver: goals aren't reordered or backtracked across each
+ * other. `InstanceGoalSchema.instanceId` may reference
+ * `"$combineResult:<goalIndex>"` to target what an EARLIER combine-goal
+ * produced, the mechanism that lets a full multi-instance dish (fry a
+ * potato, prep an egg, combine them, then fry the result) be expressed as
+ * one ordered goal list.
+ */
+export const InstanceGoalSchema = z
+  .object({
+    /** A `RecipeInstanceSchema.id` from `RecipeIntentSchema.initialInventory`,
+     *  or `"$combineResult:<goalIndex>"` referencing an earlier `combine`
+     *  goal's own spawned output. */
+    instanceId: z.string().min(1),
+    state: z.string().optional(),
+    requiredTags: z.array(z.string()).default([]),
+    /**
+     * When set, this goal is satisfied by COMBINING `instanceId` (the
+     * primary) with `secondaryInstanceId` via `actionId`, rather than by
+     * `instanceId`'s own state/tags search alone — `planner.ts`'s
+     * `planCombine`. `secondaryDesiredState`/`secondaryDesiredTags` are
+     * OPTIONAL and NOT anything `engine.ts` itself requires
+     * (`planSecondaryRole`'s own doc comment: `requiredSecondaryCapability`
+     * is checked at the entity level only, never against the secondary
+     * instance's current state) — they exist so a planned recipe can still
+     * be a REALISTIC one (a genuinely beaten egg) rather than a merely
+     * engine-legal one.
+     */
+    combine: z
+      .object({
+        actionId: z.string().min(1),
+        secondaryInstanceId: z.string().min(1),
+        secondaryDesiredState: z.string().optional(),
+        secondaryDesiredTags: z.array(z.string()).default([]),
+      })
+      .optional(),
+  })
+  .refine((g) => g.state !== undefined || g.requiredTags.length > 0 || g.combine !== undefined, {
+    message: "a goal must specify state, requiredTags, or combine",
+  });
+export type InstanceGoal = z.infer<typeof InstanceGoalSchema>;
+
+export const RecipeIntentSchema = z.object({
+  id: z.string().min(1),
+  names: z.record(z.string(), z.string()).refine((n) => "en" in n, {
+    message: "names must at least include an 'en' entry",
+  }),
+  initialInventory: z.array(RecipeInstanceSchema).min(1),
+  availableTools: z.array(z.string()).default([]),
+  goals: z.array(InstanceGoalSchema).min(1),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+});
+export type RecipeIntent = z.infer<typeof RecipeIntentSchema>;

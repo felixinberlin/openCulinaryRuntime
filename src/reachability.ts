@@ -132,6 +132,145 @@ function matchesGoal(state: string, tags: readonly string[], goal: GoalPredicate
   return true;
 }
 
+/** One usable outgoing transition from `(fromState, fromTags)` — the exact
+ *  action/parameter choice as a `ReachabilityStep`, plus the state/tags it
+ *  leads to. Extracted 2026-08-17 from `isGoalReachable`'s own inline loop
+ *  body (`ROADMAP.md`'s "close the gaps" planner work) so `planner.ts`'s
+ *  cost-aware search can reuse the IDENTICAL precondition-checking logic
+ *  — same `required*` checks, same `invalidTransitions` closure, same
+ *  parameter fan-out — instead of a second, silently-divergible
+ *  reimplementation. `isGoalReachable` below was refactored to CALL this
+ *  function rather than inline it; its own behavior (including the exact
+ *  `blockedBy` reasons and their order) is unchanged — verified by re-
+ *  running every existing `tests/reachability.test.ts` case and
+ *  `capability-test:reachability` after this extraction, not assumed. */
+export interface Edge {
+  step: ReachabilityStep;
+  nextState: string;
+  nextTags: string[];
+}
+
+export function enumerateEdges(
+  entity: Entity,
+  entities: ReadonlyMap<string, Entity>,
+  actions: ReadonlyMap<string, Action>,
+  fromState: string,
+  fromTags: readonly string[],
+  availableTools: ReadonlySet<string>,
+  availableIngredients: ReadonlySet<string>,
+  recordBlock: (reason: BlockingReason) => void
+): Edge[] {
+  const edges: Edge[] = [];
+
+  for (const actionId of entity.allowedTransformations) {
+    const action = actions.get(actionId);
+    if (!action) continue; // an unresolvable action id is a data-integrity issue scripts/validate.ts's own cross-reference already catches; not this function's job to re-flag
+
+    if (!action.validTargetKinds.includes(entity.kind)) {
+      recordBlock({ kind: "invalid_target_kind", actionId });
+      continue;
+    }
+    if (action.requiredSecondaryCapability) {
+      recordBlock({ kind: "requires_secondary_instance", actionId });
+      continue;
+    }
+    if (
+      action.requiredTargetCapability &&
+      entity.capabilities[action.requiredTargetCapability] !== true
+    ) {
+      recordBlock({
+        kind: "missing_target_capability",
+        actionId,
+        capability: action.requiredTargetCapability,
+      });
+      continue;
+    }
+
+    let toolsOk = true;
+    for (const toolId of action.requiredTools) {
+      if (!availableTools.has(toolId)) {
+        recordBlock({ kind: "missing_tool", actionId, toolId });
+        toolsOk = false;
+      }
+    }
+    for (const capability of action.requiredToolCapabilities) {
+      const satisfied = [...availableTools].some(
+        (id) => entities.get(id)?.capabilities[capability] === true
+      );
+      if (!satisfied) {
+        recordBlock({ kind: "missing_tool_capability", actionId, capability });
+        toolsOk = false;
+      }
+    }
+    if (!toolsOk) continue;
+
+    let ingredientsOk = true;
+    for (const capability of action.requiredIngredientCapabilities) {
+      const satisfied = [...availableIngredients].some(
+        (id) => entities.get(id)?.capabilities[capability] === true
+      );
+      if (!satisfied) {
+        recordBlock({ kind: "missing_ingredient_capability", actionId, capability });
+        ingredientsOk = false;
+      }
+    }
+    if (!ingredientsOk) continue;
+
+    const requiredPrior = entity.statePrerequisites[actionId];
+    if (requiredPrior) {
+      const allowed = Array.isArray(requiredPrior) ? requiredPrior : [requiredPrior];
+      const satisfied = allowed.includes(fromState) || allowed.some((s) => fromTags.includes(s));
+      if (!satisfied) {
+        recordBlock({
+          kind: "unsatisfied_state_prerequisite",
+          actionId,
+          fromState,
+          requiredAnyOf: allowed,
+        });
+        continue;
+      }
+    }
+
+    // Conservation-of-mass actions are a real dead end for THIS instance —
+    // see this file's own top doc comment. Recorded, not silently skipped,
+    // and deliberately yielded with ZERO outgoing edges.
+    if (action.outputs.destroysTarget || action.outputs.combinesInto) {
+      recordBlock({ kind: "instance_destroyed", actionId });
+      continue;
+    }
+
+    const candidates: { state: string; param?: string }[] = [];
+    if (action.outputs.transformedState) {
+      candidates.push({ state: action.outputs.transformedState });
+    } else if (action.outputs.transformedStateFromParameter) {
+      const paramDef = action.parameters.find(
+        (p) => p.id === action.outputs.transformedStateFromParameter
+      );
+      for (const value of paramDef?.allowedValues ?? []) {
+        candidates.push({ state: value, param: value });
+      }
+    } else {
+      // Tag-only (or otherwise state-preserving) action — state doesn't change.
+      candidates.push({ state: fromState });
+    }
+
+    for (const { state: nextState, param } of candidates) {
+      if (entity.invalidTransitions[fromState]?.includes(nextState)) {
+        recordBlock({ kind: "forbidden_transition", actionId, fromState, toState: nextState });
+        continue;
+      }
+      let nextTags = [...fromTags];
+      if (action.outputs.addsTag && !fromTags.includes(action.outputs.addsTag)) {
+        nextTags = [...fromTags, action.outputs.addsTag];
+      }
+      const step: ReachabilityStep = param !== undefined ? { actionId, param } : { actionId };
+      edges.push({ step, nextState, nextTags });
+    }
+  }
+
+  return edges;
+}
+
 export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
   const {
     entity,
@@ -169,126 +308,27 @@ export function isGoalReachable(query: ReachabilityQuery): ReachabilityResult {
   while (queue.length > 0) {
     const node = queue.shift()!; // FIFO — BFS, deterministic given deterministic push order below
 
-    for (const actionId of entity.allowedTransformations) {
-      const action = actions.get(actionId);
-      if (!action) continue; // an unresolvable action id is a data-integrity issue scripts/validate.ts's own cross-reference already catches; not this function's job to re-flag
+    const edges = enumerateEdges(
+      entity,
+      entities,
+      actions,
+      node.state,
+      node.tags,
+      availableTools,
+      availableIngredients,
+      recordBlock
+    );
+    for (const edge of edges) {
+      const nextPath = [...node.path, edge.step];
 
-      if (!action.validTargetKinds.includes(entity.kind)) {
-        recordBlock({ kind: "invalid_target_kind", actionId });
-        continue;
-      }
-      if (action.requiredSecondaryCapability) {
-        recordBlock({ kind: "requires_secondary_instance", actionId });
-        continue;
-      }
-      if (
-        action.requiredTargetCapability &&
-        entity.capabilities[action.requiredTargetCapability] !== true
-      ) {
-        recordBlock({
-          kind: "missing_target_capability",
-          actionId,
-          capability: action.requiredTargetCapability,
-        });
-        continue;
+      if (matchesGoal(edge.nextState, edge.nextTags, goal)) {
+        return { reachable: true, path: nextPath };
       }
 
-      let toolsOk = true;
-      for (const toolId of action.requiredTools) {
-        if (!availableTools.has(toolId)) {
-          recordBlock({ kind: "missing_tool", actionId, toolId });
-          toolsOk = false;
-        }
-      }
-      for (const capability of action.requiredToolCapabilities) {
-        const satisfied = [...availableTools].some(
-          (id) => entities.get(id)?.capabilities[capability] === true
-        );
-        if (!satisfied) {
-          recordBlock({ kind: "missing_tool_capability", actionId, capability });
-          toolsOk = false;
-        }
-      }
-      if (!toolsOk) continue;
-
-      let ingredientsOk = true;
-      for (const capability of action.requiredIngredientCapabilities) {
-        const satisfied = [...availableIngredients].some(
-          (id) => entities.get(id)?.capabilities[capability] === true
-        );
-        if (!satisfied) {
-          recordBlock({ kind: "missing_ingredient_capability", actionId, capability });
-          ingredientsOk = false;
-        }
-      }
-      if (!ingredientsOk) continue;
-
-      const requiredPrior = entity.statePrerequisites[actionId];
-      if (requiredPrior) {
-        const allowed = Array.isArray(requiredPrior) ? requiredPrior : [requiredPrior];
-        const satisfied =
-          allowed.includes(node.state) || allowed.some((s) => node.tags.includes(s));
-        if (!satisfied) {
-          recordBlock({
-            kind: "unsatisfied_state_prerequisite",
-            actionId,
-            fromState: node.state,
-            requiredAnyOf: allowed,
-          });
-          continue;
-        }
-      }
-
-      // Conservation-of-mass actions are a real dead end for THIS
-      // instance — see this file's own top doc comment. Recorded, not
-      // silently skipped, and deliberately explored with ZERO outgoing
-      // edges (never pushed to the queue).
-      if (action.outputs.destroysTarget || action.outputs.combinesInto) {
-        recordBlock({ kind: "instance_destroyed", actionId });
-        continue;
-      }
-
-      const candidates: { state: string; param?: string }[] = [];
-      if (action.outputs.transformedState) {
-        candidates.push({ state: action.outputs.transformedState });
-      } else if (action.outputs.transformedStateFromParameter) {
-        const paramDef = action.parameters.find(
-          (p) => p.id === action.outputs.transformedStateFromParameter
-        );
-        for (const value of paramDef?.allowedValues ?? []) {
-          candidates.push({ state: value, param: value });
-        }
-      } else {
-        // Tag-only (or otherwise state-preserving) action — state doesn't change.
-        candidates.push({ state: node.state });
-      }
-
-      for (const { state: nextState, param } of candidates) {
-        if (entity.invalidTransitions[node.state]?.includes(nextState)) {
-          recordBlock({
-            kind: "forbidden_transition",
-            actionId,
-            fromState: node.state,
-            toState: nextState,
-          });
-          continue;
-        }
-        let nextTags = node.tags;
-        if (action.outputs.addsTag && !node.tags.includes(action.outputs.addsTag)) {
-          nextTags = [...node.tags, action.outputs.addsTag];
-        }
-        const step: ReachabilityStep = param !== undefined ? { actionId, param } : { actionId };
-        const nextPath = [...node.path, step];
-
-        if (matchesGoal(nextState, nextTags, goal)) {
-          return { reachable: true, path: nextPath };
-        }
-
-        const nextKey = nodeKey(nextState, nextTags);
-        if (!visited.has(nextKey)) {
-          visited.add(nextKey);
-          queue.push({ state: nextState, tags: nextTags, path: nextPath });
-        }
+      const nextKey = nodeKey(edge.nextState, edge.nextTags);
+      if (!visited.has(nextKey)) {
+        visited.add(nextKey);
+        queue.push({ state: edge.nextState, tags: edge.nextTags, path: nextPath });
       }
     }
   }

@@ -4,6 +4,9 @@ import type { RecipeScript, RecipeStep } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
 import type { HeatSourceProfile } from "./heat-source.ts";
 import { applyAction, type Instance, type SafetyPolicy } from "./engine.ts";
+import type { RecipeIntent } from "./recipe.ts";
+import { planIntent, stepsToRecipeSteps } from "./planner.ts";
+import { isGoalReachable } from "./reachability.ts";
 import {
   emptyPlace,
   pourInto,
@@ -822,5 +825,239 @@ export function runRecipe(
     placeContents,
     spawnedEntityIds,
     toolContamination,
+  };
+}
+
+// ---------------------------------------------------------------------
+// Closed-loop replanning (ROADMAP.md's "actual planner" gap 4, closed
+// 2026-08-17) — a genuinely NEW, additive execution mode. `runRecipe`
+// above is completely UNCHANGED and remains the offline-validation
+// default ("log the failure, continue anyway") every existing caller
+// (scripts/validate.ts, every capability test, `npm run recipe`) still
+// gets, unmodified.
+// ---------------------------------------------------------------------
+
+export interface RecipeIntentRunResult {
+  finalInventory: Map<string, Instance>;
+  errors: RecipeStepError[];
+  log: string[];
+  warnings: string[];
+  /** One entry per goal that needed a replan after its step failed —
+   *  empty when everything ran exactly as originally planned. */
+  replans: { goalIndex: number; succeeded: boolean; reason?: string }[];
+  /** The plan actually run, step by step — NOT necessarily
+   *  `planIntent`'s own original `recipe.sequence` when a replan spliced
+   *  in a different path partway through. */
+  executedSequence: RecipeStep[];
+}
+
+export type RunFromIntentResult =
+  | { planned: true; result: RecipeIntentRunResult }
+  | { planned: false; failures: { goalIndex: number; reason: string }[] };
+
+/**
+ * `ROADMAP.md`'s own named correction, acted on directly: `runRecipe`'s
+ * "log the failure, continue to the next step anyway" is "correct for
+ * offline validation, actively wrong if ever reused verbatim to drive a
+ * real robot through a physical failure." This function is the honest
+ * alternative — a real robot's execution loop, not `runRecipe` with a
+ * flag bolted on: `src/planner.ts`'s `planIntent` produces the initial
+ * plan, and when a step genuinely fails (a thrown precondition error —
+ * a missing tool, an unsatisfied prerequisite, anything `applyAction`
+ * itself rejects), this STOPS advancing that goal's original scripted
+ * steps and instead calls `isGoalReachable` FRESH from the instance's
+ * REAL current state toward the SAME original goal, splicing in
+ * whatever alternative path is found (or reporting a real, final
+ * failure if none exists) — rather than blindly running the rest of a
+ * now-stale plan against a world that has already diverged from it.
+ *
+ * Deliberately, honestly SCOPED NARROWER than "replan anything":
+ * - **Single-instance goals only — any `combine` goal makes this
+ *   function refuse up front, not silently mishandle it.** Splicing a
+ *   replanned sub-path can change how many instances get SPAWNED partway
+ *   through execution (`SpawnIdTracker`'s own doc comment); a LATER
+ *   `COMBINE` step's `secondaryInstanceId` is a value baked in at PLAN
+ *   time, and a mid-run change to total spawn count could silently
+ *   invalidate that reference. Solving this generally needs the plan
+ *   itself to re-resolve downstream instance references after a replan,
+ *   not just re-run `isGoalReachable` — a real, larger piece of work,
+ *   named here rather than attempted unsoundly.
+ * - **At most ONE replan attempt per goal** — a goal whose replanned path
+ *   ALSO fails is reported as a final, unrecoverable failure, not retried
+ *   forever; this is the concrete guard against an infinite loop on a
+ *   genuinely unreachable goal, not just an implied one.
+ * - **No PLACE (`FILL`/`HEAT_PLACE`/`PLACE_IN`/`REMOVE`) or
+ *   `WASH_TOOL` support** — this is a fresh, simpler interpreter built
+ *   for this function specifically (not `runRecipe`'s own body, which
+ *   would have needed the SAME splice-and-resume capability threaded
+ *   through PLACE/tool-hygiene bookkeeping too — a real, separate,
+ *   larger change deliberately not attempted here). A plan involving
+ *   either is rejected the same way a `combine` goal is.
+ */
+export function runRecipeFromIntent(
+  intent: RecipeIntent,
+  entities: Map<string, Entity>,
+  actions: Map<string, Action>,
+  ccps: Map<string, CriticalControlPoint> = new Map(),
+  policy?: SafetyPolicy,
+  /**
+   * The REAL, currently-on-hand tools/ingredient entity ids — defaults to
+   * `intent.availableTools`/every `initialInventory` entity id (i.e.
+   * "the world matches what was planned against," the common case).
+   * Passing a NARROWER set here is what actually gives replanning
+   * something real to recover from: `intent.availableTools` is what
+   * `planIntent` assumed when it built the initial plan; this is what's
+   * ACTUALLY available the moment each step runs — the honest model of
+   * "a robot discovers mid-run that a tool it expected is missing/broken"
+   * `ROADMAP.md`'s own closed-loop-replanning entry describes. When
+   * omitted, execution can never diverge from what was planned (this
+   * engine has no live sensing — `ENGINE_INVARIANTS.md` #11 — so nothing
+   * else could cause a step to fail that `planIntent`'s own precondition
+   * checks didn't already rule out identically).
+   */
+  executionAvailableTools?: ReadonlySet<string>,
+  executionAvailableIngredientEntityIds?: ReadonlySet<string>
+): RunFromIntentResult {
+  const unsupportedGoals = intent.goals
+    .map((g, i) => ({ g, i }))
+    .filter(({ g }) => g.combine)
+    .map(({ i }) => ({
+      goalIndex: i,
+      reason:
+        "runRecipeFromIntent: closed-loop replanning is scoped to single-instance goals only (no combine) — see this function's own doc comment for why.",
+    }));
+  if (unsupportedGoals.length > 0) return { planned: false, failures: unsupportedGoals };
+
+  const plan = planIntent(intent, entities, actions);
+  if (!plan.success) return { planned: false, failures: plan.failures };
+
+  const PLACE_AWARE_ACTIONS = new Set(["fill", "heat_place", "place_in", "remove", "wash_tool"]);
+  if (plan.recipe.sequence.some((s) => PLACE_AWARE_ACTIONS.has(s.actionId))) {
+    return {
+      planned: false,
+      failures: [
+        {
+          goalIndex: -1,
+          reason:
+            "runRecipeFromIntent: this plan uses a PLACE/WASH_TOOL action — not supported by this function's simpler interpreter (see its own doc comment).",
+        },
+      ],
+    };
+  }
+
+  const inventory = new Map<string, Instance>();
+  for (const item of intent.initialInventory) {
+    inventory.set(item.id, { entityId: item.entityId, state: item.state, tags: [...item.tags] });
+  }
+  const availableTools = new Set(executionAvailableTools ?? intent.availableTools);
+  const availableIngredientEntityIds = new Set(
+    executionAvailableIngredientEntityIds ?? intent.initialInventory.map((i) => i.entityId)
+  );
+  const ingredientInstancePool = intent.initialInventory
+    .filter((i) => availableIngredientEntityIds.has(i.entityId))
+    .map((i) => ({ id: i.id, entityId: i.entityId }));
+
+  const errors: RecipeStepError[] = [];
+  const log: string[] = [];
+  const warnings: string[] = [];
+  const replans: RecipeIntentRunResult["replans"] = [];
+  const executedSequence: RecipeStep[] = [];
+  const replannedGoals = new Set<number>();
+  let spawnCounter = 0;
+
+  let sequence = [...plan.recipe.sequence];
+  let stepGoalIndex = [...plan.stepGoalIndex];
+
+  let i = 0;
+  while (i < sequence.length) {
+    const step = sequence[i];
+    const goalIndex = stepGoalIndex[i];
+    const instance = inventory.get(step.targetInstanceId);
+    const action = actions.get(step.actionId);
+    if (!instance || !action) {
+      errors.push({ step, message: `Unknown target instance or action for step ${i}` });
+      break;
+    }
+    const availableIngredientEntityIdsForStep = new Set(
+      step.availableIngredientInstanceIds
+        .map((id) => inventory.get(id)?.entityId)
+        .filter((x): x is string => x !== undefined)
+    );
+
+    try {
+      const result = applyAction(
+        instance,
+        action,
+        entities,
+        availableTools,
+        step.params,
+        availableIngredientEntityIdsForStep,
+        ccps,
+        policy
+      );
+      for (const warning of result.warnings) {
+        warnings.push(warning);
+        log.push(`  WARNING: ${warning}`);
+      }
+      if (result.destroyed) inventory.delete(step.targetInstanceId);
+      else inventory.set(step.targetInstanceId, result.instance);
+      log.push(`${action.verb}: "${instance.state}" -> "${result.instance.state}"`);
+      for (const spawned of result.spawned) {
+        const spawnedId = `${spawned.entityId}-${++spawnCounter}`;
+        inventory.set(spawnedId, spawned);
+        log.push(`  spawned ${spawnedId} (${spawned.entityId}, state: "${spawned.state}")`);
+      }
+      executedSequence.push(step);
+      i++;
+    } catch (err) {
+      const message = (err as Error).message;
+      if (goalIndex !== undefined && goalIndex >= 0 && !replannedGoals.has(goalIndex)) {
+        replannedGoals.add(goalIndex);
+        const goal = intent.goals[goalIndex];
+        const entity = entities.get(instance.entityId)!;
+        const fresh = isGoalReachable({
+          entity,
+          entities,
+          actions,
+          startState: instance.state,
+          startTags: instance.tags,
+          goal: { state: goal.state, requiredTags: goal.requiredTags },
+          availableTools,
+          availableIngredients: availableIngredientEntityIds,
+        });
+        if (fresh.reachable) {
+          const newSteps = stepsToRecipeSteps(fresh.path, {
+            targetInstanceId: step.targetInstanceId,
+            entities,
+            actions,
+            availableIngredientInstances: ingredientInstancePool,
+          });
+          let end = i;
+          while (end < sequence.length && stepGoalIndex[end] === goalIndex) end++;
+          sequence = [...sequence.slice(0, i), ...newSteps, ...sequence.slice(end)];
+          stepGoalIndex = [
+            ...stepGoalIndex.slice(0, i),
+            ...newSteps.map(() => goalIndex),
+            ...stepGoalIndex.slice(end),
+          ];
+          replans.push({ goalIndex, succeeded: true });
+          log.push(
+            `REPLANNED goal ${goalIndex} after "${action.verb}" failed ("${message}") — new path: ` +
+              `${fresh.path.map((s) => s.actionId).join(" -> ") || "(already at goal)"}`
+          );
+          continue; // retry at the SAME index i, now the first replanned step
+        }
+        replans.push({ goalIndex, succeeded: false, reason: "no alternative path found from the current state" });
+      }
+      errors.push({ step, message });
+      log.push(`REJECTED ${action.verb} ${step.targetInstanceId}: ${message}`);
+      break; // a real, unrecoverable failure — stop, per this function's own doc comment, rather than
+      // continuing to run the rest of a now-stale plan against a diverged world.
+    }
+  }
+
+  return {
+    planned: true,
+    result: { finalInventory: inventory, errors, log, warnings, replans, executedSequence },
   };
 }

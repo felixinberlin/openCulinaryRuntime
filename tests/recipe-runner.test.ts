@@ -1,9 +1,10 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { runRecipe } from "../src/recipe-runner.ts";
+import { runRecipe, runRecipeFromIntent } from "../src/recipe-runner.ts";
 import { makeEntity, makeAction, makeHeatSource } from "./helpers.ts";
 import type { RecipeScript } from "../src/recipe.ts";
+import type { RecipeIntent } from "../src/recipe.ts";
 
 /**
  * Focused coverage for recipe-runner.ts — previously had none (only
@@ -1045,5 +1046,144 @@ describe("runRecipe — tool hygiene / cross-contamination", () => {
     assert.equal(result.errors.length, 0, JSON.stringify(result.errors));
     assert.equal(result.warnings.length, 0);
     assert.equal(result.toolContamination.get("knife-2")?.contaminated, false);
+  });
+});
+
+// runRecipeFromIntent — 2026-08-17, ROADMAP.md's "actual planner" gap 4
+// (closed-loop replanning). `runRecipe` above is completely untouched and
+// re-tested unchanged throughout this whole file — these are new,
+// additive tests for the new function only.
+describe("runRecipeFromIntent — closed-loop replanning", () => {
+  // Two genuinely different real routes to the same goal, needing
+  // DIFFERENT tools — the synthetic forcing case a real forcing case in
+  // this repo's actual data doesn't currently have (every real cutting/
+  // peeling verb needs a knife with no substitute — see this test file's
+  // own home in LEARNINGS_ENGINE.md 2026-08-17 for why this is synthetic,
+  // not real-data, on purpose).
+  const widget = makeEntity({
+    id: "widget",
+    allowedTransformations: ["make_with_a", "make_with_b"],
+  });
+  const makeWithA = makeAction({
+    id: "make_with_a",
+    requiredTools: ["toolA"],
+    outputs: { transformedState: "done" },
+  });
+  const makeWithB = makeAction({
+    id: "make_with_b",
+    requiredTools: ["toolB"],
+    outputs: { transformedState: "done" },
+  });
+  const entities = new Map([["widget", widget]]);
+  const actions = new Map([
+    ["make_with_a", makeWithA],
+    ["make_with_b", makeWithB],
+  ]);
+
+  function makeIntent(availableTools: string[]): RecipeIntent {
+    return {
+      id: "widget-intent",
+      names: { en: "test" },
+      initialInventory: [{ id: "widget-1", entityId: "widget", state: "raw", tags: [] }],
+      availableTools,
+      goals: [{ instanceId: "widget-1", state: "done", requiredTags: [] }],
+      metadata: {},
+    };
+  }
+
+  test("plans and runs cleanly with ZERO replans when the execution world matches the plan", () => {
+    const intent = makeIntent(["toolA", "toolB"]);
+    const outcome = runRecipeFromIntent(intent, entities, actions);
+    assert.equal(outcome.planned, true);
+    if (outcome.planned) {
+      assert.equal(outcome.result.errors.length, 0);
+      assert.equal(outcome.result.replans.length, 0);
+      assert.equal(outcome.result.finalInventory.get("widget-1")?.state, "done");
+    }
+  });
+
+  test("a missing tool at EXECUTION time (planned with toolA, actually only toolB on hand) triggers a real replan that succeeds", () => {
+    const intent = makeIntent(["toolA", "toolB"]); // planIntent picks make_with_a (declared first)
+    const outcome = runRecipeFromIntent(
+      intent,
+      entities,
+      actions,
+      new Map(),
+      undefined,
+      new Set(["toolB"]) // toolA is missing at EXECUTION time
+    );
+    assert.equal(outcome.planned, true);
+    if (outcome.planned) {
+      assert.equal(outcome.result.errors.length, 0, JSON.stringify(outcome.result.errors));
+      assert.deepEqual(outcome.result.replans, [{ goalIndex: 0, succeeded: true }]);
+      assert.equal(outcome.result.finalInventory.get("widget-1")?.state, "done");
+      assert.deepEqual(
+        outcome.result.executedSequence.map((s) => s.actionId),
+        ["make_with_b"]
+      );
+    }
+  });
+
+  test("a goal with NO alternative route reports a real, final failure — not a silent success or an infinite retry", () => {
+    const intent = makeIntent(["toolA"]); // only route is make_with_a
+    const outcome = runRecipeFromIntent(
+      intent,
+      entities,
+      actions,
+      new Map(),
+      undefined,
+      new Set() // toolA missing, and there is no toolB either — genuinely stuck
+    );
+    assert.equal(outcome.planned, true);
+    if (outcome.planned) {
+      assert.equal(outcome.result.errors.length, 1);
+      assert.deepEqual(outcome.result.replans, [
+        { goalIndex: 0, succeeded: false, reason: "no alternative path found from the current state" },
+      ]);
+    }
+  });
+
+  test("a combine goal is rejected up front, honestly, not silently mishandled", () => {
+    const intent: RecipeIntent = {
+      id: "combo-intent",
+      names: { en: "test" },
+      initialInventory: [
+        { id: "widget-1", entityId: "widget", state: "raw", tags: [] },
+        { id: "widget-2", entityId: "widget", state: "raw", tags: [] },
+      ],
+      availableTools: [],
+      goals: [
+        {
+          instanceId: "widget-1",
+          requiredTags: [],
+          combine: { actionId: "combine", secondaryInstanceId: "widget-2", secondaryDesiredTags: [] },
+        },
+      ],
+      metadata: {},
+    };
+    const outcome = runRecipeFromIntent(intent, entities, actions);
+    assert.equal(outcome.planned, false);
+    if (!outcome.planned) {
+      assert.match(outcome.failures[0].reason, /scoped to single-instance goals only/);
+    }
+  });
+
+  test("the replannedGoals guard fires exactly once per goal — replans array never grows past one entry for a single goal, even when that one replan attempt itself fails", () => {
+    // Neither tool available at all: the first (and, per the guard, ONLY)
+    // replan attempt also finds no route — this exercises the SAME guard
+    // that stops a genuinely recoverable goal from being retried forever,
+    // just on a fixture where the one attempt happens to fail too (see
+    // this describe block's own top comment for why constructing a
+    // "succeeds once, fails again later" case isn't possible without an
+    // artificial inconsistency between planning and execution — the two
+    // are consistent by construction whenever they read the same
+    // available-tools set, which they always do here).
+    const intent = makeIntent(["toolA", "toolB"]);
+    const outcome = runRecipeFromIntent(intent, entities, actions, new Map(), undefined, new Set());
+    assert.equal(outcome.planned, true);
+    if (outcome.planned) {
+      assert.equal(outcome.result.replans.length, 1); // exactly one attempt, not repeated
+      assert.equal(outcome.result.errors.length, 1);
+    }
   });
 });

@@ -63,6 +63,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | POACH with any vessel — the last verb holding an exact-id tool check generalized to `isVessel`, correcting a real overclaimed "standard" technique note along the way (two real, cited, different vessel shapes for two real techniques) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:poach-any-vessel` |
 | Storage/shelf-life — real, cited, state-keyed storageLifeByState (egg raw vs. boiled genuinely different; potato's doNotRefrigerate), surfaced via recipe-explain.ts's storageSummary and recipe-narrator.ts's new section, computed over all 17 real recipes | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:storage-life` |
 | Structured DomainFact records — egg_cooking.json's ad-hoc coagulationReferenceC migrated to typed, Zod-validated domainFacts; a malformed entry now actually rejected; queryable via `npm run ask -- fact`, zero prose parsing | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:domain-facts` |
+| The actual planner — full tortilla_de_patatas planned end to end from a bare RecipeIntent (zero hand-authored steps), spawn ids correctly predicted, run against the real recipe-runner.ts with zero errors; plus a real closed-loop-replanning failure case against real data | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:planner` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -2021,11 +2022,137 @@ scope or its "not started" status — recorded because a real, independent
 source landing on the same shape is worth more than an internal design
 doc alone, the same standard this repo already holds itself to for
 domain facts.
-- [ ] `RecipeIntentSchema` (or similar) — goals/constraints/acceptable-states/
-      tolerance/victory-conditions, replacing hand-authored `RecipeScript` as
-      the AUTHORING format. `RecipeScriptSchema` itself doesn't go away — it
-      becomes the planner's grounded output / a completed run's trace.
-- [ ] An actual planner — searches `Action`'s existing precondition/effect
+- [x] **`RecipeIntentSchema` — closed 2026-08-17, alongside the planner
+      itself.** `recipe.ts`'s `RecipeIntentSchema`/`InstanceGoalSchema` —
+      exactly this entry's own framing: goals (state/`requiredTags`, or a
+      `combine` sub-goal) replacing hand-authored `RecipeScript` as the
+      authoring format; `RecipeScriptSchema` itself unchanged, now the
+      planner's grounded OUTPUT. See the full closure below.
+- [x] **An actual planner — closed 2026-08-17, `src/planner.ts`, direct
+      response to "close the gaps" naming all five sub-items below by
+      name.** Builds entirely on top of `isGoalReachable`
+      (2026-08-16, unchanged except one pure, behavior-preserving
+      refactor — see below) rather than replacing it. `engine.ts`'s
+      `applyAction` is untouched by every piece of this.
+      1. **Path -> `RecipeScript` conversion** — `stepsToRecipeSteps`
+         turns a `ReachabilityStep[]` into real `RecipeStep[]`, resolving
+         `requiredIngredientCapabilities` against a real instance pool and
+         filling any required-but-not-state-determining parameter
+         (`pasteurize.json`'s `waterTempC`/`durationSeconds`) with a
+         schema-valid, explicitly-NOT-cited placeholder (`resolveDefault
+         ParamValue` — first `allowedValues` entry, or a numeric range's
+         midpoint) a real caller can override. Every prior capability-test
+         script that executed a found path had to hand-convert it into
+         `applyAction` calls one at a time (`is-goal-still-reachable.ts`,
+         `boil-with-any-deep-vessel.ts`, ...) — this replaces that.
+      2. **`RecipeIntentSchema` + `planIntent`** — resolves a real
+         goals-and-constraints intent into a runnable `RecipeScript`.
+         Goals are processed IN ARRAY ORDER (no cross-goal backtracking,
+         a real stated simplification); a later goal's `instanceId` may
+         reference `"$combineResult:<goalIndex>"` to target what an
+         EARLIER combine-goal produced, letting a full multi-step,
+         multi-instance dish be expressed as one ordered goal list.
+      3. **Cost-aware search (`planLowestCost`)** — a real, if simple,
+         Dijkstra built on `enumerateEdges` (extracted from
+         `isGoalReachable`'s own inline loop body the same day, a pure,
+         behavior-preserving refactor — re-verified via the full existing
+         `tests/reachability.test.ts` suite plus
+         `capability-test:reachability`, byte-identical output). Cost is
+         `1 + Σ(hazard severity penalty)` per step — `defaultEdgeCost`,
+         an explicitly UNTUNED scheduling heuristic, not a cited domain
+         figure — so among equal-length paths, the search now prefers the
+         one asking a robot to do the less risky thing. Absent any
+         hazard, identical to plain BFS (fewest steps) — verified, not
+         assumed, in `tests/planner.test.ts`.
+      4. **Bounded multi-instance/COMBINE planning (`planCombine`/
+         `planSecondaryRole`)** — the honest answer to `isGoalReachable`'s
+         own "single-instance scope... a `requiredSecondaryCapability`
+         edge is recorded as blocked, not explored." NOT a general
+         multi-instance world model — a real, checked-before-building
+         finding shaped the actual scope: `engine.ts`'s
+         `requiredSecondaryCapability` check is ENTITY-level only, it
+         NEVER inspects the secondary instance's current STATE (confirmed
+         by reading `applyAction` directly — `egg_cracked.json` has no
+         `combine` key in its own `statePrerequisites` either), the exact
+         same class of gap `LEARNINGS_ENGINE.md` 2026-08-12 already named
+         for `requiredIngredientCapabilities`, just never previously
+         stated for this mechanism. So `planSecondaryRole` only needs a
+         BOUNDED, one-spawn-hop search (the real case this repo actually
+         has: raw `egg` doesn't carry `isCombinableAddition`, `CRACK`'s
+         `egg_cracked` byproduct does) — not a general entity-graph
+         planner — plus an OPTIONAL `secondaryDesiredState`/`Tags` so a
+         planned recipe can still be REALISTIC (a genuinely beaten egg),
+         not just engine-legal. `SpawnIdTracker` mirrors
+         `recipe-runner.ts`'s own real spawn-id scheme EXACTLY (a single
+         GLOBAL counter across every entity type, not per-entity-type —
+         a real, checked, easy-to-get-wrong detail, cross-verified against
+         `tortilla-de-patatas.json`'s own real
+         "egg_cracked-3"/"tortilla_mixture-4" ids) — the planner ACTING
+         AS the recipe's author predicting what its own step order will
+         produce, not a second, drift-risking re-derivation of an
+         ALREADY-RUN recipe's ids (the different, real risk
+         `LEARNINGS_ENGINE.md` 2026-08-16 named for `explainRecipe`'s
+         earlier, unrelated spawn-id gap). Deliberately does NOT resolve
+         WHICH `COMBINE`-shaped action to use from a target entity id
+         alone — `potato_onion_mixture.json`'s own
+         `capabilityAmbiguityNote` already names why guessing that would
+         be unsound; the action id is always caller-supplied.
+      5. **Closed-loop replanning (`recipe-runner.ts`'s new
+         `runRecipeFromIntent`)** — directly acts on this same section's
+         own "Closed-loop / replanning execution mode" entry (now merged
+         into this one — see below): `runRecipe` itself stays completely
+         UNCHANGED (every existing caller — `scripts/validate.ts`, every
+         capability test, `npm run recipe` — is unaffected); a genuinely
+         NEW, additive function/interpreter. Plans via `planIntent`, then
+         executes step by step; on a real thrown precondition failure, it
+         does NOT keep running the rest of a now-stale plan (`runRecipe`'s
+         own behavior, correct for offline validation, named in the
+         original "actively wrong for a real robot" entry this replaces)
+         — instead it calls `isGoalReachable` FRESH from the instance's
+         REAL current state toward the SAME original goal and splices in
+         an alternative path, at most ONE replan attempt per goal (a real,
+         explicit guard against retrying a genuinely unreachable goal
+         forever). An optional `executionAvailableTools`/
+         `executionAvailableIngredientEntityIds` override lets execution
+         diverge from what `planIntent` assumed — the honest model of "a
+         robot discovers mid-run that a tool it expected is missing" (this
+         engine has no live sensing — `ENGINE_INVARIANTS.md` #11 — so
+         without this override, plan and execution are always consistent
+         BY CONSTRUCTION, a real, checked property worth naming: nothing
+         could ever actually diverge without it). Deliberately, honestly
+         scoped narrower than "replan anything": single-instance goals
+         only (a `combine` goal is rejected up front, not silently
+         mishandled — splicing a replanned sub-path can change how many
+         instances get spawned partway through, which could invalidate a
+         LATER, already-baked-in `COMBINE` step's `secondaryInstanceId` —
+         a real, larger problem named rather than solved unsoundly here);
+         no PLACE (`FILL`/`HEAT_PLACE`/`PLACE_IN`/`REMOVE`)/`WASH_TOOL`
+         support (a fresh, simpler interpreter built for this function,
+         not `runRecipe`'s own body).
+      \
+      Proven via `npm run capability-test:planner`
+      (`scripts/planner-as-a-robot.ts`) — the flagship case: the FULL
+      `tortilla_de_patatas` dish (fry a potato, crack+beat an egg,
+      combine, fry the result) planned end to end from a bare
+      `RecipeIntent` with ZERO hand-authored `RecipeScript` steps, then
+      ACTUALLY RUN against the real, unmodified `recipe-runner.ts` with
+      zero errors — the correctly-predicted spawn ids
+      (`egg_cracked-2`/`tortilla_mixture-3`) matching exactly what
+      `recipe-runner.ts` itself produces; PLUS a real, honest
+      closed-loop-replanning failure case against REAL data (`CUT`
+      genuinely has no knife-free substitute anywhere in this
+      vocabulary — checked, not assumed — so planning with a knife then
+      executing with only a pan correctly reports a final, honest
+      failure, not a false success). 25 new unit tests
+      (`tests/planner.test.ts`, `tests/recipe-runner.test.ts`) against
+      synthetic fixtures, matching `CLAUDE.md`'s own stated `npm test`/
+      `npm run validate` split. `tsc --noEmit` clean, full existing suite
+      (304 tests total) + `npm run validate` (96 files, 17 recipes) +
+      every capability-test/demo script in the repo re-run with zero
+      regressions.
+- [x] **(original entry, kept for the reachability-closure detail below,
+      now merged with the fuller closure above)** An actual planner —
+      searches `Action`'s existing precondition/effect
       shape (`requiredTargetCapability`/`requiredTools`/
       `requiredIngredientCapabilities`/`requiredSecondaryCapability` as
       preconditions; `outputs.*` as effects — already structurally a STRIPS/
@@ -2117,10 +2244,11 @@ domain facts.
       a direct determinism check (identical query, run twice, identical
       result). 14 new unit tests in `tests/reachability.test.ts` against
       synthetic fixtures, independent of `data/*.json`'s current shape.
-- [ ] Closed-loop / replanning execution mode, distinct from
-      `recipe-runner.ts`'s current "log the failure, continue to the next
-      step anyway" — correct for offline validation, actively wrong if ever
-      reused verbatim to drive a real robot through a physical failure.
+- [x] **Closed-loop / replanning execution mode — closed 2026-08-17.**
+      `recipe-runner.ts`'s new `runRecipeFromIntent` — see the "An actual
+      planner" entry above (sub-item 5) for the full detail; `runRecipe`
+      itself is untouched and remains exactly this "log the failure,
+      continue anyway" behavior for every existing caller.
 - [x] `VerificationCriterion`-per-action — closed 2026-08-12. `action.ts`'s
       `VerificationCriterionSchema` (method/description/confidence), audited
       onto all 21 actions, not left partial. Generalizes the CCP pattern (a

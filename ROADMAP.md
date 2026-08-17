@@ -58,6 +58,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Reject early sensory termination — a plausible "looks done" sensor reading correctly rejected against a real CCP floor (flat + D/z-computed cases), citation printed | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:execution-bounds` |
 | Failure states as a robot — burned/overcooked reachable and correctly terminal, FRY on a burned potato rejected, SALT on the same instance still succeeds, pre-flight advisory fires | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:failure-states` |
 | Is goal still reachable — real dead ends with named reasons, a real gap found by pure graph search then fixed (potato.json's invalidTransitionsAudit2026-08-16), a found path actually executed against the real engine, determinism verified | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:reachability` |
+| PAR_FRY, place-aware readiness gated on real oil temperature — same `assertPlaceReady` mechanism as FRY's, widened not duplicated, correctly reads par-fry.json's own narrower/hotter 145-165°C floor | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:par-fry-shared-pan` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1022,8 +1023,17 @@ covered by what exists:**
       `availableIngredientInstanceIds` presence check alone would have let it
       through — and accepted once `HEAT_PLACE` actually reaches 175°C. Two
       new unit tests in `tests/recipe-runner.test.ts`.
-      **Still genuinely open**: `PAR_FRY` was NOT also wired (identical
-      shape, just not done — named rather than implied covered); the placed
+      **`PAR_FRY` closed 2026-08-17** — `assertPlaceReady`'s `fry` branch
+      widened to `action.id === "fry" || action.id === "par_fry"` rather
+      than duplicated, since it already reads the oilTempC range off
+      whichever `Action` is actually running: `par-fry.json`'s own
+      genuinely narrower/hotter 145-165°C floor (vs. `fry.json`'s
+      120-200°C) is picked up correctly with zero further branching.
+      Proven via `scripts/par-fry-shared-pan-as-a-robot.ts` (`npm run
+      capability-test:par-fry-shared-pan`), which shows 130°C — comfortably
+      inside FRY's own band — still correctly REJECTED for PAR_FRY, and
+      150°C succeeding.
+      **Still genuinely open**: the placed
       food's own internal temperature is still not modeled
       (`heat-penetration.ts`'s separate, potato-only concern, untouched); no
       batch-size/thermal-mass coupling between a cold item dropped in and the

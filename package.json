@@ -51,6 +51,7 @@
     "capability-test:remove-from-place": "tsx scripts/remove-from-place-as-a-robot.ts",
     "capability-test:whisk-egg-white": "tsx scripts/whisk-egg-white-as-a-robot.ts",
     "capability-test:tool-hygiene": "tsx scripts/tool-hygiene-as-a-robot.ts",
+    "capability-test:par-fry-shared-pan": "tsx scripts/par-fry-shared-pan-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

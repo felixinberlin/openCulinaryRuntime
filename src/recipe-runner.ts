@@ -103,8 +103,14 @@ import {
  * (`fry-egg-as-a-robot.ts`); this was purely the schema-level gate catching up.
  * Proven via `scripts/shared-pan-heat-as-a-robot.ts` (`npm run
  * capability-test:shared-pan-heat`) and `data/recipes/fried-egg-shared-pan.json`.
- * `PAR_FRY` was NOT also wired (same shape, genuinely not done — named rather
- * than implied covered).
+ *
+ * **`PAR_FRY` CLOSED 2026-08-17**, extending the exact same branch rather than
+ * duplicating it: `assertPlaceReady`'s condition is now `action.id === "fry" ||
+ * action.id === "par_fry"`, and since it already reads the range off whichever
+ * `Action` is actually passed in, `par-fry.json`'s own genuinely different
+ * 145-165°C floor (vs. `fry.json`'s 120-200°C) is picked up correctly with zero
+ * further branching. Proven via `scripts/par-fry-shared-pan-as-a-robot.ts`
+ * (`npm run capability-test:par-fry-shared-pan`).
  *
  * Still NOT closed by this change, named rather than implied covered: no
  * `Instance.inProgressAction` or `toolLockBehavior`
@@ -553,18 +559,24 @@ function assertPlaceReady(
           `declared ${range.min}-${range.max}°C band. HEAT_PLACE it into range first.`
       );
     }
-  } else if (action.id === "fry") {
+  } else if (action.id === "fry" || action.id === "par_fry") {
     // 2026-08-16, the oil/FRY generalization of the BOIL check above: no
     // single fixed "ready" temperature exists for oil the way boilingPointC
     // does for water (a real, distinct KIND of true — see place.ts's own
-    // doc comment) — read FRY's own declared oilTempC numericRange's
+    // doc comment) — read the action's OWN declared oilTempC numericRange's
     // MINIMUM off the loaded action, same "don't duplicate the number"
     // discipline the SIMMER branch above already uses, rather than
-    // hardcoding a threshold a second time.
+    // hardcoding a threshold a second time. `action` here is whichever of
+    // FRY/PAR_FRY is actually running, so this one branch already reads the
+    // right range for either — no duplicated per-verb logic needed, since
+    // `par_fry.json`'s own 145-165°C floor genuinely differs from `fry.json`'s
+    // 120-200°C one (a real, deliberate difference, not an oversight — PAR_FRY
+    // closed 2026-08-17, extending 2026-08-16's FRY/oil wiring to the verb
+    // that same day's own closing note named as still open).
     const range = action.parameters.find((p) => p.id === "oilTempC")?.numericRange;
     if (range && place.currentTempC < range.min) {
       throw new Error(
-        `${action.verb} references place "${placeId}", but it's only at ${place.currentTempC.toFixed(1)}°C — below FRY's own ` +
+        `${action.verb} references place "${placeId}", but it's only at ${place.currentTempC.toFixed(1)}°C — below ${action.verb}'s own ` +
           `declared ${range.min}°C minimum. HEAT_PLACE it first.`
       );
     }

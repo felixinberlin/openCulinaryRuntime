@@ -84,8 +84,8 @@ console.log(
 );
 
 console.log(
-  "\nStill NOT closed by this script: PAR_FRY (same shape, not wired); the placed egg's own internal " +
-    "temperature (heat-penetration.ts's separate, potato-only concern); no batch-size/thermal-mass coupling " +
-    "between a cold egg dropped in and the oil's own tracked temperature (fry-egg-as-a-robot.ts's own closing " +
-    "note names this same gap — still open)."
+  "\nStill NOT closed by this script: the placed egg's own internal temperature (heat-penetration.ts's " +
+    "separate, potato-only concern); no batch-size/thermal-mass coupling between a cold egg dropped in and the " +
+    "oil's own tracked temperature (fry-egg-as-a-robot.ts's own closing note names this same gap — still " +
+    "open). PAR_FRY closed 2026-08-17 — see scripts/par-fry-shared-pan-as-a-robot.ts."
 );

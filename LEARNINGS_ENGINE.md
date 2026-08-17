@@ -1446,3 +1446,28 @@ was made. Don't rewrite or delete old entries — append.
   discipline (see `knife.json`'s own new note) of naming what's NOT
   reactivated/covered rather than letting an old declaration quietly
   imply more than was ever built.
+
+### PAR_FRY's place-readiness wiring — a same-shaped gap that widened, not duplicated, an existing branch
+
+- **2026-08-17.** `shared-pan-heat-as-a-robot.ts`'s own closing note had
+  named "PAR_FRY (same shape, not wired)" as still open since
+  2026-08-16. Closing it needed exactly one line changed in
+  `recipe-runner.ts`'s `assertPlaceReady`: widening the `fry` branch's
+  condition to `action.id === "fry" || action.id === "par_fry"`, not a
+  second, parallel `par_fry` branch. The reason that's safe and correct
+  rather than a coincidental shortcut: the branch already reads its
+  threshold off `action.parameters` — the actual `Action` object passed
+  in for THIS step — rather than a fixed `fry.json` import, so it was
+  already verb-agnostic in the one dimension that mattered.
+  `par-fry.json`'s own 145-165°C range is genuinely narrower AND
+  hotter-starting than `fry.json`'s 120-200°C (do the two ranges even
+  overlap meaningfully? yes, 145-165 sits inside 120-200 — the "same
+  shape" claim from the closing note held up under an actual check, not
+  just an assumption) — worth the general lesson: when a helper already
+  takes the specific object it needs as a parameter instead of a global
+  constant, "the same shape, not wired for verb B yet" often really is a
+  one-line widening, not a new branch — but only checking (not assuming)
+  that the two verbs' ranges are independently meaningful is what turns
+  that widening into a real proof (the capability-test script's 130°C
+  case exists specifically to demonstrate the two branches don't
+  collapse into one shared threshold by accident).

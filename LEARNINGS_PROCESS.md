@@ -1112,3 +1112,42 @@ was made. Don't rewrite or delete old entries — append.
   instances of the symptom" instinct this repo's other engine-level fixes
   this session (place.ts wiring, execution-bounds) already followed.
 
+### A ticket describing a problem this repo doesn't have — check before refactoring, same discipline as an external document
+
+- **A formally-written ticket ("Ticket 1: Purge External Identifiers and
+  USDA Models from Core Schema") arrived with a specific, confident
+  description of a problem — hardcoded `openFoodFactsId`/`usdaFoodDataId`
+  fields polluting the core schema — that turned out, on an exhaustive
+  case-insensitive grep across the entire repo including `olddocs/`, to
+  not exist anywhere.** The identical discipline this file has applied to
+  every external document/report this session (check every claim against
+  actual repo state before acting, don't trust confident framing) applies
+  just as much to a ticket, maybe more: a ticket's imperative phrasing
+  ("Remove X from all core schemas") reads as an instruction to EXECUTE,
+  which creates real pressure to just start editing files rather than
+  first verifying the premise is true. Acceptance criteria phrased as
+  "grep yields no results" are a particularly seductive trap here — they
+  were trivially, immediately satisfiable by doing NOTHING, which could
+  look indistinguishable from a real fix in a superficial before/after
+  diff if the check itself were skipped.
+- **The tempting shortcut — quietly add the fields the ticket describes
+  just so there's something concrete to remove, producing a clean-looking
+  diff that satisfies the acceptance criteria — was explicitly rejected.**
+  That would have fabricated a false history (implying this repo's core
+  schema was once coupled to external databases when it never was) purely
+  to make a ticket's closure LOOK real. The same "don't claim work that
+  isn't real" standard this whole file exists to enforce for citations and
+  capability tests applies identically to a refactor ticket: a diff that
+  exists only to be reverted for show is worse than no diff, because it
+  actively misrepresents what happened.
+- **Reported the mismatch and asked rather than silently deciding for the
+  user which of several reasonable responses (close as already-satisfied;
+  add a regression guard so the constraint stays durable; treat it as
+  written for a different repo/branch) was intended** — genuinely
+  ambiguous which the user wanted, and the three options have real
+  different costs (a regression guard is actual new code; "already
+  satisfied" is a documentation-only close). Matches this session's
+  established pattern for a genuine fork in direction (the "what's next in
+  ROADMAP" question two turns earlier got the same treatment) rather than
+  either picking silently or refusing to engage until asked to clarify.
+

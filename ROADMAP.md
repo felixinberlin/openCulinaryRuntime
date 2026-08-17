@@ -2842,6 +2842,32 @@ domain facts.
       carries a `composition.nutrientsPer100g` record (water/protein/fat/
       carbohydrate, cited as literature approximations where not measured)
       that this would build on.
+      **"Ticket 1: Purge External Identifiers and USDA Models from Core
+      Schema" checked 2026-08-17, closed as already-satisfied — nothing
+      was removed because there was nothing to remove.** A user-supplied
+      ticket asked to strip `openFoodFactsId`/`usdaFoodDataId`/
+      `mealPatternContribution` out of the core schema into an
+      `extensions/`-style module, and to confirm a generic
+      `extensions: Record<string, unknown>` escape hatch exists on
+      `MetadataSchema`. Checked exhaustively before touching anything
+      (case-insensitive grep across `src/`, `data/`, `scripts/`, `tests/`,
+      every `*.md` including `olddocs/`): all three named fields have
+      ZERO occurrences anywhere in this repo — `UsdaMealPatternContributionSchema`
+      was never built (this bullet's own long-standing `[ ] Not started`,
+      unchanged by this check), and no core schema was ever polluted with
+      a hardcoded external-database foreign key. Every "USDA" hit that
+      does exist (`potato.json`, `egg.json`, `egg_yolk.json`,
+      `data/ccps/egg_cooking.json`, etc.) is a free-text `CitationSchema.
+      source` string (e.g. `"USDA FoodData Central"`) — a citation, not a
+      coupling. The generic extension bag the ticket's own task 4 asked
+      for already exists, under a different but equivalent name: every
+      core schema (`ingredient.ts`, `action.ts`, `recipe.ts`, `thermal.ts`)
+      already carries `metadata: z.record(z.string(), z.unknown()).
+      default({})`. All three of the ticket's own acceptance criteria are
+      therefore already true today. Deliberately did NOT fabricate these
+      fields just to stage a "before" state to refactor away — that would
+      misrepresent this repo's real history for the sake of looking like
+      the ticket did something. See `LEARNINGS_PROCESS.md` 2026-08-17.
 
 ## Phase 7 — Satellite: Web scraper pipeline (Python / BeautifulSoup)
 - [ ] Fetch a recipe URL, extract `<script type="application/ld+json">`.

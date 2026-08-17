@@ -1788,3 +1788,59 @@ was made. Don't rewrite or delete old entries — append.
   action without ever being able to reach `at_requested_duration` — proven
   directly by a dedicated test case and by the capability-test script's own
   Case C (MASH), not just asserted in a doc comment.
+
+- **A ticket's literal wording ("spin up parallel threads") had to be
+  checked against this repo's OWN stated invariant before deciding how to
+  build it, not implemented as literally specified.** `ENGINE_INVARIANTS.md`
+  #9 requires determinism; `recipe-runner.ts`'s `runRecipe` mutates one
+  shared inventory `Map` (plus `PlaceState`s, tool-contamination state)
+  step by step. Genuine concurrent execution of independent steps — real
+  `Promise.all`/worker-thread style concurrency — would mean two steps
+  racing to read/mutate that shared state in a runtime-dependent
+  interleaving, which is nondeterminism by construction, not a
+  performance optimization with no downside. The right response wasn't
+  "the ticket says parallel, so make it parallel" — it was recognizing
+  that what the ticket ACTUALLY needs (a chef not standing idle while
+  water boils) is answered by computing a deterministic SCHEDULE of what
+  concurrent execution would look like, not by executing concurrently.
+  Same category of decision as `in-progress-action.ts`'s earlier one
+  (avoid touching `Instance` directly) — a large-sounding ask has a
+  smaller, safer, still-fully-real implementation once the actual
+  requirement is separated from the specific mechanism the ticket
+  proposed for it.
+- **Extended `runRecipe` itself this time (unlike `execution-bounds.ts`/
+  `in-progress-action.ts`, which stayed fully standalone) — but only for
+  the part that's genuinely safe: EXECUTION ORDER, not execution
+  mechanism.** Switching from raw `recipe.sequence` array iteration to
+  `topologicalOrder`'s output is safe specifically because two independent
+  steps (different `targetInstanceId`s, no `dependsOn` between them)
+  produce an IDENTICAL final inventory state regardless of which runs
+  first — order only matters for correctness where a real dependency
+  exists, and `deriveDependsOn`'s auto-sequential fallback preserves
+  exactly the existing order wherever a recipe doesn't say otherwise. This
+  is a real, provable claim, not an assumption: `npm run validate`
+  re-simulating all 22 existing recipes to an IDENTICAL result is the
+  actual proof, run and checked, not inferred from the algorithm's design
+  alone.
+- **Populating `requiresActiveAttention` across all 26 continuous actions
+  in one pass (rather than only the ~4 needed for the ticket's own demo)
+  was a deliberate completeness call, matching the precedent
+  `actionKind`/`maxDurationSeconds` already set** (both audited across
+  every action in one ticket each, not left half-done) — `validate.ts`'s
+  new NOTE-level check for this field would otherwise have immediately
+  flagged 22 unaudited continuous actions the moment anyone looked, a
+  visible, avoidable gap for a field this cheap to fill correctly up
+  front. Classified as a real technique judgment (does this need
+  watching, yes/no), explicitly NOT treated as a citation-worthy fact —
+  no `REFERENCES.md` entry was added for these 26 classifications, the
+  same reasoning that already applies to e.g. "PEEL requires a knife": a
+  reasoned engineering/domain judgment, not a measured or regulatory
+  claim needing a source.
+- **`RecipeStepError.step` requiring a real `RecipeStep` (not a nullable/
+  optional field) turned a graph-level error (a cycle spanning the WHOLE
+  sequence, not any one step's fault) into a small design question**:
+  attach it to the first step in `recipe.sequence` as the least-wrong
+  available anchor, with a message that says plainly it's a whole-graph
+  problem, rather than changing `RecipeStepError`'s shape (e.g. making
+  `step` optional) just to accommodate one rare case — the existing type
+  stayed exactly as strict as it already was for every other caller.

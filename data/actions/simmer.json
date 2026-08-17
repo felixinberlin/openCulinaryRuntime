@@ -131,7 +131,8 @@
     "pieceSizeNote": "Same parameter, same allowedValues, same src/potato-doneness.ts POTATO_BOIL_DONENESS table as boil.json's identically-named note — see that note for the full reasoning. Arguably the MORE relevant action for 'whole'/'halved_or_quartered' potato specifically, per whyPerTarget above: a rolling boil's turbulence is the real, commonly-cited cause of cracked skins on larger pieces, exactly what SIMMER exists to avoid — POTATO_BOIL_DONENESS's timings apply the same regardless of which verb reached the target temperature, per the same reasoning yolkDonenessNote/haccpNote above already establish for egg.",
     "eggSizeNote": "Same parameter, same allowedValues, same src/egg-doneness.ts EGG_SIZE_ADJUSTMENT_SECONDS as boil.json's identically-named note — the size-vs-timing relationship is a function of the egg's own heat penetration, not of how turbulently the water around it moved to get there.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json — a real, elapsed-time thermal process (holding water in a temperature band), matching the paper's 'heating' example. applyAction still executes it atomically today; see recipe-runner.ts's assertPlaceReady for the one place this engine actually checks the real, place-tracked temperature.",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (2400s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 2400s itself."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (2400s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 2400s itself.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Same hands-off profile as BOIL once established — the whole point of simmering gently rather than at a rolling boil is that it tolerates being left alone."
   },
   "verification": {
     "method": "visual",
@@ -145,5 +146,6 @@
       "note": "Simmering water is still ~85-96°C — splash/scald risk, same as BOIL"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

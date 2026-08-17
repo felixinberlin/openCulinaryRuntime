@@ -69,7 +69,8 @@
     "parameterNotes": "durationSeconds' 30-600s range spans both styles well documented in professional technique: low heat + frequent folding over several minutes yields small, creamy curds (the French/Ramsay style — longer end of the range); higher heat + less frequent stirring sets larger curds faster (the diner-style American scramble — shorter end). curdSize records the intended outcome directly rather than trying to derive it from heatLevel+durationSeconds, since the real determinant (stir frequency) isn't itself modeled as a parameter. None of these are state-determining; see fry.json's parameterNotes for the same heatLevel caveat, and egg_cracked.json's criticalControlPointsByAction for durationSeconds' actual safety-threshold check.",
     "retrySafeNote": "retrySafe: true at the DATA/INVENTORY level only (no duplication, no engine error) — NOT a claim that repeating it is culinarily harmless. Re-running this on an already-finished result risks overcooking/over-working the actual dish, a real physical risk this schema-level flag can't and shouldn't paper over.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): combines the paper's two continuous examples at once — active heating AND stirring, with a real visual curd-formation termination (curdSize parameter) and a durationSeconds parameter already present. DISAGREES with the engine's test (applyAction is one-shot; durationSeconds is only checked as a CCP pass/fail threshold, never accumulated). Classified continuous per TICKET 1's rule — this is fry.json's own reasoning, doubled, since SCRAMBLE was originally split from FRY specifically for its continuous agitation (see fry.json's history).",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (600s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 600s itself."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (600s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 600s itself.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Constant stirring while cooking (scramble.json's own curdSize parameter exists because how it's stirred determines the result) — cannot be left unattended."
   },
   "verification": {
     "method": "visual",
@@ -83,5 +84,6 @@
       "note": "Hot pan, active stirring close to the heat source"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

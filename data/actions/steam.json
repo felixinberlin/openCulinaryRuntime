@@ -5,11 +5,19 @@
     "en": "Steam",
     "es": "Cocer al vapor"
   },
-  "requiredTools": ["steamer_basket"],
-  "requiredToolCapabilities": ["isDeepVessel"],
+  "requiredTools": [
+    "steamer_basket"
+  ],
+  "requiredToolCapabilities": [
+    "isDeepVessel"
+  ],
   "requiredTargetCapability": "isSteamable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isBoilingMedium"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isBoilingMedium"
+  ],
   "parameters": [
     {
       "id": "durationSeconds",
@@ -38,7 +46,8 @@
     "citationNote": "durationSeconds' 600-2400s (10-40 minutes) range reflects a real, cited piece-size dependency (checked via multiple convergent consumer recipe sources this session), not a single point figure: small cubed/baby potatoes ~10-15 minutes, whole potatoes ~30-40 minutes; egg.json's own steamNote has the separate, more precise 12-minute figure for a whole steamed hard-cooked egg. See REFERENCES.md for the full citation list.",
     "toolNote": "requiredTools: ['steamer_basket'] + requiredToolCapabilities: ['isDeepVessel'] together — real steaming needs BOTH a vessel to hold a shallow layer of boiling water AND a basket/insert to keep the food out of that water, not one tool doing both jobs the way BOIL's single isDeepVessel requirement does. See steamer_basket.json's own notes for why this couldn't just reuse an existing tool/capability.",
     "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-steaming an already-finished result risks overcooking, the same caveat every cooking action in this vocabulary already carries.",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process. Not wired to place.ts/HEAT_PLACE (that machinery models a vessel's own contents temperature — water directly touching what's being heated — a steamer basket's contents are a materially different physical situation place.ts doesn't currently model at all, named as a real, separate gap rather than force-fit) — applyAction executes it atomically today."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process. Not wired to place.ts/HEAT_PLACE (that machinery models a vessel's own contents temperature — water directly touching what's being heated — a steamer basket's contents are a materially different physical situation place.ts doesn't currently model at all, named as a real, separate gap rather than force-fit) — applyAction executes it atomically today.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. A steamer basket over held-boiling water — hands-off once set up, the same profile as BOIL/BAKE."
   },
   "verification": {
     "method": "visual",
@@ -52,5 +61,6 @@
       "note": "Rising steam and the boiling water beneath the basket — a real, distinct scald risk (steam burns can be worse than liquid-water burns at the same temperature due to latent heat release on contact with skin), same severity tier as BOIL/SIMMER's own hot_liquid hazard"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

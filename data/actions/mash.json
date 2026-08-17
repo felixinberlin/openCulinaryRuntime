@@ -41,7 +41,8 @@
     "toolGapNote": "A ricer vs. a fork vs. this masher would produce genuinely different real textures (ricer: fine, fluffy, minimal cell rupture; fork: coarse, uneven) — not modeled as separate tools here, same 'built for what's asked, not speculative' discipline as elsewhere; masher.json's own notes flag this precisely rather than implying one generic tool covers every real technique.",
     "retrySafeNote": "retrySafe: true — further mashing an already-mashed potato is physically continuous (more mashing just changes consistency further, same as CRUSH's coarse->fine_paste spectrum in garlic.json), not a discrete duplication risk.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a repeated, worked-until-done mechanical process — verification is explicitly a threshold ('no intact potato pieces remain; texture matches the requested consistency'), not a fixed count of strokes, so more potato mashing genuinely accumulates toward the goal the way stirring does. DISAGREES with the engine's test (applyAction one-shot). Classified continuous per TICKET 1's rule — contrast cut.json, which LOOKS similarly repeated/mechanical but is classified instantaneous because it targets a fixed discrete shape via a bounded stroke count, not an open-ended texture threshold.",
-    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 600s (10 minutes) is a generous ceiling for mashing a real potato batch by hand/masher to a smooth consistency — not derived from any specific cited source."
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 600s (10 minutes) is a generous ceiling for mashing a real potato batch by hand/masher to a smooth consistency — not derived from any specific cited source.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Hands-on masher work for the whole duration, the same profile as CRUSH."
   },
   "verification": {
     "method": "visual",
@@ -55,5 +56,6 @@
       "note": "Manual mashing motion — minor, low-severity strain risk, not a cut/burn/impact hazard like most other tools in this vocabulary"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

@@ -43,7 +43,8 @@
     "invalidTransitionsNote": "See egg_white.json's own invalidTransitionsNote for the real reasoning: every peak stage forbids reverting to any LESS-developed stage (including 'raw') — once air is incorporated and the albumen proteins denature/aggregate at the air-water interface, there is no real technique that removes air or re-dissolves that structure back to liquid raw white, the same one-way-only physical fact egg_cracked.json's fried/scrambled states already assert for a different reason (you cannot un-cook a set curd).",
     "overWhiskedNote": "'over_whisked' (egg_white.json's new terminal failure state, TICKET-5-shaped — see that file's own failureStateNote) is deliberately NOT one of this parameter's allowedValues: a cook whisks TOWARD a real target stage, never deliberately toward over-whisked — it's reached only by continuing past 'stiff_peaks' with no detection mechanism to stop at the right moment, the same authored-fact-only shape burned/overcooked already use elsewhere in this vocabulary, not something this action's own parameter offers as a choice.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a real, elapsed-time, visually-terminated do-until process (whisk until it looks like X) — the same class as MASH/GRATE's repeated-mechanical-strokes shape, genuinely different from CUT's bounded discrete-strokes-toward-a-fixed-geometry shape (see cut.json's own actionKindNote for that exact contrast) despite superficially sharing CUT's transformedStateFromParameter mechanism here.",
-    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced: 600s (10 minutes) is well past how long any real stand/hand mixer takes to reach stiff peaks from raw egg white (commonly a few minutes) — a real timeout ceiling, not a claimed realistic duration; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria ('do not copy the paper's numbers — they have no stated provenance')."
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced: 600s (10 minutes) is well past how long any real stand/hand mixer takes to reach stiff peaks from raw egg white (commonly a few minutes) — a real timeout ceiling, not a claimed realistic duration; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria ('do not copy the paper's numbers — they have no stated provenance').",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Continuous hands-on whisking (egg whites to peaks) for the whole duration — stops the instant the actor's hand stops, the same profile as BEAT/EMULSIFY."
   },
   "verification": {
     "method": "visual",
@@ -57,5 +58,6 @@
       "note": "Same hazard as mix.json's identical entry — an electric mixer's beaters, not a static blade, but the same motorized-attachment risk category."
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

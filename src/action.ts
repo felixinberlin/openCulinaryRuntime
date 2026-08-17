@@ -349,6 +349,40 @@ export const ActionSchema = z
      * numbers — they have no stated provenance."
      */
     maxDurationSeconds: z.number().positive().optional(),
+    /**
+     * Does a `continuous` action need a chef/actor's ongoing hands-on
+     * attention for its whole duration (ACTIVE — CARAMELIZE's periodic
+     * stirring to avoid burning, FRY's watching/flipping, EMULSIFY's
+     * continuous whisking while oil is added), or does it run itself once
+     * started, freeing the actor to do something else in the meantime
+     * (PASSIVE — BOIL/SIMMER/BAKE/ROAST/MARINATE/REST, all real cases where
+     * "walk away and come back" is standard technique, not neglect)? The
+     * real, concrete question ROADMAP.md's "Heat as a shared, time-varying
+     * property of a PLACE" entry raises directly: "a flat list requires a
+     * chef to stand idle... while water boils" — this field is what a
+     * scheduler (`dag-scheduler.ts`) needs to know that's actually FALSE
+     * for BOIL specifically, and actually TRUE for e.g. WHISK.
+     *
+     * Applicable ONLY to `actionKind: "continuous"` actions — an
+     * `instantaneous` action (PEEL/CUT/CRACK/...) is always, definitionally
+     * active: this vocabulary has no such thing as a passive one-shot act,
+     * since it takes literal physical manipulation by an actor to happen at
+     * all (`dag-scheduler.ts` encodes this as a rule, not a per-action
+     * field — every instantaneous action counts as active without needing
+     * an entry here). Optional, not defaulted, same "absent means not yet
+     * audited" precedent as `actionKind`/`maxDurationSeconds` above — every
+     * `continuous` action in this repo was classified as of 2026-08-17
+     * (`LEARNINGS_ENGINE.md` same date), each a real, reasoned technique
+     * judgment (not a citation-worthy fact — this is "does this need
+     * watching," not a measured quantity), but a NEW continuous action
+     * added later should not be assumed covered without checking.
+     *
+     * Does NOT change `applyAction`'s semantics at all, same as
+     * `actionKind`/`maxDurationSeconds` — `engine.ts` is completely
+     * unaware this field exists. Consumed only by `dag-scheduler.ts`'s
+     * `scheduleDag`, standalone, same precedent as `execution-bounds.ts`.
+     */
+    requiresActiveAttention: z.boolean().optional(),
     /** How a machine would confirm this action's effect actually happened —
      *  see VerificationCriterionSchema's doc comment. Optional (existing
      *  actions predate this field), but every action added or touched from

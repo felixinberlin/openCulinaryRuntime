@@ -42,7 +42,8 @@
     "finenessNote": "'cracked'/'ground' added 2026-08-13 for black_pepper.json (whole peppercorns crushed to cracked or ground, the real distinction behind 'freshly cracked black pepper' vs. table-ground — coarse/fine_paste don't fit a dry spice that never becomes a paste). Kept as ONE shared enum on the existing verb rather than a second fineness parameter or a new verb: garlic and pepper both answer the same real question ('how finely was this crushed'), just with different endpoint vocabulary for their respective materials — same reasoning CUT's single 'shape' enum already applies across every choppable entity in this repo, not just potato.",
     "retrySafeNote": "retrySafe: true — further crushing an already-crushed target is physically continuous (coarse -> fine_paste is a spectrum), not a discrete duplication risk.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): repeated pounding/grinding toward a tactile-force threshold (verification.method is literally tactile_force: 'resistance drops to near-zero and texture matches the requested fineness') — an accumulating, sensor-terminated process, the same shape as mash.json. DISAGREES with the engine's test (applyAction one-shot). Classified continuous per TICKET 1's rule.",
-    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 180s (3 minutes) is a generous ceiling for mortar-and-pestle crushing (garlic, spices) — a genuinely fast mechanical task even at its slowest real case — not derived from any specific cited source."
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 180s (3 minutes) is a generous ceiling for mortar-and-pestle crushing (garlic, spices) — a genuinely fast mechanical task even at its slowest real case — not derived from any specific cited source.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Mortar-and-pestle pounding by hand for the whole duration, the same hands-on profile as BEAT/MASH."
   },
   "verification": {
     "method": "tactile_force",
@@ -56,5 +57,6 @@
       "note": "Mortar and pestle — minor pinch/impact risk"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

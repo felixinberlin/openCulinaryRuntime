@@ -28,7 +28,8 @@
     "peelingNote": "Real, secondary benefit, not the main reason this exists: rapid contraction from the temperature drop shrinks the white slightly away from the shell membrane, which is why a shocked hard-boiled egg is noticeably easier to peel than one left to cool slowly. Not enforced here — peel.json's requirements are unchanged, this is real technique advice recorded as domain knowledge, not a hard gate (same honesty limit as everywhere else 'informational only' has been used this session).",
     "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect. Extending ice-bath time has no real downside either — same unambiguous-retry-safety category as pasteurize.json.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): PAPER_NOTES_2608.04768.md's own named 'mirror case' of beat.json — a real, elapsed-time thermal process (rapid cooling in an ice bath, physically the reverse of heat_place's warming), with a real thermal termination ('cool to the touch within roughly a minute'). DISAGREES with the engine's test (applyAction is one-shot: addsTag 'shocked' fires instantly, no elapsed cooling is modeled). Classified continuous per TICKET 1's rule — the correspondence check in TICKET 1 step 3 (every thermal-verified action should be continuous) holds here once this classification is applied, closing what would otherwise be the one violation.",
-    "maxDurationSecondsNote": "HOUSE VALUE, but anchored to this file's own existing verification.description (\"cool to the touch within roughly a minute\") rather than invented from nothing: 300s is 5x that stated expected completion time, generous headroom for a real ice bath (more ice, larger item, warmer starting temperature) rather than a tight target — the expected ~60s remains what the sensory do-until condition itself watches for; this is only the backstop."
+    "maxDurationSecondsNote": "HOUSE VALUE, but anchored to this file's own existing verification.description (\"cool to the touch within roughly a minute\") rather than invented from nothing: 300s is 5x that stated expected completion time, generous headroom for a real ice bath (more ice, larger item, warmer starting temperature) rather than a tight target — the expected ~60s remains what the sensory do-until condition itself watches for; this is only the backstop.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Submerged in an ice bath — passive once the instance is in the water, nothing further for an actor to do."
   },
   "verification": {
     "method": "thermal",
@@ -42,5 +43,6 @@
       "note": "Ice water — minor cold-discomfort risk to bare skin, not a real hazard when using tools"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

@@ -25,7 +25,8 @@
     "notes": "One of CONCEPT.md §10's Event System verbs (PICK_UP, DROP, CUT, MOVE, HEAT, WAIT, MIX). potato_peel.json is the first entity to declare isBlendable — a second reuse path alongside FRY (data/actions/fry.json): peels can be fried into crisps or put in a mixer instead of being discarded.",
     "retrySafeNote": "retrySafe: true — further mixing an already-blended target is physically continuous, not a discrete duplication risk.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same shape of disagreement as beat.json — visual, until-texture-uniform termination (verification.description: 'no distinct unblended chunks remaining') is a real do-until process by the paper's test, matching 'stirring' closely. DISAGREES with the engine's test (applyAction is one-shot, no duration parameter exists at all). Classified continuous per TICKET 1's rule.",
-    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 300s (5 minutes), same reasoning as beat.json — a generous ceiling for hand mixing/folding ingredients together, not derived from any specific cited source."
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 300s (5 minutes), same reasoning as beat.json — a generous ceiling for hand mixing/folding ingredients together, not derived from any specific cited source.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Hands-on stirring/combining for the whole duration."
   },
   "verification": {
     "method": "visual",
@@ -39,5 +40,6 @@
       "note": "Electric mixer/blender — motorized blade risk, distinct from a static knife's"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

@@ -57,7 +57,8 @@
     "retrySafeNote": "retrySafe: true — engine.ts guards addsTag against duplicates ('!instance.tags.includes(...)'), so re-running this after an interruption is a silent no-op, not a double effect. Unlike most cooking actions' culinary caveat, extending pasteurization time has no real downside (it stays raw either way) — one of the few actions where retry is unambiguously safe both at the data level AND culinarily.",
     "toolCapabilityNote": "requiredTools changed from ['pot'] to requiredToolCapabilities: ['isDeepVessel'] 2026-08-14 — same fix, same reasoning as boil.json's toolCapabilityNote: a water bath deep enough to submerge an egg/yolk is the real requirement, not the one entity literally named 'pot'.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example — a real, elapsed-time thermal process (holding a target temperature for a D/z-value-derived duration, src/thermal.ts). applyAction executes it atomically today (checking the duration as a pass/fail threshold, not simulating the hold) — an honest gap, not silently closed by this field.",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (7200s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 7200s itself."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (7200s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 7200s itself.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Holding at a target water-bath temperature for a required time — the same hands-off profile as BOIL once the temperature is reached."
   },
   "verification": {
     "method": "thermal",
@@ -71,5 +72,6 @@
       "note": "Sustained warm water bath — lower scald risk than a rolling boil, but prolonged exposure"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

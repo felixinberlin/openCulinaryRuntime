@@ -28,7 +28,8 @@
     "brineNote": "The real reason this matters beyond just closing a dead state: dissolved salt in water is a brine — a genuinely important, common technique (pickling, brining meat/poultry before cooking) this repo does not otherwise represent at all. Naming the adjacency rather than building it: a real brine also needs a concentration/ratio concept and a soak-duration/diffusion model, neither of which exists here — DISSOLVE only reaches the state 'dissolved', not a formalized brine strength.",
     "retrySafeNote": "retrySafe: true — re-stirring already-dissolved salt is physically harmless and idempotent, same reasoning as WASH's identical flag.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a real, elapsed-time diffusion process (salt crystals dissolving isn't instant) with a real observable termination ('no visible undissolved salt crystals remain'). Genuinely distinct sub-case worth naming: PASSIVE/ambient (like infuse.json), not actively agitated the way beat/mix/emulsify are — but still continuous by the paper's literal two-part test (evolves over time, terminates on an observable condition), not fire-and-forget. DISAGREES with the engine's test (applyAction one-shot). Classified continuous per TICKET 1's rule.",
-    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 300s (5 minutes) is a generous ceiling covering even a cold, unstirred, larger-batch case of table salt dissolving in water (a warm, stirred case completes in well under a minute by common food-science knowledge) — not independently re-verified against a specific study."
+    "maxDurationSecondsNote": "HOUSE VALUE, not independently sourced. 300s (5 minutes) is a generous ceiling covering even a cold, unstirred, larger-batch case of table salt dissolving in water (a warm, stirred case completes in well under a minute by common food-science knowledge) — not independently re-verified against a specific study.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Salt dissolving into water/liquid over time — nothing for an actor to do but wait."
   },
   "verification": {
     "method": "visual",
@@ -36,5 +37,6 @@
     "confidence": "medium"
   },
   "hazards": [],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

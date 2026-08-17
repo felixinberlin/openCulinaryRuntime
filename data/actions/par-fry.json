@@ -60,7 +60,8 @@
     "loadNote": "The same source also notes adding too many pieces at once drops oil temperature excessively, recommending frying only about half a batch at a time to hold the target oilTempC — a real, batch-size/thermal-mass interaction, PARTIALLY addressed 2026-08-14: src/place.ts now models the oil's own heat capacity for real (advanceTempSeconds, oil.json's specificHeatJPerKgK), closing the 'no concept of oil's own heat capacity' half of this gap named when this note was first written. What's still genuinely unmodeled: place.ts has no concept of a target instance's own thermal mass being added to (and cooling) the oil — dropping a batch of cold fries into hot oil is a real heat-exchange event between two masses, and nothing here computes the resulting temperature drop or how many 'target instances' constitute one applyAction call's batch. Named as the real remainder, not silently implied closed by the heat-capacity half that IS now real.",
     "retrySafeNote": "retrySafe: true at the DATA/INVENTORY level only (no duplication, no engine error) — same caveat as fry.json's identical flag: re-running this on an already-par-fried or already-finished potato risks over-cooking it, a real physical risk this schema-level flag can't paper over.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as fry.json — a real, elapsed-time thermal process in oil, matching the paper's 'heating' example. Not yet wired to the place.ts/HEAT_PLACE readiness check (named as a deliberate, close follow-up in recipe-runner.ts's own top doc comment) — applyAction executes it atomically today.",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (600s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 600s itself."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (600s) rather than a new number — the top of an already-established real range doubles as a reasonable timeout ceiling; see PAPER_NOTES_2608.04768.md TICKET 2's acceptance criteria (\"do not copy the paper's numbers\") and this action's own durationSeconds parameter for the reasoning behind 600s itself.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Same real technique profile as FRY — requires watching, not a walk-away process."
   },
   "verification": {
     "method": "visual",
@@ -74,5 +75,6 @@
       "note": "Hot oil splatter; pan-surface contact burn risk — same hazard as FRY"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

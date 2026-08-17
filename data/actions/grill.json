@@ -5,10 +5,16 @@
     "en": "Grill",
     "es": "Asar a la parrilla"
   },
-  "requiredTools": ["grill"],
+  "requiredTools": [
+    "grill"
+  ],
   "requiredTargetCapability": "isGrillable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isFryingMedium"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isFryingMedium"
+  ],
   "parameters": [
     {
       "id": "grillTempC",
@@ -51,7 +57,8 @@
     "durationNote": "480-1800s (8-30 minutes) — a real range reflecting genuine ingredient/prep dependency, not a single point figure: onion rounds/wedges commonly run 8-15 minutes total (both sides); potato (usually parboiled first — see alkaline_parboil.json/potato.json's own statePrerequisites, though a plain BOIL/SIMMER parboil is the more commonly-cited prerequisite for grilling specifically, not the alkaline variant) commonly runs 15-30 minutes. Same 'be flexible with measures' discipline roast.json's own durationNote already applies.",
     "statePrerequisitesNote": "Deliberately NO statePrerequisites entry on this action itself — like ROAST, real technique varies by ingredient (see each entity's own grillNote for what it specifically requires/recommends).",
     "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-grilling an already-finished result risks drying out/burning, the same caveat every high-heat cooking action in this vocabulary already carries.",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's/roast.json's identical classification — a real, elapsed-time thermal process. No place.ts/heat-source.ts wiring exists (grill.json has no thermophysical data, the same honest gap oven.json's own actionKindNote already names for its own tool) — applyAction executes it atomically today."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's/roast.json's identical classification — a real, elapsed-time thermal process. No place.ts/heat-source.ts wiring exists (grill.json has no thermophysical data, the same honest gap oven.json's own actionKindNote already names for its own tool) — applyAction executes it atomically today.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Direct open-flame/grate heat needs watching and flipping to avoid burning, the same profile as FRY."
   },
   "verification": {
     "method": "visual",
@@ -65,5 +72,6 @@
       "note": "Open flame/hot grates — direct burn risk, plus real fire/flare-up risk from dripping oil that neither an oven nor a stovetop pan carries"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

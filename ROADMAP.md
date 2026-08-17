@@ -1839,6 +1839,102 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       `RecipeScript` against `engine.ts`, collects errors/warnings without
       halting on the first failure, handles `destroyed` instances and
       spawned byproducts.
+- [x] **"Refactor Recipe Execution Model to a DAG" ticket — closed
+      2026-08-17, deliberately SCOPED, not built as literally specified.**
+      A user-supplied ticket asked for a full transition from a linear
+      array to a graph model with genuine parallel execution ("spin up
+      parallel threads"). Checked against this engine's own stated
+      invariant before building anything: `ENGINE_INVARIANTS.md` #9
+      requires determinism, and `recipe-runner.ts`'s `runRecipe` mutates
+      ONE shared inventory `Map` (plus `PlaceState`s, tool-contamination
+      state) step by step — genuine concurrent mutation of that shared
+      state is exactly the nondeterminism-risk class #9 exists to rule
+      out, not a gap to fill. "Parallel threads" is therefore interpreted
+      as computing what a concurrent SCHEDULE would be, deterministically,
+      as read-only information — not literal OS/JS-runtime concurrency —
+      named explicitly rather than silently reinterpreted.
+      \
+      **What's real:** `RecipeStepSchema` (`recipe.ts`) gained optional
+      `id`/`dependsOn: string[]` fields — fully backward compatible, every
+      one of the 22 real recipes existing before this change has neither.
+      New `src/dag-scheduler.ts`: `resolveStepId`/`deriveDependsOn`
+      (auto-derives sequential edges for any step without an explicit
+      `dependsOn` — the exact mechanism that satisfies "existing linear
+      imports auto-generate sequential dependsOn edges," since every
+      existing recipe already IS this kind of flat, linear import; no
+      Cooklang parser exists yet to import FROM, per `CLAUDE.md`'s own
+      module table, so this is proven against real recipe data directly
+      rather than a hypothetical Cooklang fixture), `topologicalOrder`
+      (Kahn's algorithm — a valid execution order, or the exact cycle,
+      never both), and `scheduleDag`/`scheduleDagFromSteps` (a real,
+      honest GREEDY list-scheduling heuristic over one shared "active"
+      actor resource plus unlimited "passive" capacity — NOT claimed
+      provably optimal; true resource-constrained scheduling with
+      precedence is NP-hard in general, named as such rather than
+      overclaimed). New `action.ts` field `requiresActiveAttention`
+      (ACTIVE — needs a chef/actor's ongoing hands, e.g. FRY/CARAMELIZE/
+      WHISK/EMULSIFY — vs. PASSIVE — runs itself once started, e.g.
+      BOIL/SIMMER/BAKE/ROAST/MARINATE/REST), populated across all 26
+      `continuous` actions with real, reasoned technique judgment (not a
+      citation-worthy fact — `LEARNINGS_ENGINE.md` 2026-08-17), same
+      "flag unaudited, don't fail" NOTE-level check added to
+      `scripts/validate.ts` as `actionKind`/`maxDurationSeconds` already
+      have. `recipe-runner.ts`'s `runRecipe` now executes steps in real
+      TOPOLOGICAL order (not raw array order) — still single-pass, still
+      deterministic, still one mutation at a time, but genuinely
+      dependency-aware; a cyclic recipe is caught and the run stops before
+      touching inventory, rather than executing in an undefined order.
+      Genuinely behavior-preserving: `deriveDependsOn`'s auto-sequential
+      fallback reproduces every existing recipe's original array order
+      exactly, proven by `npm run validate` re-simulating all 22 real
+      recipes identically (zero regressions) — not asserted, checked.
+      \
+      Acceptance criteria: cycle detection proven both on every real
+      recipe (0 found, correctly) and a synthetic in-memory cyclic case
+      (correctly rejected) — `topologicalOrder`'s own return type makes
+      "cycle" and "valid order" mutually exclusive, and since `runRecipe`
+      now calls it internally, `scripts/validate.ts`'s existing
+      hard-fail-on-any-step-error behavior ALREADY catches a cyclic real
+      recipe with zero new validate.ts code, not a separately maintained
+      check. The exact "10 minutes, not 15" numeric scenario is proven in
+      `tests/dag-execution.test.ts` (the ticket's own named filename, 20
+      new unit tests, synthetic fixtures) — passive BOIL (600s) concurrent
+      with active CHOP (300s) schedules to exactly 600s, not 900s; two
+      ACTIVE tasks correctly serialize (cannot overlap, one shared actor);
+      two PASSIVE tasks correctly overlap fully (unlimited capacity); a
+      join node ("toss pasta in sauce") correctly waits for the LATER of
+      two dependencies, not the first. Real-data proof (not just synthetic)
+      via `scripts/dag-schedule-as-a-robot.ts`
+      (`npm run capability-test:dag-schedule`):
+      `data/recipes/garlic-oil-potatoes.json` retrofitted with explicit
+      `id`/`dependsOn` (its own new `dagNote`) — a genuine independent
+      potato-prep/garlic-prep branch pair AND a real join node
+      (`fry_potato` depends on BOTH `cut_potato` and `infuse_oil`,
+      confirmed to start at the LATER finish time); a real cited-duration
+      demo (BOIL potato 1200s passive, `mashed-potatoes.json`'s own
+      figure, concurrent with CARAMELIZE onion 900s active,
+      `caramelize.json`'s own `numericRange.min`) computes 1200s total
+      vs. 2100s linear — 900s (15 minutes) real savings.
+      \
+      **Deliberately NOT done, named rather than silently scoped out:**
+      `recipe-runner.ts` does not execute steps concurrently — inventory
+      mutation stays single-threaded and sequential, by design (see
+      above); no multi-actor/multi-robot modeling exists (one shared
+      "active" resource, not N); `steps` was NOT migrated from an array to
+      an "indexed dictionary or graph node list" as the ticket's own task
+      2 literally specified — a `RecipeStep[]` array with optional
+      `id`/`dependsOn` fields is already fully graph-addressable (any step
+      can be referenced by a stable id regardless of array position),
+      making a representational rewrite of all 22 real recipe files +
+      every consumer of `RecipeScript.sequence` pure churn for zero
+      functional gain, a call made explicitly rather than followed
+      blindly; `garlic-oil-potatoes.json`'s own real-world quality
+      constraint (garlic left waiting in hot oil turns bitter) is NOT
+      expressible by this DAG — it encodes causal/data dependency only,
+      not a "must happen within N seconds of that" freshness constraint,
+      a real, separate, unbuilt mechanism, named in that recipe's own
+      `dagNote`. See `LEARNINGS_ENGINE.md` 2026-08-17 for the design
+      reasoning, especially the determinism-vs-"parallel threads" call.
 
 ## Phase 4 — Validation engine
 - [ ] `OcrValidationEngine` class as a named class — `engine.ts`'s

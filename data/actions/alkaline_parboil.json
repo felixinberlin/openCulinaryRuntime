@@ -6,10 +6,17 @@
     "es": "Precocer en agua alcalina"
   },
   "requiredTools": [],
-  "requiredToolCapabilities": ["isDeepVessel"],
+  "requiredToolCapabilities": [
+    "isDeepVessel"
+  ],
   "requiredTargetCapability": "isAlkalineParboilable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isBoilingMedium", "isAlkalizingAgent"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isBoilingMedium",
+    "isAlkalizingAgent"
+  ],
   "parameters": [
     {
       "id": "durationSeconds",
@@ -39,7 +46,8 @@
     "saltInWaterNote": "The real recipe also salts the parboiling water (2 tbsp per 2 quarts) — deliberately NOT modeled as a second requiredIngredientCapabilities entry here, same reasoning egg.json's crackContainmentNote already gives for salt-in-boiling-water generally: this repo's SALT verb targets a food entity directly (isSeasonable), not a bulk cooking liquid, and water.json has no additive-concept capability for it. Named as a real, present-but-unmodeled part of the technique rather than silently omitted.",
     "chemistryNote": "See baking_soda.json's own alkalizationNote for the full mechanism/citation — pectin demethylation/solubilization accelerated by alkaline pH, the same underlying cell-wall chemistry fry.json's agitationNote already cites (Binner, Jardine & Renard 2000) for a DIFFERENT context (mechanical agitation during frying), here deliberately induced by chemistry instead.",
     "retrySafeNote": "retrySafe: true at the data/inventory level (no duplication) — but re-parboiling an already-parboiled potato risks over-softening it to the point of falling apart, the same culinary caveat every cooking action in this vocabulary already carries.",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process with a visual/tactile termination criterion ('knife meets little resistance'). applyAction executes it atomically today, an honest gap named rather than hidden."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process with a visual/tactile termination criterion ('knife meets little resistance'). applyAction executes it atomically today, an honest gap named rather than hidden.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. A brief, gentle simmer once the baking-soda water is going — the same hands-off profile as BOIL/SIMMER once started, not a watched process."
   },
   "verification": {
     "method": "visual",
@@ -53,5 +61,6 @@
       "note": "Boiling water, same handling risk as BOIL/SIMMER"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

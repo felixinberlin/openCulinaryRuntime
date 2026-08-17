@@ -66,6 +66,7 @@
     "capability-test:physical-feasibility-rules": "tsx scripts/physical-feasibility-rules-as-a-robot.ts",
     "capability-test:self-authored-rules": "tsx scripts/self-authored-common-sense-rules-as-a-robot.ts",
     "capability-test:in-progress-action": "tsx scripts/check-in-on-a-cooking-instance-as-a-robot.ts",
+    "capability-test:dag-schedule": "tsx scripts/dag-schedule-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

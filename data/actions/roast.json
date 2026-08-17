@@ -5,10 +5,16 @@
     "en": "Roast",
     "es": "Asar al horno"
   },
-  "requiredTools": ["oven"],
+  "requiredTools": [
+    "oven"
+  ],
   "requiredTargetCapability": "isRoastable",
-  "validTargetKinds": ["ingredient"],
-  "requiredIngredientCapabilities": ["isFryingMedium"],
+  "validTargetKinds": [
+    "ingredient"
+  ],
+  "requiredIngredientCapabilities": [
+    "isFryingMedium"
+  ],
   "parameters": [
     {
       "id": "ovenTempC",
@@ -51,7 +57,8 @@
     "durationNote": "1500-3600s (25-60 minutes) — a real range, not a single point figure, because it genuinely depends on piece size and whether the potato was parboiled first (both checked via multiple convergent consumer recipe sources this session, not asserted): small diced pieces roasted directly run ~25 minutes; larger halves/quarters ~35-45 minutes; a parboiled batch (alkaline_parboil.json) commonly runs the full ~50-60 minutes since it starts from a softer, wetter piece needing more time to crisp. Deliberately not narrowed to one sub-case's figure, the same 'be flexible with measures' discipline cut-shape-dimensions.ts's own fry-timing advisory already applies.",
     "statePrerequisitesNote": "Deliberately NO statePrerequisites entry — real roast-potato technique genuinely varies: some recipes roast raw cut/oiled potatoes directly (simpler, still real and common); Kenji's own 'extra-crispy' method (data/actions/alkaline_parboil.json) is a real, cited UPGRADE on top of that, not the only valid path. ROAST is callable from any cut-shape state OR from 'alkaline_parboiled', matching FRY's own 'no statePrerequisites, callable from any state' precedent rather than forcing one specific technique.",
     "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-roasting an already-finished result risks drying out/burning, the same caveat every oven/pan cooking action in this vocabulary already carries (bake.json's identical note).",
-    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's identical classification — a real, elapsed-time thermal process. No place.ts/oven wiring exists yet (oven.json has no thermophysical data, same honest gap bake.json's own actionKindNote already names) — applyAction executes it atomically today."
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's identical classification — a real, elapsed-time thermal process. No place.ts/oven wiring exists yet (oven.json has no thermophysical data, same honest gap bake.json's own actionKindNote already names) — applyAction executes it atomically today.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Oven-driven dry heat, same profile as BAKE."
   },
   "verification": {
     "method": "visual",
@@ -65,5 +72,6 @@
       "note": "Oven cavity and bakeware — sustained high-temperature contact burn risk, same as bake.json"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

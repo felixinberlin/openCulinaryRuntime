@@ -21,6 +21,7 @@ import {
   isRawContaminationRisk,
   type ToolContaminationState,
 } from "./tool-hygiene.ts";
+import { topologicalOrder, resolveStepId } from "./dag-scheduler.ts";
 
 /**
  * Walks a RecipeScript's sequence against engine.ts's applyAction, the way
@@ -609,7 +610,46 @@ export function runRecipe(
   const toolContamination = new Map<string, ToolContaminationState>();
   let spawnCounter = 0;
 
-  for (const step of recipe.sequence) {
+  // DAG-execution ticket (ROADMAP.md, 2026-08-17, dag-scheduler.ts): steps
+  // are executed in a real, dependency-respecting TOPOLOGICAL order, not
+  // raw `recipe.sequence` array position — for every recipe written before
+  // `RecipeStep.id`/`dependsOn` existed (all 22 real ones as of this
+  // change), `deriveDependsOn`'s auto-sequential fallback reproduces the
+  // exact original array order, so this is a behavior-PRESERVING change,
+  // not a reinterpretation — proven by `npm run validate` re-simulating
+  // every real recipe identically. This does NOT make execution
+  // concurrent: still one step at a time, still one mutation of
+  // `inventory`/`places`/`toolContamination` per step, in a SAFE order —
+  // `dag-scheduler.ts`'s own top doc comment explains why genuine
+  // concurrent mutation of this shared state is deliberately NOT
+  // attempted here (`ENGINE_INVARIANTS.md` #9). A recipe whose STEPS form
+  // a cycle (a real authoring bug, not a legal dish) has no valid
+  // execution order at all — recorded as a single error against the
+  // recipe's first step (there is no more specific step to blame; the
+  // cycle is a property of the WHOLE graph) and the run stops before
+  // touching inventory, rather than executing in an arbitrary, undefined
+  // order.
+  const topo = topologicalOrder(recipe.sequence);
+  if ("cycle" in topo) {
+    errors.push({
+      step: recipe.sequence[0]!,
+      message: `Circular dependency among steps [${topo.cycle.join(", ")}] — no valid execution order exists.`,
+    });
+    return {
+      finalInventory: inventory,
+      errors,
+      log,
+      warnings,
+      places,
+      placeContents,
+      spawnedEntityIds,
+      toolContamination,
+    };
+  }
+  const stepById = new Map(recipe.sequence.map((s, i) => [resolveStepId(s, i), s] as const));
+  const orderedSteps = topo.order.map((id) => stepById.get(id)!);
+
+  for (const step of orderedSteps) {
     const action = actions.get(step.actionId);
 
     if (!action) {

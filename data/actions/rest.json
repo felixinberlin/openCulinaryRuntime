@@ -39,7 +39,8 @@
     "genericityNote": "Deliberately entity-agnostic (isRestable capability, not a fixed target list) precisely because 'let it sit before the next step' is a real technique that recurs across genuinely unrelated dishes for genuinely different underlying physical reasons (moisture/heat redistribution in a fried potato vs. residual-heat protein setting + flavor absorption in a raw-egg mixture) — this action does not attempt to model WHY resting matters for any specific entity (informational only, same non-causal depth as every other timing parameter in this vocabulary); each entity's own metadata documents its own specific reason, this file just provides the shared mechanism.",
     "durationSecondsNote": "60-1800s (1-30 minutes) spans FOUR real cited use cases, widened a THIRD time 2026-08-17 (the prior 120s floor lowered to 60s) once a fourth, shorter real case turned up — the same 'widen the range, cite why' discipline EGG_SIZE_ADJUSTMENT_SECONDS's own history already established, now applied to this field for a third distinct occasion: par-fry.json's own source specifies 'at least 10 minutes' (600s) for the par-fry-to-fry rest; tortilla de patatas' combine-to-fry rest is commonly cited across multiple convergent consumer recipe sources (Spanish Sabores, Kitchen Frau, and others) at anywhere from 5 to 20 minutes (300-1200s); Di Lorenzo & Di Maio's 'Periodic cooking of eggs' (Communications Engineering, 2025, REFERENCES.md) uses a real, cited, much shorter 2-minute (120s) dwell per bath — data/recipes/periodic-cooking-of-eggs.json; and — the real forcing case for THIS widening — letting a just-boiled, just-drained potato steam-dry for as little as 60 seconds (commonly cited up to 3-5 minutes) before mashing, `data/recipes/mashed-potatoes.json`, `REFERENCES.md`. The four ranges overlap rather than being identical, which is expected: they're different techniques for different reasons that happen to share the same verb, not one universal 'correct' resting time.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): purely elapsed-time passing with no discrete completion signal beyond the clock itself — the clearest possible case for actionKind: 'continuous' under the paper's own test, even though (unlike BOIL/SIMMER/FRY) nothing here is actively driven by a heat source. verification.method: 'elapsed_time_only' reflects the same fact from VerificationCriterionSchema's own enum — there is no visual/thermal/tactile signal to check, only whether the clock ran out.",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (1800s) — same convention as fry.json's/par-fry.json's identically-named notes."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (1800s) — same convention as fry.json's/par-fry.json's identically-named notes.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified PASSIVE. Literally just letting an instance sit — passive by definition, the clearest possible case."
   },
   "verification": {
     "method": "elapsed_time_only",
@@ -47,5 +48,6 @@
     "confidence": "high"
   },
   "hazards": [],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": false
 }

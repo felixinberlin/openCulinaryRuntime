@@ -109,7 +109,8 @@
     "durationSecondsNote": "900-2700s (15-45 minutes) spans both real cited methods: López-Alt's faster deglazed method (~15-20 min = 900-1200s) at the bottom, the traditional low-and-slow method (~30-45 min = 1800-2700s) at the top. Genuinely caramelized onion — deep amber, jammy, sweet — is not achievable much faster than the lower bound regardless of technique; this is not FRY's much wider, less specific 10s-30min range.",
     "donenessNote": "Same informational-only, non-state-determining discipline as fry.json's doneness parameter (see that file's own donenessNote for why: ActionOutputsSchema has no default-value mechanism for a parameter-driven state, only one fixed transformedState OR one parameter-driven one per action) — CARAMELIZE's transformedState is fixed at 'caramelized' regardless of which doneness value is recorded; 'soft_translucent'/'golden' describe real intermediate waypoints on the way there (useful for a recipe wanting to record progress or an early stopping point) even though only 'deep_caramel' is what most recipes actually mean by 'caramelized onions'.",
     "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a genuinely open-ended, accumulating do-until process (color/texture threshold crossed by 'more of the same' low, patient heat over many minutes) — the same class as BOIL/SIMMER/FRY, not a bounded discrete act like CUT/PEEL. Both discriminators (elapsed-time dependence, unreliably-sensed completion) agree.",
-    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (2700s) — same convention as fry.json's/boil.json's identically-named notes: the top of an already-established real range doubles as a reasonable timeout ceiling, not a new number."
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (2700s) — same convention as fry.json's/boil.json's identically-named notes: the top of an already-established real range doubles as a reasonable timeout ceiling, not a new number.",
+    "requiresActiveAttentionNote": "Added 2026-08-17 (DAG-execution ticket, action.ts's own requiresActiveAttention doc comment) — classified ACTIVE. Real technique requires periodic stirring/watching to avoid scorching (caramelize.json's own agitation/heatLevel parameters exist because unattended onion burns) — not a walk-away process."
   },
   "verification": {
     "method": "visual",
@@ -123,5 +124,6 @@
       "note": "Extended pan/oil exposure at low-to-medium heat over many minutes — lower splatter risk than high-heat frying, but a real burn risk from prolonged contact and from the fond catching if left unattended too long"
     }
   ],
-  "retrySafe": true
+  "retrySafe": true,
+  "requiresActiveAttention": true
 }

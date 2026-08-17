@@ -382,6 +382,16 @@ for (const action of actions.items.values()) {
           `actionKind is "${action.actionKind}", not "continuous" — confirm this is deliberate.`
       );
     }
+    // requiresActiveAttention (action.ts, 2026-08-17, DAG-execution ticket) —
+    // same "flag unaudited, don't fail" treatment, only meaningful for
+    // continuous actions (an instantaneous action is always active by
+    // definition — see that field's own doc comment).
+    if (action.actionKind === "continuous" && action.requiresActiveAttention === undefined) {
+      console.log(
+        `NOTE actions/${action.id}.json: requiresActiveAttention not audited — does this need a chef/actor's ongoing ` +
+          `hands-on attention (ACTIVE), or does it run itself once started (PASSIVE)?`
+      );
+    }
   }
 }
 

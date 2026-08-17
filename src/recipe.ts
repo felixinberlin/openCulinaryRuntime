@@ -31,6 +31,33 @@ export const RecipeInstanceSchema = z.object({
 export type RecipeInstance = z.infer<typeof RecipeInstanceSchema>;
 
 export const RecipeStepSchema = z.object({
+  /**
+   * A stable, recipe-local id for THIS STEP (distinct from
+   * `targetInstanceId`, which names the INGREDIENT/tool instance the step
+   * acts on — one instance can be the target of many steps, so it can't
+   * double as a step id). Optional, defaulting via `dag-scheduler.ts`'s
+   * `resolveStepId` to the step's own array index (as a string) when
+   * absent — every recipe written before this field existed (all 22 real
+   * ones as of 2026-08-17) is completely unaffected; `dependsOn` below can
+   * still reference an un-id'd step by its index-derived id. See
+   * `dag-scheduler.ts`'s own doc comment for the full DAG-execution design
+   * this field is part of (ROADMAP.md's "recipe execution as a DAG" entry).
+   */
+  id: z.string().min(1).optional(),
+  /**
+   * Recipe-local ids of steps that must complete before this one may
+   * begin — `dag-scheduler.ts`'s edges. Optional: when omitted, the step
+   * implicitly depends on the immediately preceding step in `sequence`
+   * (see `dag-scheduler.ts`'s `deriveDependsOn`) — the exact linear
+   * ordering every recipe already had before this field existed, made
+   * explicit rather than silently assumed. A step with an EXPLICIT
+   * `dependsOn: []` (empty array, not omitted) genuinely has no
+   * prerequisite and may run first/concurrently with any other
+   * zero-dependency step — the mechanism `garlic-oil-potatoes.json` uses
+   * to mark its potato-prep and garlic-prep branches as real, independent
+   * work.
+   */
+  dependsOn: z.array(z.string()).optional(),
   actionId: z.string().min(1),
   /** Recipe-local instance id this step targets — either from initialInventory, or an id spawned by an earlier step. */
   targetInstanceId: z.string().min(1),

@@ -1743,3 +1743,48 @@ was made. Don't rewrite or delete old entries — append.
   key and need a real schema change (a separate
   `secondaryStatePrerequisites` map); named as a real, currently-inert
   edge case rather than pre-built for a situation that doesn't exist yet.
+
+- **Given a genuinely large, structural item to pick up ("Heat as a shared,
+  time-varying property of a PLACE" — user-selected from three real
+  candidates), the right scope wasn't "build all of it" — it was finding
+  the SMALLEST slice that's real, provable, and doesn't require touching
+  `engine.ts`'s core `Instance` type or `applyAction`'s atomicity at
+  all.** The tempting first design (add `inProgressAction` as a new field
+  directly on `Instance`) was rejected specifically because `Instance` is
+  threaded through nearly every file in this repo (`engine.ts`,
+  `recipe-runner.ts`, `recipe-explain.ts`, `planner.ts`, `reachability.ts`,
+  `tool-hygiene.ts`, dozens of scripts/tests) — a change there has a blast
+  radius disproportionate to what this slice actually needed to prove.
+  Built `src/in-progress-action.ts` as a fully standalone set of pure
+  functions instead, taking an `Action`+`params`+a simulated start time as
+  plain arguments rather than a mutated `Instance` field — the same
+  "prove the mechanism is real via a script before touching the execution
+  loop" discipline `place.ts`/`execution-bounds.ts` already established,
+  applied here specifically to avoid a large, risky refactor of a
+  pervasively-used type for a slice that didn't need it.
+- **Composed the new module directly on top of `execution-bounds.ts`'s
+  `ExecutionBound` rather than re-deriving a second "how long should this
+  run" concept.** `progressStatus` takes an `ExecutionBound | undefined`
+  as an argument instead of re-reading CCPs/`maxDurationSeconds` itself —
+  the SAME `minSafeHoldSeconds`/`maxDurationSeconds` pair now answers both
+  "may a sensor end this early" (execution-bounds.ts's own question) and
+  "where in that range is this instance right now" (this module's
+  question), from one real, cited source of truth rather than two that
+  could drift apart. Worth naming as a general pattern this repo keeps
+  reusing: when a new capability needs a number a DIFFERENT module already
+  computes correctly, take that module's OUTPUT as an input rather than
+  reimplementing the computation — `place.ts`'s `estimatedPreheatSeconds`
+  reused the same way by `boil-potato-as-a-robot.ts`/`egg-doneness.ts` is
+  the earlier instance of this same discipline.
+- **A real design decision worth stating explicitly: `requestedDurationSeconds`
+  being `undefined` (an action like MASH/BEAT/CRUSH that has no
+  `durationSeconds` parameter at all) is NOT an error case or a "TODO,
+  handle this later" — every function in the module treats it as a real,
+  first-class "not applicable," distinct from 0 or from an unset-but-
+  expected value.** `fractionOfRequestedDuration`/`remainingRequestedSeconds`
+  return `undefined` rather than guessing a number from `maxDurationSeconds`
+  (which is a CEILING, not the caller's actual target), and
+  `progressStatus` can still correctly reach `forced_timeout` for such an
+  action without ever being able to reach `at_requested_duration` — proven
+  directly by a dedicated test case and by the capability-test script's own
+  Case C (MASH), not just asserted in a doc comment.

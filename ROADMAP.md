@@ -1559,6 +1559,47 @@ covered by what exists:**
       verification); its actual proposal (3+ input assembly, not just
       two) is a different, real, still-unbuilt extension worth
       distinguishing from that inaccurate framing.
+      **The `Instance.inProgressAction` query half CLOSED 2026-08-17** —
+      `src/in-progress-action.ts` (`beginAction`/`progressStatus`/
+      `fractionOfRequestedDuration`/`remainingRequestedSeconds`), the
+      concrete design input named above actually built, composing
+      directly with `execution-bounds.ts`'s already-real
+      `ExecutionBound` (the same `minSafeHoldSeconds` safety floor/
+      `maxDurationSeconds` forced ceiling that module already computes)
+      rather than re-deriving a second notion of "how long should this
+      take." Answers a real, previously-unanswerable question: given a
+      continuous action that started some simulated seconds ago, is it
+      still below its safety floor, in progress, at its own caller-
+      requested duration, or past the forced timeout ceiling — plus how
+      far into that requested duration it is and how much is left. Same
+      standalone-module-before-engine-wiring precedent as `place.ts`/
+      `execution-bounds.ts` itself: `engine.ts`'s `applyAction` is
+      completely UNCHANGED — it stays atomic. Proven via 16 new unit
+      tests (`tests/in-progress-action.test.ts`, synthetic fixtures) and
+      `scripts/check-in-on-a-cooking-instance-as-a-robot.ts`
+      (`npm run capability-test:in-progress-action`) across four real
+      cases: BOIL egg walked through its own real CCP floor then its own
+      requested duration; FRY given a requested duration LONGER than its
+      real `maxDurationSeconds` ceiling (proves the forced timeout fires
+      regardless of what was asked for); MASH, a real action with NO
+      `durationSeconds` parameter at all (proves `requestedDurationSeconds`/
+      the fraction/remaining functions correctly report "not applicable"
+      rather than guessing, while the forced ceiling still tracks
+      correctly); PEEL, an instantaneous action (proves `beginAction`
+      correctly refuses to track something with no partial-completion
+      concept at all). Deliberately does NOT close the other named half
+      of this gap: `recipe-runner.ts` does not construct an
+      `InProgressAction` or pause a step mid-execution anywhere — this is
+      a query mechanism proven against a hypothetical already-started
+      action, not real execution-loop pause/resume. The two CONCRETE
+      cases this whole entry names (an egg's shape settling/spreading
+      over its first several seconds after cracking; basting applied
+      repeatedly DURING a fry, not once) remain unmodeled — this answers
+      "how far along, in TIME," not "what does the food actually look
+      like partway through," a harder question with its own real
+      physical facts this pass deliberately did not attempt to source.
+      `toolLockBehavior` (mutual exclusion on a shared tool) also remains
+      completely unbuilt, a different, real, separate mechanism.
 - [x] **Storage/shelf-life common knowledge — closed 2026-08-17.**
       `ingredient.ts`'s new `StorageLifeSchema` + `EntitySchema.
       storageLifeByState` (keyed by state id, the same per-state-fact shape

@@ -67,6 +67,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Crispy roast potatoes** (real alkaline-parboil technique — ROAST + ALKALINE_PARBOIL + baking_soda.json, generalizes across potato/garlic/onion, real BAKE-vs-ROAST mechanical distinction proven) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- crispy_roast_potatoes` / `npm run capability-test:roast` |
 | **Easy-peel steamed egg** (STEAM — genuinely different verb from BOIL, own state for potato backed by a real measured vitamin-retention difference, egg's widened statePrerequisites proven load-bearing, real HACCP wiring + an honest unreachable-shortfall finding) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- easy_peel_steamed_egg` / `npm run capability-test:steam` |
 | **Grilled potatoes and onions** (GRILL — mechanically distinct tool from ROAST, both directions of rejection proven, generalizes across potato/garlic/onion, real parboil-vs-direct technique difference wired correctly) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- grilled_potatoes_and_onions` / `npm run capability-test:grill` |
+| **Quick-pickled onions** (MARINATE — mechanically distinct from ACID via a real duration requirement, generalizes across onion/garlic/egg with three genuinely different real timescales from 30 minutes to 10 days) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- quick_pickled_onions` / `npm run capability-test:marinate` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -790,7 +791,11 @@ covered by what exists:**
       dated entry further down. **`STEAM` closed 2026-08-17** — see this
       same bullet's own dated entry, further down still. **`GRILL`
       closed 2026-08-17**, same day — see this same bullet's own dated
-      entry, further down again. Still open: `MARINATE`, `KNEAD`.
+      entry, further down again. **`MARINATE` closed 2026-08-17**, same
+      day — see this same bullet's own dated entry, further down once
+      more. Still open: `KNEAD` (blocked on flour/dough not existing in
+      this vocabulary at all yet — see "Far more staple ingredients"
+      above).
       **`DRAIN` closed 2026-08-16** (`data/actions/drain.json`) — resolves
       the "does `REMOVE`'s own `strainer_drain`/`poured_out`
       `removalMethod` values already cover this" question this same entry
@@ -1001,6 +1006,43 @@ covered by what exists:**
       `place.ts`/`heat-source.ts` wiring (same honest gap `ROAST`/`BAKE`
       already carry); no char/smoke-flavor modeling beyond the
       `verification.description` string.
+      \
+      **`MARINATE` closed 2026-08-17**, the same day (`data/actions/
+      marinate.json`) — a real, DURATION-based, passive process,
+      mechanically distinct from `ACID` (`data/actions/acid.json`, an
+      instant tag-add with no elapsed time at all), not a longer version
+      of the same verb — proven directly, not asserted:
+      `scripts/marinate-any-ingredient-as-a-robot.ts`'s own step 2 shows
+      `ACID` succeeding instantly while `MARINATE` correctly rejects a
+      duration below its own declared minimum. Reuses `acid.json`'s own
+      `isAcid` capability (`vinegar.json`) rather than inventing a second
+      one for the identical real ingredient fact. Generalizes across
+      THREE real entities with THREE genuinely different real timescales,
+      not glossed into one average — the actual reason for
+      `durationSeconds`' unusually wide 1800-864000s (30 minutes to 10
+      days) range, named explicitly rather than left looking like
+      padding: quick-pickled onion (sliced, ~30 minutes, the flagship
+      case — `data/recipes/quick-pickled-onions.json`, simulated
+      end-to-end with zero step errors, `npm run recipe --
+      quick_pickled_onions`), pickled garlic (individual peeled cloves —
+      a real, DIFFERENT prep from `ROAST`/`GRILL`'s own whole-bulb
+      technique for the same ingredient), and British pub-style pickled
+      eggs (peeled hard-boiled egg, a minimum of 3 days, commonly 10 —
+      REFERENCES.md). A real, correct food-safety CONTRAST named
+      explicitly rather than defaulting to `infuse.json`'s own garlic-
+      in-OIL botulism caution for a structurally different case:
+      acid (vinegar) is itself the classical preservation mechanism
+      real commercial shelf-stable pickled products rely on — not
+      modeled as a new CCP either way (`thermal.ts`'s own scope stays
+      temperature/hold-time only), named in `marinate.json`'s own
+      `foodSafetyNote`. Proven via `npm run capability-test:marinate`
+      (`scripts/marinate-any-ingredient-as-a-robot.ts`). Zero new engine
+      code — a pure data/schema-population addition, the same shape as
+      `ROAST`/`STEAM`/`GRILL`/`CARAMELIZE`/`DRAIN` before it. Still NOT
+      closed: no elapsed-real-world-time or refrigeration-duration
+      tracking anywhere in this engine — "marinated for 10 days,
+      refrigerated" is an authored fact, never verified, the same
+      limitation `storageLifeByState`/`infuse.json` already name.
 - [x] **Tortilla FLIP physics, and the real link to FRY's `agitation`
       parameter — closed 2026-08-16.** A direct user question ("is moving
       potato pieces in oil the same logic as flipping a tortilla") plus a

@@ -1,0 +1,33 @@
+{
+  "id": "quick_pickled_onions",
+  "names": {
+    "en": "Quick-Pickled Onions",
+    "es": "Cebolla Encurtida Rápida"
+  },
+  "initialInventory": [
+    { "id": "onion-1", "entityId": "onion", "state": "raw", "tags": [] },
+    { "id": "vinegar-1", "entityId": "vinegar", "state": "raw", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": { "kind": "imprecise", "descriptor": "pinch", "approxRangeGrams": { "min": 0.3, "max": 0.6 }, "citation": { "source": "Commonly cited culinary conversion: 1 pinch ≈ 1/16 tsp of fine table salt", "confidence": "commonly_cited_unverified" } }
+    }
+  ],
+  "availableTools": ["knife", "bowl"],
+  "sequence": [
+    { "actionId": "peel", "targetInstanceId": "onion-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "onion-1", "params": { "shape": "sliced" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "marinate",
+      "targetInstanceId": "onion-1",
+      "params": { "durationSeconds": "1800" },
+      "availableIngredientInstanceIds": ["vinegar-1"]
+    },
+    { "actionId": "salt", "targetInstanceId": "onion-1", "params": { "timing": "before_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "The real, cited quick-pickled red onion technique (see data/actions/marinate.json's own citationNote and REFERENCES.md): thinly sliced onion submerged in vinegar for 1800 seconds (30 minutes, the commonly-cited minimum). The first real recipe to exercise MARINATE, closing ROADMAP.md's own 'More common technique verbs' gap alongside the flagship real dish it was named for."
+  }
+}

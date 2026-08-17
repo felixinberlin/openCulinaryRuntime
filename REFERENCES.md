@@ -842,6 +842,25 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   (added 2026-08-17, `ROADMAP.md`'s "More common technique verbs" gap) —
   `grillTempC`/`durationSeconds` ranges and their own `temperatureNote`/
   `durationNote`. Confidence: `commonly_cited_unverified`.
+- **Convergent consumer recipe sources on quick-pickled red onion**
+  (Gimme Some Oven, Two Peas & Their Pod, Rachel Cooks, Simple Joy,
+  Cookie and Kate, America's Test Kitchen, and others independently
+  checked) — thinly sliced onion submerged in a hot vinegar/water/salt
+  brine, minimum ~30 minutes to pickle, refrigerator-stable up to 2
+  weeks. Used in `data/actions/marinate.json` (added 2026-08-17,
+  `ROADMAP.md`'s "More common technique verbs" gap) and
+  `data/entities/onion.json`'s own `marinateNote`. Confidence:
+  `commonly_cited_unverified`.
+- **Convergent food-blog sources on British pub-style pickled eggs**
+  (That's Nerdalicious, RecipeLand, All Food Board, Food Blog Alliance,
+  Eat Healthy 365, and others independently checked) — hard-boiled,
+  peeled eggs submerged in a vinegar/spice brine, a minimum of 3 days
+  refrigerated before eating, commonly 10 days for full flavor
+  development. Used in `data/entities/egg.json`'s new `marinateNote` and
+  `data/actions/marinate.json`'s own `durationSeconds` range (1800-864000s,
+  30 minutes to 10 days) — the deliberately wide range spanning both this
+  and the much-faster onion-pickling case above, not a single point
+  figure. Confidence: `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

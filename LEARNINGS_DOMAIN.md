@@ -1426,3 +1426,40 @@ was made. Don't rewrite or delete old entries — append.
   just that one direction happens to work — a cheap, worthwhile addition
   once the first check was already being written.
 
+### MARINATE — a verb-pair distinction proven by a MISSING parameter, not a different one, and a range honestly widened by 480x rather than split into two verbs
+
+- **MARINATE's distinction from the already-existing ACID verb turned out
+  to be provable by the ABSENCE of a parameter on one side, not a
+  different value of the same parameter — a cleaner proof than most of
+  this session's other verb-pair distinctions (GRILL/ROAST's tool
+  rejection, ROAST/BAKE's ingredient requirement).** ACID has no
+  `durationSeconds` parameter at all — it's an instantaneous tag-add;
+  MARINATE has a real, required-range `durationSeconds`. Checking this
+  meant literally calling ACID with no duration argument and watching it
+  succeed anyway, immediately, which is itself the proof that ACID was
+  never modeling elapsed time to begin with (not merely "modeling a short
+  elapsed time"). Worth noting as a distinct FLAVOR of verb-pair
+  distinction from this session's earlier ones: sometimes the checkable
+  fact is "these two actions require a genuinely different SHAPE of
+  input," not just a different range on the same one.
+- **Onion's real marinating timescale (~30 minutes) and egg's (3-10 days)
+  differ by roughly three orders of magnitude, and the honest response
+  was ONE action with a very wide declared range plus an explanatory
+  note, not two separate verbs or a narrowed, misleading range.** The
+  instinct to split was real (this session split `PAR_FRY`/`FRY`,
+  `ROAST`/`BAKE`, `GRILL`/`ROAST`, `ALKALINE_PARBOIL`/`BOIL` on exactly
+  this kind of "these produce different results" reasoning) — but the
+  actual result HERE is the same kind of thing at both timescales (acid
+  penetration into a solid over time, texture/color change), just at
+  wildly different rates depending on the specific food's structure
+  (thin, permeable onion slices vs. a dense, already-cooked egg white) —
+  a real difference in RATE, not in what the process fundamentally is.
+  The same three-orders-of-magnitude range that would be a red flag for
+  "these are secretly different verbs" in another context was, once
+  checked against what's actually physically happening, just an honest
+  description of one real process applied to structurally different
+  foods. Worth stating as the calibration this session's repeated
+  same-verb-vs-different-verb judgment call was building toward: the
+  test isn't "how different are the numbers," it's "is the same physical
+  mechanism producing both."
+

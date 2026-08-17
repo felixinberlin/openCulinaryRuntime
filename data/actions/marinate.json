@@ -1,0 +1,49 @@
+{
+  "id": "marinate",
+  "verb": "MARINATE",
+  "names": {
+    "en": "Marinate",
+    "es": "Marinar"
+  },
+  "requiredTools": ["bowl"],
+  "requiredTargetCapability": "isMarinatable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isAcid"],
+  "parameters": [
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "seconds",
+        "min": 1800,
+        "max": 864000
+      }
+    }
+  ],
+  "outputs": {
+    "transformedState": "marinated",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 864000,
+  "metadata": {
+    "notes": "A real, DURATION-based, passive process — genuinely different from ACID (data/actions/acid.json), not a longer version of the same verb: ACID adds a tag ('acidified') instantaneously, an immediate seasoning splash; MARINATE actually SOAKS the target in an acid over real elapsed time, producing a measurably different result (softened texture, real acid penetration, a genuinely different named preparation — 'pickled/marinated onion' is not 'onion with vinegar on it') — the same 'own transformedState, not a shared one' judgment call ROAST/STEAM/GRILL/CARAMELIZE already made for an analogous reason. requiredIngredientCapabilities: ['isAcid'] reuses the exact capability acid.json already established on vinegar.json, rather than inventing a second one for the identical real ingredient fact. requiredTools: ['bowl'] stands in for 'some real container to submerge the target in' — the same convention COMBINE/BEAT already use, not a claim a mixing bowl specifically is required.",
+    "citationNote": "durationSeconds' 1800-864000s (30 minutes to 10 days) range is deliberately WIDE because it spans two genuinely different real timescales this vocabulary applies it to, not one glossed-over average: quick-pickled onion (~30 minutes, a hot-brine technique, REFERENCES.md) and British pub-style pickled hard-boiled eggs (a minimum of 3 days, commonly 10 for full flavor, REFERENCES.md) — see each entity's own marinateNote for which real technique applies. Presenting one narrow range would have misrepresented one of the two real cases; presenting the true range and naming why it's wide is the honest choice, the same 'be flexible with measures' discipline roast.json's own durationNote already establishes.",
+    "foodSafetyNote": "A real, correct food-safety CONTRAST worth stating explicitly, not smoothed over: garlic/onion/egg marinated in an ACID (vinegar, low pH) is a genuinely different, safer situation than garlic held in OIL (infuse.json's own safetyNote — an anaerobic, non-acidic environment real Clostridium botulinum spores can grow in). Vinegar's acidity is itself the classical, real preservation mechanism (commercial shelf-stable pickled products exist) — this is NOT modeled as a CriticalControlPointSchema entry either way (thermal.ts's own CCP scope is deliberately temperature/hold-time only, the same reasoning infuse.json's safetyNote already gives), but the underlying physical situation is real and worth being accurate about rather than defaulting to the SAME caution infuse.json names for a structurally different case. Still genuinely unmodeled: this engine has no elapsed-real-world-time or refrigeration-duration concept at all (the same limitation named throughout storageLifeByState/infuse.json), so 'marinated for 10 days, refrigerated the whole time' is asserted, never verified.",
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-marinating an already-marinated target risks over-souring/over-softening past the intended result, the same caveat every cooking/processing action in this vocabulary already carries.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a real, passive, elapsed-time diffusion process with a real observable termination (texture/color/taste) — the same AMBIENT sub-case dissolve.json's own actionKindNote already established (nobody is actively driving it, unlike stirring/frying), applied here to acid penetration instead of a dissolving solid."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Visibly softened/translucent texture and color change consistent with acid penetration (e.g. red onion turning bright pink) — the direct, observable proxy for actual acid penetration, which can't be seen directly",
+    "confidence": "low"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

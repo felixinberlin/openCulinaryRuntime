@@ -1,4 +1,4 @@
-import { type Entity, type Allergen, isTerminalState } from "./ingredient.ts";
+import { type Entity, type Allergen, type StorageLife, isTerminalState } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
@@ -135,6 +135,23 @@ export interface RecipeExplanation {
    * not an approximation of it.
    */
   allergenSummary: Allergen[];
+  /**
+   * Real, cited storage/shelf-life guidance (`ingredient.ts`'s
+   * `StorageLifeSchema`, `ROADMAP.md`'s "Storage/shelf-life common
+   * knowledge" gap, closed 2026-08-17) for every `initialInventory` item
+   * whose STARTING state has a `storageLifeByState` entry on its entity —
+   * e.g. a recipe starting with `egg-1` in state `"raw"` gets that entity's
+   * `storageLifeByState.raw` if one exists. Deliberately keyed to the
+   * item's AUTHORED starting state, not every state that entity happens to
+   * have guidance for — a recipe starting with an already-`"boiled"` egg
+   * should see the boiled figure, not the raw one, the same "describe what
+   * was actually declared" discipline `allergenSummary` above already
+   * follows for `initialInventory`. Same DECLARATION-only scope as
+   * `allergenSummary`: this repo has no elapsed-real-world-time concept
+   * (`StorageLifeSchema`'s own doc comment), so this can say WHAT the
+   * guidance is, never whether THIS specific instance is still within it.
+   */
+  storageSummary: { instanceId: string; entityId: string; state: string; storageLife: StorageLife }[];
 }
 
 function candidatesForCapability(
@@ -475,6 +492,20 @@ export function explainRecipe(
   }
   const allergenSummary = [...allergenSet].sort();
 
+  const storageSummary: RecipeExplanation["storageSummary"] = [];
+  for (const item of recipe.initialInventory) {
+    const entity = entities.get(item.entityId);
+    const storageLife = entity?.storageLifeByState[item.state];
+    if (storageLife) {
+      storageSummary.push({
+        instanceId: item.id,
+        entityId: item.entityId,
+        state: item.state,
+        storageLife,
+      });
+    }
+  }
+
   return {
     tools: {
       needed: [...toolsNeeded],
@@ -487,5 +518,6 @@ export function explainRecipe(
     actionKinds,
     executionBounds,
     allergenSummary,
+    storageSummary,
   };
 }

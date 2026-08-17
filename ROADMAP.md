@@ -61,6 +61,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | PAR_FRY, place-aware readiness gated on real oil temperature — same `assertPlaceReady` mechanism as FRY's, widened not duplicated, correctly reads par-fry.json's own narrower/hotter 145-165°C floor | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:par-fry-shared-pan` |
 | Unit tests per forbidden-transition rule — 42 real, shipped invalidTransitions rules (potato/egg/egg_cracked/onion) run against the real engine, including a real redundancy finding (egg's own PEEL prerequisite makes some entries structurally dead weight) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:invalid-transitions` |
 | POACH with any vessel — the last verb holding an exact-id tool check generalized to `isVessel`, correcting a real overclaimed "standard" technique note along the way (two real, cited, different vessel shapes for two real techniques) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:poach-any-vessel` |
+| Storage/shelf-life — real, cited, state-keyed storageLifeByState (egg raw vs. boiled genuinely different; potato's doNotRefrigerate), surfaced via recipe-explain.ts's storageSummary and recipe-narrator.ts's new section, computed over all 17 real recipes | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:storage-life` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1158,10 +1159,56 @@ covered by what exists:**
       verification); its actual proposal (3+ input assembly, not just
       two) is a different, real, still-unbuilt extension worth
       distinguishing from that inaccurate framing.
-- [ ] **Storage/shelf-life common knowledge** (partially, deliberately
-      out-of-scope already for one case — `infuse.json`'s garlic-in-oil
-      botulism note, `LEARNINGS_DOMAIN.md` 2026-08-12 — but nothing general exists:
-      no "how long is this safe/good for" anywhere).
+- [x] **Storage/shelf-life common knowledge — closed 2026-08-17.**
+      `ingredient.ts`'s new `StorageLifeSchema` + `EntitySchema.
+      storageLifeByState` (keyed by state id, the same per-state-fact shape
+      `criticalControlPointsByAction` already uses per-action, since
+      storage life is genuinely different per state on the SAME entity —
+      raw shell egg keeps 3-5 weeks refrigerated, the same egg hard-boiled
+      keeps ~1 week: `refrigeratedDays`/`roomTempHours`/`pantryMonths`/
+      `doNotRefrigerate`, each an optional real, cited range, not a false-
+      precision point value). Applied to 5 real entities as an honest,
+      checked slice — NOT "all," same discipline this whole section holds
+      itself to: `egg.json` (raw + boiled/peeled, real, dramatically
+      different USDA-sourced figures), `egg_yolk.json`/`egg_white.json`
+      (raw, once separated — a much shorter figure than the intact shell
+      egg), `potato.json` (raw — `doNotRefrigerate: true`, a real,
+      cited, food-QUALITY-not-safety fact connecting directly to this
+      repo's own existing frying-physics citations: refrigeration converts
+      starch to sugar, increasing browning/acrylamide when later fried),
+      `garlic.json` (raw whole bulb only — deliberately does NOT cover
+      peeled/chopped garlic or garlic-in-oil, the shorter-lived, real
+      food-SAFETY case `infuse.json`'s own pre-existing `safetyNote`
+      already named and is cross-referenced from, not duplicated).
+      Deliberately DECLARATION only, the exact same scoping precedent
+      `AllergenSchema` (2026-08-16) already established: this engine has
+      no elapsed-real-world-time concept (no purchase date, no "how long
+      has this actually been in the fridge" — the same honest limitation
+      `egg.json`'s own `freshnessNote` names for fresh/aged tags), so
+      nothing here says whether a SPECIFIC instance is still within range,
+      only what the range is. Surfaced two ways, mirroring
+      `allergenSummary`'s own precedent exactly: `recipe-explain.ts`'s new
+      `storageSummary` (keyed to each `initialInventory` item's own
+      AUTHORED starting state, not every state its entity happens to have
+      guidance for) and `recipe-narrator.ts`'s new "Storage & shelf life"
+      Markdown section. `scripts/validate.ts` hard-fails a
+      `storageLifeByState` key not in the entity's own `possibleStates`,
+      the same standard `invalidTransitions`/`rawContaminationRiskStates`
+      already hold themselves to. Proven via `npm run
+      capability-test:storage-life` (`scripts/storage-life-as-a-robot.ts`)
+      — every real entity's real data printed, the state-specific keying
+      demonstrated directly against the real `egg` entity (raw: 21-35
+      refrigerated days vs. boiled/peeled: 1-7), `storageSummary` computed
+      over every one of this repo's 17 real recipes with zero errors, and
+      potato's `doNotRefrigerate` fact confirmed present. 8 new unit tests
+      (`tests/recipe-explain.test.ts`). Deliberately NOT closed: most
+      entities in this repo still have zero `storageLifeByState` entries
+      (a real, honest, checkable gap, not implied covered); a leftover
+      COOKED dish's own shelf life is a `RecipeScript`-level fact this
+      repo doesn't model at all (named, not attempted); the USDA "Danger
+      Zone" 2-hour room-temperature rule is cited in `REFERENCES.md` but
+      not yet applied to any real entity — no forcing case has needed
+      `roomTempHours` yet.
 - [x] **Yield/waste factors — closed 2026-08-16.** `producedByproducts`
       recorded WHAT spawns, never HOW MUCH — `ingredient.ts`'s new
       `YieldFractionSchema` (`Entity.typicalYieldFractionOfParent`, placed

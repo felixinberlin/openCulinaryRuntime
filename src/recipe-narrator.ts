@@ -2,7 +2,7 @@ import type { Entity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
 import type { CriticalControlPoint } from "./thermal.ts";
-import { explainRecipe } from "./recipe-explain.ts";
+import { explainRecipe, type RecipeExplanation } from "./recipe-explain.ts";
 import { runRecipe } from "./recipe-runner.ts";
 
 /**
@@ -104,6 +104,13 @@ export interface RecipeNarration {
    *  `RecipeExplanation`, so a narrated/read-back recipe says "this dish
    *  contains egg" the same way it already says what tools it needs. */
   allergenSummary: string[];
+  /** `explainRecipe`'s `storageSummary` — real, cited "how long is this
+   *  safe/good for" guidance for whichever `initialInventory` items have
+   *  it, at their AUTHORED starting state (`ingredient.ts`'s
+   *  `StorageLifeSchema`, `ROADMAP.md`'s "Storage/shelf-life common
+   *  knowledge" gap). Same "surface it in the read-back document, not just
+   *  the machine-facing explanation" reasoning as `allergenSummary` above. */
+  storageSummary: RecipeExplanation["storageSummary"];
   runErrors: string[];
   ranCleanly: boolean;
 }
@@ -233,6 +240,7 @@ export function narrateRecipe(
     timingAdvisories: explanation.timingAdvisories,
     prepAdvisories: explanation.prepAdvisories,
     allergenSummary: explanation.allergenSummary,
+    storageSummary: explanation.storageSummary,
     runErrors: result.errors.map(
       (e) => `${e.step.actionId} on ${e.step.targetInstanceId}: ${e.message}`
     ),
@@ -258,6 +266,42 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
     n.allergenSummary.length > 0
       ? `⚠️ Contains: **${n.allergenSummary.join(", ")}** (FDA "Big 9" — \`ingredient.ts\`'s \`AllergenSchema\`).`
       : `None of the FDA "Big 9" major allergens (\`ingredient.ts\`'s \`AllergenSchema\`) are declared on any \`initialInventory\` ingredient.`
+  );
+  p();
+
+  p(`## Storage & shelf life`);
+  p();
+  if (n.storageSummary.length > 0) {
+    for (const entry of n.storageSummary) {
+      const parts: string[] = [];
+      if (entry.storageLife.refrigeratedDays) {
+        const { min, max } = entry.storageLife.refrigeratedDays;
+        parts.push(`refrigerated: ${min}-${max} days`);
+      }
+      if (entry.storageLife.roomTempHours) {
+        const { min, max } = entry.storageLife.roomTempHours;
+        parts.push(`room temperature: ${min}-${max} hours`);
+      }
+      if (entry.storageLife.pantryMonths) {
+        const { min, max } = entry.storageLife.pantryMonths;
+        parts.push(`pantry: ${min}-${max} months`);
+      }
+      if (entry.storageLife.doNotRefrigerate) parts.push("do NOT refrigerate");
+      p(`- **${entry.instanceId}** (${entry.entityId}, starting state "${entry.state}"): ${parts.join(", ")} — ${entry.storageLife.citation.source}`);
+    }
+  } else {
+    p(
+      `No storage/shelf-life guidance (\`ingredient.ts\`'s \`StorageLifeSchema\`) is declared for any ` +
+        `\`initialInventory\` ingredient at its starting state — either none has been audited yet, or every ` +
+        `ingredient here starts already mid-preparation (a state this repo doesn't have separate storage ` +
+        `guidance for).`
+    );
+  }
+  p();
+  p(
+    `_Reference knowledge only — this repo has no concept of elapsed real-world time (no purchase date, no ` +
+      `"how long has this actually been stored"), so this cannot say whether THIS instance is still within range, ` +
+      `only what the range is._`
   );
   p();
 

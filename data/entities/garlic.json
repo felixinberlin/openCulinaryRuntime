@@ -36,6 +36,16 @@
     "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "boiled", "fried", "baked", "coarse", "fine_paste", "emulsified"]
   },
   "producedByproducts": ["garlic_peel"],
+  "storageLifeByState": {
+    "raw": {
+      "pantryMonths": { "min": 1, "max": 6 },
+      "citation": {
+        "source": "USDA FoodKeeper app (whole unbroken bulb, 1 month) plus convergent consumer sources citing 3-6 months for cool/dark/ventilated storage (Fresh Keeper, Mill, Michigan State University Extension) — via search summary, primary pages not directly fetched this session",
+        "confidence": "commonly_cited_unverified",
+        "note": "'raw' here is the whole, unbroken, unpeeled bulb — a cool, dark, well-ventilated pantry or mesh bag, NOT the refrigerator (humidity there promotes sprouting/mold). The wide range reflects genuinely different sources: USDA FoodKeeper's own conservative 1-month figure vs. several convergent consumer sources citing 3-6 months under ideal conditions — presented as a real range rather than picking one and hiding the disagreement. Deliberately does NOT cover peeled/chopped garlic or garlic held in oil — that is a SHORTER-lived, food-SAFETY (not just quality) case already named in infuse.json's own safetyNote (a real, documented Clostridium botulinum risk in oil's anaerobic environment), left there rather than duplicated/conflated here."
+      }
+    }
+  },
   "capabilities": {
     "isPeelable": true,
     "isChoppable": true,

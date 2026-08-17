@@ -1232,3 +1232,46 @@ was made. Don't rewrite or delete old entries — append.
   exactly the kind of drift this repo's own discipline (`CLAUDE.md`'s
   "every factual claim traces to a real source") exists to prevent.
 
+### `storageLifeByState` — keying by state, not entity, was decided by one concrete number pair, not a design preference
+
+- **"How long is this safe to keep" looked at first like it could reuse
+  `EntitySchema`'s existing flat, entity-level shape (`thermophysical`,
+  `physicalDimensions`) — one object, a few optional fields.** Looking up
+  the actual real numbers for egg specifically (not designing the schema
+  before checking any real data) is what changed that: a raw shell egg
+  keeps 3-5 WEEKS refrigerated; the same egg, once hard-boiled, keeps only
+  about 1 WEEK — roughly a 5x difference for the identical entity, not a
+  rounding nuance a single flat field could quietly average away. Once that
+  number pair was in hand, keying by state (mirroring
+  `criticalControlPointsByAction`'s existing per-action shape, applied to
+  states instead) was the only honest option — the same "check the real
+  numbers before assuming a design generalizes" discipline this repo's
+  `invalidTransitions`/`cut.json` dimension work already established,
+  applied to a schema-shape decision this time rather than a data claim.
+- **Two independent, both-real reasons an ingredient can want a
+  DIFFERENT storage answer than "refrigerate it," and conflating them
+  would have been a real mistake**: potato's `doNotRefrigerate: true` is a
+  food-QUALITY fact (starch converts to sugar below ~42°F, affecting later
+  frying) — the potato is not less SAFE refrigerated, it just fries worse.
+  Garlic-in-oil's already-existing, deliberately-uncovered risk
+  (`infuse.json`'s `safetyNote`) is the opposite: a real food-SAFETY
+  concern (botulism), not a quality one. Both are real reasons to say
+  "don't just refrigerate this by default," but they're different KINDS of
+  true — worth keeping `doNotRefrigerate` as a quality-scoped boolean on
+  `StorageLifeSchema` rather than trying to make one field cover both, and
+  worth explicitly naming (in both files) which kind each instance is,
+  rather than letting "don't refrigerate this" read as one undifferentiated
+  warning.
+- **Several primary government pages (fsis.usda.gov, idahopotato.com) all
+  independently returned HTTP 403 to direct `WebFetch` this session — a
+  real, repeated environmental limit, not a one-off fluke worth silently
+  working around.** The honest response, repeated for every figure in this
+  section, was corroborating via 2+ independent secondary sources that
+  each explicitly attribute the same specific number back to the primary
+  agency, and recording the citation's `confidence` as
+  `commonly_cited_unverified` (not `standard_reference`) precisely because
+  this repo verified the CLAIM, not the PRIMARY TEXT — the same honesty
+  distinction `CitationSchema`'s own doc comment already draws between its
+  two confidence tiers, applied here to a session-specific fetch failure
+  rather than a recalled-vs-checked distinction.
+

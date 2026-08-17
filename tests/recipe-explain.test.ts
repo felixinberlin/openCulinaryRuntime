@@ -801,3 +801,68 @@ describe("explainRecipe — allergenSummary", () => {
     assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).allergenSummary, []);
   });
 });
+
+// storageSummary — 2026-08-17, ROADMAP.md's "Storage/shelf-life common
+// knowledge" gap.
+describe("explainRecipe — storageSummary", () => {
+  const CITATION = { source: "test", confidence: "standard_reference" as const };
+  const egg = makeEntity({
+    id: "egg",
+    possibleStates: ["raw", "boiled"],
+    storageLifeByState: {
+      raw: { refrigeratedDays: { min: 21, max: 35 }, citation: CITATION },
+      boiled: { refrigeratedDays: { min: 1, max: 7 }, citation: CITATION },
+    },
+  });
+  const potato = makeEntity({ id: "potato", possibleStates: ["raw"] }); // no storageLifeByState at all
+  const entities = new Map([
+    ["egg", egg],
+    ["potato", potato],
+  ]);
+  const actions = new Map();
+  const ccps = new Map();
+
+  test("empty when no initialInventory entity has any storageLifeByState", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "potato-1", entityId: "potato", state: "raw", tags: [] }],
+    });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).storageSummary, []);
+  });
+
+  test("reports the entry matching the item's AUTHORED starting state, not every state the entity has guidance for", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "raw", tags: [] }],
+    });
+    const summary = explainRecipe(recipe, entities, actions, ccps).storageSummary;
+    assert.deepEqual(summary, [
+      {
+        instanceId: "egg-1",
+        entityId: "egg",
+        state: "raw",
+        storageLife: { refrigeratedDays: { min: 21, max: 35 }, citation: CITATION },
+      },
+    ]);
+  });
+
+  test("a recipe starting with an already-boiled egg gets the boiled figure, not the raw one", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "boiled", tags: [] }],
+    });
+    const summary = explainRecipe(recipe, entities, actions, ccps).storageSummary;
+    assert.deepEqual(summary[0].storageLife.refrigeratedDays, { min: 1, max: 7 });
+  });
+
+  test("a state with no storageLifeByState entry on an entity that has OTHER states covered is silently omitted, not a zero-value entry", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "egg-1", entityId: "egg", state: "fried", tags: [] }],
+    });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).storageSummary, []);
+  });
+
+  test("an initialInventory entityId not present in the entities map is silently skipped, not thrown", () => {
+    const recipe = makeRecipe({
+      initialInventory: [{ id: "x-1", entityId: "unknown_entity", state: "raw", tags: [] }],
+    });
+    assert.deepEqual(explainRecipe(recipe, entities, actions, ccps).storageSummary, []);
+  });
+});

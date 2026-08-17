@@ -104,6 +104,68 @@ export const YieldFractionSchema = z
   .refine((y) => y.min <= y.max, { message: "min must be <= max" });
 export type YieldFraction = z.infer<typeof YieldFractionSchema>;
 
+/** A `{min, max}` day/hour/month range, refined so `min <= max` — the exact
+ *  "range, not a false-precision point value" shape `YieldFractionSchema`/
+ *  `PhysicalDimensionsSchema`/`potato-doneness.ts`/`egg-doneness.ts` all
+ *  already commit to for a real, cited-but-variable culinary figure. */
+const RangeSchema = z
+  .object({ min: z.number().positive(), max: z.number().positive() })
+  .refine((r) => r.min <= r.max, { message: "min must be <= max" });
+
+/**
+ * Real, cited "how long is this safe/good for" storage guidance — closes
+ * `ROADMAP.md`'s long-named "Storage/shelf-life common knowledge" gap
+ * (2026-08-17): before this, nothing in this schema answered that question
+ * anywhere, despite it being directly relevant to this repo's own stated
+ * mission (someone relying on a machine to cook for them needs to know
+ * whether an ingredient is still safe to use, not just how to cook it).
+ * `infuse.json`'s own `safetyNote` already named the general shape of this
+ * gap for garlic-in-oil specifically ("this engine has no concept of
+ * elapsed time or storage conditions after a recipe finishes") — this
+ * schema is the first real, structured (if still DECLARATION-only, see
+ * below) answer to that.
+ *
+ * Every field is an independent optional range because not every storage
+ * MODE applies to every ingredient/state — `doNotRefrigerate: true` (raw
+ * potato: refrigeration converts starch to sugar, a real, cited, food-
+ * QUALITY reason, not a food-SAFETY one) is itself a real, meaningful fact
+ * distinct from simply omitting `refrigeratedDays`.
+ *
+ * Deliberately DECLARATION only, the same scoping precedent `AllergenSchema`
+ * already established (2026-08-16) for the identical reason: this engine
+ * has no concept of elapsed real-world time after a recipe finishes (no
+ * purchase date, no "how long has this actually been in the fridge" —
+ * the same honest limitation `egg.json`'s own `freshnessNote` already names
+ * for fresh/aged tags). Nothing here is read by `engine.ts`/
+ * `recipe-runner.ts` to reject a step or compute a real remaining shelf
+ * life — it's real, cited reference knowledge, surfaced (not enforced) via
+ * `recipe-explain.ts`'s `storageSummary` the same way `allergenSummary`
+ * surfaces allergens without gating execution on them.
+ */
+export const StorageLifeSchema = z
+  .object({
+    /** How long this keeps under active refrigeration (~40°F/4°C or below). */
+    refrigeratedDays: RangeSchema.optional(),
+    /** How long this is safe to leave at room/ambient temperature before
+     *  discarding — the USDA "Danger Zone (40°F-140°F)" 2-hour rule for a
+     *  perishable food, when it applies. */
+    roomTempHours: RangeSchema.optional(),
+    /** How long this keeps in a cool, dry pantry/counter WITHOUT
+     *  refrigeration — for shelf-stable raw goods (whole garlic bulb) or an
+     *  ingredient that is actively better NOT refrigerated (raw potato). */
+    pantryMonths: RangeSchema.optional(),
+    /** True when refrigerating this specific state is itself the wrong
+     *  advice (not just unnecessary) — a real, cited, QUALITY-not-safety
+     *  fact for raw potato (starch converts to sugar below ~42°F/6°C,
+     *  causing excess browning/acrylamide formation when later fried). */
+    doNotRefrigerate: z.boolean().optional(),
+    citation: CitationSchema,
+    note: z.string().optional(),
+  })
+  .partial()
+  .required({ citation: true });
+export type StorageLife = z.infer<typeof StorageLifeSchema>;
+
 /** Chemical/nutritional composition. masideas.md §6 "Composition". */
 export const CompositionSchema = z
   .object({
@@ -552,6 +614,22 @@ export const EntitySchema = z.object({
    * isn't attempted here.
    */
   rawContaminationRiskStates: z.array(z.string()).default([]),
+  /**
+   * Real, cited storage/shelf-life guidance — `StorageLifeSchema`'s own doc
+   * comment has the full reasoning (added 2026-08-17, closing ROADMAP.md's
+   * "Storage/shelf-life common knowledge" gap). Keyed by state id, the SAME
+   * per-state-fact shape `criticalControlPointsByAction` already uses for
+   * per-ACTION facts, because storage life is often genuinely different for
+   * different states of the SAME entity, not one flat fact — e.g. a raw
+   * shell egg keeps 3-5 weeks refrigerated; the same egg, once hard-boiled,
+   * keeps only about a week. `scripts/validate.ts` hard-fails a key not in
+   * `possibleStates`, the same standard `invalidTransitions`/
+   * `rawContaminationRiskStates` above already hold themselves to. Optional
+   * and defaults to `{}` — most entities (tools, and any ingredient not yet
+   * audited for this) simply have no entries, not a claim that storage is
+   * irrelevant for them.
+   */
+  storageLifeByState: z.record(z.string(), StorageLifeSchema).default({}),
   capabilities: CapabilitiesSchema.default({}),
   physicalDimensions: PhysicalDimensionsSchema.optional(),
   thermophysical: ThermophysicalPropertiesSchema.optional(),

@@ -106,6 +106,34 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   (EU) 1169/2011 Annex II) is a real, cited, deliberately NOT-modeled
   alternative — see `AllergenSchema`'s own doc comment for why the FDA
   list was chosen instead, despite this repo's Spanish/EU-leaning dishes.
+- **USDA FSIS, "Shell Eggs from Farm to Table"** —
+  https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/eggs/shell-eggs-farm-table
+  (this session's direct fetch returned HTTP 403; figures verified via two
+  independent secondary sources — The Whole Fork, "How Long Do Eggs Last?";
+  Farmers' Almanac — both explicitly attributing to USDA FSIS/FoodKeeper) —
+  raw shell eggs: 3-5 weeks refrigerated (≤40°F/4°C) past purchase date;
+  hard-cooked eggs (peeled or unpeeled): up to 1 week refrigerated; raw
+  yolks/whites once separated: 2-4 days refrigerated. Used in
+  `data/entities/egg.json`'s/`egg_yolk.json`'s/`egg_white.json`'s new
+  `storageLifeByState` (added 2026-08-17, `ROADMAP.md`'s "Storage/shelf-life
+  common knowledge" gap). Confidence: `commonly_cited_unverified` — two
+  convergent secondary sources agreeing on the same figures and both citing
+  the same primary agency, not this repo's own direct read of the primary
+  FSIS page.
+- **USDA FSIS, "'Danger Zone' (40°F - 140°F)"** —
+  https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/danger-zone-40f-140f
+  — perishable food left at room temperature should be discarded after 2
+  hours (1 hour above 90°F/32°C); bacteria can double in as little as 20
+  minutes in this range. Named/scoped in `ingredient.ts`'s
+  `StorageLifeSchema` (`roomTempHours` field) but NOT yet applied to any
+  real entity's `storageLifeByState` — no forcing case has needed it yet
+  (every entity audited so far only needed `refrigeratedDays`/
+  `pantryMonths`), named here so the field's own citation exists ahead of
+  its first real use rather than being invented at that point. Confidence:
+  `standard_reference` — a specific, named, standard USDA food-safety page,
+  independently corroborated by multiple secondary sources with consistent
+  figures (this session's direct fetch of the primary page was not
+  attempted, since no data file needed the number yet).
 
 ## Physical constants & composition data
 
@@ -716,6 +744,30 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   physically correct fix: both a deep pot and a wide pan are real,
   cited, standard poaching vessels for two different real techniques,
   not one "the" standard vessel. Confidence: `commonly_cited_unverified`.
+- **Idaho Potato Commission, "Storing Idaho Potatoes in the
+  Refrigerator...Right or Wrong?" (Dr. Potato column)** —
+  https://idahopotato.com/dr-potato/storing-idaho-potatoes-in-the-refrigerator-right-or-wrong
+  (this session's direct fetch returned HTTP 403; figures verified via
+  search-summary corroboration) — raw potatoes keep ~1.5-2 months in a
+  cool (45-55°F/7-13°C), dark, well-ventilated pantry; refrigeration
+  below ~42°F/6°C converts starch to sugar, causing excess browning and
+  higher acrylamide formation when later fried. Used in
+  `data/entities/potato.json`'s new `storageLifeByState.raw`
+  (`doNotRefrigerate: true`, added 2026-08-17) — the same organization
+  already cited in this repo for `potato-doneness.ts`'s fork-tender
+  figure. Confidence: `commonly_cited_unverified`.
+- **USDA FoodKeeper app (whole unbroken garlic bulb: 1 month pantry)**,
+  corroborated by convergent consumer sources citing 3-6 months under
+  cool/dark/ventilated conditions (Fresh Keeper; Mill; Michigan State
+  University Extension) — used in `data/entities/garlic.json`'s new
+  `storageLifeByState.raw` (added 2026-08-17), presented as a real
+  `{min: 1, max: 6}` month range rather than picking one figure and
+  hiding the disagreement between the conservative official app figure
+  and the wider consumer-source consensus. Deliberately does NOT cover
+  peeled/chopped garlic or garlic-in-oil — a shorter-lived, food-SAFETY
+  case already named in `infuse.json`'s own `safetyNote` (real,
+  FDA-documented botulism risk), left there rather than duplicated here.
+  Confidence: `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

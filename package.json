@@ -54,6 +54,7 @@
     "capability-test:par-fry-shared-pan": "tsx scripts/par-fry-shared-pan-as-a-robot.ts",
     "capability-test:invalid-transitions": "tsx scripts/invalid-transitions-as-a-robot.ts",
     "capability-test:poach-any-vessel": "tsx scripts/poach-with-any-vessel.ts",
+    "capability-test:storage-life": "tsx scripts/storage-life-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

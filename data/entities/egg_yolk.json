@@ -40,6 +40,16 @@
     "pasteurize": "egg_pasteurization_liquid"
   },
   "rawContaminationRiskStates": ["raw", "blended"],
+  "storageLifeByState": {
+    "raw": {
+      "refrigeratedDays": { "min": 2, "max": 4 },
+      "citation": {
+        "source": "USDA FSIS, \"Shell Eggs from Farm to Table\" (via The Whole Fork, attributing to USDA — see egg.json's identical citation for the same-source discussion; the primary fsis.usda.gov page returned HTTP 403 to direct fetch this session)",
+        "confidence": "commonly_cited_unverified",
+        "note": "2-4 days refrigerated in an airtight covered container, once separated from the shell — a real, much shorter figure than the intact raw shell egg's 3-5 weeks (egg.json), the direct consequence of losing the shell's own protective barrier the instant SEPARATE runs."
+      }
+    }
+  },
   "capabilities": {
     "isBlendable": true,
     "isEmulsionStabilizer": true,

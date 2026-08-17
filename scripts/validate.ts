@@ -195,6 +195,19 @@ for (const entity of entities.items.values()) {
       `NOTE entities/${entity.id}.json: capabilities.isRawContaminationRisk is true but rawContaminationRiskStates is empty — this capability can never actually trigger a warning.`
     );
   }
+  // storageLifeByState (ingredient.ts, closed 2026-08-17 — ROADMAP.md's
+  // "Storage/shelf-life common knowledge" gap) — same hard-fail standard as
+  // invalidTransitions/rawContaminationRiskStates above: a key not in this
+  // entity's own possibleStates is always an authoring bug (a typo, or
+  // storage guidance authored against a state this entity doesn't actually
+  // have), not a legitimate edge case.
+  for (const state of Object.keys(entity.storageLifeByState)) {
+    if (!entity.possibleStates.includes(state)) {
+      fail(
+        `entities/${entity.id}.json: storageLifeByState references unknown state "${state}" (not in possibleStates)`
+      );
+    }
+  }
   for (const [actionId, byproductIds] of Object.entries(entity.byproductsByAction)) {
     if (!actions.items.has(actionId)) {
       fail(

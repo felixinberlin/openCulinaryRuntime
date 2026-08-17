@@ -957,3 +957,52 @@ was made. Don't rewrite or delete old entries — append.
   real bounds, rather than presenting a false-precision single answer for
   the case this repo's model genuinely cannot compute exactly.
 
+## 2026-08-17
+
+### Triaging a 300-item document — the yield is small, and that's the expected outcome, not a failure of the search
+
+- **A user-supplied "300 Common Sense Cooking Rules" document (300
+  numbered tips across 10 sections) produced exactly 3 genuinely
+  actionable, real, cited gaps** (steam-dry potato before mashing;
+  calibrated pierce-before-baking risk; whole-vs-ground pepper shelf
+  life) — a ~1% hit rate. Consistent with every other external-document
+  triage this session (Reddit thread: one real gap, Acid, out of dozens
+  of comments; scientific review: a handful out of many findings). The
+  right read of a low hit rate on a broad, generic document is that most
+  of its content is either already covered by this repo's own prior,
+  independently-cited work, or genuinely out of this vocabulary's current
+  ingredient/technique scope — not that the triage was insufficiently
+  thorough. Reading the whole document and checking every plausibly-
+  relevant claim against actual repo state (not assumed) is still the
+  right process even when it yields few results; the value is in NOT
+  missing the few real ones, not in maximizing how much gets added.
+- **Two of the three findings generalized EXISTING verbs (`DRAIN`,
+  `REST`) to a new real use case rather than adding new ones** — the same
+  pattern as most of this session's other closures (POACH's vessel
+  generalization, GRILL/ROAST's tool-capability split). A new fact
+  forcing an existing mechanism wider is the common case; a new fact
+  requiring a genuinely new mechanism is rarer. Worth checking "does an
+  existing verb/field already almost cover this" before reaching for a
+  new one, which is what happened here: `DRAIN` was already liquid-
+  agnostic in its actual validation logic, just under-documented as
+  oil-specific; the fix was clarifying scope and adding a matching hazard
+  entry, not new code.
+- **The steam-dry-before-mash finding was also this repo's first real
+  recipe to exercise `MASH`** (built 2026-08-13, unused by any recipe for
+  four days) — a reminder that a schema/action existing and being
+  cited/tested in isolation is not the same as it being proven against a
+  real, complete recipe; `data/recipes/mashed-potatoes.json` is what
+  actually confirms the full DRAIN→REST→MASH→SALT chain composes
+  correctly end-to-end via `recipe-runner.ts`, not just that each action
+  independently validates.
+- **The pierce-before-baking rule was deliberately NOT added as a new
+  `HazardSchema` entry**, even though a plausible one-line entry was easy
+  to write, because the same source already cited elsewhere in this repo
+  for potato facts (Idaho Potato Commission) describes the actual risk as
+  rare, not routine — adding a formal hazard entry would have overstated
+  it. The same "resist a structurally-easy but substantively wrong fix"
+  discipline as the 2026-08-16 `potato.json`-fried-transition entry
+  above, applied here in the other direction: recording LESS formally
+  than the data would structurally support, because that's what the
+  citation actually says.
+

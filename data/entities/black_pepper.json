@@ -27,6 +27,24 @@
   "possibleTags": [],
   "allowedTransformations": ["crush"],
   "producedByproducts": [],
+  "storageLifeByState": {
+    "whole": {
+      "pantryMonths": { "min": 36, "max": 48 },
+      "citation": {
+        "source": "Convergent spice-storage references (Better Homes & Gardens flavor-retention testing; multiple independently-checked spice-shelf-life sources) — whole peppercorns in a sealed container, cool/dark storage",
+        "confidence": "commonly_cited_unverified",
+        "note": "Whole peppercorns are, per this same source set, still ~80% as flavorful after 2 years — the real reason this repo was modeled starting from WHOLE peppercorns in the first place (see this file's own top-level notes) also turns out to be the real reason they keep so much longer: an intact outer shell protects the volatile oils/piperine inside, the identical rupture-exposes-everything mechanism this file's own flavorChemistryNote already names for the FRESHLY-ground-vs-stale distinction."
+      }
+    },
+    "ground": {
+      "pantryMonths": { "min": 12, "max": 24 },
+      "citation": {
+        "source": "Same convergent spice-storage reference set as the 'whole' entry above",
+        "confidence": "commonly_cited_unverified",
+        "note": "A REAL, roughly 2-3x shorter shelf life than whole peppercorns for the identical substance — one independently-checked source (a Journal of Food Science study, cited via secondary summary, not directly fetched this session) reports ground black pepper stored in a clear counter-top container losing over 40% of its volatile oil content within just 3 months, a real, more aggressive figure than the pantry-month range above assumes for a properly sealed, dark-stored container. 'cracked' (this entity's third real state) deliberately has no entry here — no citation was found specific to that intermediate grind, and estimating one by interpolation would be a guess presented as a fact; it plausibly sits between whole and ground, closer to ground (rupture, not fineness, is what exposes the oils), but that's reasoning, not a citation."
+      }
+    }
+  },
   "capabilities": {
     "isCrushable": true,
     "isSeasoning": true,
@@ -48,6 +66,6 @@
     "commonName": "black peppercorns",
     "notes": "Modeled starting from WHOLE peppercorns, not pre-ground, on purpose — the same reasoning garlic.json applies to peeling: the more common real starting point for someone actually cooking, and it's the one that lets a genuine technique distinction (see flavorChemistryNote) be represented at all. No thermophysical block: unlike salt.json (a pure, well-characterized compound), black pepper is a complex plant material never heated to a phase-change point in this vocabulary's actions — a density/conductivity figure would be recalled-approximate at best and isn't consumed by anything here (no CCP, no thermal-model use), so it's omitted rather than filled with an unused placeholder number, same reasoning garlic_peel.json's metadata gives for skipping composition/thermophysical entirely.",
     "capabilityNote": "isPepperySeasoning (not the generic isSeasoning) is what data/actions/pepper.json actually checks via requiredIngredientCapabilities — see salt.json's capabilityNote for why the generic flag alone isn't specific enough once more than one seasoning entity exists. isSeasoning stays true here too, for the separate 'is this a seasoning at all' question.",
-    "flavorChemistryNote": "Source: Harold McGee, \"On Food and Cooking\" (rev. 2004), spices chapter — not re-verified against a primary source this session, recalled with reasonable confidence as well-established. Black pepper's bite comes from piperine, an alkaloid concentrated in the outer layer of the dried berry — it's volatile aromatic compounds (terpenes), not piperine itself, that oxidize/evaporate fastest once ground, which is the real, specific mechanism behind 'always use freshly ground/cracked pepper' being standard advice rather than folklore: pre-ground pepper isn't unsafe or non-pungent, it's measurably less aromatic within days to weeks of grinding. This is exactly the same shape of fact CUT's shape parameter and CRUSH's fineness parameter don't otherwise carry any notion of 'time since prepared' for — not modeled here either (no shelf-life/staleness mechanic exists anywhere in this repo yet), flagged rather than implied to already be captured just because 'whole' is now a representable starting state."
+    "flavorChemistryNote": "Source: Harold McGee, \"On Food and Cooking\" (rev. 2004), spices chapter — not re-verified against a primary source this session, recalled with reasonable confidence as well-established. Black pepper's bite comes from piperine, an alkaloid concentrated in the outer layer of the dried berry — it's volatile aromatic compounds (terpenes), not piperine itself, that oxidize/evaporate fastest once ground, which is the real, specific mechanism behind 'always use freshly ground/cracked pepper' being standard advice rather than folklore: pre-ground pepper isn't unsafe or non-pungent, it's measurably less aromatic within days to weeks of grinding. This is exactly the same shape of fact CUT's shape parameter and CRUSH's fineness parameter don't otherwise carry any notion of 'time since prepared' for — CLOSED 2026-08-17 via the new storageLifeByState field below (whole vs. ground pantry-life figures), though that field answers 'how long does this stay good for at all,' not the finer-grained 'how many days after grinding does peak aroma fade,' which stays unmodeled."
   }
 }

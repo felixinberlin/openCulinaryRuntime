@@ -69,6 +69,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Grilled potatoes and onions** (GRILL — mechanically distinct tool from ROAST, both directions of rejection proven, generalizes across potato/garlic/onion, real parboil-vs-direct technique difference wired correctly) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- grilled_potatoes_and_onions` / `npm run capability-test:grill` |
 | **Quick-pickled onions** (MARINATE — mechanically distinct from ACID via a real duration requirement, generalizes across onion/garlic/egg with three genuinely different real timescales from 30 minutes to 10 days) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- quick_pickled_onions` / `npm run capability-test:marinate` |
 | **Salt crystal/grind size** (kosher_salt.json/flaky_salt.json — real, cited grams-per-teaspoon differences, EntitySchema.domainFacts extended from CCP-only to entities on a real second forcing case, queryable via `npm run ask -- entity-fact`) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:salt-crystal-size` |
+| **Mashed potatoes** (this repo's first real recipe to exercise MASH; DRAIN/REST generalized beyond oil/fry to the real steam-dry-before-mashing technique, triaged from an external "300 common sense cooking rules" document) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- mashed_potatoes` / `npm run capability-test:cooking-common-sense` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -658,6 +659,61 @@ proven runnable, not just asserted.
       within kosher salt (Diamond Crystal vs. Morton specifically) is
       deliberately NOT modeled as separate entities, presented as a real,
       honest combined range instead.
+- [x] **Triaged 2026-08-17 against a user-supplied "300 Common Sense
+      Cooking Rules" document** (300 numbered tips across 10 sections —
+      prep, knife safety, heat/pan control, seasoning, food safety,
+      cleaning, baking foundations, meat/fish, vegetables, troubleshooting
+      — copy-pasted into the repo, moved to
+      `olddocs/300_common_sense_cooking_rules.md` after triage, same
+      discipline as the Reddit-thread/scientific-review/tortilla-physics
+      triages above). Every rule cross-checked against this repo's actual
+      current state (not assumed) before acting. Three genuinely new,
+      real, cited gaps found and closed:
+      1. **Rule #253 — steam-dry a boiled potato before mashing.** Surface
+         water dilutes butter/milk and produces a gluier mash; a brief
+         uncovered rest lets it evaporate first. Generalized two existing
+         verbs beyond their original oil/fry forcing cases rather than
+         adding new ones: `data/actions/drain.json` (already liquid-
+         agnostic in principle, now explicitly documented and given a
+         matching `hot_liquid` hazard entry alongside its existing
+         `hot_oil` one) and `data/actions/rest.json` (duration floor
+         widened from 120s to 60s — the fourth widening of this range,
+         `durationSecondsNote`). `data/entities/potato.json` gained a
+         `steamDryBeforeMashNote`. Proven by this repo's first real
+         recipe to actually exercise `MASH` (built 2026-08-13, never
+         previously used): `data/recipes/mashed-potatoes.json`
+         (`npm run recipe -- mashed_potatoes`), plus
+         `npm run capability-test:cooking-common-sense`.
+      2. **Rule #255 — pierce a whole potato before baking.** Checked and
+         honestly CALIBRATED rather than reflexively added as a hazard:
+         the same Idaho Potato Commission already cited elsewhere in
+         `potato.json` characterizes oven-explosion from an unpierced
+         potato as real but unlikely, so this was recorded as
+         informational technique context only
+         (`potato.json`'s `pierceBeforeBakeNote`), deliberately NOT as a
+         new `HazardSchema` entry — adding one would have overstated a
+         rare event.
+      3. **Rules #99/#113 — whole vs. ground black pepper's real,
+         dramatically different shelf life.** Closes `black_pepper.json`'s
+         own long-standing `flavorChemistryNote` admission that no
+         shelf-life mechanic existed anywhere in this repo. New
+         `storageLifeByState` entries: whole ~36-48 pantry months, ground
+         ~12-24 (roughly 2-3x shorter for the identical substance — an
+         intact peppercorn shell protects the volatile oils that grinding
+         immediately exposes). `cracked` deliberately left uncited rather
+         than interpolated.
+
+      The great majority of the other ~297 rules were either already
+      covered by this repo's own existing, independently-cited work
+      (simmer-vs-boil, carryover cooking, smoke points, cold-start potato
+      boiling, flaky finishing salt — confirmed, not re-built), genuinely
+      out of this vocabulary's current ingredient scope (meat/fish/
+      yeasted baking), or generic kitchen-safety/cleaning advice this
+      schema doesn't model at the per-technique level at all — named
+      honestly rather than implied covered. Full verification sweep (tsc/
+      test/validate/every capability-test + demo) clean, zero
+      regressions. See `LEARNINGS_PROCESS.md` 2026-08-17 for the triage
+      methodology.
 
 **Known-large, not yet started — flagged so the gap is visible, not implied
 covered by what exists:**

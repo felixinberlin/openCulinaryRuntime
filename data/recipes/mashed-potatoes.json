@@ -1,0 +1,39 @@
+{
+  "id": "mashed_potatoes",
+  "names": {
+    "en": "Mashed Potatoes",
+    "es": "Puré de Patatas"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
+    { "id": "butter-1", "entityId": "butter", "state": "cold", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": { "kind": "imprecise", "descriptor": "to_taste", "citation": { "source": "Commonly cited culinary convention — salt to taste", "confidence": "commonly_cited_unverified" } }
+    }
+  ],
+  "availableTools": ["knife", "pot", "masher"],
+  "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "quartered" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "boil",
+      "targetInstanceId": "potato-1",
+      "params": { "durationSeconds": "1200" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    { "actionId": "drain", "targetInstanceId": "potato-1", "params": { "method": "colander_shake" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "rest", "targetInstanceId": "potato-1", "params": { "durationSeconds": "180" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "mash", "targetInstanceId": "potato-1", "params": { "consistency": "smooth" }, "availableIngredientInstanceIds": ["butter-1"] },
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "This repo's first real recipe to actually exercise MASH (data/actions/mash.json), closed 2026-08-13 but never previously exercised by a real dish. Triaged 2026-08-17 from an externally-supplied '300 Common Sense Cooking Rules' document (moved to olddocs/ after triage) — the real DRAIN(colander_shake) -> REST(brief steam-dry, 180s) -> MASH sequence is rule #253's own cited technique: surface water left on a just-boiled potato dilutes butter/milk and produces a gluier mash. See potato.json's own steamDryBeforeMashNote, drain.json's mashedPotatoUseCaseNote, and rest.json's updated durationSecondsNote (widened to a 60s floor specifically for this shorter real case) for the full citation chain.",
+    "boilDurationNote": "1200s (20 minutes) for quartered potato pieces sits within src/potato-doneness.ts's own POTATO_BOIL_DONENESS cited range for that piece size, not an arbitrary pick."
+  }
+}

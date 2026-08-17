@@ -882,6 +882,44 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   30 minutes to 10 days) — the deliberately wide range spanning both this
   and the much-faster onion-pickling case above, not a single point
   figure. Confidence: `commonly_cited_unverified`.
+- **Convergent culinary-technique sources on steam-drying boiled potato
+  before mashing** (rule #253 of an externally-supplied "300 Common Sense
+  Cooking Rules" document, 2026-08-17, cross-checked against independent
+  convergent sources before use — moved to `olddocs/` after triage) —
+  surface water clinging to a just-drained, just-boiled potato piece
+  dilutes the butter/milk added during mashing and produces a gluier,
+  wetter result; a brief uncovered rest (as little as ~1 minute, commonly
+  2-3) lets residual surface moisture evaporate as steam before mashing.
+  Used in `data/actions/drain.json`'s `mashedPotatoUseCaseNote`,
+  `data/actions/rest.json`'s widened `durationSecondsNote` (60s floor,
+  down from 120s), `data/entities/potato.json`'s `steamDryBeforeMashNote`,
+  and `data/recipes/mashed-potatoes.json` (this repo's first recipe to
+  exercise `MASH`). Confidence: `commonly_cited_unverified`.
+- **Idaho Potato Commission** (already cited elsewhere in `potato.json` for
+  storage-life figures) — piercing a whole potato before high-heat oven
+  baking is standard advice to vent steam building inside the skin; the
+  Commission's own material characterizes an unpierced potato exploding in
+  the oven as a real but rare/unlikely event, not a routine hazard. Used
+  in `data/entities/potato.json`'s `pierceBeforeBakeNote` (added
+  2026-08-17, rule #255 of the same source document above) —
+  deliberately recorded as informational technique context only, NOT as a
+  new `HazardSchema` entry, to avoid overstating a rare event's
+  likelihood. Confidence: `commonly_cited_unverified`.
+- **Convergent spice-storage references** (Better Homes & Gardens
+  flavor-retention testing; a *Journal of Food Science* volatile-oil-loss
+  figure for ground pepper, cited via secondary summary; multiple
+  independently-checked spice-shelf-life sources) — whole black
+  peppercorns retain useful flavor far longer in sealed, cool/dark
+  storage (~3-4 years, still ~80% as flavorful after 2 years) than ground
+  black pepper (~1-2 years, with one source reporting >40% volatile-oil
+  loss within 3 months for pepper stored in a clear counter-top
+  container) — the intact outer shell of a whole peppercorn protects the
+  volatile aromatic oils that grinding immediately exposes. Used in
+  `data/entities/black_pepper.json`'s new `storageLifeByState` field
+  (added 2026-08-17, closing that file's own long-standing
+  `flavorChemistryNote` admission that no shelf-life mechanic existed;
+  rules #99/#113 of the same source document above). Confidence:
+  `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

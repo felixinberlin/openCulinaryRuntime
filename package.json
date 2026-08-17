@@ -64,6 +64,7 @@
     "capability-test:salt-crystal-size": "tsx scripts/salt-crystal-size-as-a-robot.ts",
     "capability-test:cooking-common-sense": "tsx scripts/cooking-common-sense-triage-as-a-robot.ts",
     "capability-test:physical-feasibility-rules": "tsx scripts/physical-feasibility-rules-as-a-robot.ts",
+    "capability-test:self-authored-rules": "tsx scripts/self-authored-common-sense-rules-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

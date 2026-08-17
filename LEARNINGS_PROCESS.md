@@ -1051,3 +1051,64 @@ was made. Don't rewrite or delete old entries — append.
   triage happens to probe it directly, rather than a purely internal
   code-only audit that has no external prompt to go looking.
 
+### Writing common-sense rules myself, not triaging someone else's — the SAME audit method, applied one seam deeper
+
+- **Asked to author cooking common-sense rules directly rather than triage
+  an external document, the productive move was NOT to invent 300 more
+  generic truisms — it was to reuse the exact "new action × old entity"
+  seam that closed rule #29 above and go looking for more instances of it
+  in this repo's own real data**, since that seam had just been PROVEN to
+  contain a real bug, not merely plausible to contain one. Checking
+  `isRestable`/`isDrainable`/`isMarinatable`/etc. entities against which
+  newer actions (`REST`, `DRAIN`, `GRILL`, `STEAM`, `ROAST`, all added
+  2026-08-16/17) they'd gained a capability for, cross-referenced against
+  whether `statePrerequisites` had ever been updated to match, found a
+  second real instance in about ten minutes (`potato.json`'s `REST`)
+  — a much higher hit rate than either external-document triage this
+  session, because the search was targeted at a known-productive pattern
+  rather than reading 300 unrelated claims hoping a few would land.
+- **A deeper, genuinely more interesting gap was found by asking a
+  different question: not "is this entity's OWN statePrerequisites
+  complete," but "does `applyAction` check statePrerequisites AT ALL for
+  every ROLE an instance can play."** The answer was no — `requiredSecondaryCapability`
+  (a COMBINE-shaped action's second ingredient) was checked for
+  capability only, never for state, an asymmetry between the primary
+  target and the secondary instance that had existed since
+  `requiredSecondaryCapability` was first added (2026-08-12) and was
+  never itself audited, because nothing had prompted anyone to ask
+  "what about the OTHER instance a COMBINE action touches." Worth
+  generalizing: an engine mechanism built and correctly applied to ONE
+  role of a multi-role action is not evidence it was applied to every
+  role — the gap hides specifically in the role that gets less
+  attention because it's not the thing named in the recipe step's own
+  `targetInstanceId`.
+- **Two existing metadata notes turned out to be quietly WRONG in a way
+  this audit caught as a side effect, not the primary goal** —
+  `onion.json`'s `combinePotatoOnionNote` claimed the real potato/onion
+  prep order was "enforced," true only for potato (the target), not onion
+  (the secondary); `egg_cracked.json`'s `combineNote` claimed the
+  must-be-beaten-first rule COULDN'T be expressed at all, a claim that was
+  already stale by two days (array-valued OR-logic `statePrerequisites`
+  entries existed since 2026-08-15) before this session ever touched it.
+  Neither was caught by any prior review — both are the kind of claim
+  that reads as plausible and doesn't get re-verified once written, the
+  same risk this file's own citation discipline exists to catch for
+  external facts, just showing up here for a claim about this repo's OWN
+  code instead. Fixing the underlying gap without correcting the stale
+  note next to it would have left a wrong claim sitting right beside the
+  code that disproves it — corrected both, not just the code.
+- **Extended the fix at the RIGHT layer once the gap's real shape was
+  clear: `src/engine.ts`'s `applyAction`, not a one-off check bolted onto
+  three data files.** The primary-target statePrerequisites check was
+  extracted into a shared `checkStatePrerequisite` helper and called for
+  both roles, reusing the existing `Entity.statePrerequisites` map (keyed
+  by action id) rather than inventing a new schema field for "secondary
+  role prerequisites" — safe specifically because no entity used as a
+  secondary here is ever the primary target of the SAME action id, a
+  fact worth checking explicitly before reusing a map for a second
+  purpose, not assuming. This closes the gap STRUCTURALLY for any future
+  action that adds `requiredSecondaryCapability`, not just for the three
+  that exist today — the same "fix the mechanism, not just today's
+  instances of the symptom" instinct this repo's other engine-level fixes
+  this session (place.ts wiring, execution-bounds) already followed.
+

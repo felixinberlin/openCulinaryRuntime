@@ -145,6 +145,51 @@ export interface ExecutionResult {
   warnings: string[];
 }
 
+/**
+ * Shared by both the primary target and (added 2026-08-17) the secondary
+ * instance of a COMBINE-shaped action — `role` only affects the error
+ * message's wording, the check itself is identical either way: does
+ * `entity.statePrerequisites[action.id]` (if any) allow this instance's
+ * current state/tags. Extracted from what used to be inline-only logic in
+ * `applyAction` when the secondary-instance gap below was found and fixed;
+ * behavior for the primary/target call site is completely unchanged.
+ */
+function checkStatePrerequisite(entity: Entity, instance: Instance, action: Action, role: "target" | "secondary"): void {
+  const requiredPriorState = entity.statePrerequisites[action.id];
+  if (!requiredPriorState) return;
+  // A single required state is treated as a one-element allowed set, so this
+  // branch's behavior/error message is unchanged for every statePrerequisites
+  // entry written before array values existed (ingredient.ts's own doc
+  // comment) — only a genuinely multi-valued entry (e.g. potato.json's cut:
+  // ["washed", "peeled"]) takes the OR path.
+  //
+  // Each allowed entry is checked against EITHER instance.state OR
+  // instance.tags (added 2026-08-15, potato.json's "cut"/"grate":
+  // ["washed", "peeled"] being the forcing case): "washed" used to be
+  // modeled as a STATE (WASH's outputs.transformedState), which meant
+  // washing a potato and then peeling it silently overwrote away the fact
+  // it had ever been washed — `state` is documented as the one
+  // mutually-exclusive value an instance holds, so "washed" and "peeled"
+  // could never both be true of the same instance at once even though
+  // physically they obviously can. WASH now sets a TAG instead (see
+  // wash.json), matching SALT/PEPPER/etc.'s existing addsTag pattern — an
+  // orthogonal fact that survives whatever state comes next. This check
+  // treating state-prerequisite entries as satisfiable by a matching tag,
+  // not just a matching state, is what keeps that precondition meaningful
+  // now that "washed" isn't a state value anymore; every entry that names
+  // an actual state (the overwhelming majority) is completely unaffected,
+  // since instance.state is still checked first/either way.
+  const allowedPriorStates = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
+  const satisfied =
+    allowedPriorStates.includes(instance.state) || allowedPriorStates.some((s) => instance.tags.includes(s));
+  if (!satisfied) {
+    const roleLabel = role === "secondary" ? "secondary instance " : "";
+    throw new Error(
+      `${action.verb} requires ${roleLabel}"${entity.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}", tags [${instance.tags}]).`
+    );
+  }
+}
+
 export function applyAction(
   instance: Instance,
   action: Action,
@@ -165,43 +210,7 @@ export function applyAction(
     throw new Error(`${action.verb} cannot target entity kind "${target.kind}" ("${target.id}")`);
   }
 
-  const requiredPriorState = target.statePrerequisites[action.id];
-  if (requiredPriorState) {
-    // A single required state is treated as a one-element allowed set, so
-    // this branch's behavior/error message is unchanged for every
-    // statePrerequisites entry written before array values existed
-    // (ingredient.ts's own doc comment) — only a genuinely multi-valued
-    // entry (e.g. potato.json's cut: ["washed", "peeled"]) takes the OR path.
-    //
-    // Each allowed entry is checked against EITHER instance.state OR
-    // instance.tags (added 2026-08-15, potato.json's "cut"/"grate":
-    // ["washed", "peeled"] being the forcing case): "washed" used to be
-    // modeled as a STATE (WASH's outputs.transformedState), which meant
-    // washing a potato and then peeling it silently overwrote away the
-    // fact it had ever been washed — `state` is documented as the one
-    // mutually-exclusive value an instance holds, so "washed" and "peeled"
-    // could never both be true of the same instance at once even though
-    // physically they obviously can. WASH now sets a TAG instead (see
-    // wash.json), matching SALT/PEPPER/etc.'s existing addsTag pattern —
-    // an orthogonal fact that survives whatever state comes next. This
-    // check treating state-prerequisite entries as satisfiable by a
-    // matching tag, not just a matching state, is what keeps that
-    // precondition meaningful now that "washed" isn't a state value
-    // anymore; every entry that names an actual state (the overwhelming
-    // majority) is completely unaffected, since instance.state is still
-    // checked first/either way.
-    const allowedPriorStates = Array.isArray(requiredPriorState)
-      ? requiredPriorState
-      : [requiredPriorState];
-    const satisfied =
-      allowedPriorStates.includes(instance.state) ||
-      allowedPriorStates.some((s) => instance.tags.includes(s));
-    if (!satisfied) {
-      throw new Error(
-        `${action.verb} requires "${target.id}" to already be "${allowedPriorStates.join('" or "')}" (currently "${instance.state}", tags [${instance.tags}]).`
-      );
-    }
-  }
+  checkStatePrerequisite(target, instance, action, "target");
 
   if (action.requiredTargetCapability) {
     const has = target.capabilities[action.requiredTargetCapability];
@@ -231,6 +240,19 @@ export function applyAction(
         `${action.verb} requires secondary capability "${action.requiredSecondaryCapability}" on "${secondaryEntity.id}", but it is ${why}.`
       );
     }
+    // Added 2026-08-17, self-authored common-sense audit (LEARNINGS_PROCESS.md
+    // this date): requiredSecondaryCapability is a static, state-independent
+    // boolean (onion.json asserts isCombinableWithPotato regardless of
+    // whether that onion instance is raw and whole or peeled and sliced), so
+    // before this fix nothing stopped COMBINE_POTATO_ONION from accepting a
+    // never-prepped secondary onion — the identical class of gap
+    // statePrerequisites already closes for the PRIMARY target, just never
+    // extended to the secondary instance. Reuses the exact same
+    // statePrerequisites map/lookup-by-action-id mechanism, not a new field —
+    // safe because no entity used here as a SECONDARY (onion.json,
+    // egg_cracked.json) is ever the PRIMARY target of the same action id, so
+    // there is no ambiguity about which role a given entry describes.
+    checkStatePrerequisite(secondaryEntity, secondaryInstance, action, "secondary");
   }
 
   for (const toolId of action.requiredTools) {

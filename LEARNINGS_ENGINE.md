@@ -1705,3 +1705,41 @@ was made. Don't rewrite or delete old entries — append.
   have — worth noting as a real, useful property of `DomainFactSchema`'s
   own design (a bare `{value, unit, citation, verified}` shape), not
   just its citation discipline.
+
+## 2026-08-17
+
+- **`applyAction`'s `statePrerequisites` check had a real, structural
+  asymmetry between an action's PRIMARY target and its SECONDARY instance
+  that had existed since `requiredSecondaryCapability` was first added
+  (2026-08-12) and was never caught until directly audited for**: the
+  primary target's `statePrerequisites[action.id]` was checked (has been
+  since this engine's first commit); the secondary instance's was not
+  checked at all — only its static, state-independent capability was. A
+  COMBINE-shaped action's secondary slot (`onion` for
+  `COMBINE_POTATO_ONION`, `egg_cracked` for `COMBINE`/
+  `COMBINE_CON_CEBOLLA`) could be satisfied by an instance in ANY state
+  asserting the right capability, including a raw, completely unprepped
+  one. Fixed by extracting the primary check into a standalone
+  `checkStatePrerequisite(entity, instance, action, role)` helper and
+  calling it for both the target AND (when
+  `requiredSecondaryCapability`/`secondaryInstance` are both present) the
+  secondary — see `src/engine.ts`'s own doc comment on that function.
+  General lesson: a check implemented and correctly exercised against ONE
+  role of a multi-role action (the one named directly in a recipe step's
+  `targetInstanceId`) is not evidence it was applied to every role — the
+  secondary/tertiary role that gets less attention in review is exactly
+  where an asymmetric gap like this hides.
+- **The fix deliberately reuses `Entity.statePrerequisites` — the SAME
+  map, keyed by the SAME action id — for the secondary role, rather than
+  adding a new schema field for "secondary-role prerequisites."** This is
+  safe here specifically because no entity used as a secondary instance in
+  this vocabulary (`onion.json`, `egg_cracked.json`) is EVER the primary
+  target of the same action id (`onion` is never the target of
+  `combine_potato_onion`; `egg_cracked` is never the target of `combine`/
+  `combine_con_cebolla`) — checked explicitly, not assumed, before reusing
+  a map for a second purpose. A future action that DID need an entity to
+  be both a valid primary target for action X and a valid secondary for
+  action X under different state requirements would collide on this same
+  key and need a real schema change (a separate
+  `secondaryStatePrerequisites` map); named as a real, currently-inert
+  edge case rather than pre-built for a situation that doesn't exist yet.

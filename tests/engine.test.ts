@@ -696,6 +696,48 @@ describe("applyAction — outputs & conservation of mass", () => {
     );
   });
 
+  test("requiredSecondaryCapability: also enforces the secondary instance's OWN statePrerequisites (added 2026-08-17, self-authored common-sense audit — a real gap: capability alone is state-independent)", () => {
+    const potato = makeEntity({ id: "fried_potato" });
+    // statePrerequisites keyed by THIS action's own id, exactly the same
+    // shape/lookup already used when this entity is the PRIMARY target —
+    // reused here for the SECONDARY role, per checkStatePrerequisite's own
+    // doc comment in src/engine.ts.
+    const egg = makeEntity({
+      id: "beaten_egg",
+      capabilities: { isCombinable: true },
+      statePrerequisites: { combine: "beaten" },
+    });
+    const entities = new Map([
+      ["fried_potato", potato],
+      ["beaten_egg", egg],
+    ]);
+    const action = makeAction({
+      id: "combine",
+      requiredSecondaryCapability: "isCombinable",
+      outputs: { combinesInto: "tortilla_mixture" },
+    });
+    const target: Instance = { entityId: "fried_potato", state: "fried", tags: [] };
+
+    assert.throws(
+      () =>
+        applyAction(target, action, entities, NO_TOOLS, {}, NO_INGREDIENTS, NO_CCPS, undefined, {
+          entityId: "beaten_egg",
+          state: "raw",
+          tags: [],
+        }),
+      /requires secondary instance "beaten_egg" to already be "beaten"/
+    );
+    // The identical entity, in the state its own statePrerequisites
+    // actually requires, still succeeds — the fix narrows what's accepted,
+    // it doesn't break the real path.
+    const result = applyAction(target, action, entities, NO_TOOLS, {}, NO_INGREDIENTS, NO_CCPS, undefined, {
+      entityId: "beaten_egg",
+      state: "beaten",
+      tags: [],
+    });
+    assert.equal(result.secondaryDestroyed, true);
+  });
+
   test("combinesInto merges tags from BOTH instances (filtered), destroys both, spawns exactly one new instance", () => {
     const potato = makeEntity({ id: "fried_potato", possibleTags: ["salted"] });
     const egg = makeEntity({

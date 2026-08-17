@@ -750,6 +750,66 @@ proven runnable, not just asserted.
       (`mashed-potatoes.json` after `boiled`, `crispy-french-fries.json`/
       `salted-fried-potatoes.json` after `fried`), confirming the new
       prerequisite doesn't break the states real technique already uses.
+- [x] **Self-authored common-sense cooking rules, 2026-08-17** (not
+      triaged from any external document — written directly by auditing
+      this repo's own real entities/actions/recipes for the exact class of
+      gap the drain fix above found: a newer action's real prerequisites
+      not yet checked against an older entity, or — new this time — not
+      checked against a SECONDARY instance at all). Two genuine, real,
+      structural gaps found and fixed, proven via
+      `scripts/self-authored-common-sense-rules-as-a-robot.ts`
+      (`npm run capability-test:self-authored-rules`, 15/15 passing) plus
+      a new `tests/engine.test.ts` unit test (synthetic fixtures, matching
+      this repo's own `npm test`/`npm run validate` split):
+      1. **"You cannot rest a raw, never-cooked potato."** `potato.json`'s
+         `isRestable` had no `statePrerequisites.rest` entry at all — REST
+         is, per `rest.json`'s own `genericityNote`, always POST-cook
+         settling in every real use case this vocabulary has, and a raw
+         potato has no residual heat or clinging moisture to settle.
+         Fixed: `statePrerequisites.rest: ['boiled','par_fried']` — the two
+         states this repo's own real recipes actually rest a potato from.
+         Deliberately does NOT touch `egg.json`'s own `isRestable` (its
+         real use case, `periodic-cooking-of-eggs.json`, genuinely spans
+         `raw` too — a periodic warming cycle, not post-cook settling) or
+         `tortilla_mixture{,_con_cebolla}.json`'s (only one state, `raw`,
+         is ever available before REST in their own real recipes anyway).
+      2. **"You cannot combine an unprepped secondary ingredient."** A
+         DEEPER, engine-level gap, not a data-only fix: `src/engine.ts`'s
+         `applyAction` checked `requiredSecondaryCapability` (a static,
+         entity-level boolean) on a COMBINE-shaped action's secondary
+         instance, but never checked that instance's actual CURRENT
+         state — so a raw, unpeeled whole onion could satisfy
+         `COMBINE_POTATO_ONION`'s secondary slot, and a never-beaten
+         `egg_cracked` could satisfy `COMBINE`'s/`COMBINE_CON_CEBOLLA`'s,
+         even though `potato.json`'s/`onion.json`'s own metadata already
+         claimed the real prep order was enforced (it wasn't, for the
+         secondary side). Fixed by extracting the existing primary-target
+         state check into a shared `checkStatePrerequisite` helper
+         (`src/engine.ts`) and calling it for the secondary instance too —
+         reusing the SAME `Entity.statePrerequisites` map, keyed by the
+         same action id, no new schema field, safe because no entity used
+         as a secondary here (`onion.json`, `egg_cracked.json`) is ever
+         the PRIMARY target of that same action. Three new data entries:
+         `onion.json`'s `statePrerequisites.combine_potato_onion:
+         'sliced'`; `egg_cracked.json`'s `statePrerequisites.combine`/
+         `combine_con_cebolla: ['beaten','well_beaten']` — closing a
+         SEPARATE, real documentation bug found along the way:
+         `egg_cracked.json`'s own `combineNote` had claimed this couldn't
+         be expressed at all ("statePrerequisites only supports one exact
+         required state string"), a claim already stale by 2026-08-17
+         (array-valued OR-logic entries have existed since 2026-08-15).
+         Structural, not just a three-entity patch: any FUTURE action
+         adding `requiredSecondaryCapability` gets this check automatically.
+      Full verification sweep (tsc/test — 308/308/validate/every
+      capability-test + demo) clean, zero regressions, including every
+      real recipe that calls `REST`, `COMBINE`, `COMBINE_CON_CEBOLLA`, or
+      `COMBINE_POTATO_ONION` (`mashed-potatoes.json`,
+      `crispy-french-fries.json`, `tortilla-de-patatas.json`,
+      `tortilla-de-betanzos.json` — note its own `well_beaten` intensity,
+      a genuinely different valid state from the other two recipes'
+      `beaten`, both correctly accepted — and
+      `tortilla-de-patatas-con-cebolla.json`). See `LEARNINGS_PROCESS.md`
+      2026-08-17 for the audit method.
 
 **Known-large, not yet started — flagged so the gap is visible, not implied
 covered by what exists:**

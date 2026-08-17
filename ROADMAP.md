@@ -1859,9 +1859,42 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
         start gap, `shock.json`'s unquantified carryover note,
         `simmer.json`'s unquantified turbulence note) — confirmed as still
         correctly out of scope, not newly attempted.
-- [ ] Unit tests per forbidden-transition rule — genuinely still blocked, but
-      now on the `INVALID_TRANSITIONS` matrix itself not existing (this
-      phase's own next unchecked item), not on the test-runner gap.
+- [x] **Unit tests per forbidden-transition rule — closed 2026-08-17.** Was
+      genuinely blocked (as this entry originally said) on `INVALID_
+      TRANSITIONS` not existing at all; that cleared 2026-08-15
+      (`Entity.invalidTransitions`, per-entity) and was substantially
+      audited 2026-08-15/16, but nothing had ever run those specific real,
+      shipped rules against the real engine — this entry itself just never
+      got revisited once its own blocker cleared. Deliberately NOT added
+      to `tests/*.test.ts` (`CLAUDE.md`'s own stated split: the unit suite
+      stays independent of `data/*.json`, complementary to `npm run
+      validate`, `LEARNINGS_ENGINE.md` 2026-08-13) — instead
+      `scripts/invalid-transitions-as-a-robot.ts` (`npm run
+      capability-test:invalid-transitions`), the same shape as
+      `failure-states-as-a-robot.ts` (which already covers burned/
+      overcooked and wasn't duplicated here). Walks every real
+      `fromState`/`toState` pair in potato/egg/egg_cracked/onion's shipped
+      `invalidTransitions` maps against the real loaded engine — 42
+      real rules, 42/42 passing on first run.
+      \
+      **A real, honest finding surfaced while building this, not smoothed
+      over**: egg's own `peel.json` prerequisite
+      (`statePrerequisites.peel: "boiled"`, a single required state) means
+      PEEL can only ever fire from state `"boiled"` in the first place —
+      so egg's `sliced`/`diced`/`chopped`/`fried`/`poached` entries
+      forbidding a reversion to `"peeled"` are structurally REDUNDANT: the
+      earlier statePrerequisites check already blocks it, for a different,
+      stricter reason, before `invalidTransitions` is ever consulted. Not a
+      bug (defense in depth is harmless) but a real, now-provable
+      difference from potato's OWN reversion-to-peeled entries, where PEEL
+      has no statePrerequisites at all and `invalidTransitions` is the
+      ONLY thing enforcing it — the script reports which mechanism
+      actually fired for each check, rather than treating "REJECTED" as
+      one undifferentiated outcome. Also named, not silently skipped:
+      `egg_cracked`'s `fried`/`scrambled` forbidding a reversion to `"raw"`
+      is a genuinely DEAD entry — no action in this vocabulary ever
+      produces `"raw"` as an output, so that rule can never fire via any
+      real action call at all.
 - [ ] **Real closed-loop control/perception layer for autonomous execution.**
       Explicitly out of scope for this repo as it stands — `engine.ts`'s own
       doc comment and `ENGINE_INVARIANTS.md` #11 are direct about this:

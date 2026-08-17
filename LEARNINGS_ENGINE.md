@@ -1471,3 +1471,39 @@ was made. Don't rewrite or delete old entries — append.
   that widening into a real proof (the capability-test script's 130°C
   case exists specifically to demonstrate the two branches don't
   collapse into one shared threshold by accident).
+
+### A stale "still blocked" roadmap entry, and a redundancy found by actually running every real rule
+
+- **2026-08-17.** "Unit tests per forbidden-transition rule" had sat unchecked
+  in `ROADMAP.md` since before `Entity.invalidTransitions` existed, still
+  reading "blocked on the matrix not existing" two full sessions after that
+  matrix was built and audited (2026-08-15/16). Nobody had gone back to
+  confirm the blocker actually cleared — worth treating a roadmap entry's own
+  stated REASON for being blocked as something to re-check periodically, not
+  just trust as still accurate because the checkbox is still unchecked.
+- **Systematically running every real rule against the real engine — not just
+  a representative sample — found a genuine structural redundancy that spot-
+  checking would have missed**: egg's `peel.json` requires state `"boiled"`
+  exactly (a single required state, not an array), which means PEEL can never
+  fire from `"fried"`/`"poached"`/`"sliced"`/etc. in the first place — so
+  egg.json's own `invalidTransitions` entries forbidding those same states
+  from reverting to `"peeled"` are dead weight, always intercepted earlier by
+  `statePrerequisites`. Confirmed by literally checking which of the two
+  possible error messages fired (`/forbidden transition/` vs. the
+  statePrerequisites one), not assumed from reading the JSON. This is
+  harmless (defense in depth costs nothing at runtime) but worth recording:
+  potato's parallel reversion-to-peeled entries are NOT redundant the same
+  way (PEEL has no statePrerequisites for potato at all) — two entities can
+  carry the textually-identical-looking rule for genuinely different
+  structural reasons, and only actually running both against the real engine
+  (not reading the data side by side) surfaces which is which.
+- **A rule can be unconditionally correct and still be provably DEAD** —
+  `egg_cracked.json`'s `fried`/`scrambled` forbidding a reversion to `"raw"`
+  can never be exercised by any real action, since no action in this
+  vocabulary has an output that ever produces `"raw"` (it only ever appears
+  as an initial inventory state). The honest move was naming this explicitly
+  in the script's own output rather than either (a) silently skipping it with
+  no explanation or (b) faking a fabricated action just to get a green
+  checkmark — the same "don't manufacture a proof, name what can't be proven"
+  discipline this repo has applied to citations elsewhere, now applied to a
+  test case.

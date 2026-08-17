@@ -80,7 +80,9 @@ function attempt(
   const ok = rejected === expectRejected;
   if (ok) passCount++;
   else failCount++;
-  console.log(`  [${ok ? "PASS" : "FAIL"}] ${label}: ${rejected ? "REJECTED" : "SUCCEEDED"} — ${message}`);
+  console.log(
+    `  [${ok ? "PASS" : "FAIL"}] ${label}: ${rejected ? "REJECTED" : "SUCCEEDED"} — ${message}`
+  );
 }
 
 console.log("=== Rule 1 (NEW FIX) — you cannot rest a raw, never-cooked potato ===\n");
@@ -158,13 +160,51 @@ attempt(
   { entityId: "egg_cracked", state: "raw", tags: [] }
 );
 
-console.log("\n=== Rules 4-9 — proof of soundness for mechanisms already correct before this audit ===\n");
-attempt("Rule 4: you cannot fold an egg that hasn't been fried into an omelette shape yet", { entityId: "egg_cracked", state: "raw", tags: [] }, "fold", {}, true);
-attempt("Rule 5: you can fold a fried egg_cracked (the real French-omelette step)", { entityId: "egg_cracked", state: "fried", tags: [] }, "fold", {}, false);
-attempt("Rule 6: you cannot emulsify garlic that hasn't been crushed to a fine paste yet", { entityId: "garlic", state: "peeled", tags: [] }, "emulsify", {}, true);
-attempt("Rule 7: you cannot alkaline-parboil a whole, unpeeled potato", { entityId: "potato", state: "raw", tags: [] }, "alkaline_parboil", {}, true);
-attempt("Rule 8: you cannot caramelize a whole, unsliced onion", { entityId: "onion", state: "peeled", tags: [] }, "caramelize", {}, true);
-attempt("Rule 9: you cannot marinate an onion that hasn't been sliced (quick-pickled-onions.json's real prerequisite)", { entityId: "onion", state: "peeled", tags: [] }, "marinate", { durationSeconds: "1800" }, true);
+console.log(
+  "\n=== Rules 4-9 — proof of soundness for mechanisms already correct before this audit ===\n"
+);
+attempt(
+  "Rule 4: you cannot fold an egg that hasn't been fried into an omelette shape yet",
+  { entityId: "egg_cracked", state: "raw", tags: [] },
+  "fold",
+  {},
+  true
+);
+attempt(
+  "Rule 5: you can fold a fried egg_cracked (the real French-omelette step)",
+  { entityId: "egg_cracked", state: "fried", tags: [] },
+  "fold",
+  {},
+  false
+);
+attempt(
+  "Rule 6: you cannot emulsify garlic that hasn't been crushed to a fine paste yet",
+  { entityId: "garlic", state: "peeled", tags: [] },
+  "emulsify",
+  {},
+  true
+);
+attempt(
+  "Rule 7: you cannot alkaline-parboil a whole, unpeeled potato",
+  { entityId: "potato", state: "raw", tags: [] },
+  "alkaline_parboil",
+  {},
+  true
+);
+attempt(
+  "Rule 8: you cannot caramelize a whole, unsliced onion",
+  { entityId: "onion", state: "peeled", tags: [] },
+  "caramelize",
+  {},
+  true
+);
+attempt(
+  "Rule 9: you cannot marinate an onion that hasn't been sliced (quick-pickled-onions.json's real prerequisite)",
+  { entityId: "onion", state: "peeled", tags: [] },
+  "marinate",
+  { durationSeconds: "1800" },
+  true
+);
 
 console.log(`\n${passCount} passed, ${failCount} failed.`);
 console.log(

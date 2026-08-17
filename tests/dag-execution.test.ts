@@ -20,7 +20,9 @@ import { makeAction } from "./helpers.ts";
  * criterion (tests/dag-execution.test.ts) exactly.
  */
 
-function step(overrides: Partial<RecipeStep> & { actionId: string; targetInstanceId: string }): RecipeStep {
+function step(
+  overrides: Partial<RecipeStep> & { actionId: string; targetInstanceId: string }
+): RecipeStep {
   return { params: {}, availableIngredientInstanceIds: [], ...overrides };
 }
 
@@ -73,9 +75,19 @@ describe("topologicalOrder — cycle detection (acceptance criterion)", () => {
   test("an acyclic DAG (garlic-oil-potatoes-shaped: two branches + a join) produces a valid order", () => {
     const sequence = [
       step({ id: "wash_potato", actionId: "wash", targetInstanceId: "potato-1", dependsOn: [] }),
-      step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: ["wash_potato"] }),
+      step({
+        id: "peel_potato",
+        actionId: "peel",
+        targetInstanceId: "potato-1",
+        dependsOn: ["wash_potato"],
+      }),
       step({ id: "peel_garlic", actionId: "peel", targetInstanceId: "garlic-1", dependsOn: [] }),
-      step({ id: "cut_garlic", actionId: "cut", targetInstanceId: "garlic-1", dependsOn: ["peel_garlic"] }),
+      step({
+        id: "cut_garlic",
+        actionId: "cut",
+        targetInstanceId: "garlic-1",
+        dependsOn: ["peel_garlic"],
+      }),
       step({
         id: "fry_both",
         actionId: "fry",
@@ -127,7 +139,9 @@ describe("topologicalOrder — cycle detection (acceptance criterion)", () => {
   });
 
   test("a step referencing an unknown dependency id throws a clear error rather than silently dropping it", () => {
-    const sequence = [step({ id: "a", actionId: "boil", targetInstanceId: "x", dependsOn: ["nonexistent"] })];
+    const sequence = [
+      step({ id: "a", actionId: "boil", targetInstanceId: "x", dependsOn: ["nonexistent"] }),
+    ];
     assert.throws(() => topologicalOrder(sequence), /unknown step id "nonexistent"/);
   });
 });
@@ -171,8 +185,20 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
   test("join node (Step C 'toss pasta in sauce' waits for BOTH A and B): starts only once the LATER of the two finishes", () => {
     const nodes: DagNode[] = [
       { id: "boil_pasta", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: [] }, // finishes at 600
-      { id: "simmer_sauce", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: [] }, // finishes at 900
-      { id: "toss", dependsOn: ["boil_pasta", "simmer_sauce"], durationSeconds: 60, active: true, requiredToolIds: [] },
+      {
+        id: "simmer_sauce",
+        dependsOn: [],
+        durationSeconds: 900,
+        active: false,
+        requiredToolIds: [],
+      }, // finishes at 900
+      {
+        id: "toss",
+        dependsOn: ["boil_pasta", "simmer_sauce"],
+        durationSeconds: 60,
+        active: true,
+        requiredToolIds: [],
+      },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.nodes.get("toss")!.startSeconds, 900); // NOT 600 — must wait for the later dependency
@@ -184,7 +210,13 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
     const nodes: DagNode[] = [
       { id: "prep", dependsOn: [], durationSeconds: 100, active: true, requiredToolIds: [] }, // actor busy 0-100
       { id: "boil", dependsOn: [], durationSeconds: 50, active: false, requiredToolIds: [] }, // finishes at 50, well before prep
-      { id: "combine", dependsOn: ["prep", "boil"], durationSeconds: 30, active: true, requiredToolIds: [] },
+      {
+        id: "combine",
+        dependsOn: ["prep", "boil"],
+        durationSeconds: 30,
+        active: true,
+        requiredToolIds: [],
+      },
     ];
     const schedule = scheduleDag(nodes);
     // combine's readySeconds = max(finish(prep)=100, finish(boil)=50) = 100;
@@ -210,8 +242,20 @@ describe("scheduleDag — tool-lock behavior (WORLD_MODEL_OPTIMIZATION.md's tool
 
   test("two independent steps using DIFFERENT tools still overlap fully — the lock is per-tool, not global", () => {
     const nodes: DagNode[] = [
-      { id: "boil_in_pot", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: ["pot"] },
-      { id: "roast_in_oven", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: ["oven"] },
+      {
+        id: "boil_in_pot",
+        dependsOn: [],
+        durationSeconds: 600,
+        active: false,
+        requiredToolIds: ["pot"],
+      },
+      {
+        id: "roast_in_oven",
+        dependsOn: [],
+        durationSeconds: 900,
+        active: false,
+        requiredToolIds: ["oven"],
+      },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.totalSeconds, 900); // max, not sum — genuinely different resources
@@ -221,8 +265,20 @@ describe("scheduleDag — tool-lock behavior (WORLD_MODEL_OPTIMIZATION.md's tool
 
   test("a PASSIVE step still locks its tool even though it never touches the actor constraint", () => {
     const nodes: DagNode[] = [
-      { id: "boil_passive", dependsOn: [], durationSeconds: 500, active: false, requiredToolIds: ["pot"] },
-      { id: "boil_again", dependsOn: [], durationSeconds: 100, active: false, requiredToolIds: ["pot"] },
+      {
+        id: "boil_passive",
+        dependsOn: [],
+        durationSeconds: 500,
+        active: false,
+        requiredToolIds: ["pot"],
+      },
+      {
+        id: "boil_again",
+        dependsOn: [],
+        durationSeconds: 100,
+        active: false,
+        requiredToolIds: ["pot"],
+      },
     ];
     const schedule = scheduleDag(nodes);
     // Both are passive (never wait on the actor), but the SECOND still can't start until the
@@ -233,9 +289,27 @@ describe("scheduleDag — tool-lock behavior (WORLD_MODEL_OPTIMIZATION.md's tool
 
   test("a node with multiple requiredToolIds waits for ALL of them to be free", () => {
     const nodes: DagNode[] = [
-      { id: "occupy_pan", dependsOn: [], durationSeconds: 200, active: false, requiredToolIds: ["pan"] },
-      { id: "occupy_pot", dependsOn: [], durationSeconds: 50, active: false, requiredToolIds: ["pot"] },
-      { id: "needs_both", dependsOn: [], durationSeconds: 30, active: false, requiredToolIds: ["pan", "pot"] },
+      {
+        id: "occupy_pan",
+        dependsOn: [],
+        durationSeconds: 200,
+        active: false,
+        requiredToolIds: ["pan"],
+      },
+      {
+        id: "occupy_pot",
+        dependsOn: [],
+        durationSeconds: 50,
+        active: false,
+        requiredToolIds: ["pot"],
+      },
+      {
+        id: "needs_both",
+        dependsOn: [],
+        durationSeconds: 30,
+        active: false,
+        requiredToolIds: ["pan", "pot"],
+      },
     ];
     const schedule = scheduleDag(nodes);
     // needs_both can't start until BOTH the pan (free at 200) and the pot (free at 50) are free.
@@ -265,7 +339,11 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
     requiresActiveAttention: true,
     outputs: { transformedState: "caramelized" },
   });
-  const peelAction = makeAction({ id: "peel", actionKind: "instantaneous", outputs: { transformedState: "peeled" } });
+  const peelAction = makeAction({
+    id: "peel",
+    actionKind: "instantaneous",
+    outputs: { transformedState: "peeled" },
+  });
   const fryAction = makeAction({
     id: "fry",
     actionKind: "continuous",
@@ -295,7 +373,13 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
 
   test("duration is read from the step's own params.durationSeconds, matching in-progress-action.ts's extraction exactly", () => {
     const sequence = [
-      step({ id: "boil_potato", actionId: "boil", targetInstanceId: "potato-1", params: { durationSeconds: "600" }, dependsOn: [] }),
+      step({
+        id: "boil_potato",
+        actionId: "boil",
+        targetInstanceId: "potato-1",
+        params: { durationSeconds: "600" },
+        dependsOn: [],
+      }),
       step({
         id: "caramelize_onion",
         actionId: "caramelize",
@@ -309,13 +393,17 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
   });
 
   test("an instantaneous action (PEEL) is always treated as active, with 0 duration when unparameterized", () => {
-    const sequence = [step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: [] })];
+    const sequence = [
+      step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: [] }),
+    ];
     const schedule = scheduleDagFromSteps(sequence, actions);
     assert.equal(schedule.nodes.get("peel_potato")!.finishSeconds, 0);
   });
 
   test("an unknown actionId (not in the loaded actions map) defaults to active — the SAFE default, never silently passive", () => {
-    const sequence = [step({ id: "mystery", actionId: "does_not_exist", targetInstanceId: "x", dependsOn: [] })];
+    const sequence = [
+      step({ id: "mystery", actionId: "does_not_exist", targetInstanceId: "x", dependsOn: [] }),
+    ];
     // Should not throw — just falls back to active: true, duration: 0.
     const schedule = scheduleDagFromSteps(sequence, actions);
     assert.equal(schedule.nodes.get("mystery")!.finishSeconds, 0);
@@ -341,20 +429,42 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
       }),
     ];
     const schedule = scheduleDagFromSteps(sequence, actions);
-    assert.deepEqual(schedule.nodes.get("simmer_a")!, { id: "simmer_a", startSeconds: 0, finishSeconds: 300 });
-    assert.deepEqual(schedule.nodes.get("simmer_b")!, { id: "simmer_b", startSeconds: 300, finishSeconds: 600 });
+    assert.deepEqual(schedule.nodes.get("simmer_a")!, {
+      id: "simmer_a",
+      startSeconds: 0,
+      finishSeconds: 300,
+    });
+    assert.deepEqual(schedule.nodes.get("simmer_b")!, {
+      id: "simmer_b",
+      startSeconds: 300,
+      finishSeconds: 600,
+    });
   });
 
   test("requiredToolIds derivation: an action with no requiredTools at all (PEEL) schedules with no tool lock at all", () => {
-    const sequence = [step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: [] })];
+    const sequence = [
+      step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: [] }),
+    ];
     const schedule = scheduleDagFromSteps(sequence, actions);
     assert.equal(schedule.nodes.get("peel_potato")!.startSeconds, 0); // no tool wait, nothing to conflict with
   });
 
   test("a cyclic dependsOn among real RecipeSteps throws rather than producing a nonsensical schedule", () => {
     const sequence = [
-      step({ id: "a", actionId: "boil", targetInstanceId: "x", params: { durationSeconds: "10" }, dependsOn: ["b"] }),
-      step({ id: "b", actionId: "boil", targetInstanceId: "x", params: { durationSeconds: "10" }, dependsOn: ["a"] }),
+      step({
+        id: "a",
+        actionId: "boil",
+        targetInstanceId: "x",
+        params: { durationSeconds: "10" },
+        dependsOn: ["b"],
+      }),
+      step({
+        id: "b",
+        actionId: "boil",
+        targetInstanceId: "x",
+        params: { durationSeconds: "10" },
+        dependsOn: ["a"],
+      }),
     ];
     assert.throws(() => scheduleDagFromSteps(sequence, actions), /circular dependency/);
   });
@@ -362,7 +472,11 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
   test("backward compatibility: a fully legacy linear recipe (no id/dependsOn anywhere) schedules as pure serial time, matching today's actual runRecipe behavior", () => {
     const sequence = [
       step({ actionId: "boil", targetInstanceId: "potato-1", params: { durationSeconds: "600" } }),
-      step({ actionId: "caramelize", targetInstanceId: "onion-1", params: { durationSeconds: "300" } }),
+      step({
+        actionId: "caramelize",
+        targetInstanceId: "onion-1",
+        params: { durationSeconds: "300" },
+      }),
     ];
     const schedule = scheduleDagFromSteps(sequence, actions);
     // No explicit dependsOn -> step 1 auto-depends on step 0 -> forced serial, 600 + 300 = 900,

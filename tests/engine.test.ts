@@ -730,11 +730,21 @@ describe("applyAction — outputs & conservation of mass", () => {
     // The identical entity, in the state its own statePrerequisites
     // actually requires, still succeeds — the fix narrows what's accepted,
     // it doesn't break the real path.
-    const result = applyAction(target, action, entities, NO_TOOLS, {}, NO_INGREDIENTS, NO_CCPS, undefined, {
-      entityId: "beaten_egg",
-      state: "beaten",
-      tags: [],
-    });
+    const result = applyAction(
+      target,
+      action,
+      entities,
+      NO_TOOLS,
+      {},
+      NO_INGREDIENTS,
+      NO_CCPS,
+      undefined,
+      {
+        entityId: "beaten_egg",
+        state: "beaten",
+        tags: [],
+      }
+    );
     assert.equal(result.secondaryDestroyed, true);
   });
 
@@ -982,7 +992,10 @@ describe("applyAction — HACCP / CCP enforcement", () => {
 describe("requiredIngredientCapabilityFromParameter / addsTagFromParameter — SEASON generalization (2026-08-17)", () => {
   const potato = makeEntity({ id: "potato", capabilities: { isSeasonable: true } });
   const saltEntity = makeEntity({ id: "salt", capabilities: { isSaltySeasoning: true } });
-  const pepperEntity = makeEntity({ id: "black_pepper", capabilities: { isPepperySeasoning: true } });
+  const pepperEntity = makeEntity({
+    id: "black_pepper",
+    capabilities: { isPepperySeasoning: true },
+  });
   const entities = new Map([
     ["potato", potato],
     ["salt", saltEntity],
@@ -1034,7 +1047,14 @@ describe("requiredIngredientCapabilityFromParameter / addsTagFromParameter — S
   test("rejects seasoningType: salt when only a pepper ingredient is available — the exact bug the flat requiredIngredientCapabilities list would have missed", () => {
     assert.throws(
       () =>
-        applyAction(target, season, entities, NO_TOOLS, { seasoningType: "salt" }, new Set(["black_pepper"])),
+        applyAction(
+          target,
+          season,
+          entities,
+          NO_TOOLS,
+          { seasoningType: "salt" },
+          new Set(["black_pepper"])
+        ),
       /requires an available ingredient with capability "isSaltySeasoning"/
     );
   });
@@ -1051,7 +1071,14 @@ describe("requiredIngredientCapabilityFromParameter / addsTagFromParameter — S
     });
     assert.throws(
       () =>
-        applyAction(target, badAction, entities, NO_TOOLS, { seasoningType: "chili" }, new Set(["salt"])),
+        applyAction(
+          target,
+          badAction,
+          entities,
+          NO_TOOLS,
+          { seasoningType: "chili" },
+          new Set(["salt"])
+        ),
       /no known ingredient capability for "seasoningType: chili"/
     );
   });
@@ -1076,7 +1103,14 @@ describe("requiredIngredientCapabilityFromParameter / addsTagFromParameter — S
   });
 
   test("addsTagFromParameter rejects an unrecognized value with a clear error, not a silent no-op", () => {
-    const result0 = applyAction(target, season, entities, NO_TOOLS, { seasoningType: "salt" }, new Set(["salt"]));
+    const result0 = applyAction(
+      target,
+      season,
+      entities,
+      NO_TOOLS,
+      { seasoningType: "salt" },
+      new Set(["salt"])
+    );
     assert.deepEqual(result0.instance.tags, ["salted"]); // sanity: normal path still works
     const badTagAction = makeAction({
       id: "season",

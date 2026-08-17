@@ -24,7 +24,11 @@ describe("resolveDefaultParamValue", () => {
   });
 
   test("numericRange -> the midpoint", () => {
-    const param = { id: "temp", required: true, numericRange: { unit: "celsius", min: 100, max: 200 } } as any;
+    const param = {
+      id: "temp",
+      required: true,
+      numericRange: { unit: "celsius", min: 100, max: 200 },
+    } as any;
     assert.equal(resolveDefaultParamValue(param), "150");
   });
 });
@@ -52,7 +56,12 @@ describe("stepsToRecipeSteps", () => {
       availableIngredientInstances: [{ id: "oil-1", entityId: "oil" }],
     });
     assert.deepEqual(steps, [
-      { actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: ["oil-1"] },
+      {
+        actionId: "fry",
+        targetInstanceId: "potato-1",
+        params: {},
+        availableIngredientInstanceIds: ["oil-1"],
+      },
     ]);
   });
 
@@ -153,7 +162,11 @@ describe("planLowestCost", () => {
       outputs: { transformedState: "done" },
       hazards: [{ type: "hot_liquid", severity: "high", note: "test" }],
     });
-    const safe = makeAction({ id: "safe_route", outputs: { transformedState: "done" }, hazards: [] });
+    const safe = makeAction({
+      id: "safe_route",
+      outputs: { transformedState: "done" },
+      hazards: [],
+    });
     const entities = new Map([["widget", widget]]);
     const actions = new Map([
       ["risky_route", risky],
@@ -222,7 +235,11 @@ describe("planSecondaryRole", () => {
     ["egg", makeEntity({ id: "egg", allowedTransformations: ["crack"] })],
     [
       "egg_cracked",
-      makeEntity({ id: "egg_cracked", possibleStates: ["raw"], capabilities: { isCombinableAddition: true } }),
+      makeEntity({
+        id: "egg_cracked",
+        possibleStates: ["raw"],
+        capabilities: { isCombinableAddition: true },
+      }),
     ],
     ["egg_shell", makeEntity({ id: "egg_shell", possibleStates: ["raw"] })],
   ]);
@@ -233,7 +250,10 @@ describe("planSecondaryRole", () => {
   const actions = new Map([["crack", crack]]);
 
   test("already-satisfying entity is used as-is, zero steps", () => {
-    const beatable = makeEntity({ id: "egg_cracked", capabilities: { isCombinableAddition: true } });
+    const beatable = makeEntity({
+      id: "egg_cracked",
+      capabilities: { isCombinableAddition: true },
+    });
     const result = planSecondaryRole(
       "egg_cracked-1",
       beatable,
@@ -277,7 +297,12 @@ describe("planSecondaryRole", () => {
       assert.equal(result.finalInstanceId, "egg_cracked-2"); // egg_shell takes 1, egg_cracked takes 2
       assert.equal(result.finalEntityId, "egg_cracked");
       assert.deepEqual(result.steps, [
-        { actionId: "crack", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: [] },
+        {
+          actionId: "crack",
+          targetInstanceId: "egg-1",
+          params: {},
+          availableIngredientInstanceIds: [],
+        },
       ]);
     }
   });
@@ -346,8 +371,15 @@ describe("planCombine", () => {
     statePrerequisites: { combine: "fried" },
     capabilities: { isFryable: true, isCombinableBase: true },
   });
-  const eggCracked = makeEntity({ id: "egg_cracked", capabilities: { isCombinableAddition: true } });
-  const fry = makeAction({ id: "fry", requiredTargetCapability: "isFryable", outputs: { transformedState: "fried" } });
+  const eggCracked = makeEntity({
+    id: "egg_cracked",
+    capabilities: { isCombinableAddition: true },
+  });
+  const fry = makeAction({
+    id: "fry",
+    requiredTargetCapability: "isFryable",
+    outputs: { transformedState: "fried" },
+  });
   const combine = makeAction({
     id: "combine",
     requiredTargetCapability: "isCombinableBase",
@@ -428,7 +460,11 @@ describe("planIntent", () => {
     allowedTransformations: ["fry"],
     capabilities: { isFryable: true },
   });
-  const fry = makeAction({ id: "fry", requiredTargetCapability: "isFryable", outputs: { transformedState: "fried" } });
+  const fry = makeAction({
+    id: "fry",
+    requiredTargetCapability: "isFryable",
+    outputs: { transformedState: "fried" },
+  });
   const entities = new Map([["potato", potato]]);
   const actions = new Map([["fry", fry]]);
 
@@ -470,7 +506,10 @@ describe("planIntent", () => {
   });
 
   test("$combineResult:<goalIndex> lets a later goal target an earlier combine goal's spawned output", () => {
-    const eggCracked = makeEntity({ id: "egg_cracked", capabilities: { isCombinableAddition: true } });
+    const eggCracked = makeEntity({
+      id: "egg_cracked",
+      capabilities: { isCombinableAddition: true },
+    });
     const combinableFriedPotato = makeEntity({
       id: "potato",
       allowedTransformations: ["fry"],

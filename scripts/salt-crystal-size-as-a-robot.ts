@@ -28,10 +28,20 @@ const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 const salt = actions.get("salt")!;
 
-console.log("1. All three real salt products are accepted as substitutes for SALT — no engine check catches a volume-based mistake:\n");
+console.log(
+  "1. All three real salt products are accepted as substitutes for SALT — no engine check catches a volume-based mistake:\n"
+);
 for (const entityId of ["salt", "kosher_salt", "flaky_salt"]) {
   const instance: Instance = { entityId: "potato", state: "fried", tags: [] };
-  const result = applyAction(instance, salt, entities, new Set(), { timing: "after_cooking" }, new Set([entityId]), ccps);
+  const result = applyAction(
+    instance,
+    salt,
+    entities,
+    new Set(),
+    { timing: "after_cooking" },
+    new Set([entityId]),
+    ccps
+  );
   console.log(`  potato + ${entityId}: SALT succeeds — tags [${result.instance.tags}]`);
 }
 
@@ -42,8 +52,13 @@ console.log(
 );
 for (const entityId of ["salt", "kosher_salt", "flaky_salt"]) {
   const answer = answerAboutEntityDomainFact(entities, entityId, "gramsPerTeaspoon")!;
-  const value = typeof answer.fact.value === "number" ? answer.fact.value : `${answer.fact.value.min}-${answer.fact.value.max}`;
-  console.log(`  ${answer.entityNameEn}: ${value} ${answer.fact.unit} — ${answer.fact.citation.confidence}`);
+  const value =
+    typeof answer.fact.value === "number"
+      ? answer.fact.value
+      : `${answer.fact.value.min}-${answer.fact.value.max}`;
+  console.log(
+    `  ${answer.entityNameEn}: ${value} ${answer.fact.unit} — ${answer.fact.citation.confidence}`
+  );
 }
 
 console.log(

@@ -1,12 +1,7 @@
 import { join } from "node:path";
 import { loadEntities, loadActions, loadCcps } from "../src/registry.ts";
 import { runRecipe, runRecipeFromIntent } from "../src/recipe-runner.ts";
-import {
-  planIntent,
-  planLowestCost,
-  stepsToRecipeSteps,
-  defaultEdgeCost,
-} from "../src/planner.ts";
+import { planIntent, planLowestCost, stepsToRecipeSteps, defaultEdgeCost } from "../src/planner.ts";
 import { isGoalReachable } from "../src/reachability.ts";
 import type { RecipeIntent } from "../src/recipe.ts";
 
@@ -54,7 +49,9 @@ if (singleResult.reachable) {
   console.log(`  RecipeSteps: ${JSON.stringify(steps)}`);
 }
 
-console.log("\n=== 2. RecipeIntentSchema + planIntent — a single-instance intent, no hand-authored steps ===\n");
+console.log(
+  "\n=== 2. RecipeIntentSchema + planIntent — a single-instance intent, no hand-authored steps ===\n"
+);
 const singleIntent: RecipeIntent = {
   id: "planned-fried-potato",
   names: { en: "Planned fried potato" },
@@ -77,7 +74,9 @@ if (singlePlan.success) {
   console.log(`  FAILED: ${JSON.stringify(singlePlan.failures)}`);
 }
 
-console.log("\n=== 3. Cost-aware search — prefers fewer/less-severe hazards among equal-length paths ===\n");
+console.log(
+  "\n=== 3. Cost-aware search — prefers fewer/less-severe hazards among equal-length paths ===\n"
+);
 const shortest = isGoalReachable({
   entity: potato,
   entities,
@@ -106,10 +105,12 @@ if (cheapest.reachable) {
     `  cost-aware:               ${cheapest.path.map((s) => s.actionId).join(" -> ")} (totalCost = ${cheapest.totalCost.toFixed(2)})`
   );
   const fryAction = actions.get("fry")!;
-  console.log(`  FRY's own defaultEdgeCost: ${defaultEdgeCost(fryAction).toFixed(2)} (1 + hazard penalty)`);
+  console.log(
+    `  FRY's own defaultEdgeCost: ${defaultEdgeCost(fryAction).toFixed(2)} (1 + hazard penalty)`
+  );
 }
 console.log(
-  "  Same path here (FRY is on the only real route to \"fried\") — the real proof is that both searches " +
+  '  Same path here (FRY is on the only real route to "fried") — the real proof is that both searches ' +
     "agree when there's only one route, and that cost-aware search still terminates/returns correctly, not " +
     "that this specific case diverges (see tests/planner.test.ts for a synthetic fixture where two equal-" +
     "length paths genuinely differ in hazard cost, and cost-aware search picks the safer one)."
@@ -148,7 +149,10 @@ const tortillaPlan = planIntent(tortillaIntent, entities, actions);
 if (tortillaPlan.success) {
   console.log(
     `  planned sequence:\n    ${tortillaPlan.recipe.sequence
-      .map((s) => `${s.actionId}(${s.targetInstanceId}${s.secondaryInstanceId ? " + " + s.secondaryInstanceId : ""})`)
+      .map(
+        (s) =>
+          `${s.actionId}(${s.targetInstanceId}${s.secondaryInstanceId ? " + " + s.secondaryInstanceId : ""})`
+      )
       .join("\n    ")}`
   );
   const runResult = runRecipe(tortillaPlan.recipe, entities, actions, ccps);
@@ -190,7 +194,9 @@ const dicedOutcome = runRecipeFromIntent(
   new Set(["pan"]) // ACTUALLY only a pan on hand — no knife
 );
 if (dicedOutcome.planned) {
-  console.log(`  planned sequence (assuming a knife): ${dicedOutcome.result.log[0] ?? "(none logged yet)"}`);
+  console.log(
+    `  planned sequence (assuming a knife): ${dicedOutcome.result.log[0] ?? "(none logged yet)"}`
+  );
   console.log(`  errors: ${dicedOutcome.result.errors.length}`);
   console.log(`  replans: ${JSON.stringify(dicedOutcome.result.replans)}`);
   for (const e of dicedOutcome.result.errors) console.log(`    ${e.step.actionId}: ${e.message}`);

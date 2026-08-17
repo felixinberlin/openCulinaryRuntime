@@ -43,13 +43,27 @@ console.log(
     "oven-only kitchen, ROAST rejects a grill-only one:\n"
 );
 try {
-  applyAction({ entityId: "potato", state: "quartered", tags: [] }, grill, entities, new Set(["oven"]), {}, OIL);
+  applyAction(
+    { entityId: "potato", state: "quartered", tags: [] },
+    grill,
+    entities,
+    new Set(["oven"]),
+    {},
+    OIL
+  );
   console.log("  Unexpected: GRILL with only an oven (no grill) should have been rejected.");
 } catch (e) {
   console.log(`  GRILL with only an oven on hand: REJECTED — ${(e as Error).message}`);
 }
 try {
-  applyAction({ entityId: "potato", state: "quartered", tags: [] }, roast, entities, new Set(["grill"]), {}, OIL);
+  applyAction(
+    { entityId: "potato", state: "quartered", tags: [] },
+    roast,
+    entities,
+    new Set(["grill"]),
+    {},
+    OIL
+  );
   console.log("  Unexpected: ROAST with only a grill (no oven) should have been rejected.");
 } catch (e) {
   console.log(`  ROAST with only a grill on hand: REJECTED — ${(e as Error).message}`);

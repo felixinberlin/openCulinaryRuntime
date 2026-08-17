@@ -1,7 +1,12 @@
 import { join } from "node:path";
 import { loadEntities, loadActions, loadCcps } from "../src/registry.ts";
 import { executionBoundFor } from "../src/execution-bounds.ts";
-import { beginAction, progressStatus, fractionOfRequestedDuration, remainingRequestedSeconds } from "../src/in-progress-action.ts";
+import {
+  beginAction,
+  progressStatus,
+  fractionOfRequestedDuration,
+  remainingRequestedSeconds,
+} from "../src/in-progress-action.ts";
 
 /**
  * Capability test for `src/in-progress-action.ts` — the next real slice of
@@ -41,13 +46,21 @@ const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 
-function checkIn(label: string, actionId: string, entityId: string, params: Record<string, string>, checkpoints: number[]): void {
+function checkIn(
+  label: string,
+  actionId: string,
+  entityId: string,
+  params: Record<string, string>,
+  checkpoints: number[]
+): void {
   console.log(`\n=== ${label} ===`);
   const action = actions.get(actionId)!;
   const entity = entities.get(entityId)!;
   const inProgress = beginAction(action, params, 0);
   if (!inProgress) {
-    console.log(`  beginAction returned undefined — not a continuous, audited action. Nothing to check in on.`);
+    console.log(
+      `  beginAction returned undefined — not a continuous, audited action. Nothing to check in on.`
+    );
     return;
   }
   const bound = executionBoundFor(action, entity, params, ccps);
@@ -61,14 +74,20 @@ function checkIn(label: string, actionId: string, entityId: string, params: Reco
     const remaining = remainingRequestedSeconds(inProgress, t);
     console.log(
       `  t=${t}s -> ${status}` +
-        (fraction !== undefined ? `, ${Math.round(fraction * 100)}% of requested duration, ${remaining}s remaining` : "")
+        (fraction !== undefined
+          ? `, ${Math.round(fraction * 100)}% of requested duration, ${remaining}s remaining`
+          : "")
     );
   }
 }
 
-checkIn("A. BOIL egg — flat CCP floor (egg_cooking), real requested duration", "boil", "egg", { durationSeconds: "420" }, [
-  5, 60, 200, 420, 500,
-]);
+checkIn(
+  "A. BOIL egg — flat CCP floor (egg_cooking), real requested duration",
+  "boil",
+  "egg",
+  { durationSeconds: "420" },
+  [5, 60, 200, 420, 500]
+);
 
 checkIn(
   "B. FRY — no CCP floor, requested duration LONGER than the real 1800s ceiling",
@@ -78,9 +97,13 @@ checkIn(
   [900, 1799, 1800, 2000]
 );
 
-checkIn("C. MASH — no durationSeconds parameter at all, worked 'until done'", "mash", "potato", { consistency: "smooth" }, [
-  60, 300, 600, 700,
-]);
+checkIn(
+  "C. MASH — no durationSeconds parameter at all, worked 'until done'",
+  "mash",
+  "potato",
+  { consistency: "smooth" },
+  [60, 300, 600, 700]
+);
 
 console.log("\n=== D. PEEL — instantaneous, no partial-completion concept ===");
 const peelAction = actions.get("peel")!;

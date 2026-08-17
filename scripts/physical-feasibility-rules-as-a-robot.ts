@@ -63,7 +63,9 @@ function attempt(
   const ok = rejected === expectRejected;
   if (ok) passCount++;
   else failCount++;
-  console.log(`  [${ok ? "PASS" : "FAIL"}] ${label}: ${rejected ? "REJECTED" : "SUCCEEDED"} — ${message}`);
+  console.log(
+    `  [${ok ? "PASS" : "FAIL"}] ${label}: ${rejected ? "REJECTED" : "SUCCEEDED"} — ${message}`
+  );
 }
 
 console.log("=== rule #29 fix — DRAIN now correctly requires a real wet/oily state first ===\n");
@@ -90,7 +92,13 @@ attempt(
 );
 
 console.log("\n=== rules #1/#6/#9 — WASH gated on isWashable, not just 'always works' ===\n");
-attempt("WASH salt (isWashable: false)", { entityId: "salt", state: "dry", tags: [] }, "wash", {}, true);
+attempt(
+  "WASH salt (isWashable: false)",
+  { entityId: "salt", state: "dry", tags: [] },
+  "wash",
+  {},
+  true
+);
 attempt(
   "WASH black pepper (isWashable: false)",
   { entityId: "black_pepper", state: "whole", tags: [] },
@@ -98,8 +106,20 @@ attempt(
   {},
   true
 );
-attempt("WASH oil (isWashable unasserted)", { entityId: "oil", state: "cold", tags: [] }, "wash", {}, true);
-attempt("WASH water (isWashable unasserted)", { entityId: "water", state: "cold", tags: [] }, "wash", {}, true);
+attempt(
+  "WASH oil (isWashable unasserted)",
+  { entityId: "oil", state: "cold", tags: [] },
+  "wash",
+  {},
+  true
+);
+attempt(
+  "WASH water (isWashable unasserted)",
+  { entityId: "water", state: "cold", tags: [] },
+  "wash",
+  {},
+  true
+);
 attempt(
   "WASH a raw potato (isWashable: true — the real, common case)",
   { entityId: "potato", state: "raw", tags: [] },
@@ -108,12 +128,30 @@ attempt(
   false
 );
 
-console.log("\n=== rules #4/#6 — CHOP/GRATE gated on isChoppable/isGratable, not just any solid ===\n");
-attempt("CUT water (isChoppable unasserted)", { entityId: "water", state: "cold", tags: [] }, "cut", { shape: "sliced" }, true);
-attempt("GRATE oil (isGratable unasserted)", { entityId: "oil", state: "cold", tags: [] }, "grate", {}, true);
+console.log(
+  "\n=== rules #4/#6 — CHOP/GRATE gated on isChoppable/isGratable, not just any solid ===\n"
+);
+attempt(
+  "CUT water (isChoppable unasserted)",
+  { entityId: "water", state: "cold", tags: [] },
+  "cut",
+  { shape: "sliced" },
+  true
+);
+attempt(
+  "GRATE oil (isGratable unasserted)",
+  { entityId: "oil", state: "cold", tags: [] },
+  "grate",
+  {},
+  true
+);
 
-console.log("\n=== rule #17 — cannot chop something already mashed (the CLAUDE_DEV_CTX.md canonical example) ===\n");
-console.log("(exhaustively audited already by invalid-transitions-as-a-robot.ts; one representative check here)");
+console.log(
+  "\n=== rule #17 — cannot chop something already mashed (the CLAUDE_DEV_CTX.md canonical example) ===\n"
+);
+console.log(
+  "(exhaustively audited already by invalid-transitions-as-a-robot.ts; one representative check here)"
+);
 attempt(
   "CUT a mashed potato",
   { entityId: "potato", state: "mashed", tags: ["washed"] },
@@ -123,8 +161,12 @@ attempt(
 );
 
 console.log("\n=== rule #40 — cannot separate an egg's yolk from its white after the fact ===\n");
-console.log("(structural, not a statePrerequisite: SEPARATE destroysTarget — once separated, the whole-egg");
-console.log(" instance is GONE, spawning egg_yolk/egg_white in its place; there is no 'egg' left to re-separate)");
+console.log(
+  "(structural, not a statePrerequisite: SEPARATE destroysTarget — once separated, the whole-egg"
+);
+console.log(
+  " instance is GONE, spawning egg_yolk/egg_white in its place; there is no 'egg' left to re-separate)"
+);
 const eggAction = actions.get("separate")!;
 const eggInstance: Instance = { entityId: "egg", state: "raw", tags: [] };
 const separated = applyAction(eggInstance, eggAction, entities, ALL_TOOLS, {});
@@ -136,10 +178,16 @@ console.log(
 passCount++;
 
 console.log("\n=== rule #12 — cannot crack an egg that is already cracked ===\n");
-console.log("(structural: CRACK spawns a DIFFERENT entity, egg_cracked — an egg_cracked instance is never fed");
-console.log(" back into CRACK's own requiredTargetCapability, isCrackable, which only egg.json asserts)");
+console.log(
+  "(structural: CRACK spawns a DIFFERENT entity, egg_cracked — an egg_cracked instance is never fed"
+);
+console.log(
+  " back into CRACK's own requiredTargetCapability, isCrackable, which only egg.json asserts)"
+);
 const crackedEntity = entities.get("egg_cracked")!;
-console.log(`  egg_cracked.json capabilities.isCrackable: ${crackedEntity.capabilities.isCrackable ?? "unasserted"}`);
+console.log(
+  `  egg_cracked.json capabilities.isCrackable: ${crackedEntity.capabilities.isCrackable ?? "unasserted"}`
+);
 if (crackedEntity.capabilities.isCrackable !== true) passCount++;
 else failCount++;
 

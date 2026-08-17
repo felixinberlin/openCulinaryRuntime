@@ -33,7 +33,9 @@ for (const toolId of ["pot", "pan", "saucepan", "wok"]) {
     new Set(["water"]),
     ccps
   );
-  console.log(`POACH with only "${toolId}" on hand: "${instance.state}" -> "${result.instance.state}"`);
+  console.log(
+    `POACH with only "${toolId}" on hand: "${instance.state}" -> "${result.instance.state}"`
+  );
 }
 
 console.log(

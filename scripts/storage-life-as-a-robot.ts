@@ -24,9 +24,11 @@ for (const entity of entities.values()) {
   console.log(`  ${entity.id}:`);
   for (const [state, life] of entries) {
     const parts: string[] = [];
-    if (life.refrigeratedDays) parts.push(`refrigerated ${life.refrigeratedDays.min}-${life.refrigeratedDays.max}d`);
+    if (life.refrigeratedDays)
+      parts.push(`refrigerated ${life.refrigeratedDays.min}-${life.refrigeratedDays.max}d`);
     if (life.pantryMonths) parts.push(`pantry ${life.pantryMonths.min}-${life.pantryMonths.max}mo`);
-    if (life.roomTempHours) parts.push(`room temp ${life.roomTempHours.min}-${life.roomTempHours.max}h`);
+    if (life.roomTempHours)
+      parts.push(`room temp ${life.roomTempHours.min}-${life.roomTempHours.max}h`);
     if (life.doNotRefrigerate) parts.push("do NOT refrigerate");
     console.log(`    "${state}": ${parts.join(", ")}`);
   }
@@ -42,7 +44,14 @@ function tinyRecipe(state: string): RecipeScript {
     names: { en: "storage test" },
     initialInventory: [{ id: "egg-1", entityId: "egg", state, tags: [] }],
     availableTools: [],
-    sequence: [{ actionId: "salt", targetInstanceId: "egg-1", params: {}, availableIngredientInstanceIds: ["salt"] }],
+    sequence: [
+      {
+        actionId: "salt",
+        targetInstanceId: "egg-1",
+        params: {},
+        availableIngredientInstanceIds: ["salt"],
+      },
+    ],
     metadata: {},
   };
 }
@@ -57,7 +66,8 @@ for (const state of ["raw", "boiled", "peeled"]) {
 console.log("\n3. storageSummary computed over every real data/recipes/*.json:\n");
 for (const recipe of recipes.values()) {
   const summary = explainRecipe(recipe, entities, actions, ccps).storageSummary;
-  const label = summary.length > 0 ? summary.map((s) => `${s.instanceId}("${s.state}")`).join(", ") : "(none)";
+  const label =
+    summary.length > 0 ? summary.map((s) => `${s.instanceId}("${s.state}")`).join(", ") : "(none)";
   console.log(`  ${recipe.id}: ${label}`);
 }
 
@@ -66,7 +76,9 @@ console.log(
     "own existing frying-physics citations (fry.json/cut-dimensions.ts/heat-penetration.ts):\n"
 );
 const potatoLife = entities.get("potato")!.storageLifeByState.raw;
-console.log(`  potato "raw": doNotRefrigerate = ${potatoLife.doNotRefrigerate}, pantryMonths = ${JSON.stringify(potatoLife.pantryMonths)}`);
+console.log(
+  `  potato "raw": doNotRefrigerate = ${potatoLife.doNotRefrigerate}, pantryMonths = ${JSON.stringify(potatoLife.pantryMonths)}`
+);
 
 console.log(
   "\nStill NOT closed by this addition, named rather than implied covered: this is DECLARATION only — no " +

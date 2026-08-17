@@ -237,7 +237,9 @@ export function scheduleDag(nodes: readonly DagNode[]): DagSchedule {
     const readySeconds = node.dependsOn.reduce((max, depId) => {
       const depFinish = finishOf.get(depId);
       if (depFinish === undefined) {
-        throw new Error(`scheduleDag: "${id}" depends on "${depId}", which has not been scheduled yet — nodes must be in topological order`);
+        throw new Error(
+          `scheduleDag: "${id}" depends on "${depId}", which has not been scheduled yet — nodes must be in topological order`
+        );
       }
       return Math.max(max, depFinish);
     }, 0);
@@ -290,12 +292,12 @@ export function scheduleDagFromSteps(
 ): DagSchedule {
   const topo = topologicalOrder(sequence);
   if ("cycle" in topo) {
-    throw new Error(`scheduleDagFromSteps: circular dependency among steps [${topo.cycle.join(", ")}]`);
+    throw new Error(
+      `scheduleDagFromSteps: circular dependency among steps [${topo.cycle.join(", ")}]`
+    );
   }
   const edges = deriveDependsOn(sequence);
-  const byId = new Map(
-    sequence.map((step, index) => [resolveStepId(step, index), step] as const)
-  );
+  const byId = new Map(sequence.map((step, index) => [resolveStepId(step, index), step] as const));
   // Build nodes in the VALIDATED topological order, not raw array order —
   // scheduleDag requires every dependency to already be scheduled before
   // its dependent is processed, which an explicit out-of-order dependsOn
@@ -307,7 +309,8 @@ export function scheduleDagFromSteps(
     const durationRaw = step.params["durationSeconds"];
     const parsed = durationRaw !== undefined ? Number(durationRaw) : undefined;
     const durationSeconds = parsed !== undefined && !Number.isNaN(parsed) ? parsed : 0;
-    const active = action?.actionKind !== "continuous" ? true : (action.requiresActiveAttention ?? true);
+    const active =
+      action?.actionKind !== "continuous" ? true : (action.requiresActiveAttention ?? true);
     // requiredTools only — requiredToolCapabilities deliberately excluded,
     // see DagNode.requiredToolIds' own doc comment for why (which specific
     // capability-satisfying tool a step occupies is genuinely ambiguous

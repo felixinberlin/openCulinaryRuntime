@@ -59,7 +59,14 @@ console.log(
 );
 const bake = actions.get("bake")!;
 try {
-  applyAction({ entityId: "potato", state: "quartered", tags: [] }, roast, entities, TOOLS, {}, new Set());
+  applyAction(
+    { entityId: "potato", state: "quartered", tags: [] },
+    roast,
+    entities,
+    TOOLS,
+    {},
+    new Set()
+  );
   console.log("  Unexpected: ROAST with no oil should have been rejected.");
 } catch (e) {
   console.log(`  ROAST with no oil on hand: REJECTED — ${(e as Error).message}`);
@@ -72,7 +79,9 @@ const bakedResult = applyAction(
   {},
   new Set()
 );
-console.log(`  BAKE with no oil on hand: succeeds — "${bakedResult.instance.state}" (needs no medium at all)`);
+console.log(
+  `  BAKE with no oil on hand: succeeds — "${bakedResult.instance.state}" (needs no medium at all)`
+);
 
 console.log(
   "\nStill NOT closed by this script, named rather than implied covered: no place.ts/heat-source.ts wiring " +

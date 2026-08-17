@@ -151,7 +151,12 @@ export interface RecipeExplanation {
    * (`StorageLifeSchema`'s own doc comment), so this can say WHAT the
    * guidance is, never whether THIS specific instance is still within it.
    */
-  storageSummary: { instanceId: string; entityId: string; state: string; storageLife: StorageLife }[];
+  storageSummary: {
+    instanceId: string;
+    entityId: string;
+    state: string;
+    storageLife: StorageLife;
+  }[];
 }
 
 function candidatesForCapability(

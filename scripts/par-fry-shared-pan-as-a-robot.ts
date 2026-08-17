@@ -62,7 +62,9 @@ for (const targetTempC of [130, 150]) {
   const insideFryOutsideParFry = targetTempC === 130;
   console.log(
     `\n=== PAR_FRY with placeId, oil heated to ${targetTempC}°C` +
-      (insideFryOutsideParFry ? " (inside FRY's 120-200°C band, below PAR_FRY's 145°C floor)" : " (above PAR_FRY's 145°C floor)") +
+      (insideFryOutsideParFry
+        ? " (inside FRY's 120-200°C band, below PAR_FRY's 145°C floor)"
+        : " (above PAR_FRY's 145°C floor)") +
       " ==="
   );
   const recipe = makeRecipe(targetTempC);

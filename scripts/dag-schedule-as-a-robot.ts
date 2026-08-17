@@ -63,13 +63,29 @@ for (const recipe of recipes.values()) {
   }
 }
 if (!anyCycle) {
-  console.log(`  All ${recipes.size} real recipes are acyclic — 0 cycles found (correct: none should exist).`);
+  console.log(
+    `  All ${recipes.size} real recipes are acyclic — 0 cycles found (correct: none should exist).`
+  );
 }
 
 console.log("\n  Now a SYNTHETIC cyclic recipe (in-memory only, never written to data/recipes/):");
 const cyclicSequence: RecipeStep[] = [
-  { id: "a", dependsOn: ["b"], actionId: "boil", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
-  { id: "b", dependsOn: ["a"], actionId: "fry", targetInstanceId: "potato-1", params: {}, availableIngredientInstanceIds: [] },
+  {
+    id: "a",
+    dependsOn: ["b"],
+    actionId: "boil",
+    targetInstanceId: "potato-1",
+    params: {},
+    availableIngredientInstanceIds: [],
+  },
+  {
+    id: "b",
+    dependsOn: ["a"],
+    actionId: "fry",
+    targetInstanceId: "potato-1",
+    params: {},
+    availableIngredientInstanceIds: [],
+  },
 ];
 const cyclicResult = topologicalOrder(cyclicSequence);
 console.log(
@@ -102,7 +118,9 @@ console.log(
   `  fry_potato starts at ${fryPotato.startSeconds}s — the LATER of the two (${Math.max(cutPotato.finishSeconds, infuseOil.finishSeconds)}s), not just cut_potato's own.`
 );
 
-console.log("\n=== C. Real concurrent time savings — real cited durations, independent branches ===\n");
+console.log(
+  "\n=== C. Real concurrent time savings — real cited durations, independent branches ===\n"
+);
 const boilAction = actions.get("boil")!;
 const caramelizeAction = actions.get("caramelize")!;
 console.log(
@@ -140,7 +158,9 @@ console.log(
     `real time a chef does not have to stand idle.`
 );
 
-console.log("\n=== D. Tool-lock behavior — real ROAST steps correctly serialize on the shared oven ===\n");
+console.log(
+  "\n=== D. Tool-lock behavior — real ROAST steps correctly serialize on the shared oven ===\n"
+);
 const roastAction = actions.get("roast")!;
 console.log(
   `  roast.json requiredTools: [${roastAction.requiredTools.join(", ")}], requiresActiveAttention: ` +

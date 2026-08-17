@@ -123,7 +123,7 @@ export function stepsToRecipeSteps(
       throw new Error(`stepsToRecipeSteps: unknown action "${s.actionId}" at step ${index}`);
     }
 
-    const params: Record<string, string> = { ...(opts.paramOverrides?.[index] ?? {}) };
+    const params: Record<string, string> = { ...opts.paramOverrides?.[index] };
     if (s.param !== undefined && action.outputs.transformedStateFromParameter) {
       params[action.outputs.transformedStateFromParameter] = s.param;
     }
@@ -392,7 +392,12 @@ export function planSecondaryRole(
     priorSteps: RecipeStep[]
   ): SecondaryRoleResult | SecondaryRoleFailure {
     if (desiredState === undefined && (!desiredTags || desiredTags.length === 0)) {
-      return { found: true, steps: priorSteps, finalInstanceId: instanceId, finalEntityId: entityId };
+      return {
+        found: true,
+        steps: priorSteps,
+        finalInstanceId: instanceId,
+        finalEntityId: entityId,
+      };
     }
     const result = isGoalReachable({
       entity,
@@ -416,7 +421,12 @@ export function planSecondaryRole(
       actions,
       availableIngredientInstances: [...availableIngredients].map((id) => ({ id, entityId: id })),
     });
-    return { found: true, steps: [...priorSteps, ...steps], finalInstanceId: instanceId, finalEntityId: entityId };
+    return {
+      found: true,
+      steps: [...priorSteps, ...steps],
+      finalInstanceId: instanceId,
+      finalEntityId: entityId,
+    };
   }
 
   if (startEntity.capabilities[requiredCapability] === true) {
@@ -440,7 +450,6 @@ export function planSecondaryRole(
     // stays correct even if that ever changes).
     const requiredPrior = startEntity.statePrerequisites[actionId];
     let prefixSteps: RecipeStep[] = [];
-    let stateBeforeSpawn = startState;
     let tagsBeforeSpawn = [...startTags];
     if (requiredPrior) {
       const allowed = Array.isArray(requiredPrior) ? requiredPrior : [requiredPrior];
@@ -461,9 +470,11 @@ export function planSecondaryRole(
           targetInstanceId: startInstanceId,
           entities,
           actions,
-          availableIngredientInstances: [...availableIngredients].map((id) => ({ id, entityId: id })),
+          availableIngredientInstances: [...availableIngredients].map((id) => ({
+            id,
+            entityId: id,
+          })),
         });
-        stateBeforeSpawn = allowed[0];
       }
     }
 
@@ -548,7 +559,10 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     return { success: false, reason: `"${query.combineActionId}" is not a COMBINE-shaped action` };
   }
   if (!action.requiredSecondaryCapability) {
-    return { success: false, reason: `"${query.combineActionId}" has no requiredSecondaryCapability` };
+    return {
+      success: false,
+      reason: `"${query.combineActionId}" has no requiredSecondaryCapability`,
+    };
   }
 
   const requiredPrior = query.primaryEntity.statePrerequisites[query.combineActionId];
@@ -575,7 +589,10 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     targetInstanceId: query.primaryInstanceId,
     entities: query.entities,
     actions: query.actions,
-    availableIngredientInstances: [...query.availableIngredients].map((id) => ({ id, entityId: id })),
+    availableIngredientInstances: [...query.availableIngredients].map((id) => ({
+      id,
+      entityId: id,
+    })),
   });
 
   const secondaryResult = planSecondaryRole(
@@ -596,7 +613,10 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     return { success: false, reason: secondaryResult.reason };
   }
 
-  if (action.requiredTargetCapability && !query.primaryEntity.capabilities[action.requiredTargetCapability]) {
+  if (
+    action.requiredTargetCapability &&
+    !query.primaryEntity.capabilities[action.requiredTargetCapability]
+  ) {
     return {
       success: false,
       reason: `primary entity "${query.primaryEntity.id}" lacks capability "${action.requiredTargetCapability}"`,
@@ -672,9 +692,7 @@ export function planIntent(
   actions: ReadonlyMap<string, Action>
 ): PlanIntentSuccess | PlanIntentFailure {
   const availableTools = new Set(intent.availableTools);
-  const availableIngredientEntityIds = new Set(
-    intent.initialInventory.map((i) => i.entityId)
-  );
+  const availableIngredientEntityIds = new Set(intent.initialInventory.map((i) => i.entityId));
   const instancePool: PlannerIngredientInstance[] = intent.initialInventory.map((i) => ({
     id: i.id,
     entityId: i.entityId,

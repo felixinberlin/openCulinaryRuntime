@@ -32,17 +32,47 @@ const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const ccps = loadCcps(join(root, "data", "ccps"));
 
-console.log("1. DRAIN and REST generalized beyond their original oil/fry forcing case — a boiled potato:\n");
+console.log(
+  "1. DRAIN and REST generalized beyond their original oil/fry forcing case — a boiled potato:\n"
+);
 const boiledPotato: Instance = { entityId: "potato", state: "boiled", tags: [] };
 const drain = actions.get("drain")!;
 const rest = actions.get("rest")!;
 const mash = actions.get("mash")!;
-const drained = applyAction(boiledPotato, drain, entities, new Set(), { method: "colander_shake" }, new Set(), ccps);
+const drained = applyAction(
+  boiledPotato,
+  drain,
+  entities,
+  new Set(),
+  { method: "colander_shake" },
+  new Set(),
+  ccps
+);
 console.log(`  DRAIN(colander_shake) on boiled potato: tags [${drained.instance.tags}]`);
-const rested = applyAction(drained.instance, rest, entities, new Set(), { durationSeconds: "60" }, new Set(), ccps);
-console.log(`  REST for 60s (rest.json's own NEWLY WIDENED floor — was 120s): tags [${rested.instance.tags}]`);
-const mashed = applyAction(rested.instance, mash, entities, new Set(["masher"]), { consistency: "smooth" }, new Set(), ccps);
-console.log(`  MASH: "${rested.instance.state}" -> "${mashed.instance.state}" — this repo's first real MASH proof`);
+const rested = applyAction(
+  drained.instance,
+  rest,
+  entities,
+  new Set(),
+  { durationSeconds: "60" },
+  new Set(),
+  ccps
+);
+console.log(
+  `  REST for 60s (rest.json's own NEWLY WIDENED floor — was 120s): tags [${rested.instance.tags}]`
+);
+const mashed = applyAction(
+  rested.instance,
+  mash,
+  entities,
+  new Set(["masher"]),
+  { consistency: "smooth" },
+  new Set(),
+  ccps
+);
+console.log(
+  `  MASH: "${rested.instance.state}" -> "${mashed.instance.state}" — this repo's first real MASH proof`
+);
 
 console.log(
   "\n2. REST at the OLD 120s floor still works too (this widening is additive, not a breaking change) — and " +
@@ -57,18 +87,32 @@ const oldFloorResult = applyAction(
   new Set(),
   ccps
 );
-console.log(`  REST for 120s (the OLD floor): still succeeds — tags [${oldFloorResult.instance.tags}]`);
+console.log(
+  `  REST for 120s (the OLD floor): still succeeds — tags [${oldFloorResult.instance.tags}]`
+);
 try {
-  applyAction({ entityId: "potato", state: "boiled", tags: [] }, rest, entities, new Set(), { durationSeconds: "30" }, new Set(), ccps);
+  applyAction(
+    { entityId: "potato", state: "boiled", tags: [] },
+    rest,
+    entities,
+    new Set(),
+    { durationSeconds: "30" },
+    new Set(),
+    ccps
+  );
   console.log("  Unexpected: a 30s rest should have been rejected (below the new 60s floor).");
 } catch (e) {
   console.log(`  REST for 30s: REJECTED — ${(e as Error).message}`);
 }
 
-console.log("\n3. Black pepper's real, dramatically different whole-vs-ground shelf life, now queryable:\n");
+console.log(
+  "\n3. Black pepper's real, dramatically different whole-vs-ground shelf life, now queryable:\n"
+);
 const blackPepper = entities.get("black_pepper")!;
 for (const [state, life] of Object.entries(blackPepper.storageLifeByState)) {
-  console.log(`  black_pepper "${state}": pantry ${life.pantryMonths?.min}-${life.pantryMonths?.max} months`);
+  console.log(
+    `  black_pepper "${state}": pantry ${life.pantryMonths?.min}-${life.pantryMonths?.max} months`
+  );
 }
 
 console.log(

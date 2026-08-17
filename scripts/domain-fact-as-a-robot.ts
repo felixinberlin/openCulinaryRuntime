@@ -20,13 +20,17 @@ import { answerAboutDomainFact } from "../src/query.ts";
 const root = join(import.meta.dirname, "..");
 const ccps = loadCcps(join(root, "data", "ccps"));
 
-console.log("1. Typed, structured access — no prose parsing, no LLM needed (ENGINE_INVARIANTS.md #10):\n");
+console.log(
+  "1. Typed, structured access — no prose parsing, no LLM needed (ENGINE_INVARIANTS.md #10):\n"
+);
 const eggCooking = ccps.get("egg_cooking")!;
 for (const factId of Object.keys(eggCooking.domainFacts)) {
   const answer = answerAboutDomainFact(ccps, "egg_cooking", factId)!;
   const { fact } = answer;
   const value = typeof fact.value === "number" ? fact.value : `${fact.value.min}-${fact.value.max}`;
-  console.log(`  ${factId}: ${value} ${fact.unit} (verified: ${fact.verified}, source: ${fact.citation.source})`);
+  console.log(
+    `  ${factId}: ${value} ${fact.unit} (verified: ${fact.verified}, source: ${fact.citation.source})`
+  );
 }
 
 console.log(
@@ -37,7 +41,9 @@ const yolkFact = eggCooking.domainFacts.eggYolkCoagulationTemp;
 const yolkRange = yolkFact.value as { min: number; max: number };
 for (const measuredC of [60, 67, 72]) {
   const inRange = measuredC >= yolkRange.min && measuredC <= yolkRange.max;
-  console.log(`  measured ${measuredC}°C: ${inRange ? "within" : "outside"} the yolk coagulation range`);
+  console.log(
+    `  measured ${measuredC}°C: ${inRange ? "within" : "outside"} the yolk coagulation range`
+  );
 }
 
 console.log(
@@ -62,7 +68,9 @@ const malformedCcp = {
   },
 };
 const result = CriticalControlPointSchema.safeParse(malformedCcp);
-console.log(`  Zod validation: ${result.success ? "UNEXPECTEDLY PASSED" : `REJECTED — ${result.error!.issues[0].message} at ${result.error!.issues[0].path.join(".")}`}`);
+console.log(
+  `  Zod validation: ${result.success ? "UNEXPECTEDLY PASSED" : `REJECTED — ${result.error!.issues[0].message} at ${result.error!.issues[0].path.join(".")}`}`
+);
 
 console.log(
   "\n4. 'verified' is a real, independent axis from citation.confidence — both eggYolkCoagulationTemp and " +
@@ -71,7 +79,9 @@ console.log(
 );
 for (const factId of Object.keys(eggCooking.domainFacts)) {
   const fact = eggCooking.domainFacts[factId];
-  console.log(`  ${factId}: citation.confidence = "${fact.citation.confidence}", verified = ${fact.verified}`);
+  console.log(
+    `  ${factId}: citation.confidence = "${fact.citation.confidence}", verified = ${fact.verified}`
+  );
 }
 
 console.log(

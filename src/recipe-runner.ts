@@ -1087,7 +1087,11 @@ export function runRecipeFromIntent(
           );
           continue; // retry at the SAME index i, now the first replanned step
         }
-        replans.push({ goalIndex, succeeded: false, reason: "no alternative path found from the current state" });
+        replans.push({
+          goalIndex,
+          succeeded: false,
+          reason: "no alternative path found from the current state",
+        });
       }
       errors.push({ step, message });
       log.push(`REJECTED ${action.verb} ${step.targetInstanceId}: ${message}`);

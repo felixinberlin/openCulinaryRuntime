@@ -30,7 +30,8 @@ import type { DomainFact } from "../src/ingredient.ts";
 const root = join(import.meta.dirname, "..");
 
 function printFact(label: string, fact: DomainFact): void {
-  const value = typeof fact.value === "number" ? String(fact.value) : `${fact.value.min}-${fact.value.max}`;
+  const value =
+    typeof fact.value === "number" ? String(fact.value) : `${fact.value.min}-${fact.value.max}`;
   console.log(label);
   console.log(`  value: ${value} ${fact.unit}`);
   console.log(`  verified: ${fact.verified}`);
@@ -67,7 +68,10 @@ if (process.argv[2] === "entity-fact") {
     console.error(`No entity "${entityId}" with domainFacts entry "${factId}" found.`);
     process.exit(1);
   }
-  printFact(`${answer.entityNameEn} (${answer.entityId}).domainFacts.${answer.factId}`, answer.fact);
+  printFact(
+    `${answer.entityNameEn} (${answer.entityId}).domainFacts.${answer.factId}`,
+    answer.fact
+  );
   process.exit(0);
 }
 

@@ -287,7 +287,9 @@ export function renderNarrationMarkdown(n: RecipeNarration): string {
         parts.push(`pantry: ${min}-${max} months`);
       }
       if (entry.storageLife.doNotRefrigerate) parts.push("do NOT refrigerate");
-      p(`- **${entry.instanceId}** (${entry.entityId}, starting state "${entry.state}"): ${parts.join(", ")} — ${entry.storageLife.citation.source}`);
+      p(
+        `- **${entry.instanceId}** (${entry.entityId}, starting state "${entry.state}"): ${parts.join(", ")} — ${entry.storageLife.citation.source}`
+      );
     }
   } else {
     p(

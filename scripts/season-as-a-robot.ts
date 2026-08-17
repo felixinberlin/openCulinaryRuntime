@@ -43,7 +43,8 @@ for (const { seasoningType, ingredientId, expectTag } of cases) {
     { seasoningType, timing: "after_cooking" },
     new Set([ingredientId])
   );
-  const ok = result.instance.tags.includes(expectTag) && result.matchedIngredientInstanceId === ingredientId;
+  const ok =
+    result.instance.tags.includes(expectTag) && result.matchedIngredientInstanceId === ingredientId;
   console.log(
     `  [${ok ? "PASS" : "FAIL"}] SEASON(seasoningType: "${seasoningType}") with "${ingredientId}" on hand: ` +
       `tags [${result.instance.tags}], matchedIngredientInstanceId: "${result.matchedIngredientInstanceId}"`
@@ -60,13 +61,24 @@ console.log(
 console.log("\n=== The real bug a flat requiredIngredientCapabilities list could not catch ===\n");
 const rawPotato: Instance = { entityId: "potato", state: "raw", tags: [] };
 try {
-  applyAction(rawPotato, season, entities, new Set(), { seasoningType: "salt" }, new Set(["chili_flakes"]));
+  applyAction(
+    rawPotato,
+    season,
+    entities,
+    new Set(),
+    { seasoningType: "salt" },
+    new Set(["chili_flakes"])
+  );
   console.log("  Unexpected: should have been rejected — only chili flakes are on hand, not salt.");
 } catch (e) {
-  console.log(`  SEASON(seasoningType: "salt") with only chili_flakes on hand: REJECTED — ${(e as Error).message}`);
+  console.log(
+    `  SEASON(seasoningType: "salt") with only chili_flakes on hand: REJECTED — ${(e as Error).message}`
+  );
 }
 
-console.log("\n=== matchedIngredientInstanceId — the real, additional thing this offers over a flat list ===\n");
+console.log(
+  "\n=== matchedIngredientInstanceId — the real, additional thing this offers over a flat list ===\n"
+);
 const withBothOnHand = applyAction(
   rawPotato,
   season,

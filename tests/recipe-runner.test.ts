@@ -1138,7 +1138,11 @@ describe("runRecipeFromIntent — closed-loop replanning", () => {
     if (outcome.planned) {
       assert.equal(outcome.result.errors.length, 1);
       assert.deepEqual(outcome.result.replans, [
-        { goalIndex: 0, succeeded: false, reason: "no alternative path found from the current state" },
+        {
+          goalIndex: 0,
+          succeeded: false,
+          reason: "no alternative path found from the current state",
+        },
       ]);
     }
   });
@@ -1156,7 +1160,11 @@ describe("runRecipeFromIntent — closed-loop replanning", () => {
         {
           instanceId: "widget-1",
           requiredTags: [],
-          combine: { actionId: "combine", secondaryInstanceId: "widget-2", secondaryDesiredTags: [] },
+          combine: {
+            actionId: "combine",
+            secondaryInstanceId: "widget-2",
+            secondaryDesiredTags: [],
+          },
         },
       ],
       metadata: {},

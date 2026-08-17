@@ -164,7 +164,12 @@ export interface ExecutionResult {
  * `applyAction` when the secondary-instance gap below was found and fixed;
  * behavior for the primary/target call site is completely unchanged.
  */
-function checkStatePrerequisite(entity: Entity, instance: Instance, action: Action, role: "target" | "secondary"): void {
+function checkStatePrerequisite(
+  entity: Entity,
+  instance: Instance,
+  action: Action,
+  role: "target" | "secondary"
+): void {
   const requiredPriorState = entity.statePrerequisites[action.id];
   if (!requiredPriorState) return;
   // A single required state is treated as a one-element allowed set, so this
@@ -189,9 +194,12 @@ function checkStatePrerequisite(entity: Entity, instance: Instance, action: Acti
   // now that "washed" isn't a state value anymore; every entry that names
   // an actual state (the overwhelming majority) is completely unaffected,
   // since instance.state is still checked first/either way.
-  const allowedPriorStates = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
+  const allowedPriorStates = Array.isArray(requiredPriorState)
+    ? requiredPriorState
+    : [requiredPriorState];
   const satisfied =
-    allowedPriorStates.includes(instance.state) || allowedPriorStates.some((s) => instance.tags.includes(s));
+    allowedPriorStates.includes(instance.state) ||
+    allowedPriorStates.some((s) => instance.tags.includes(s));
   if (!satisfied) {
     const roleLabel = role === "secondary" ? "secondary instance " : "";
     throw new Error(
@@ -540,5 +548,12 @@ export function applyAction(
     }
   }
 
-  return { instance: updated, spawned, destroyed, secondaryDestroyed, warnings, matchedIngredientInstanceId };
+  return {
+    instance: updated,
+    spawned,
+    destroyed,
+    secondaryDestroyed,
+    warnings,
+    matchedIngredientInstanceId,
+  };
 }

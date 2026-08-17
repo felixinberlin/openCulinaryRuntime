@@ -92,7 +92,10 @@ describe("CriticalControlPointSchema", () => {
         eggWhiteCoagulationTemp: {
           value: { min: 62, max: 65 },
           unit: "celsius",
-          citation: { source: "Harold McGee, On Food and Cooking", confidence: "commonly_cited_unverified" },
+          citation: {
+            source: "Harold McGee, On Food and Cooking",
+            confidence: "commonly_cited_unverified",
+          },
           verified: false,
         },
       },

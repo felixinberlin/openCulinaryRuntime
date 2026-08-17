@@ -79,7 +79,8 @@ export function beginAction(
   if (action.actionKind !== "continuous") return undefined;
   const raw = params["durationSeconds"];
   const parsed = raw !== undefined ? Number(raw) : undefined;
-  const requestedDurationSeconds = parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined;
+  const requestedDurationSeconds =
+    parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined;
   return { actionId: action.id, startedAtSeconds, requestedDurationSeconds };
 }
 
@@ -132,7 +133,10 @@ export function progressStatus(
   if (bound !== undefined && elapsed >= bound.maxDurationSeconds) {
     return "forced_timeout";
   }
-  if (inProgress.requestedDurationSeconds !== undefined && elapsed >= inProgress.requestedDurationSeconds) {
+  if (
+    inProgress.requestedDurationSeconds !== undefined &&
+    elapsed >= inProgress.requestedDurationSeconds
+  ) {
     return "at_requested_duration";
   }
   return "in_progress";
@@ -141,8 +145,14 @@ export function progressStatus(
 /** `0..1`, clamped — `undefined` when no `requestedDurationSeconds` exists
  *  to measure progress against (see that field's own doc comment: this is
  *  a real "not applicable," not a missing value to guess at). */
-export function fractionOfRequestedDuration(inProgress: InProgressAction, nowSeconds: number): number | undefined {
-  if (inProgress.requestedDurationSeconds === undefined || inProgress.requestedDurationSeconds <= 0) {
+export function fractionOfRequestedDuration(
+  inProgress: InProgressAction,
+  nowSeconds: number
+): number | undefined {
+  if (
+    inProgress.requestedDurationSeconds === undefined ||
+    inProgress.requestedDurationSeconds <= 0
+  ) {
     return undefined;
   }
   return Math.min(1, elapsedSeconds(inProgress, nowSeconds) / inProgress.requestedDurationSeconds);
@@ -152,7 +162,10 @@ export function fractionOfRequestedDuration(inProgress: InProgressAction, nowSec
  *  for the same reason as `fractionOfRequestedDuration` above. Never
  *  negative (a status of "at_requested_duration" or beyond reads as 0, not
  *  a negative "remaining" figure). */
-export function remainingRequestedSeconds(inProgress: InProgressAction, nowSeconds: number): number | undefined {
+export function remainingRequestedSeconds(
+  inProgress: InProgressAction,
+  nowSeconds: number
+): number | undefined {
   if (inProgress.requestedDurationSeconds === undefined) return undefined;
   return Math.max(0, inProgress.requestedDurationSeconds - elapsedSeconds(inProgress, nowSeconds));
 }

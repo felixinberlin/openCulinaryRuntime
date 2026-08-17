@@ -66,7 +66,9 @@ function attempt(
     message = `-> "${result.instance.state}"`;
   } catch (err) {
     message = (err as Error).message;
-    outcome = /forbidden transition/.test(message) ? "rejected_by_invalid_transitions" : "rejected_earlier";
+    outcome = /forbidden transition/.test(message)
+      ? "rejected_by_invalid_transitions"
+      : "rejected_earlier";
   }
   const ok = outcome === expect;
   if (ok) passCount++;
@@ -83,24 +85,54 @@ console.log("=== potato.json — mashed forbids reverting to any intact-piece st
 console.log("(load-bearing: PEEL/BOIL/PAR_FRY/BAKE have no statePrerequisites for potato at all)");
 attempt("potato", "mashed", [], "peel", {}, "rejected_by_invalid_transitions", "peeled");
 attempt("potato", "mashed", [], "boil", {}, "rejected_by_invalid_transitions", "boiled");
-attempt("potato", "mashed", [], "par_fry", { oilTempC: "150" }, "rejected_by_invalid_transitions", "par_fried");
-attempt("potato", "mashed", [], "bake", {}, "rejected_by_invalid_transitions", "baked");
-console.log('  (CUT/GRATE need a "washed" or "peeled" tag/state to even reach invalidTransitions —');
-console.log("   a mashed-but-previously-washed potato is a real reachable combination: raw+WASH tag -> BOIL -> MASH)");
-attempt("potato", "mashed", ["washed"], "cut", { shape: "sliced" }, "rejected_by_invalid_transitions", "sliced");
-attempt("potato", "mashed", ["washed"], "cut", { shape: "diced" }, "rejected_by_invalid_transitions", "diced");
-attempt("potato", "mashed", ["washed"], "cut", { shape: "halved" }, "rejected_by_invalid_transitions", "halved");
-attempt("potato", "mashed", ["washed"], "grate", {}, "rejected_by_invalid_transitions", "grated");
-console.log('  Deliberately NOT forbidden — the real potato-cake technique (mashed -> fried IS legal):');
 attempt(
   "potato",
   "mashed",
   [],
-  "fry",
-  { oilTempC: "175" },
-  "succeeds",
-  "fried"
+  "par_fry",
+  { oilTempC: "150" },
+  "rejected_by_invalid_transitions",
+  "par_fried"
 );
+attempt("potato", "mashed", [], "bake", {}, "rejected_by_invalid_transitions", "baked");
+console.log(
+  '  (CUT/GRATE need a "washed" or "peeled" tag/state to even reach invalidTransitions —'
+);
+console.log(
+  "   a mashed-but-previously-washed potato is a real reachable combination: raw+WASH tag -> BOIL -> MASH)"
+);
+attempt(
+  "potato",
+  "mashed",
+  ["washed"],
+  "cut",
+  { shape: "sliced" },
+  "rejected_by_invalid_transitions",
+  "sliced"
+);
+attempt(
+  "potato",
+  "mashed",
+  ["washed"],
+  "cut",
+  { shape: "diced" },
+  "rejected_by_invalid_transitions",
+  "diced"
+);
+attempt(
+  "potato",
+  "mashed",
+  ["washed"],
+  "cut",
+  { shape: "halved" },
+  "rejected_by_invalid_transitions",
+  "halved"
+);
+attempt("potato", "mashed", ["washed"], "grate", {}, "rejected_by_invalid_transitions", "grated");
+console.log(
+  "  Deliberately NOT forbidden — the real potato-cake technique (mashed -> fried IS legal):"
+);
+attempt("potato", "mashed", [], "fry", { oilTempC: "175" }, "succeeds", "fried");
 
 console.log("\n=== potato.json — every cut-shape / cooked state forbids reverting to peeled ===");
 console.log("(structural: once subdivided or cooked, no single whole piece remains to peel)");
@@ -137,24 +169,46 @@ for (const fromState of [
   attempt("onion", fromState, [], "peel", {}, "rejected_by_invalid_transitions", "peeled");
 }
 
-console.log("\n=== egg.json — fried/poached forbidding a reversion to peeled: REDUNDANT, not load-bearing ===");
-console.log('(PEEL requires state "boiled" exactly — fried/poached can never reach PEEL at all, for a');
-console.log(" DIFFERENT, earlier, stricter reason — invalidTransitions never actually gets consulted here)");
+console.log(
+  "\n=== egg.json — fried/poached forbidding a reversion to peeled: REDUNDANT, not load-bearing ==="
+);
+console.log(
+  '(PEEL requires state "boiled" exactly — fried/poached can never reach PEEL at all, for a'
+);
+console.log(
+  " DIFFERENT, earlier, stricter reason — invalidTransitions never actually gets consulted here)"
+);
 attempt("egg", "fried", [], "peel", {}, "rejected_earlier", "peeled");
 attempt("egg", "poached", [], "peel", {}, "rejected_earlier", "peeled");
 attempt("egg", "sliced", [], "peel", {}, "rejected_earlier", "peeled");
 
-console.log("\n=== egg.json — fried/poached/separated forbidding a reversion to boiled: LIVE, load-bearing ===");
-console.log("(BOIL has no statePrerequisites for egg — invalidTransitions is the only thing stopping this)");
+console.log(
+  "\n=== egg.json — fried/poached/separated forbidding a reversion to boiled: LIVE, load-bearing ==="
+);
+console.log(
+  "(BOIL has no statePrerequisites for egg — invalidTransitions is the only thing stopping this)"
+);
 attempt("egg", "fried", [], "boil", {}, "rejected_by_invalid_transitions", "boiled");
 attempt("egg", "poached", [], "boil", {}, "rejected_by_invalid_transitions", "boiled");
 attempt("egg", "separated", [], "boil", {}, "rejected_by_invalid_transitions", "boiled");
 
-console.log('\n=== egg.json — "separated" also forbids reverting to fried/poached (no shell in play) ===');
-attempt("egg", "separated", [], "fry", { oilTempC: "175" }, "rejected_by_invalid_transitions", "fried");
+console.log(
+  '\n=== egg.json — "separated" also forbids reverting to fried/poached (no shell in play) ==='
+);
+attempt(
+  "egg",
+  "separated",
+  [],
+  "fry",
+  { oilTempC: "175" },
+  "rejected_by_invalid_transitions",
+  "fried"
+);
 attempt("egg", "separated", [], "poach", {}, "rejected_by_invalid_transitions", "poached");
 
-console.log("\n=== egg_cracked.json — fried/scrambled is a genuine protein-coagulation one-way door ===");
+console.log(
+  "\n=== egg_cracked.json — fried/scrambled is a genuine protein-coagulation one-way door ==="
+);
 attempt(
   "egg_cracked",
   "fried",
@@ -164,7 +218,15 @@ attempt(
   "rejected_by_invalid_transitions",
   "lightly_beaten"
 );
-attempt("egg_cracked", "fried", [], "beat", { intensity: "beaten" }, "rejected_by_invalid_transitions", "beaten");
+attempt(
+  "egg_cracked",
+  "fried",
+  [],
+  "beat",
+  { intensity: "beaten" },
+  "rejected_by_invalid_transitions",
+  "beaten"
+);
 attempt(
   "egg_cracked",
   "scrambled",
@@ -181,7 +243,9 @@ console.log(
     "action call — a genuinely dead/unreachable rule, named here rather than faked with a synthetic action."
 );
 
-console.log(`\n${passCount} passed, ${failCount} failed (of ${passCount + failCount} real, shipped rules checked).`);
+console.log(
+  `\n${passCount} passed, ${failCount} failed (of ${passCount + failCount} real, shipped rules checked).`
+);
 console.log(
   "\nStill NOT covered by this script: burned/overcooked (see failure-states-as-a-robot.ts, which already " +
     "proves that ground); this only re-derives what the loaded data/*.json ACTUALLY says today, so it " +

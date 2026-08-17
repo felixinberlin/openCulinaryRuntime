@@ -29,7 +29,9 @@ const steam = actions.get("steam")!;
 const TOOLS = new Set(["steamer_basket", "pot", "knife"]);
 const WATER = new Set(["water"]);
 
-console.log("1. STEAM on potato — a genuinely different, own state (real, measured composition difference):\n");
+console.log(
+  "1. STEAM on potato — a genuinely different, own state (real, measured composition difference):\n"
+);
 const potatoResult = applyAction(
   { entityId: "potato", state: "peeled", tags: [] },
   steam,
@@ -50,7 +52,9 @@ const steamed = applyAction(egg, steam, entities, TOOLS, { durationSeconds: "720
 console.log(`  egg "raw" -> STEAM -> "${steamed.instance.state}"`);
 const peel = actions.get("peel")!;
 const peeled = applyAction(steamed.instance, peel, entities, TOOLS, {}, new Set(), ccps);
-console.log(`  egg "${steamed.instance.state}" -> PEEL -> "${peeled.instance.state}" (would have FAILED before this session's widening)`);
+console.log(
+  `  egg "${steamed.instance.state}" -> PEEL -> "${peeled.instance.state}" (would have FAILED before this session's widening)`
+);
 
 console.log(
   "\n3. HACCP — STEAM carries the identical egg_cooking CCP BOIL/SIMMER/FRY/POACH already do (real, checked " +

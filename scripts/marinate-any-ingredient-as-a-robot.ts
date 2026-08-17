@@ -36,7 +36,15 @@ for (const [entityId, startState, durationSeconds, label] of [
   ["egg", "peeled", "864000", "10 days — British pub pickled egg"],
 ] as const) {
   const instance: Instance = { entityId, state: startState, tags: [] };
-  const result = applyAction(instance, marinate, entities, TOOLS, { durationSeconds }, VINEGAR, ccps);
+  const result = applyAction(
+    instance,
+    marinate,
+    entities,
+    TOOLS,
+    { durationSeconds },
+    VINEGAR,
+    ccps
+  );
   console.log(`  ${entityId} ("${startState}", ${label}): MARINATE -> "${result.instance.state}"`);
 }
 
@@ -54,8 +62,17 @@ const acidResult = applyAction(
 );
 console.log(`  ACID (no duration given): succeeds instantly — tags [${acidResult.instance.tags}]`);
 try {
-  applyAction({ entityId: "onion", state: "sliced", tags: [] }, marinate, entities, TOOLS, { durationSeconds: "5" }, VINEGAR);
-  console.log("  Unexpected: MARINATE with a 5-second duration should have been rejected (below its own declared minimum).");
+  applyAction(
+    { entityId: "onion", state: "sliced", tags: [] },
+    marinate,
+    entities,
+    TOOLS,
+    { durationSeconds: "5" },
+    VINEGAR
+  );
+  console.log(
+    "  Unexpected: MARINATE with a 5-second duration should have been rejected (below its own declared minimum)."
+  );
 } catch (e) {
   console.log(`  MARINATE with a 5-second duration: REJECTED — ${(e as Error).message}`);
 }

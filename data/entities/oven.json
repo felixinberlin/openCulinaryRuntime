@@ -15,6 +15,7 @@
   "producedByproducts": [],
   "capabilities": {},
   "metadata": {
-    "notes": "Minimal tool entity, added so bake.json's requiredTools reference resolves. No isWashable asserted — an oven isn't washed the way a knife/pan/pot is; left unasserted rather than forced false."
+    "notes": "Minimal tool entity, added so bake.json's requiredTools reference resolves. No isWashable asserted — an oven isn't washed the way a knife/pan/pot is; left unasserted rather than forced false.",
+    "deadStatesNote": "possibleStates: ['off','preheating','hot'] has never had any action or engine mechanism that transitions it — the same shape of gap knife.json's own dead 'clean'/'dirty' possibleStates carry (LEARNINGS_ENGINE.md 2026-08-16: 'that machinery is Instance-based; tools have no Instance representation anywhere in this engine'). Checked, not silently assumed, while building ROAST/BAKE's shared oven requirement 2026-08-17: reactivating this would need the SAME real, standalone mechanism place.ts built for pot/pan heat (a tool carrying real state OUTSIDE Instance/applyAction) — a genuine, larger addition (oven preheat-time physics, distinct from heat-source.ts's stovetop-burner model), not attempted here. Left honestly dead, cross-referenced, rather than force-wired or silently ignored."
   }
 }

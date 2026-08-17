@@ -1275,3 +1275,64 @@ was made. Don't rewrite or delete old entries — append.
   two confidence tiers, applied here to a session-specific fetch failure
   rather than a recalled-vs-checked distinction.
 
+## 2026-08-17
+
+### ROAST/ALKALINE_PARBOIL — checking a tool entity's dead states while wiring an unrelated verb found a real, second instance of an already-diagnosed gap
+
+- **Wiring `ROAST`'s `requiredTools: ["oven"]` prompted a quick look at
+  `oven.json` itself, not just a reference-resolves check — and found
+  `possibleStates: ["off","preheating","hot"]` with ZERO actions ever
+  transitioning it, the identical shape to `knife.json`'s own dead
+  `clean`/`dirty` states (already diagnosed and left honestly dead,
+  `LEARNINGS_ENGINE.md` 2026-08-16).** Worth restating as a pattern this
+  repo keeps re-confirming: a "minimal tool entity, added so a
+  requiredTools reference resolves" (`oven.json`'s own original notes)
+  is a real, recurring shape of under-scrutiny — the entity was only ever
+  built to satisfy a schema reference, never actually audited for whether
+  its OWN declared vocabulary was reachable. The right response, matching
+  the `knife.json` precedent exactly rather than re-litigating it: name
+  and cross-reference the gap, do NOT reactivate it via `Instance`-based
+  machinery (tools have none), and do NOT build a new standalone
+  mechanism (`place.ts`-shaped) speculatively either, since nothing in
+  THIS change actually needed oven temperature/preheat-time to be real —
+  `ROAST`/`BAKE` both stay atomic, the same honest depth every categorical
+  oven parameter in this vocabulary already has.
+- **Real technique names a genuine BAKE-vs-ROAST distinction, and finding
+  the concrete, mechanically-checkable version of it (rather than a
+  purely definitional one) is what made this a real verb split, not an
+  arbitrary one.** The instinct going in was that "roast" and "bake" are
+  near-synonyms in a lot of everyday speech (people say "roasted
+  vegetables" and "baked vegetables" for similar dishes) — which would
+  have argued for a `BAKE` parameter instead of a new verb, the same
+  question `fry.json`'s own `donenessNote` already raised for garlic
+  before `CARAMELIZE` resolved the parallel question for onion. The
+  concrete, checkable difference that settled it: real roasting
+  technique universally involves tossing the food in fat before/during
+  cooking; real baking (in this vocabulary's own existing `bake.json`
+  notes) explicitly requires no medium at all. That's not just a prose
+  assertion — it's `requiredIngredientCapabilities: ["isFryingMedium"]`
+  vs. `[]`, a real, provable rejection difference
+  (`roast-any-vegetable-as-a-robot.ts` demonstrates it directly). Worth
+  the general lesson: when two candidate verbs feel similar in ordinary
+  language, look for the one CONCRETE, mechanically-different
+  precondition/ingredient/tool requirement between them before deciding
+  whether they're the same verb wearing two names or genuinely different
+  — the same discipline `SIMMER`-vs-`BOIL` and `PAR_FRY`-vs-`FRY` already
+  used, applied to a new pair.
+- **`ALKALINE_PARBOIL` needed a genuinely NEW ingredient (`baking_soda.json`)
+  and a genuinely NEW capability (`isAlkalizingAgent`, deliberately NOT
+  `isSeasoning`) — checked against an EXISTING, already-written note
+  before building either, not designed from scratch.** `egg.json`'s own
+  `crackContainmentNote` (salt added to boiling water for crack
+  containment, not flavor) had already worked out and stated the exact
+  reasoning needed here: a water additive used for a non-seasoning,
+  process-chemistry reason is "a genuinely new concept SALT's
+  isSeasoning/isSeasonable capabilities don't fit." That note was written
+  for a DIFFERENT, still-unbuilt case (salted boiling water for eggs,
+  still not modeled) — but its reasoning transferred directly to a case
+  that WAS worth building this time, without needing to re-derive the
+  same judgment call. Worth the general lesson: a "deliberately not built
+  this way, here's why" note written for one gap is worth checking again
+  when a DIFFERENT, later gap turns out to have the identical shape —
+  the reasoning can be reused even when the specific technique can't.
+

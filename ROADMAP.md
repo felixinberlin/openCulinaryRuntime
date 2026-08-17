@@ -64,6 +64,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Storage/shelf-life — real, cited, state-keyed storageLifeByState (egg raw vs. boiled genuinely different; potato's doNotRefrigerate), surfaced via recipe-explain.ts's storageSummary and recipe-narrator.ts's new section, computed over all 17 real recipes | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:storage-life` |
 | Structured DomainFact records — egg_cooking.json's ad-hoc coagulationReferenceC migrated to typed, Zod-validated domainFacts; a malformed entry now actually rejected; queryable via `npm run ask -- fact`, zero prose parsing | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:domain-facts` |
 | The actual planner — full tortilla_de_patatas planned end to end from a bare RecipeIntent (zero hand-authored steps), spawn ids correctly predicted, run against the real recipe-runner.ts with zero errors; plus a real closed-loop-replanning failure case against real data | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:planner` |
+| **Crispy roast potatoes** (real alkaline-parboil technique — ROAST + ALKALINE_PARBOIL + baking_soda.json, generalizes across potato/garlic/onion, real BAKE-vs-ROAST mechanical distinction proven) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- crispy_roast_potatoes` / `npm run capability-test:roast` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -783,7 +784,9 @@ covered by what exists:**
       cooking effect the rest actually causes — named honestly in
       `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
       deliberately-scoped-out deeper alternative, not silently implied
-      closed. Still open: `STEAM`, `ROAST`/`GRILL`, `MARINATE`, `KNEAD`.
+      closed. **`ROAST` closed 2026-08-17** — see this same bullet's own
+      dated entry further down. Still open: `STEAM`, `GRILL`, `MARINATE`,
+      `KNEAD`.
       **`DRAIN` closed 2026-08-16** (`data/actions/drain.json`) — resolves
       the "does `REMOVE`'s own `strainer_drain`/`poured_out`
       `removalMethod` values already cover this" question this same entry
@@ -846,6 +849,62 @@ covered by what exists:**
       a place have any modeled doneness/burn consequence) remains real,
       separate, and still fully open, named explicitly in `remove.json`'s
       own `idleTimeScopeNote` rather than implied closed by this addition.
+      **`ROAST` closed 2026-08-17** (`data/actions/roast.json`),
+      alongside `ALKALINE_PARBOIL` (`data/actions/alkaline_parboil.json`)
+      and a genuinely new base ingredient, `baking_soda.json` — the
+      latter directly closing this repo's own long-named "complete
+      potato" gap ("the real alkaline (baking-soda) parboil-roughening
+      technique... remain open," first flagged 2026-08-13). Deliberately
+      its OWN verb rather than a `BAKE` parameter — the same "genuinely
+      different named dish, not the same technique at a different
+      setting" test `onion.json`'s `CARAMELIZE` closure already applied
+      (a whole baked potato and cut, oiled, browned roast potatoes are
+      different real dishes) — and mechanically, not just rhetorically,
+      distinct from `BAKE`: `ROAST` requires an `isFryingMedium`
+      ingredient present (real oil-tossing technique), `BAKE` requires
+      none at all (`bake.json`'s own pre-existing notes), proven as a
+      real rejection, not asserted
+      (`scripts/roast-any-vegetable-as-a-robot.ts`). `ALKALINE_PARBOIL`
+      mirrors `PAR_FRY`'s own precedent exactly — a genuinely different,
+      unfinished intermediate state (`"alkaline_parboiled"`, a rough,
+      starch-slurry-coated surface from `baking_soda.json`'s real,
+      cited pH-driven acceleration of pectin/starch breakdown at the cut
+      surface), not a gentler path to the same `"boiled"` result the way
+      `SIMMER` correctly reuses `BOIL`'s state. Both real temperature/
+      timing figures — 204-232°C oven, 480-720s parboil — are J. Kenji
+      López-Alt's own cited "Crispy Roast Potatoes" (Serious Eats)
+      recipe, verified via convergent secondary corroboration this
+      session (the primary page itself was not directly fetchable — a
+      host-level block, not a per-request 403); `REFERENCES.md` has the
+      full citation, including the separate convergent-source citation
+      for roast timing's own real piece-size/parboil dependency (25-60
+      minutes, not one point figure). `ROAST` generalizes across three
+      real, genuinely different starting points — cut/oiled potato, the
+      WHOLE unpeeled garlic bulb (real technique: roasted garlic is
+      never peeled/cut first, unlike every other garlic verb in this
+      vocabulary — proving `ROAST`'s deliberate lack of a
+      `statePrerequisites` entry is load-bearing, not just permissive),
+      and halved onion — not built against potato alone and assumed to
+      transfer. Checking `oven.json` while wiring `ROAST`'s
+      `requiredTools` found a real, pre-existing, previously-unnoticed
+      dead-declaration gap of the exact same shape `knife.json`'s own
+      dead `clean`/`dirty` states already carry (`possibleStates:
+      ["off","preheating","hot"]`, zero actions ever transitioning it) —
+      named and cross-referenced (`oven.json`'s new `deadStatesNote`),
+      deliberately NOT reactivated: doing so honestly needs the same
+      real, standalone mechanism `place.ts` built for pot/pan heat (a
+      tool carrying real state outside `Instance`/`applyAction`), a
+      genuinely separate, larger addition (oven preheat-time physics,
+      distinct from `heat-source.ts`'s stovetop-burner model) than this
+      entry's own scope. Proven end-to-end two ways:
+      `data/recipes/crispy-roast-potatoes.json` (the full real chain —
+      wash/peel/cut/alkaline_parboil/drain/roast/salt — simulated with
+      zero step errors, `npm run recipe -- crispy_roast_potatoes`) and
+      `npm run capability-test:roast`
+      (`scripts/roast-any-vegetable-as-a-robot.ts`, all three entities
+      plus the real BAKE-vs-ROAST rejection proof). Zero new engine code
+      — a pure data/schema-population addition, same as `CARAMELIZE`/
+      `DRAIN` before it.
 - [x] **Tortilla FLIP physics, and the real link to FRY's `agitation`
       parameter — closed 2026-08-16.** A direct user question ("is moving
       potato pieces in oil the same logic as flipping a tortilla") plus a

@@ -1,0 +1,57 @@
+{
+  "id": "crispy_roast_potatoes",
+  "names": {
+    "en": "Crispy Roast Potatoes (alkaline parboil method)",
+    "es": "Patatas Asadas Crujientes (método de precocción alcalina)"
+  },
+  "initialInventory": [
+    { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
+    {
+      "id": "baking_soda-1",
+      "entityId": "baking_soda",
+      "state": "dry",
+      "tags": [],
+      "quantity": { "kind": "precise", "amount": 2.5, "unit": "g" }
+    },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": {
+        "kind": "imprecise",
+        "descriptor": "to_taste",
+        "citation": {
+          "source": "Commonly cited culinary convention — salt to taste",
+          "confidence": "commonly_cited_unverified"
+        }
+      }
+    }
+  ],
+  "availableTools": ["knife", "pot", "oven"],
+  "sequence": [
+    { "actionId": "wash", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "potato-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "cut", "targetInstanceId": "potato-1", "params": { "shape": "quartered" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "alkaline_parboil",
+      "targetInstanceId": "potato-1",
+      "params": { "durationSeconds": "600" },
+      "availableIngredientInstanceIds": ["water-1", "baking_soda-1"]
+    },
+    { "actionId": "drain", "targetInstanceId": "potato-1", "params": { "method": "wire_rack" }, "availableIngredientInstanceIds": [] },
+    {
+      "actionId": "roast",
+      "targetInstanceId": "potato-1",
+      "params": { "ovenTempC": "232", "durationSeconds": "3000" },
+      "availableIngredientInstanceIds": ["oil-1"]
+    },
+    { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
+  ],
+  "metadata": {
+    "notes": "The real, cited J. Kenji López-Alt / Serious Eats 'extra-crispy roast potatoes' technique, closing ROADMAP.md's own long-named gap (first flagged 2026-08-13 alongside complete-potato.json's own capability test: 'the real alkaline (baking-soda) parboil-roughening technique... remain open'). durationSeconds on ALKALINE_PARBOIL (600s = 10 minutes) and ROAST (3000s = 50 minutes, the cited figure for a parboiled batch — see roast.json's own durationNote) both match the real recipe's own cited timing directly, not arbitrary picks within the declared range. See data/actions/alkaline_parboil.json, data/actions/roast.json, data/entities/baking_soda.json, and REFERENCES.md for the full citation chain.",
+    "saltInParboilWaterNote": "The real recipe also salts the parboiling water (2 tbsp per 2 quarts) — deliberately NOT modeled as a step here, same reasoning alkaline_parboil.json's own saltInWaterNote gives: this repo's SALT verb targets a food entity directly, not a bulk cooking liquid, and water.json has no additive-concept capability for it yet."
+  }
+}

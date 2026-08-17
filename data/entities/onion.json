@@ -24,17 +24,17 @@
     }
   },
   "allergens": [],
-  "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "burned", "overcooked"],
+  "possibleStates": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "roasted", "burned", "overcooked"],
   "possibleTags": ["salted"],
-  "allowedTransformations": ["peel", "cut", "grate", "boil", "fry", "bake", "caramelize", "salt", "combine_potato_onion"],
+  "allowedTransformations": ["peel", "cut", "grate", "boil", "fry", "bake", "caramelize", "roast", "salt", "combine_potato_onion"],
   "statePrerequisites": {
     "cut": "peeled",
     "grate": "peeled",
     "caramelize": ["sliced", "chopped"]
   },
   "invalidTransitions": {
-    "burned": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "overcooked"],
-    "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized"],
+    "burned": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "roasted", "overcooked"],
+    "overcooked": ["raw", "peeled", "sliced", "diced", "julienne", "chopped", "minced", "halved", "quartered", "grated", "boiled", "fried", "baked", "caramelized", "roasted"],
     "sliced": ["peeled"],
     "diced": ["peeled"],
     "julienne": ["peeled"],
@@ -45,7 +45,8 @@
     "grated": ["peeled"],
     "fried": ["peeled"],
     "baked": ["peeled"],
-    "caramelized": ["peeled"]
+    "caramelized": ["peeled"],
+    "roasted": ["peeled"]
   },
   "producedByproducts": ["onion_peel"],
   "capabilities": {
@@ -56,6 +57,7 @@
     "isFryable": true,
     "isBakeable": true,
     "isCaramelizable": true,
+    "isRoastable": true,
     "isSeasonable": true,
     "isWashable": false,
     "isCombinableWithPotato": true
@@ -87,6 +89,7 @@
     "invalidTransitionsAuditNote": "Audited individually 2026-08-16 at the SAME rigor as potato.json's 2026-08-16 dedicated audit (invalidTransitionsAudit2026-08-16 note there), not batch-asserted from a template — checked one entry at a time against real technique. Eight cut-shape states (sliced/diced/julienne/chopped/minced/halved/quartered/grated) forbid 'peeled' at HIGH confidence — structural: once subdivided, there is no single whole piece left to revert to 'peeled', the same geometric fact potato.json's identical entries rest on. 'fried'/'baked'/'caramelized' also forbid 'peeled', but at the SAME WEAKER 'no real counter-technique found on active search' tier potato.json's fried/baked/par_fried entries use — named as such, not presented with equal confidence. Deliberately does NOT forbid 'boiled' -> 'peeled' (see boiledPeeledNote above) and deliberately does NOT add shape-to-shape closures (e.g. diced forbidding sliced) — real progressive-cutting sequences exist and this audit did not have the confidence to individually verify which shape-to-shape transitions are and aren't real, so none were asserted rather than guessed, the identical open-gap discipline potato.json's own audit already named.",
     "combineScopeNote": "UPDATED 2026-08-16, same day, once actually asked for: this entity now DOES combine into a real tortilla-de-patatas-con-cebolla chain — see combinePotatoOnionNote below. What's still true from the original version of this note: it is NOT wired into the ORIGINAL data/actions/combine.json (potato+egg -> tortilla_mixture) — that action's own scopeNote is explicit its requiredTargetCapability/requiredSecondaryCapability/combinesInto are FIXED to that one specific pairing, not a generic merge-any-two-isCombinable verb, and onion does NOT assert egg_cracked.json's isCombinableAddition (a deliberately SEPARATE capability, isCombinableWithPotato, was added instead — see combinePotatoOnionNote) specifically so the original onion-free combine.json cannot accidentally accept an onion instance as its secondary.",
     "combinePotatoOnionNote": "isCombinableWithPotato + data/actions/combine_potato_onion.json (target: potato, requiredTargetCapability isCombinableBase — reusing potato.json's existing flag, not a new one) is a SECOND, genuinely different COMBINE-shaped action from data/actions/combine.json, matching real technique: sliced potato and sliced onion are cooked TOGETHER, raw, confit-style, in the same oil (not fried separately then merged) — so this combine step happens BEFORE frying, spawning data/entities/potato_onion_mixture.json in the 'raw' state (potato.json's own statePrerequisites.combine_potato_onion: 'sliced' enforces the real prep order). That mixture is then fried ONCE (both together), then combined a SECOND time with beaten egg via data/actions/combine_con_cebolla.json (target: potato_onion_mixture, same isCombinableBase flag again) into data/entities/tortilla_mixture_con_cebolla.json — a genuinely different entity from plain tortilla_mixture.json (structure.components: ['potato','onion','egg'] vs ['potato','egg']), not the same entity relabeled, so the composition stays honest. See data/recipes/tortilla-de-patatas-con-cebolla.json for the full proven chain, and potato_onion_mixture.json's own metadata for a named, real cross-capability ambiguity this two-stage design introduces (both combine.json and combine_con_cebolla.json share requiredTargetCapability isCombinableBase, so nothing in the schema itself stops a malformed recipe from calling the WRONG one against the wrong target).",
+    "roastNote": "isRoastable + ROAST (data/actions/roast.json), added 2026-08-17 alongside potato.json's/garlic.json's identical addition — real roasted onion (wedges or halves, oiled, high heat) is a genuinely different dish from CARAMELIZE's own long, low, sugar-browning process (caramelizeNote above) — ROAST is fast/high-heat/oven, CARAMELIZE is slow/low/stovetop, the same real distinction that already justified CARAMELIZE as its own verb rather than a FRY parameter.",
     "failureStateNote": "'burned'/'overcooked' added following the same TICKET 5 (PAPER_NOTES_2608.04768.md) pattern as potato.json/garlic.json/egg.json/tortilla_mixture.json — see those files' identically-named notes for the full reasoning (no detection mechanism, reachable only as an authored fact). Onion, like garlic, is a real, commonly-known burn hazard specifically BECAUSE of caramelize.json's own long, high-sugar, low-supervision process — 'keep it low and slow or it burns instead of caramelizing' is exactly the failure this note exists to make assertable. 'burned' is unconditionally terminal (forbids every other state including 'overcooked'); 'overcooked' forbids reverting to every normal state but leaves the transition to 'burned' itself open (a real further progression), so isTerminalState(onion, 'overcooked') correctly computes false, matching every other TICKET-5 entity in this vocabulary."
   }
 }

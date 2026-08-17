@@ -1,0 +1,45 @@
+{
+  "id": "baking_soda",
+  "kind": "ingredient",
+  "names": {
+    "en": "Baking soda",
+    "es": "Bicarbonato de sodio"
+  },
+  "aggregationState": "powder",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "chemicalFormula": "NaHCO3",
+    "citation": {
+      "source": "IUPAC standard atomic weights (Na 22.98977, H 1.008, C 12.011, O 15.999) — sodium bicarbonate's molar mass (84.007 g/mol) is a directly computable stoichiometric fact, not a food-composition-table lookup",
+      "confidence": "standard_reference",
+      "note": "No nutrientsPer100g given — used here in trace amounts (fractions of a teaspoon per liter of water) as a chemical process aid, not consumed as a meaningful source of any nutrient, the same reasoning black_pepper.json omits a thermophysical block for a similarly non-load-bearing reason."
+    }
+  },
+  "allergens": [],
+  "possibleStates": ["dry", "dissolved"],
+  "allowedTransformations": ["dissolve"],
+  "statePrerequisites": {},
+  "producedByproducts": [],
+  "capabilities": {
+    "isDissolvable": true,
+    "isAlkalizingAgent": true
+  },
+  "sensory": {
+    "taste": ["bitter"],
+    "texture": ["fine", "powdery"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "bicarbonato",
+    "spiceLock": true
+  },
+  "metadata": {
+    "commonName": "sodium bicarbonate, bicarb",
+    "casNumber": "144-55-8",
+    "notes": "Added 2026-08-17, closing ROADMAP.md's own long-named gap ('the real alkaline (baking-soda) parboil-roughening technique... remain open,' first flagged 2026-08-13) — this repo's first entity whose real culinary role here is a CHEMICAL PROCESS AID, not a flavor/seasoning ingredient (isAlkalizingAgent is deliberately NOT isSeasoning/isSeasonable — raising the parboiling water's pH to break down potato surface starch/pectin is not a taste contribution, the same 'a genuinely new concept SALT's isSeasoning/isSeasonable capabilities don't fit' reasoning egg.json's own crackContainmentNote already established for salt-in-boiling-water). Deliberately does NOT model baking soda's other, more common real culinary role — a leavening agent in actual baking (reacting with an acid to release CO2) — no LEAVEN/bread-shaped verb exists in this vocabulary yet; only the alkaline-parboil role is wired.",
+    "alkalizationNote": "The real mechanism, cited in data/actions/alkaline_parboil.json's own safetyNote-equivalent: raising water pH accelerates pectin demethylation/solubilization at the potato surface (the same cell-wall-softening chemistry fry.json's agitationNote already cites Binner, Jardine & Renard 2000 for, here deliberately accelerated rather than a side effect to manage) — corroding a rough, starchy surface layer that then blisters and crisps dramatically under high roasting heat. See alkaline_parboil.json for the full citation."
+  }
+}

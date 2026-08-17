@@ -1,0 +1,69 @@
+{
+  "id": "roast",
+  "verb": "ROAST",
+  "names": {
+    "en": "Roast",
+    "es": "Asar al horno"
+  },
+  "requiredTools": ["oven"],
+  "requiredTargetCapability": "isRoastable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isFryingMedium"],
+  "parameters": [
+    {
+      "id": "ovenTempC",
+      "names": {
+        "en": "Oven temperature",
+        "es": "Temperatura del horno"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "celsius",
+        "min": 204,
+        "max": 232
+      }
+    },
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "seconds",
+        "min": 1500,
+        "max": 3600
+      }
+    }
+  ],
+  "outputs": {
+    "transformedState": "roasted",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 3600,
+  "metadata": {
+    "notes": "The real, distinct sibling of BAKE (bake.json), not a duplicate — deliberately its own verb rather than a bake.json parameter, the same 'is this a genuinely different named preparation, or the same result reached differently' test onion.json's own CARAMELIZE (vs. FRY+parameter) closure already applied: a baked potato (whole, jacket-on, gentle enclosed heat, soft interior) and roasted potatoes (cut, tossed in fat, uncovered, high heat, browned/crisp exterior) are genuinely different dishes real cooks name differently, not the same technique at two settings. requiredIngredientCapabilities: ['isFryingMedium'] is the concrete, checkable difference from BAKE (bake.json's own notes: 'no medium ingredient is required at all') — roasting without fat isn't real roasting, matching FRY's own oil requirement.",
+    "temperatureNote": "204-232°C (400-450°F) — J. Kenji López-Alt's own cited range for his 'Crispy Roast Potatoes' recipe (Serious Eats): 450°F in a standard oven, 400°F if using convection. Verified via convergent secondary corroboration this session (The Kitchn's detailed recipe review); the primary seriouseats.com page was not directly fetchable this session (host-level block). See REFERENCES.md for the full citation.",
+    "durationNote": "1500-3600s (25-60 minutes) — a real range, not a single point figure, because it genuinely depends on piece size and whether the potato was parboiled first (both checked via multiple convergent consumer recipe sources this session, not asserted): small diced pieces roasted directly run ~25 minutes; larger halves/quarters ~35-45 minutes; a parboiled batch (alkaline_parboil.json) commonly runs the full ~50-60 minutes since it starts from a softer, wetter piece needing more time to crisp. Deliberately not narrowed to one sub-case's figure, the same 'be flexible with measures' discipline cut-shape-dimensions.ts's own fry-timing advisory already applies.",
+    "statePrerequisitesNote": "Deliberately NO statePrerequisites entry — real roast-potato technique genuinely varies: some recipes roast raw cut/oiled potatoes directly (simpler, still real and common); Kenji's own 'extra-crispy' method (data/actions/alkaline_parboil.json) is a real, cited UPGRADE on top of that, not the only valid path. ROAST is callable from any cut-shape state OR from 'alkaline_parboiled', matching FRY's own 'no statePrerequisites, callable from any state' precedent rather than forcing one specific technique.",
+    "retrySafeNote": "retrySafe: true (data-level, no duplication) — re-roasting an already-finished result risks drying out/burning, the same caveat every oven/pan cooking action in this vocabulary already carries (bake.json's identical note).",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): the paper's own 'heating' example, matching bake.json's identical classification — a real, elapsed-time thermal process. No place.ts/oven wiring exists yet (oven.json has no thermophysical data, same honest gap bake.json's own actionKindNote already names) — applyAction executes it atomically today."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Deep golden-brown, visibly crisped exterior all over — the actual target, not just 'internal temperature reached' (bake.json's own weaker verification)",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "hot_surface",
+      "severity": "high",
+      "note": "Oven cavity and bakeware — sustained high-temperature contact burn risk, same as bake.json"
+    }
+  ],
+  "retrySafe": true
+}

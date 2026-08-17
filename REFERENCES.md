@@ -774,6 +774,31 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   case already named in `infuse.json`'s own `safetyNote` (real,
   FDA-documented botulism risk), left there rather than duplicated here.
   Confidence: `commonly_cited_unverified`.
+- **J. Kenji López-Alt, "Crispy Roast Potatoes," Serious Eats** —
+  closing this repo's own long-named gap ("the real alkaline (baking-
+  soda) parboil-roughening technique... remain open," first flagged
+  2026-08-13, `complete-potato.json`'s own capability test). Used in
+  `data/actions/roast.json` (204-232°C / 400-450°F oven temperature —
+  450°F standard, 400°F convection) and `data/actions/alkaline_parboil.json`
+  (1/2 teaspoon baking soda + 2 tablespoons salt per 2 quarts/~1.9L
+  water, simmered ~10 minutes until a knife meets little resistance —
+  the real mechanism: alkaline water accelerates pectin/starch
+  breakdown at the potato's cut surface, corroding it into a
+  starch-slurry coating that blisters and crisps dramatically under
+  high roasting heat). Verified via convergent secondary corroboration
+  this session (The Kitchn's detailed recipe review, independently
+  cross-checked against several other consumer recipe sources for the
+  oven-temperature figure specifically) — the primary seriouseats.com
+  page itself returned a host-level block to direct fetch this session,
+  not a per-request 403. Confidence: `commonly_cited_unverified`.
+- **Convergent consumer recipe sources on roast-potato timing** (Potato
+  Goodness, Tastes of Lizzy T, Sugar Spun Run, Chef's Resource, and
+  others independently checked) — 25-35 minutes for small diced pieces
+  at 450°F, 35-45 minutes for larger halves/quarters, up to 50-60
+  minutes for a parboiled batch. Used in `data/actions/roast.json`'s
+  `durationSeconds` range (1500-3600s) and `durationNote` — presented
+  as a real range reflecting a genuine piece-size/parboil dependency,
+  not a single point figure. Confidence: `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

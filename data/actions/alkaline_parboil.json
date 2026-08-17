@@ -1,0 +1,57 @@
+{
+  "id": "alkaline_parboil",
+  "verb": "ALKALINE_PARBOIL",
+  "names": {
+    "en": "Alkaline parboil",
+    "es": "Precocer en agua alcalina"
+  },
+  "requiredTools": [],
+  "requiredToolCapabilities": ["isDeepVessel"],
+  "requiredTargetCapability": "isAlkalineParboilable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": ["isBoilingMedium", "isAlkalizingAgent"],
+  "parameters": [
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": {
+        "unit": "seconds",
+        "min": 480,
+        "max": 720
+      }
+    }
+  ],
+  "outputs": {
+    "transformedState": "alkaline_parboiled",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 720,
+  "metadata": {
+    "notes": "The real, cited Kenji López-Alt/Serious Eats 'extra-crispy roast potatoes' technique — closing ROADMAP.md's own long-named gap ('the real alkaline (baking-soda) parboil-roughening technique... remain open,' first flagged 2026-08-13, complete-potato.json's own capability test). Genuinely DIFFERENT from a plain BOIL/SIMMER, the same PAR_FRY precedent: baking_soda.json's isAlkalizingAgent raises the parboiling water's pH, accelerating pectin/starch breakdown at the potato's cut surface far beyond what plain hot water achieves in the same ~10 minutes — the potato pieces come out with a rough, starch-slurry-coated surface (real technique: shaken/tossed afterward to rough it up further), not just 'tender.' Deliberately does NOT reuse BOIL/SIMMER's shared 'boiled' transformedState (unlike SIMMER, which correctly DOES reuse it — see simmer.json's own sharedTransformedStateNote for why that was the right call there and isn't here): an alkaline-parboiled potato is a genuinely different, unfinished INTERMEDIATE — soft-edged, starch-coated, structurally fragile — not the same result reached more gently, matching par-fry.json's identical reasoning for 'par_fried' staying its own state rather than collapsing into 'fried'.",
+    "citationNote": "Amounts and timing: 1/2 teaspoon baking soda + 2 tablespoons salt per 2 quarts (~1.9L) water, brought to a boil then simmered ~10 minutes until a knife meets little resistance — J. Kenji López-Alt, Serious Eats ('Crispy Roast Potatoes' recipe). Verified via convergent secondary corroboration this session (The Kitchn's own detailed recipe review, and independent aggregator summaries) — the primary seriouseats.com page itself was not directly fetchable this session (host-level block, not a 403). REFERENCES.md has the full citation. durationSeconds' 480-720s (8-12 minutes) range is centered on the cited ~10 minutes with a real, small tolerance band, the same 'a real figure, not a point estimate' discipline this repo already applies elsewhere.",
+    "saltInWaterNote": "The real recipe also salts the parboiling water (2 tbsp per 2 quarts) — deliberately NOT modeled as a second requiredIngredientCapabilities entry here, same reasoning egg.json's crackContainmentNote already gives for salt-in-boiling-water generally: this repo's SALT verb targets a food entity directly (isSeasonable), not a bulk cooking liquid, and water.json has no additive-concept capability for it. Named as a real, present-but-unmodeled part of the technique rather than silently omitted.",
+    "chemistryNote": "See baking_soda.json's own alkalizationNote for the full mechanism/citation — pectin demethylation/solubilization accelerated by alkaline pH, the same underlying cell-wall chemistry fry.json's agitationNote already cites (Binner, Jardine & Renard 2000) for a DIFFERENT context (mechanical agitation during frying), here deliberately induced by chemistry instead.",
+    "retrySafeNote": "retrySafe: true at the data/inventory level (no duplication) — but re-parboiling an already-parboiled potato risks over-softening it to the point of falling apart, the same culinary caveat every cooking action in this vocabulary already carries.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as boil.json/simmer.json — a real, elapsed-time thermal process with a visual/tactile termination criterion ('knife meets little resistance'). applyAction executes it atomically today, an honest gap named rather than hidden."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "A knife or skewer meets little resistance when inserted; surface has visibly softened/roughened — the same visual/tactile check simmer.json/par-fry.json use for an identically-shaped continuous, elapsed-time process",
+    "confidence": "medium"
+  },
+  "hazards": [
+    {
+      "type": "hot_liquid",
+      "severity": "high",
+      "note": "Boiling water, same handling risk as BOIL/SIMMER"
+    }
+  ],
+  "retrySafe": true
+}

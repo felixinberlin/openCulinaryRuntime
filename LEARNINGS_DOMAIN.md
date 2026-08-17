@@ -1336,3 +1336,67 @@ was made. Don't rewrite or delete old entries — append.
   when a DIFFERENT, later gap turns out to have the identical shape —
   the reasoning can be reused even when the specific technique can't.
 
+### STEAM — a shared-state-vs-own-state judgment call resolved by finding a QUANTIFIED reason instead of a qualitative one, and a real dead-end caught before shipping
+
+- **The SIMMER/BOIL-vs-PAR_FRY/FRY "does this deserve its own state"
+  question came up again for STEAM, and this time it had an unusually
+  clean, MEASURED answer rather than a judgment call resting on
+  technique-description vocabulary alone.** Every prior instance of this
+  decision in this repo (`SIMMER` reusing `BOIL`'s state, `PAR_FRY` not
+  reusing `FRY`'s, `CARAMELIZE` not reusing `FRY`'s, `ROAST` not reusing
+  `BAKE`'s) was settled by asking whether real cooks NAME the two results
+  as different dishes — a real, defensible test, but ultimately a
+  qualitative one. For potato specifically, a peer-reviewed source
+  (Lee et al. 2017) gave an actual NUMBER: 83.65% vitamin C retention
+  steamed vs. 49.79% boiled — a potato that's been steamed is, by direct
+  measurement, a different substance from one that's been boiled to the
+  same doneness, not just "the same dish, gentler process." Worth stating
+  as a general upgrade to this repo's own recurring judgment call: when a
+  quantified compositional difference is available, it's strictly better
+  evidence for a shared-vs-own-state decision than "do people call these
+  different dishes," and worth actively looking for before defaulting to
+  the qualitative test.
+- **The identical verb (STEAM) needed two GENUINELY DIFFERENT
+  justifications for two different entities, and collapsing them into one
+  copy-pasted "why this is useful" note would have been dishonest about
+  one of the two.** Potato's reason (measured composition difference) and
+  egg's reason (easier peeling, same eaten result) are not the same claim
+  wearing two names — egg's own real benefit doesn't involve the food
+  being meaningfully different at all, just easier to process afterward.
+  Both real, both worth having, but stating them as if they were the same
+  kind of justification would have overclaimed for egg or underclaimed
+  for potato. Named explicitly as an asymmetry rather than smoothed into
+  one shared sentence.
+- **Building the egg side of this addition would have shipped a real,
+  silent dead end if `statePrerequisites.peel`/`shock` hadn't been
+  widened in the SAME change, and catching that before shipping (not
+  after) mattered.** The entire realistic reason to steam an egg is
+  easier peeling — a `STEAM` action that reached a `"steamed"` state with
+  no path onward to `PEEL`/`SHOCK` would have been a real, working verb
+  that was simultaneously pointless for its own stated purpose, the exact
+  same shape of gap this repo's own `is-goal-still-reachable.ts` tooling
+  exists to catch mechanically. Caught here by tracing the actual use
+  case through by hand before considering the addition finished (does the
+  thing STEAM is FOR still work afterward), not by running the
+  reachability tool itself — worth noting as a cheaper, earlier check
+  than the tool: ask what a new verb's own stated REASON for existing
+  requires downstream, and verify that path is still open, before
+  building the capability-test script that would eventually have caught
+  it anyway.
+- **Reusing STEAM's own newly-declared parameter range to test its CCP
+  wiring surfaced the identical "declared floor already clears the
+  safety threshold" shape `execution-bounds.ts`'s own closing note had
+  already named for a DIFFERENT action (`fry.json`'s `oilTempC`) — found
+  by actually trying to construct the violating test case, not by
+  auditing for the pattern.** `steam.json`'s own minimum valid
+  `durationSeconds` (600s) is 40x `egg_cooking`'s `heldSeconds` floor
+  (15s), so no schema-valid `STEAM` step can ever trip the CCP's advisory
+  path. The honest response, matching how the FRY case was handled: name
+  it as a real, checked property of this specific verb's real timing
+  range in both the data's own metadata and the capability-test script's
+  output, not force a synthetic below-range value just to make a demo
+  "work." A capability-test script's job is to prove what's actually
+  true, including "this integration is real but currently unreachable,"
+  not to manufacture a scenario that doesn't correspond to any real
+  authored recipe.
+

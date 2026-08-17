@@ -65,6 +65,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Structured DomainFact records — egg_cooking.json's ad-hoc coagulationReferenceC migrated to typed, Zod-validated domainFacts; a malformed entry now actually rejected; queryable via `npm run ask -- fact`, zero prose parsing | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:domain-facts` |
 | The actual planner — full tortilla_de_patatas planned end to end from a bare RecipeIntent (zero hand-authored steps), spawn ids correctly predicted, run against the real recipe-runner.ts with zero errors; plus a real closed-loop-replanning failure case against real data | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:planner` |
 | **Crispy roast potatoes** (real alkaline-parboil technique — ROAST + ALKALINE_PARBOIL + baking_soda.json, generalizes across potato/garlic/onion, real BAKE-vs-ROAST mechanical distinction proven) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- crispy_roast_potatoes` / `npm run capability-test:roast` |
+| **Easy-peel steamed egg** (STEAM — genuinely different verb from BOIL, own state for potato backed by a real measured vitamin-retention difference, egg's widened statePrerequisites proven load-bearing, real HACCP wiring + an honest unreachable-shortfall finding) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- easy_peel_steamed_egg` / `npm run capability-test:steam` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -785,8 +786,9 @@ covered by what exists:**
       `tortilla_mixture.json`'s own `rawStateHonestyNote` as a real,
       deliberately-scoped-out deeper alternative, not silently implied
       closed. **`ROAST` closed 2026-08-17** — see this same bullet's own
-      dated entry further down. Still open: `STEAM`, `GRILL`, `MARINATE`,
-      `KNEAD`.
+      dated entry further down. **`STEAM` closed 2026-08-17** — see this
+      same bullet's own dated entry, further down still. Still open:
+      `GRILL`, `MARINATE`, `KNEAD`.
       **`DRAIN` closed 2026-08-16** (`data/actions/drain.json`) — resolves
       the "does `REMOVE`'s own `strainer_drain`/`poured_out`
       `removalMethod` values already cover this" question this same entry
@@ -905,6 +907,64 @@ covered by what exists:**
       plus the real BAKE-vs-ROAST rejection proof). Zero new engine code
       — a pure data/schema-population addition, same as `CARAMELIZE`/
       `DRAIN` before it.
+      \
+      **`STEAM` closed 2026-08-17**, the same day, alongside a new
+      `steamer_basket.json` tool entity (`data/actions/steam.json`) — a
+      real, physically DIFFERENT process from `BOIL`/`SIMMER`, not the
+      same result reached differently: the target never touches the
+      liquid at all, cooked by water-vapor contact only. Applied to
+      potato AND egg, with a deliberately-stated ASYMMETRY in why each
+      one is worth having, not one copy-pasted justification: for
+      potato, steaming produces a real, MEASURED compositional
+      difference (Lee, Choi, Jeong, Lee & Sung 2017, `Food Science and
+      Biotechnology`, verified via direct fetch this session: potato
+      retains 83.65% of its vitamin C steamed vs. 49.79% boiled —
+      `REFERENCES.md`) — the deciding factor for giving `STEAM` its own
+      `"steamed"` state rather than reusing `BOIL`'s shared `"boiled"`
+      the way `SIMMER` correctly does, a stronger, quantified version of
+      the same judgment call `ROAST`/`BAKE` and `CARAMELIZE`/`FRY`
+      already made on qualitative grounds. For egg, the eaten result is
+      close to boiled — the real payoff is easier peeling (steaming
+      above, not submerged in, turbulent boiling water genuinely
+      produces cleaner-separating shells, per convergent consumer/
+      food-science sources citing J. Kenji López-Alt's own comparative
+      testing) — kept as the SAME fixed state name anyway, both because
+      `ActionOutputsSchema` only supports one fixed `transformedState`
+      per action (no per-target override — the same constraint that
+      originally split `SCRAMBLE` from `FRY`) and because "steamed, not
+      boiled" is still a real, distinct fact about HOW an egg was cooked
+      even when the eaten result converges. Directly forced a real,
+      necessary companion fix: `egg.json`'s `statePrerequisites.peel`/
+      `shock` widened from `"boiled"` to `["boiled","steamed"]` (the
+      same array-of-acceptable-priors mechanism `potato.json`'s
+      `cut`/`grate` already use) — without it, a steamed egg could never
+      reach `PEEL` at all, defeating the entire real reason to steam an
+      egg in the first place; proven directly, not assumed
+      (`scripts/steam-as-a-robot.ts`'s own step 2). `criticalControlPointsByAction.steam`
+      reuses `egg_cooking`, the identical CCP `boil`/`simmer`/`fry`/
+      `poach` already reference — Salmonella kill-time depends on
+      internal temperature/hold duration, not on whether the heat
+      arrived via liquid water or steam at the same temperature. A real,
+      honest finding surfaced while proving the CCP wiring, not hidden:
+      `steam.json`'s own declared `durationSeconds` floor (600s) already
+      clears `egg_cooking`'s `heldSeconds` threshold (15s) by 40x, the
+      same shape of gap `execution-bounds.ts`'s own closing note already
+      named for `fry.json`'s `oilTempC` floor — the CCP check is real
+      and correctly wired, it just cannot currently be violated by any
+      schema-valid `STEAM` step, because nobody would ever steam an egg
+      for under 10 minutes to begin with. Proven end-to-end via
+      `data/recipes/easy-peel-steamed-egg.json` (the direct sibling of
+      `soft-boiled-egg.json`, `npm run recipe --
+      easy_peel_steamed_egg`) and `npm run capability-test:steam`
+      (`scripts/steam-as-a-robot.ts`). Still NOT closed, named rather
+      than implied covered: no `place.ts`/`heat-source.ts` wiring (a
+      steamer basket's contents are a materially different physical
+      situation from a vessel's own liquid contents, which is all
+      `place.ts` currently models); `potato-doneness.ts`/
+      `egg-doneness.ts` don't yet have a dedicated `STEAM` timing table
+      — `durationSeconds` stays a plain declared range on `steam.json`
+      itself, not a cited per-piece-size lookup the way `BOIL`'s
+      `pieceSize` parameter has.
 - [x] **Tortilla FLIP physics, and the real link to FRY's `agitation`
       parameter — closed 2026-08-16.** A direct user question ("is moving
       potato pieces in oil the same logic as flipping a tortilla") plus a

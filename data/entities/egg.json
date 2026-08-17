@@ -24,23 +24,23 @@
     }
   },
   "allergens": ["egg"],
-  "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "burned", "overcooked"],
+  "possibleStates": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "steamed", "burned", "overcooked"],
   "possibleTags": ["salted", "peppered", "chili_seasoned", "acidified", "pasteurized", "shocked", "fresh", "aged", "rested"],
-  "allowedTransformations": ["boil", "simmer", "fry", "peel", "salt", "pepper", "chili", "acid", "separate", "crack", "poach", "pasteurize", "shock", "cut", "rest"],
+  "allowedTransformations": ["boil", "simmer", "steam", "fry", "peel", "salt", "pepper", "chili", "acid", "separate", "crack", "poach", "pasteurize", "shock", "cut", "rest"],
   "statePrerequisites": {
-    "peel": "boiled",
-    "shock": "boiled",
+    "peel": ["boiled", "steamed"],
+    "shock": ["boiled", "steamed"],
     "cut": "peeled"
   },
   "invalidTransitions": {
     "sliced": ["peeled"],
     "diced": ["peeled"],
     "chopped": ["peeled"],
-    "fried": ["peeled", "boiled"],
-    "poached": ["peeled", "boiled"],
-    "separated": ["boiled", "fried", "poached"],
-    "burned": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "overcooked"],
-    "overcooked": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped"]
+    "fried": ["peeled", "boiled", "steamed"],
+    "poached": ["peeled", "boiled", "steamed"],
+    "separated": ["boiled", "fried", "poached", "steamed"],
+    "burned": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "steamed", "overcooked"],
+    "overcooked": ["raw", "boiled", "fried", "peeled", "separated", "cracked", "poached", "sliced", "diced", "chopped", "steamed"]
   },
   "producedByproducts": ["egg_shell"],
   "byproductsByAction": {
@@ -52,6 +52,7 @@
     "poach": "egg_cooking",
     "boil": "egg_cooking",
     "simmer": "egg_cooking",
+    "steam": "egg_cooking",
     "pasteurize": "egg_pasteurization_raw"
   },
   "rawContaminationRiskStates": ["raw", "cracked"],
@@ -84,6 +85,7 @@
   "capabilities": {
     "isBoilable": true,
     "isSimmerable": true,
+    "isSteamable": true,
     "isFryable": true,
     "isPeelable": true,
     "isSeasonable": true,
@@ -121,6 +123,7 @@
     "shockNote": "isShockable + statePrerequisites.shock: 'boiled' — see data/actions/shock.json's carryoverCookingNote for why this matters more than it looks like it should: BOIL's durationSeconds doesn't fully determine final doneness on its own, residual heat keeps cooking the egg after it leaves the pot until this action (or slow, uncontrolled ambient cooling) stops it.",
     "restNote": "isRestable added 2026-08-16, closing ROADMAP.md's own long-named gap: Di Lorenzo & Di Maio's 'Periodic cooking of eggs' (Communications Engineering, 2025, REFERENCES.md) alternates an egg between a 100C and a 30C water bath every 2 minutes for 32 minutes. place.ts's advanceTempSeconds can only ever HEAT a place UP toward a target (a real, checked structural fact — it's a silent no-op if the target is at or below the place's current temperature, since a heatSourceProfile is strictly a positive energy source, no cooling/refrigeration concept exists anywhere in this vocabulary), so the two baths in data/recipes/periodic-cooking-of-eggs.json are represented as two SEPARATELY, PERSISTENTLY maintained pots (one FILLed+HEAT_PLACEd to 100C once, one simply FILLed with startTempC: 30 and never actively heated or cooled) rather than one pot cycled up and down — the same real mechanism the paper's own technique actually uses (literally two baths, not one cycled pot). REST represents each dwell between PLACE_IN/REMOVE moves — see that recipe's own metadata for the full, honestly-named list of what this does and doesn't actually prove.",
     "seasoningNote": "pepper/chili added 2026-08-13 alongside salt — see potato.json's identical seasoningNote. acid added 2026-08-15, same shape, same discipline.",
+    "steamNote": "isSteamable + STEAM (data/actions/steam.json) + steamer_basket.json, added 2026-08-17, ROADMAP.md's 'More common technique verbs' gap. Unlike potato.json's identical addition (where steaming produces a real, MEASURABLY different substance — see that file's own steamNote and its cited vitamin-retention figures), STEAM's real payoff for egg is a genuinely different reason: easier peeling, not a different eaten result. Steaming an egg in a basket above (not submerged in) boiling water means the shell never touches turbulent, bubbling water and heats slightly more gently and evenly than a full boil — real, convergent consumer/food-science sources (REFERENCES.md) describe this as reliably producing shells that separate more cleanly from the white, a genuine alternative lever to freshnessNote's own aging-based explanation for the SAME real-world problem ('why did this egg peel badly'). statePrerequisites.peel/shock widened to ['boiled','steamed'] (the same array-of-acceptable-priors mechanism potato.json's own cut/grate already use) — steaming without ever being able to reach PEEL/SHOCK afterward would make this addition pointless, since easier peeling IS the entire real reason to steam an egg. criticalControlPointsByAction.steam reuses 'egg_cooking', the identical CCP boil/simmer/fry/poach already use — Salmonella kill-time depends on internal temperature/hold duration, not on whether the heat arrived via liquid water or steam at the same temperature. 'steamed' also added everywhere 'boiled' already appears in invalidTransitions (fried/poached/separated forbidding a revert, burned/overcooked forbidding everything) — the same structural/safety reasoning applies regardless of which of the two equivalent-temperature methods produced it.",
     "simmerNote": "SIMMER (data/actions/simmer.json) added 2026-08-13, isSimmerable alongside isBoilable, reaching the SAME 'boiled' state BOIL does (see simmer.json's sharedTransformedStateNote) — statePrerequisites.peel/shock above ('boiled') therefore work unchanged for an egg cooked via SIMMER, no separate wiring needed. criticalControlPointsByAction.simmer reuses 'egg_cooking', the identical CCP boil/fry/poach already reference: Salmonella kill-time is a function of internal temperature and hold duration, not of how turbulently the water moved to get there. The real reason this verb exists for egg specifically: a rolling boil's turbulence is a common, preventable CAUSE of shell cracking during cooking — see crackContainmentNote below for what to do once a crack has already happened; this is the complementary, more-preventable half of the same real risk.",
     "freshnessNote": "'fresh'/'aged' added 2026-08-13, directly answering 'getting the perfect egg shape in the pan' — a real, cited, currently-unmodeled factor. As an egg ages, the thick albumen's ovomucin protein network (which traps water and gives fresh white its gel-like body) progressively breaks down — see MDPI, \"Non-Destructive Evaluation of Physicochemical Properties for Egg Freshness: A Review\" (2024), https://www.mdpi.com/2077-0472/14/11/2049, and the albumen-viscosity study it cites, https://www.sciencedirect.com/science/article/pii/S0032579119424632 — both verified via direct lookup 2026-08-13. Practical effect FRY actually cares about: a very fresh egg cracked into a pan holds its shape and stands tall; an older egg's white has measurably lower viscosity and spreads flat and ragged immediately — the real mechanism behind 'getting the perfect egg shape,' not pan temperature or technique alone. Also the more credible explanation (see crackContainmentNote below) for why older eggs peel more easily after boiling. Deliberately NOT wired to any action: this repo has no concept of elapsed real-world time and no 'AGE' verb (nor should there be one) — 'fresh'/'aged' can only be set as a starting tag on a specific egg instance in a recipe's initialInventory (RecipeInstanceSchema.tags), the same mechanism already used for any other pre-existing property a recipe author asserts about their starting ingredients, not something applyAction ever derives or changes.",
     "crackContainmentNote": "Real, commonly-cited technique — salt (or vinegar) added to the BOILING WATER before/while boiling an egg, distinct from and NOT modeled via data/actions/salt.json's SALT verb, on purpose: SALT targets a food entity and adds tag 'salted' for a seasoning/flavor reason (osmosis, browning — see salt.json's timingNote); salting the water an egg boils in is NOT primarily about flavor at all — the shell/white barely absorb it during a ~10 minute boil, unlike a porous food like pasta. The real, causal mechanism is different: if the shell cracks during boiling, salt (and separately, vinegar/acid) speeds coagulation of the leaking egg white on contact with the salted water, sealing the crack faster and containing the mess, rather than letting white stream out into plain water. A commonly-repeated SECOND claim — that salting the water makes peeling easier — is NOT included here with the same confidence: evidence for it is mixed/disputed; easier peeling is more reliably explained by egg freshness (older eggs peel easier as the shell's inner membrane separates more with age/CO2 loss — see freshnessNote above, now backed by a real citation, added 2026-08-13) and by shock.json's ice-bath shock, not by water salinity. Deliberately not built as a new action/mechanism this session (would need water.json to accept an additive for a non-seasoning, non-isSeasonable reason — a genuinely different concept SALT's isSeasonable/isSeasoning capabilities don't fit) — named precisely as a real, correctly out-of-scope gap rather than forced into the wrong verb just to have something.",

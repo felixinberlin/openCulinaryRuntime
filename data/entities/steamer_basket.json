@@ -1,0 +1,22 @@
+{
+  "id": "steamer_basket",
+  "kind": "tool",
+  "names": {
+    "en": "Steamer basket",
+    "es": "Cesta para cocinar al vapor"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "possibleStates": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isWashable": true
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17 for STEAM (data/actions/steam.json) — a real, physically distinct tool from pot/pan/saucepan: an open-mesh or slotted insert that holds food ABOVE a shallow layer of boiling water, so the food cooks by contact with steam only, never submerged in or touching the liquid itself. Deliberately its own required tool (requiredTools: ['steamer_basket']), not folded into isDeepVessel/isVessel — those capabilities answer 'can this hold/submerge food in liquid,' the opposite of what steaming actually needs. STEAM also separately requires requiredToolCapabilities: ['isDeepVessel'] (a pot to hold the shallow water layer underneath) — real steaming needs BOTH a vessel for the water AND a basket to keep food out of it, not one tool doing both jobs. possibleStates deliberately empty, allowedTransformations deliberately empty — the same 'tools have zero per-instance state in this engine' baseline every other tool entity in this repo starts from (see oven.json's own deadStatesNote for what happens when a tool entity's possibleStates ISN'T kept honestly empty)."
+  }
+}

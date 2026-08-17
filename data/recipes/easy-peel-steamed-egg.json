@@ -1,0 +1,25 @@
+{
+  "id": "easy_peel_steamed_egg",
+  "names": {
+    "en": "Easy-Peel Steamed Egg (hard-cooked)",
+    "es": "Huevo Cocido al Vapor (fácil de pelar)"
+  },
+  "initialInventory": [
+    { "id": "egg-1", "entityId": "egg", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] }
+  ],
+  "availableTools": ["pot", "steamer_basket", "bowl", "knife"],
+  "sequence": [
+    {
+      "actionId": "steam",
+      "targetInstanceId": "egg-1",
+      "params": { "durationSeconds": "720" },
+      "availableIngredientInstanceIds": ["water-1"]
+    },
+    { "actionId": "shock", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] },
+    { "actionId": "peel", "targetInstanceId": "egg-1", "params": {}, "availableIngredientInstanceIds": [] }
+  ],
+  "metadata": {
+    "notes": "The real, cited steamed-egg technique (see data/actions/steam.json's citationNote and REFERENCES.md) — 720 seconds (12 minutes) in a basket above boiling water, then an ice-bath shock, then peel. The direct sibling of soft-boiled-egg.json, swapping BOIL for STEAM specifically to demonstrate the real, practical reason STEAM exists for egg at all: easier peeling (egg.json's own steamNote), not a different eaten result the way potato.json's steaming is (a real, measured compositional difference — see that file's own steamNote). statePrerequisites.peel/shock ('boiled' widened to ['boiled','steamed']) is what makes this sequence legal at all — without that widening, a steamed egg would have been a dead end unable to ever reach PEEL, defeating the entire point of the technique."
+  }
+}

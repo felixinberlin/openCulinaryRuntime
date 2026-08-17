@@ -799,6 +799,38 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `durationSeconds` range (1500-3600s) and `durationNote` — presented
   as a real range reflecting a genuine piece-size/parboil dependency,
   not a single point figure. Confidence: `commonly_cited_unverified`.
+- **Lee, Choi, Jeong, Lee & Sung, "Effect of different cooking methods on
+  the content of vitamins and true retention in selected vegetables,"
+  *Food Science and Biotechnology* (2017)** — potato retained 83.65% of
+  its vitamin C when steamed vs. 49.79% when boiled. Verified via direct
+  fetch this session (PMC6049644, pmc.ncbi.nlm.nih.gov), not recalled or
+  taken from a secondary aggregator. Used in `data/entities/potato.json`'s
+  new `steamNote` (added 2026-08-17, `ROADMAP.md`'s "More common
+  technique verbs" gap) as the deciding, MEASURED reason `STEAM` gets its
+  own `"steamed"` state rather than reusing `BOIL`'s shared `"boiled"`
+  the way `SIMMER` correctly does — a real compositional difference, not
+  just gentler-process framing. Confidence: `standard_reference` — a
+  peer-reviewed journal article, its own specific numbers directly read,
+  not a search-summary paraphrase.
+- **Convergent food-science/consumer sources on steamed hard-cooked eggs**
+  (Chowhound, Leite's Culinaria, The Cookful, and others independently
+  checked, citing J. Kenji López-Alt's own comparative testing) — steaming
+  a whole egg above (not submerged in) an inch of boiling water for 12
+  minutes produces a shell that separates more cleanly from the white
+  than a conventionally boiled egg, because the shell never contacts
+  turbulent boiling water directly. Used in `data/actions/steam.json`'s
+  `citationNote` and `data/entities/egg.json`'s new `steamNote` — the
+  real, different (from potato's) reason `STEAM` is worth having for egg:
+  easier peeling, not a different eaten result. Confidence:
+  `commonly_cited_unverified`.
+- **Convergent consumer recipe sources on steamed-potato timing**
+  (Very Veganish, A Spicy Perspective, Gluten-Free Baking, Feed Your
+  Skull, and others independently checked) — small cubed/baby potatoes
+  ~10-15 minutes, whole potatoes ~30-40 minutes. Used in
+  `data/actions/steam.json`'s `durationSeconds` range (600-2400s) and
+  `citationNote`, the same real piece-size-dependent-range discipline
+  `roast.json`'s own timing already uses. Confidence:
+  `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

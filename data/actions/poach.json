@@ -5,8 +5,9 @@
     "en": "Poach",
     "es": "Escalfar"
   },
-  "requiredTools": [
-    "pan"
+  "requiredTools": [],
+  "requiredToolCapabilities": [
+    "isVessel"
   ],
   "requiredTargetCapability": "isPoachable",
   "validTargetKinds": [
@@ -65,7 +66,8 @@
   "actionKind": "continuous",
   "maxDurationSeconds": 600,
   "metadata": {
-    "notes": "Cracked straight into barely-simmering water in a pan — the shallow-water technique (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell in a pot. requiredTools is 'pan', not 'pot': poaching is standardly done in a wide shallow pan, unlike in-shell boiling. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor.",
+    "notes": "Cracked straight into barely-simmering water (huevo escalfado), distinct from BOIL (data/actions/boil.json) which is the whole egg simmered in-shell. Like FRY, doesn't explicitly model shell removal (spawnsTargetByproducts: false) — same simplification FRY already makes for a raw whole egg cooked directly, kept for consistency rather than singling POACH out for more rigor.",
+    "vesselCorrectionNote": "requiredTools: ['pan'] (hardcoded, exact-id) generalized to requiredToolCapabilities: ['isVessel'] 2026-08-17, the same requiredTools-to-requiredToolCapabilities fix BOIL/SIMMER/PASTEURIZE (isDeepVessel) and FRY/PAR_FRY (isFryingVessel) already got — 'a robot has a pot, not a pan, does POACH still work' had the same answer those did: yes. This also corrected a real, checked-not-assumed factual overclaim this note used to make ('poaching is standardly done in a wide shallow pan, unlike in-shell boiling') — verified via direct lookup (WebSearch/WebFetch), not assumed: two REAL, genuinely different, both-cited techniques exist, not one standard one: a narrower, DEEPER vessel (2-3in/5-8cm water, ~6-8in opening) for the classic single-egg vortex method, producing the compact teardrop shape (Kolbeck, Food Republic, 2024-01-20, REFERENCES.md) — i.e. pot/saucepan (isDeepVessel), not pan; AND a WIDE, shallower skillet (1.5-2in/4-5cm water, 12in opening) for a no-vortex batch method cooking several eggs at once (Farnsworth, The Stay at Home Chef, updated 2024-05-20, REFERENCES.md) — i.e. pan/wok (isFryingVessel). Both are real; neither is 'the' standard. isVessel (the same weaker, medium-agnostic capability FILL/PLACE_IN/HEAT_PLACE already use — asserted by all four of pot/pan/saucepan/wok) is therefore the physically correct requirement here, not a looser stand-in for a narrower one. Vessel-shape's effect on final EGG SHAPE (teardrop vs. flatter/rounder) is real and cited but deliberately NOT modeled as a new parameter — informational-only depth, same as every other technique fact this schema doesn't enforce, and outside this fix's own scope (a requiredTools generalization, not a new outcome axis).",
     "parameterNotes": "waterTempC's 70-100°C range deliberately excludes a full rolling boil as the intended target (100°C is the max only because water can't physically exceed it at sea-level pressure, not because it's recommended) — standard technique keeps poaching water at a bare simmer, ~85-95°C: a rolling boil's turbulence tears the white apart and can shatter the yolk. None of the parameters are state-determining. See egg.json's criticalControlPointsByAction for durationSeconds' actual safety-threshold check.",
     "yolkDonenessNote": "A poached egg is arguably ordered by yolk doneness even more consistently than a fried one — 'poached egg' alone usually implies runny by default in most kitchens. Same parameter, same allowedValues, same non-enforcement caveat as fry.json's yolkDonenessNote — added here rather than invented separately so the two actions stay directly comparable for this axis.",
     "retrySafeNote": "retrySafe: true at the DATA/INVENTORY level only (no duplication, no engine error) — NOT a claim that repeating it is culinarily harmless. Re-running this on an already-finished result risks overcooking/over-working the actual dish, a real physical risk this schema-level flag can't and shouldn't paper over.",

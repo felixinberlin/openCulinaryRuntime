@@ -692,6 +692,30 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   convergent consumer baking sources, not one peer-reviewed primary
   source, same tier as this repo's other consumer-recipe-derived
   technique facts.
+- **Suzannah Kolbeck, "Mistakes Everyone Makes With Poached Eggs," Food
+  Republic (2024-01-20)** —
+  https://www.foodrepublic.com/1491158/mistakes-everyone-makes-poached-eggs/
+  — a real minimum water depth (2in, 3in optimal) and vessel opening
+  (6-8in) for the classic single-egg vortex poaching method, in a
+  narrower, deeper vessel (pot/saucepan). Used in `data/actions/poach.
+  json`'s `vesselCorrectionNote` (added 2026-08-17, correcting that
+  file's own prior overclaim that poaching is "standardly" done in a
+  wide shallow pan — this is the real, cited counter-technique that
+  claim didn't account for). Confidence: `commonly_cited_unverified` —
+  a real, detailed consumer food-science source, not a peer-reviewed
+  study.
+- **Rachel Farnsworth, "How to Poach Eggs," The Stay at Home Chef
+  (updated 2024-05-20)** — a 12-inch skillet with 1.5-2in of water,
+  cooking up to 6 eggs at once with no vortex (eggs slid in with
+  spacing, skillet covered, heat off) — the real, genuinely different
+  wide-shallow batch technique, in a pan/wok rather than a pot/saucepan.
+  Used alongside the Food Republic citation above in `poach.json`'s
+  `vesselCorrectionNote` — together the two sources are why
+  `requiredToolCapabilities: ["isVessel"]` (the union covering all four
+  of pot/pan/saucepan/wok), not a narrower single capability, is the
+  physically correct fix: both a deep pot and a wide pan are real,
+  cited, standard poaching vessels for two different real techniques,
+  not one "the" standard vessel. Confidence: `commonly_cited_unverified`.
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

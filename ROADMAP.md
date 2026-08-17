@@ -59,6 +59,8 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Failure states as a robot — burned/overcooked reachable and correctly terminal, FRY on a burned potato rejected, SALT on the same instance still succeeds, pre-flight advisory fires | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:failure-states` |
 | Is goal still reachable — real dead ends with named reasons, a real gap found by pure graph search then fixed (potato.json's invalidTransitionsAudit2026-08-16), a found path actually executed against the real engine, determinism verified | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:reachability` |
 | PAR_FRY, place-aware readiness gated on real oil temperature — same `assertPlaceReady` mechanism as FRY's, widened not duplicated, correctly reads par-fry.json's own narrower/hotter 145-165°C floor | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:par-fry-shared-pan` |
+| Unit tests per forbidden-transition rule — 42 real, shipped invalidTransitions rules (potato/egg/egg_cracked/onion) run against the real engine, including a real redundancy finding (egg's own PEEL prerequisite makes some entries structurally dead weight) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:invalid-transitions` |
+| POACH with any vessel — the last verb holding an exact-id tool check generalized to `isVessel`, correcting a real overclaimed "standard" technique note along the way (two real, cited, different vessel shapes for two real techniques) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:poach-any-vessel` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1760,7 +1762,8 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       reversed from the `isDeepVessel` case, where `pot` qualified and
       `pan` didn't; here it's `pan`/`wok` that qualify and `pot` that
       doesn't). `POACH`'s
-      `pan` requirement remains untouched — no forcing case yet. Proven via
+      `pan` requirement remained untouched at the time — no forcing case yet.
+      Proven via
       `npm run capability-test:fry-any-vessel`
       (`scripts/fry-with-any-vessel.ts`). `scripts/validate.ts` gained a
       matching dead-capability check (a `requiredToolCapabilities` entry no
@@ -1772,6 +1775,33 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       capability-test:boil-any-vessel` (`scripts/boil-with-any-deep-
       vessel.ts` — real data, all three cases: pan correctly still rejected,
       pot works, saucepan — an id `boil.json` never mentions — also works).
+      **`POACH` closed 2026-08-17**, the last verb still holding an exact-id
+      `requiredTools` check. Unlike BOIL (`isDeepVessel` only) or FRY
+      (`isFryingVessel` only), a direct check (`WebSearch`/`WebFetch`, not
+      assumed) found `poach.json`'s own existing metadata claim — "poaching
+      is standardly done in a wide shallow pan" — was a real overclaim: TWO
+      genuinely different, both real, both-cited techniques exist in TWO
+      different vessel shapes (Kolbeck, Food Republic 2024: a narrower,
+      DEEPER pot/saucepan, 2-3in water, the classic single-egg vortex
+      method; Farnsworth, The Stay at Home Chef 2024: a WIDE, shallower
+      12in skillet/pan, 1.5-2in water, a no-vortex batch method —
+      `REFERENCES.md`), not one standard vessel. That made the physically
+      correct fix `requiredToolCapabilities: ["isVessel"]` — the SAME
+      weaker, medium-agnostic capability `FILL`/`PLACE_IN`/`HEAT_PLACE`
+      already use, since real technique genuinely supports all four of
+      pot/pan/saucepan/wok, not just one capability's worth of them.
+      `poach.json`'s prior "wide shallow pan" claim was corrected in place
+      (`vesselCorrectionNote`), not just quietly widened — the same
+      "check real technique, don't just check the existing note" discipline
+      this repo applied to the boiled-potato-can't-be-peeled correction
+      (2026-08-15). Deliberately NOT modeled as a new outcome parameter:
+      the real, cited vessel-shape → egg-shape (teardrop vs. flatter)
+      difference stays informational-only, same depth limit as every other
+      unenforced technique fact here — this fix's scope is
+      substitutability, not outcome prediction. Proven via
+      `scripts/poach-with-any-vessel.ts` (`npm run
+      capability-test:poach-any-vessel`) — all four vessels succeed, a bare
+      knife (no vessel at all) still correctly rejected.
 - [x] **Triage of a third external report (`scientific_review_report.md`,
       not committed — same treatment as the two prior reports), closed
       2026-08-14.** Mostly confirmed existing correctness (A/A+ grades

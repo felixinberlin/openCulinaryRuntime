@@ -1188,3 +1188,47 @@ was made. Don't rewrite or delete old entries — append.
   too, not just states — the state-vs-tag question and the
   authored-vs-derived question are two separate axes, not one choice.
 
+## 2026-08-17
+
+### POACH's vessel requirement — an engine-mechanism fix that only turned out correct because the existing prose claim was checked, not trusted
+
+- **The obvious move — reuse `isFryingVessel` for POACH, since `poach.json`'s
+  own metadata already said "wide shallow pan" and that phrase sounds like
+  `isFryingVessel`'s own established justification — would have been wrong,
+  and checking (not assuming) is what caught it.** A direct `WebSearch`/
+  `WebFetch` pass (not recalled) found the claim was a real overclaim: the
+  classic single-egg "vortex" poaching method actually calls for a
+  NARROWER, DEEPER vessel (Food Republic: minimum 2in water, 3in optimal,
+  a 6-8in opening) — the opposite shape from `isFryingVessel`'s own
+  pan/wok-qualify, pot-doesn't reasoning. A second real, independently
+  cited technique (The Stay at Home Chef: a 12in skillet, 1.5-2in water,
+  batch-poaching up to 6 eggs with no vortex) genuinely does match the
+  wide-shallow framing — so BOTH the original claim's implied "one
+  standard vessel" AND a hasty "just swap in the deep-vessel capability
+  instead" correction would have each been half-wrong. Reusing `isVessel`
+  (already existing, already the real union of all four vessels, built
+  for a structurally unrelated reason — `FILL`/`PLACE_IN`/`HEAT_PLACE`,
+  2026-08-16) turned out to be the physically correct answer precisely
+  because it doesn't pick a side between two real techniques that don't
+  need to be picked between.
+- **A metadata note that's been sitting unchallenged since an action was
+  first authored is not automatically still correct just because nothing
+  has contradicted it yet** — the same lesson `WASH`'s state-vs-tag bug
+  and the boiled-potato-can't-be-peeled correction (2026-08-15) already
+  taught, recurring a third time, this time self-triggered by a routine
+  `requiredTools`-generalization task rather than a user's direct
+  pushback. Worth treating "this file already has a note explaining the
+  design" as a starting hypothesis to verify while touching that code for
+  an unrelated reason, not as a settled fact to build on top of — the fix
+  here was going to touch this exact claim's supporting code regardless
+  of whether the prose was right, which made it cheap to check at the
+  same time rather than a separate audit.
+- **Corrected the prose IN PLACE, in the same field, rather than leaving
+  the wrong claim standing next to the new, more permissive capability
+  check** — a `requiredToolCapabilities: ["isVessel"]` change with no
+  corresponding note fix would have left a real, discoverable
+  contradiction sitting in the same file (code says "any of four vessels
+  work," prose still says "standardly done in a wide shallow pan"),
+  exactly the kind of drift this repo's own discipline (`CLAUDE.md`'s
+  "every factual claim traces to a real source") exists to prevent.
+

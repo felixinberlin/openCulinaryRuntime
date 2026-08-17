@@ -714,6 +714,42 @@ proven runnable, not just asserted.
       test/validate/every capability-test + demo) clean, zero
       regressions. See `LEARNINGS_PROCESS.md` 2026-08-17 for the triage
       methodology.
+- [x] **Triaged 2026-08-17 against a SECOND, differently-scoped
+      user-supplied document, "300 Common-Sense Cooking Rules"**
+      (hyphenated title — a distinct file from the generic-tips one
+      immediately above, moved to `olddocs/` after triage, same
+      convention). Where the first document was mostly new domain FACTS,
+      this one is a 300-item restatement of physical-feasibility
+      CONSTRAINTS ("you cannot chop water," "you cannot peel an
+      already-peeled potato") — the same claim `CLAUDE_DEV_CTX.md`'s own
+      INVALID_TRANSITIONS concept already exists to enforce, at the
+      individual-rule level. Checked, not assumed: the overwhelming
+      majority (~290+ of 300) either reference ingredients entirely
+      outside this vocabulary's real scope (meat/fish/bones/citrus/
+      coconut/nuts/shrimp/chicken/dough/gelatin/chocolate/pasta/rice/
+      corn), or are already provably enforced by this engine's existing
+      mechanisms — proven, not asserted, via
+      `scripts/physical-feasibility-rules-as-a-robot.ts`
+      (`npm run capability-test:physical-feasibility-rules`), which
+      exercises three different real mechanisms this schema actually has
+      (`requiredTargetCapability` gates on WASH/CUT/GRATE; the structural
+      entity-spawn destruction SEPARATE/CRACK already rely on;
+      `invalidTransitions`, already exhaustively audited elsewhere by
+      `invalid-transitions-as-a-robot.ts` and not re-duplicated here).
+      One genuine, real, scoped gap WAS found and fixed: rule #29 ("You
+      cannot drain a completely dry ingredient") — `potato.json`'s
+      `statePrerequisites` had no `drain` entry at all (`DRAIN`, added
+      2026-08-16, postdates this entity's last `statePrerequisites`
+      audit), so `DRAIN` was callable on a raw, never-cooked-in-liquid
+      potato with nothing clinging to remove. Fixed: `statePrerequisites.
+      drain` now requires one of `boiled`/`par_fried`/`fried`/
+      `alkaline_parboiled` — see `potato.json`'s own
+      `drainStatePrerequisiteNote`. Full verification sweep (tsc/test/
+      validate/every capability-test + demo) clean, zero regressions —
+      including both real recipes that already call `DRAIN`
+      (`mashed-potatoes.json` after `boiled`, `crispy-french-fries.json`/
+      `salted-fried-potatoes.json` after `fried`), confirming the new
+      prerequisite doesn't break the states real technique already uses.
 
 **Known-large, not yet started — flagged so the gap is visible, not implied
 covered by what exists:**

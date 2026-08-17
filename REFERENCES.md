@@ -920,6 +920,24 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   `flavorChemistryNote` admission that no shelf-life mechanic existed;
   rules #99/#113 of the same source document above). Confidence:
   `commonly_cited_unverified`.
+- **A second, differently-scoped externally-supplied document, "300
+  Common-Sense Cooking Rules" (hyphenated title — distinct from the
+  generic-tips document cited immediately above), 2026-08-17** — 300
+  physical-feasibility statements ("you cannot chop water," "you cannot
+  drain a completely dry ingredient") rather than domain facts; moved to
+  `olddocs/` after triage, same convention. Not itself a source of new
+  facts requiring citation (these are structural/logical claims, the same
+  class `CLAUDE_DEV_CTX.md`'s own INVALID_TRANSITIONS concept already
+  targets, not measured or regulatory facts) — listed here to record that
+  it directly motivated one real, structural engine fix: rule #29 ("You
+  cannot drain a completely dry ingredient") found that
+  `data/entities/potato.json`'s `statePrerequisites` had no `drain` entry
+  at all, so `DRAIN` was callable on a raw, never-cooked-in-liquid potato.
+  Fixed by requiring one of `boiled`/`par_fried`/`fried`/
+  `alkaline_parboiled` first — see `potato.json`'s own
+  `drainStatePrerequisiteNote` and
+  `scripts/physical-feasibility-rules-as-a-robot.ts`
+  (`npm run capability-test:physical-feasibility-rules`).
 
 ## Discussed, informs design reasoning, not yet embedded in any data file
 

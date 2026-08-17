@@ -1006,3 +1006,48 @@ was made. Don't rewrite or delete old entries — append.
   than the data would structurally support, because that's what the
   citation actually says.
 
+### A second, unrelated document appearing mid-task — surface it, don't silently fold it in or ignore it
+
+- **While staging the first document's triage commit, a SECOND,
+  differently-named but similarly-titled file appeared in the repo root**
+  ("300 Common-Sense Cooking Rules.md," hyphenated — vs. the already-being
+  -triaged "300_common_sense_cooking_rules.md," no hyphen). Reading it
+  revealed genuinely different content (physical-feasibility constraints,
+  not domain facts) — not a duplicate, not a typo, a real second document.
+  The right move was neither of the two easy wrong ones: silently
+  triaging it as part of the same task (the user never actually asked for
+  a second document, and conflating two differently-scoped documents
+  under one commit would have made the commit message misleading about
+  what it actually covers), nor silently ignoring/leaving it out of the
+  final report (the user has no way to know it appeared unless told).
+  Committed and pushed the FIRST document's fully-verified work
+  immediately rather than blocking it on a decision about the second —
+  then surfaced the second file explicitly and asked before spending
+  effort on it, since a 300-item document's real yield is unpredictable
+  in advance (the first one turned out to be ~1%) and the user is the
+  only one who can say whether that effort is wanted right now.
+- **Once given the go-ahead, the actual triage confirmed a prediction
+  worth stating explicitly: a document that restates a repo's OWN core
+  design principle back at it (this one's stated premise — "if an action
+  does not make physical or culinary sense... it should not be
+  available" — is a direct paraphrase of this repo's own
+  `CLAUDE_DEV_CTX.md` INVALID_TRANSITIONS framing) is not thereby more
+  likely to contain new gaps; if anything it's LESS likely, because the
+  repo has already been independently, repeatedly audited against
+  exactly that concern (potato.json's/egg.json's/onion.json's own
+  `invalidTransitionsAudit` entries, `invalid-transitions-as-a-robot.ts`).
+  308 of 309 items checked across the two documents this session (~297 +
+  ~1 in this one) turned out to be already-covered, out-of-scope, or
+  unmodelable — the value was in finding the genuinely small remainder,
+  not in expecting the search to turn up much.
+- **The one real gap found (rule #29, DRAIN's missing statePrerequisite)
+  was found by checking a NEWER action (`DRAIN`, added 2026-08-16) against
+  an OLDER entity's last audit date** (`potato.json`'s own
+  `statePrerequisites` block hadn't been touched for DRAIN specifically) —
+  a concrete instance of a general risk worth naming: adding a new verb to
+  this vocabulary doesn't retroactively re-audit every existing entity
+  that gains the matching capability, so a real gap can sit unnoticed
+  exactly at that seam (new action × old entity) until something like this
+  triage happens to probe it directly, rather than a purely internal
+  code-only audit that has no external prompt to go looking.
+

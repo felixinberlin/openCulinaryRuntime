@@ -1,0 +1,50 @@
+{
+  "id": "flour",
+  "kind": "ingredient",
+  "names": {
+    "en": "Flour",
+    "es": "Harina"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 11.92,
+      "protein_g": 10.33,
+      "fat_g": 0.98,
+      "carbohydrate_g": 76.31
+    },
+    "citation": {
+      "source": "USDA FoodData Central, wheat flour, white, all-purpose, unenriched — commonly-cited composition figures.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same caveat as potato.json/garlic.json/butter.json/milk.json: this repo has not looked up the exact current FDC entry/ID to confirm the precise values. Modeled as all-purpose flour specifically — see proteinContentNote below for why bread/cake flour are named as a real, unbuilt variant gap rather than silently assumed identical."
+    }
+  },
+  "allergens": ["wheat"],
+  "possibleStates": ["raw"],
+  "possibleTags": [],
+  "allowedTransformations": ["combine_dough"],
+  "producedByproducts": [],
+  "rawContaminationRiskStates": ["raw"],
+  "capabilities": {
+    "isDoughBase": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["powdery"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "harina",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17, opening ROADMAP.md's 'baking' epic — this repo's first entity from the flour/dough/bread family, deliberately scoped as its OWN tracked epic rather than squeezed into the ordinary staple-ingredient bullet (see ROADMAP.md's own epic entry for the full reasoning: dough is a genuinely new composite-with-emergent-behavior concept, not just another ingredient with states, and KNEAD/PROOF need real new mechanisms this session builds alongside this file). Modeled as a single all-purpose flour entity, matching this repo's own established precedent (salt.json before kosher_salt.json/flaky_salt.json existed) of starting from the single most common real form rather than every real variant at once.",
+    "proteinContentNote": "Real, technique-relevant fact deliberately NOT modeled as separate entities yet: protein content is what determines gluten-forming potential and is the actual reason bread flour (~12-14% protein, commonly cited) and cake/pastry flour (~7-9%) exist as distinct products, not marketing — more protein means more/stronger gluten network, which is why bread flour is preferred for yeasted bread (needs structure to trap fermentation gas) and cake flour for tender, low-gluten baked goods. This entity's own 10.33g/100g sits in the commonly-cited all-purpose range (~10-12%), a real middle ground, not arbitrary. Named as a real, deliberately-deferred variant gap — the same discipline salt-crystal-size's own closure applied to salt.json before kosher_salt.json/flaky_salt.json existed as separate entities.",
+    "rawContaminationRiskNote": "Added the same change as this entity itself, not a later audit — raw flour is a REAL, modern, FDA/CDC-documented pathogen risk (E. coli O121/O26, several real multi-state outbreaks traced to raw flour, including a widely-reported 2016 recall), genuinely distinct from egg/meat pathogens and NOT killed by the same washing/rinsing intuitions that don't work for raw egg either. Uses the SAME rawContaminationRiskStates mechanism egg.json/egg_cracked.json/egg_yolk.json/egg_white.json already established (src/tool-hygiene.ts) rather than inventing a second one — 'raw' is flour's ONLY state in this vocabulary (there is no cooked/heat-treated state modeled yet), so the risk applies to every instance of this entity that exists, a real and correct claim, not an oversight.",
+    "heatTreatingNote": "A real, commonly-cited home food-safety practice this repo does NOT model as an action: heat-treating raw flour (spread thin on a tray, baked at ~350°F/177°C for ~5 minutes, or microwaved in short bursts checking internal temperature) specifically to make it safe to eat WITHOUT further cooking — the standard fix for recipes like edible cookie dough or no-bake energy bites. No dedicated action exists for this narrow use case; named as a real, out-of-scope gap rather than built speculatively, the same discipline as butter.json's clarifiedButterNote."
+  }
+}

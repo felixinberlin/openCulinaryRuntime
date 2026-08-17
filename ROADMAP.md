@@ -70,6 +70,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Quick-pickled onions** (MARINATE — mechanically distinct from ACID via a real duration requirement, generalizes across onion/garlic/egg with three genuinely different real timescales from 30 minutes to 10 days) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- quick_pickled_onions` / `npm run capability-test:marinate` |
 | **Salt crystal/grind size** (kosher_salt.json/flaky_salt.json — real, cited grams-per-teaspoon differences, EntitySchema.domainFacts extended from CCP-only to entities on a real second forcing case, queryable via `npm run ask -- entity-fact`) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:salt-crystal-size` |
 | **Mashed potatoes** (this repo's first real recipe to exercise MASH; DRAIN/REST generalized beyond oil/fry to the real steam-dry-before-mashing technique, triaged from an external "300 common sense cooking rules" document) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- mashed_potatoes` / `npm run capability-test:cooking-common-sense` |
+| **Simple flatbread** (this repo's first real dish from the baking epic — flour/dough/KNEAD, unleavened, real roti/chapati/tortilla-de-harina technique; PROOF/yeast independently proven but not yet in one recipe, blocked on the real 3+-input COMBINE gap) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- simple_flatbread` / `npm run capability-test:bake-bread` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1028,6 +1029,85 @@ covered by what exists:**
       order — the closed-items list this bullet lives under is appended
       to, so the new entry sits earlier on the page despite landing
       later in the session).
+
+- [x] **Baking epic — flour/dough/KNEAD/PROOF, opened AND given a real
+      v1 close, 2026-08-17.** Deliberately tracked as its OWN epic, not
+      folded into the ordinary staple-ingredient bullet above — a direct
+      user call ("do the whole baking logic... should we make it
+      special?"), confirmed rather than assumed: dough is a genuinely new
+      COMPOSITE-with-emergent-behavior concept (gluten network, gas
+      retention), not just another ingredient with states, and `KNEAD`
+      had been sitting explicitly blocked in this file since the earliest
+      sessions for exactly that reason.
+      \
+      **What's real:** `data/entities/flour.json` (USDA-cited
+      composition, `rawContaminationRiskStates` — real, FDA/CDC-
+      documented raw-flour E. coli risk, same mechanism as raw egg) and
+      `data/entities/yeast.json` (`isLeaveningAgent`, reuses
+      `data/actions/dissolve.json` for proofing-in-water rather than
+      inventing a new verb — see that entity's own `dissolveReuseNote` for
+      why that's an honest simplification, not a hack). New
+      `data/actions/combine_dough.json` (a THIRD `COMBINE`-shaped action,
+      dedicated `isDoughBase`/`isDoughLiquid` capabilities — flour.json's
+      own, and a new one added to `water.json` — so this can never be
+      satisfied by the wrong secondary ingredient, the same discipline
+      `combine_potato_onion.json`'s own `isCombinableWithPotato` already
+      established) spawns `data/entities/dough.json` — this repo's
+      SECOND-ever composite entity (after `tortilla_mixture.json`),
+      composition COMPUTED from `flour.json`/`water.json`'s own already-
+      cited data at a real, commonly-cited 65% hydration, not externally
+      asserted. New `data/actions/knead.json` (real windowpane-test
+      citation, Peter Reinhart's *The Bread Baker's Apprentice*,
+      `developmentLevel` parameter; ACTIVE, hands-only, no work-surface
+      tool modeled at this vocabulary's granularity) and
+      `data/actions/proof.json` (bulk fermentation; PASSIVE, real
+      commonly-cited 30-90 minute room-temperature range — no
+      temperature-dependence model, named honestly as unmodeled, same
+      depth limit as every other technique parameter here).
+      `data/entities/butter.json`/`data/entities/milk.json` both gained
+      a shared `isMashEnrichment` capability the same change (closing a
+      small, related, previously-decorative gap:
+      `mashed-potatoes.json`'s own `availableIngredientInstanceIds` for
+      MASH were never actually validated as real enrichment ingredients
+      until now — deliberately NOT made a hard `mash.json` requirement,
+      since a plain unenriched mash is real, valid technique too).
+      \
+      **The real anchor dish**: `data/recipes/simple-flatbread.json` —
+      deliberately UNLEAVENED (flour + water + salt, kneaded, rested,
+      pan-fried), a real, complete, correct dish in its own right (real
+      roti/chapati/tortilla-de-harina technique), not a lesser proof —
+      chosen specifically because it sidesteps the one real, honestly-
+      named engine limit this epic surfaced: `COMBINE`-shaped actions in
+      this engine only ever merge TWO instances (target + secondary) into
+      one, so a genuinely LEAVENED bread (flour + water + yeast, three
+      real inputs) cannot be expressed as ONE valid `RecipeScript` yet —
+      the exact "3+ input assembly" gap a user-supplied
+      `WORLD_MODEL_OPTIMIZATION.md` read already named as a real, separate,
+      unbuilt extension (`LEARNINGS_ENGINE.md`'s own entry on that
+      document). Every individual LEAVENED-path mechanism is still real
+      and independently proven, not blocked — yeast activation (DISSOLVE),
+      KNEAD's own state-prerequisite correctness (a second KNEAD call on
+      already-kneaded dough correctly rejected), and PROOF (kneaded ->
+      proofed, the state only a real leavened dough reaches) — via
+      `scripts/bake-bread-as-a-robot.ts`
+      (`npm run capability-test:bake-bread`), the same "prove the
+      mechanism directly, even without full recipe-runner wiring"
+      precedent `execution-bounds.ts`/`in-progress-action.ts` already
+      established.
+      \
+      **Deliberately NOT done, named rather than silently scoped out:**
+      the 3+-input `COMBINE` extension itself (the real next slice for a
+      true leavened-bread recipe); a `SHAPE` action (real bread is shaped
+      between bulk ferment and a second, shorter "final proof" — this
+      epic represents only ONE proof stage); fermentation-rate/
+      temperature-dependence for PROOF; bread-flour/cake-flour protein-
+      content variants (`flour.json`'s own `proteinContentNote`); a
+      dedicated raw-flour CCP with a computed hold time (the real risk is
+      handled via `rawContaminationRiskStates` — a surface-contact risk,
+      not a cook-to-temperature threshold, since normal baking already
+      far exceeds any real pathogen-kill requirement for this specific
+      risk). Full verification sweep (tsc/test/validate/lint/format,
+      every capability-test + demo) clean, zero regressions.
 - [ ] **More common technique verbs.** ~~`SIMMER`~~ **closed 2026-08-13** —
       see "Common culinary knowledge coverage" below. **`REST` closed
       2026-08-16**, in direct response to a user's real-world correction

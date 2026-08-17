@@ -1,0 +1,50 @@
+{
+  "id": "yeast",
+  "kind": "ingredient",
+  "names": {
+    "en": "Yeast",
+    "es": "Levadura"
+  },
+  "aggregationState": "solid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 8.0,
+      "protein_g": 36.0,
+      "fat_g": 2.5,
+      "carbohydrate_g": 41.0
+    },
+    "citation": {
+      "source": "USDA FoodData Central, yeast, baker's, active dry — commonly-cited composition figures.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same caveat as this repo's other composition citations: not independently looked up against the exact current FDC entry. Nutrition is a minor fact for this entity — its real culinary role is biological leavening, not nourishment (see leaveningNote below)."
+    }
+  },
+  "allergens": [],
+  "possibleStates": ["dry", "dissolved"],
+  "possibleTags": [],
+  "allowedTransformations": ["dissolve"],
+  "producedByproducts": [],
+  "capabilities": {
+    "isDissolvable": true,
+    "isLeaveningAgent": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["powdery"],
+    "color": "brown"
+  },
+  "cooklang": {
+    "canonicalToken": "levadura",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17, alongside flour.json/dough.json, ROADMAP.md's baking epic. Modeled as active dry yeast (the most common home-baking form) — instant yeast (mixable directly into flour, no proofing step) and fresh/cake yeast (a genuinely different, perishable, refrigerated product) are real, named, deliberately-unbuilt variants, the same 'start from the single most common real form' discipline flour.json's own proteinContentNote applies.",
+    "dissolveReuseNote": "Reuses data/actions/dissolve.json (built 2026-08-16 for salt) rather than inventing a new 'activate'/'proof yeast' verb — a real, deliberate simplification, named honestly: DISSOLVE's own requiredTargetCapability (isDissolvable) and verification ('no visible undissolved crystals remain') describe the OBSERVABLE mechanical transformation correctly (dry granules disperse into the liquid), but the real underlying process for yeast is BIOLOGICAL activation, not physical solubility the way salt's NaCl dissolving is — proofing yeast in warm water rehydrates the dormant cells and starts them metabolizing sugar, producing the real, visible foam/bubbles bakers check for ('proofing is alive') before trusting the yeast is active. This repo represents the mechanical shape of that step (dry -> dissolved) without modeling the biochemistry, the same non-causal depth every other action in this vocabulary already commits to (e.g. FRY doesn't model Maillard chemistry either).",
+    "leaveningNote": "isLeaveningAgent: true is the real, load-bearing fact this entity exists to carry — yeast produces CO2 through fermentation, and trapped gas is literally what makes bread dough rise (data/actions/proof.json). No fermentation-rate/temperature-dependence model exists (proof.json's own durationSecondsNote names this same limit) — yeast activity is famously temperature-sensitive (too cold: dormant; ~75-95°F/24-35°C: active; too hot, above ~120°F/49°C: killed), a real, citable fact this repo does NOT compute against, informational-only like every other technique parameter here.",
+    "temperatureKillNote": "A real, commonly-cited home-baking safety-adjacent fact, informational only: water hotter than roughly 120°F/49°C kills yeast outright rather than activating it — the real reason baking instructions consistently specify 'warm,' not 'hot,' water for proofing. Not enforced or computed by this repo (no thermal-kill model for yeast the way thermal.ts's D/z model exists for real pathogens) — named as a real technique fact a human/robot following this vocabulary should still know, not something this schema currently checks."
+  }
+}

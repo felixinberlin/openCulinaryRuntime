@@ -1,0 +1,68 @@
+{
+  "id": "dough",
+  "kind": "ingredient",
+  "names": {
+    "en": "Dough",
+    "es": "Masa"
+  },
+  "aggregationState": "paste",
+  "structure": {
+    "composite": true,
+    "components": ["flour", "water"]
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 46.62,
+      "protein_g": 6.26,
+      "fat_g": 0.59,
+      "carbohydrate_g": 46.26
+    },
+    "citation": {
+      "source": "COMPUTED from this repo's OWN real, cited data — flour.json (water_g=11.92, protein_g=10.33, fat_g=0.98, carbohydrate_g=76.31) + water.json, weighted at ~65% hydration (65g water per 100g flour, a commonly-cited standard 'baker's percentage' for everyday bread dough — real doughs range roughly 60-75% depending on bread style, 65% is a real, representative middle figure, not an arbitrary pick), giving a flour:water mass ratio of ~60.6:39.4. Same computed-not-assumed methodology as tortilla_mixture.json's own composition (2026-08-16, built in direct response to a user-supplied external report's unsourced assumed composition).",
+      "confidence": "commonly_cited_unverified",
+      "note": "The hydration PERCENTAGE (65%) is the commonly-cited figure; the arithmetic combining it with flour.json/water.json's own already-recorded composition is exact, not itself a separate estimate."
+    }
+  },
+  "allergens": ["wheat"],
+  "possibleStates": ["shaggy", "kneaded", "proofed", "fried", "baked", "burned", "overcooked"],
+  "possibleTags": ["rested", "salted"],
+  "allowedTransformations": ["knead", "proof", "rest", "fry", "bake", "salt"],
+  "statePrerequisites": {
+    "knead": "shaggy",
+    "proof": "kneaded",
+    "fry": ["kneaded", "proofed"],
+    "bake": ["kneaded", "proofed"]
+  },
+  "invalidTransitions": {
+    "fried": ["shaggy", "kneaded", "proofed"],
+    "baked": ["shaggy", "kneaded", "proofed"],
+    "burned": ["shaggy", "kneaded", "proofed", "fried", "baked", "overcooked"],
+    "overcooked": ["shaggy", "kneaded", "proofed", "fried", "baked"]
+  },
+  "producedByproducts": [],
+  "rawContaminationRiskStates": ["shaggy", "kneaded", "proofed"],
+  "capabilities": {
+    "isKneadable": true,
+    "isProofable": true,
+    "isRestable": true,
+    "isFryable": true,
+    "isBakeable": true,
+    "isSeasonable": true
+  },
+  "sensory": {
+    "taste": ["neutral"],
+    "texture": ["soft", "sticky"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "masa",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17, ROADMAP.md's baking epic — the SECOND composite entity this repo has ever built via COMBINE (after tortilla_mixture.json, 2026-08-12), spawned from data/actions/combine_dough.json (flour + water). 'shaggy' is the real baking term for just-mixed, not-yet-kneaded dough (rough, uneven, not yet a cohesive mass) — the entity's OWN first possibleState, matching combinesInto's own logic (a freshly-spawned instance starts at possibleStates[0]).",
+    "statePrerequisitesNote": "knead: 'shaggy' — you cannot knead dough that's already been kneaded again via this same action (real technique DOES continue working dough, but that's KNEAD called once for its own full duration, not this action re-entered from a 'kneaded' state — same one-shot-per-call shape as MASH/CRUSH). proof: 'kneaded' — bulk fermentation only makes sense once gluten structure exists to trap the yeast's CO2 (proof.json's own leaveningNote). fry/bake: ['kneaded','proofed'] — an OR, matching potato.json's own mash prerequisite shape: UNLEAVENED dough (no yeast, flatbread-style — this repo's actual real anchor recipe, no multi-ingredient COMBINE needed) goes straight from kneaded to cooked; LEAVENED dough goes through 'proofed' first. Both are real, valid technique paths, not one being a shortcut around the other.",
+    "invalidTransitionsNote": "fried/baked forbid reverting to shaggy/kneaded/proofed — a real, structural fact: once heat has set the gluten structure and driven off/redistributed moisture, there is no mechanical process that un-cooks bread back to raw dough, the same 'cannot un-fry/un-boil' rule every other entity in this vocabulary already enforces (egg.json's fried/poached forbidding reversion to boiled is the closest precedent). burned/overcooked mirror potato.json's own failure-state shape exactly (TICKET 5, PAPER_NOTES_2608.04768.md, 2026-08-16) — not independently re-derived, the same established pattern applied to a new entity.",
+    "rawContaminationRiskNote": "['shaggy','kneaded','proofed'] — every PRE-baked/fried state carries the same real raw-flour E. coli risk flour.json's own rawContaminationRiskNote names (uncooked dough is still, physically, mostly raw flour + water), matching egg.json's identical 'every pre-cooked state' pattern for its own pathogen risk. 'fried'/'baked'/'burned'/'overcooked' correctly excluded — heat has been applied.",
+    "multiIngredientLimitNote": "A real, honestly-named engine limit, not specific to this entity: LEAVENED (yeasted) dough needs THREE real ingredients incorporated (flour, water, yeast — often salt too, a fourth), but combine.json-shaped actions in this engine only ever merge TWO instances into one (target + secondary, engine.ts's requiredSecondaryCapability). A user-supplied WORLD_MODEL_OPTIMIZATION.md read (cited elsewhere in ROADMAP.md/LEARNINGS_ENGINE.md) already named '3+ input assembly' as a real, separate, unbuilt extension distinct from the current two-instance COMBINE — this repo's own anchor baking recipe is therefore UNLEAVENED flatbread-style dough (flour + water only, no yeast), which needs nothing beyond the existing two-instance mechanism; a real yeasted-bread recipe is a genuine, named next slice blocked on that same multi-input extension, not on anything about yeast.json/proof.json themselves, both of which are real and independently proven (see scripts/bake-bread-as-a-robot.ts)."
+  }
+}

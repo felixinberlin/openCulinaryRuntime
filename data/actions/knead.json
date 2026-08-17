@@ -1,0 +1,56 @@
+{
+  "id": "knead",
+  "verb": "KNEAD",
+  "names": {
+    "en": "Knead",
+    "es": "Amasar"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isKneadable",
+  "validTargetKinds": ["ingredient"],
+  "parameters": [
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": { "unit": "seconds", "min": 300, "max": 900 }
+    },
+    {
+      "id": "developmentLevel",
+      "names": {
+        "en": "Gluten development",
+        "es": "Desarrollo del gluten"
+      },
+      "required": false,
+      "allowedValues": ["underdeveloped", "windowpane", "overworked"]
+    }
+  ],
+  "outputs": {
+    "transformedState": "kneaded",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 900,
+  "requiresActiveAttention": true,
+  "metadata": {
+    "notes": "Closes ROADMAP.md's long-blocked KNEAD entry (named since this repo's earliest sessions as 'blocked on flour/dough not existing in this vocabulary at all yet'), part of the same change that builds flour.json/dough.json/data/actions/combine_dough.json/proof.json — the baking epic. requiredTools: [] — deliberately hands-only, no work-surface/counter tool exists in this vocabulary at this granularity (the same 'not tool-gated at this vocabulary's granularity' reasoning salt.json/pepper.json's own metadata already applies to seasoning). A real, named alternative technique NOT modeled: kneading with a stand mixer's dough hook (data/entities/mixer.json already exists, used by MIX/WHISK) — commonly cited as faster (5-8 minutes) than hand-kneading (8-10 minutes); this action only represents the by-hand path, the more universally-accessible one and the one this repo's own anchor recipe (scripts/bake-bread-as-a-robot.ts) actually uses.",
+    "durationNote": "300-900s (5-15 minutes) — commonly-cited hand-kneading range for a basic bread/flatbread dough (typically described as 8-10 minutes, i.e. 480-600s, for a well-developed gluten structure by hand); the wider 300-900s range leaves room for a shorter, less-developed knead (flatbread doesn't need as strong a gluten network as a tall yeasted loaf) and a longer, more vigorous one. Confidence: commonly_cited_unverified, same tier as this repo's other technique-timing figures (e.g. caramelize.json's own durationSeconds range).",
+    "developmentLevelNote": "A real, citable baking concept, informational only (same non-enforced depth as fry.json's doneness/CUT's shape): the professional 'windowpane test' — stretching a small piece of dough thin enough to see light through it without tearing — is the standard check for whether gluten development is sufficient (Peter Reinhart, The Bread Baker's Apprentice, and widely corroborated across baking references). 'underdeveloped' (tears immediately, opaque) and 'overworked' (a real, less commonly discussed failure mode — over-kneading by machine can break down gluten structure, though by-hand overworking is rare in practice) bound the real 'windowpane' target state this parameter names. Confidence: commonly_cited_unverified.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a repeated, worked-until-done mechanical process toward a tactile/visual threshold (the windowpane test), the same shape as MASH/CRUSH — classified continuous per TICKET 1's rule.",
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (900s) — same convention as fry.json's/par-fry.json's identically-named notes.",
+    "requiresActiveAttentionNote": "Added the same change as this action itself, not a later audit — classified ACTIVE. Hands-on kneading for the whole duration, the same profile as BEAT/MASH/CRUSH/EMULSIFY/WHISK — stops the instant the actor's hands stop.",
+    "retrySafeNote": "retrySafe: true — further kneading an already-shaggy-turning-kneaded target is physically continuous (more kneading just develops gluten further), the same reasoning CRUSH's coarse->fine_paste spectrum and MASH's consistency spectrum already establish. dough.json's own statePrerequisites.knead: 'shaggy' means a SECOND, separate KNEAD call after dough already reads 'kneaded' is correctly rejected — not a contradiction: that's about deliberately re-invoking the verb a second time in a recipe, a different question from retrySafe's actual scope (blindly repeating THIS SAME interrupted call before its effect is confirmed), the identical distinction crush.json's own retrySafeNote already draws."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Dough passes the windowpane test — a small piece stretches thin enough to see light through without tearing — and is smooth and elastic, not rough or shaggy",
+    "confidence": "medium"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

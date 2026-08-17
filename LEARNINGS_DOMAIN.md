@@ -1491,3 +1491,46 @@ was made. Don't rewrite or delete old entries — append.
   real to check against without this addition having overreached its own
   actual forcing case.
 
+- **Given a genuinely large ask ("do the whole baking logic... should we
+  make it special?"), the real design decision was picking the ANCHOR
+  DISH deliberately, not building toward whichever dish happened to be
+  most ambitious.** A genuinely leavened bread was the more impressive-
+  sounding target, but building toward it first would have meant either
+  quietly forcing yeast through a 2-instance `COMBINE` in a way that
+  doesn't really represent 3 real ingredients, or blocking the entire
+  epic on first building a 3+-input assembly extension. Choosing
+  UNLEAVENED flatbread (flour + water + salt) as the anchor instead
+  wasn't a lesser proof or a workaround — real roti/chapati/tortilla-de-
+  harina bread is made exactly this way, a genuine, complete, correct
+  dish — and it meant every real mechanism (flour, dough, KNEAD, REST,
+  FRY) could be proven against ONE valid, honest `RecipeScript` today,
+  while the genuinely-blocked piece (leavened bread specifically) got
+  named as a real, separate, honestly-scoped next slice instead of
+  either being silently faked or blocking everything else.
+- **The individual LEAVENED-path mechanisms (yeast activation, PROOF)
+  were still built and independently proven THIS SAME change, not
+  deferred alongside the recipe that would chain them.** The blocker is
+  specifically "can these three things be expressed as ONE RecipeScript,"
+  not "does yeast/proofing work at all" — conflating the two would have
+  meant leaving real, working code unbuilt for a reason that doesn't
+  actually apply to it. `scripts/bake-bread-as-a-robot.ts` proves PROOF
+  reaching a state (`proofed`) the actual anchor recipe's unleavened
+  dough never reaches, by calling the mechanism directly — the same
+  "prove it stands on its own before/instead of full wiring" discipline
+  this session has used repeatedly (`execution-bounds.ts`,
+  `in-progress-action.ts`), applied here to a content epic rather than
+  an engine one.
+- **Reused DISSOLVE for yeast activation rather than inventing a new
+  verb, but flagged the reuse's real limit explicitly rather than
+  presenting it as a perfect fit.** DISSOLVE's mechanical shape (dry
+  solid disperses into liquid, visual verification) genuinely matches
+  proofing yeast in warm water — but the underlying real process is
+  BIOLOGICAL activation (rehydrating dormant cells, starting
+  fermentation), not physical solubility the way salt's NaCl dissolving
+  is. Worth the general point: reusing an existing verb for a
+  mechanically-similar new case is the right instinct (the alternative —
+  a near-duplicate 'activate' verb — would have been worse), but the
+  citation/note explaining WHY it's being reused, and what real
+  difference it's glossing over, is what keeps the reuse honest rather
+  than just convenient.
+

@@ -1,0 +1,33 @@
+{
+  "id": "combine_dough",
+  "verb": "COMBINE",
+  "names": {
+    "en": "Combine (flour + water)",
+    "es": "Combinar (harina + agua)"
+  },
+  "requiredTools": ["bowl"],
+  "requiredTargetCapability": "isDoughBase",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilities": [],
+  "requiredSecondaryCapability": "isDoughLiquid",
+  "parameters": [],
+  "outputs": {
+    "combinesInto": "dough",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "A THIRD, genuinely different COMBINE-shaped action in this vocabulary (after combine.json/combine_potato_onion.json — combine_con_cebolla.json is a fourth, structurally distinct COMBINE-shaped step) — target: flour (isDoughBase, a NEW capability, not reusing potato.json's/potato_onion_mixture.json's isCombinableBase, on purpose: flour combining into dough is a genuinely different real pairing, and this repo's own capabilityAmbiguityNote on potato_onion_mixture.json already names the real risk of two COMBINE-shaped actions sharing one capability by accident — a dedicated flag avoids adding a THIRD action to that same ambiguity). Secondary: water (isDoughLiquid, also new — see water.json's own isDoughLiquidNote for why this isn't isBoilingMedium/isDissolvingMedium/isPourable reused). requiredTools: ['bowl'], same reasoning as the original combine.json (a real mixing vessel, not the tool-free combine_potato_onion.json case — raw sliced potato+onion are just placed together in a pan, but flour+water genuinely need to be mixed in a bowl first).",
+    "hydrationNote": "This action does NOT take a water-quantity/hydration-percentage parameter — the real ~65% baker's-percentage figure dough.json's own composition citation uses is a MODELING assumption for that entity's composition data, not something this step lets a caller vary per-call. A real, honest simplification: this vocabulary's QuantitySchema (ingredient.ts) already lets a recipe author specify precise gram amounts for flour-1/water-1 in initialInventory, so the REAL hydration ratio of any given recipe is still expressible — this action just doesn't compute or validate it.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a single one-off assembly of two instances into one — same reasoning as combine.json's identical note; both discriminators agree."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Flour and water are combined into one cohesive, if rough and uneven ('shaggy'), mass — no dry, unincorporated flour remains",
+    "confidence": "medium"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

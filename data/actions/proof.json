@@ -1,0 +1,46 @@
+{
+  "id": "proof",
+  "verb": "PROOF",
+  "names": {
+    "en": "Proof",
+    "es": "Fermentar"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isProofable",
+  "validTargetKinds": ["ingredient"],
+  "parameters": [
+    {
+      "id": "durationSeconds",
+      "names": {
+        "en": "Duration",
+        "es": "Duración"
+      },
+      "required": false,
+      "numericRange": { "unit": "seconds", "min": 1800, "max": 5400 }
+    }
+  ],
+  "outputs": {
+    "transformedState": "proofed",
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "continuous",
+  "maxDurationSeconds": 5400,
+  "requiresActiveAttention": false,
+  "metadata": {
+    "notes": "Closes the other half of ROADMAP.md's baking epic alongside knead.json/combine_dough.json/flour.json/dough.json/yeast.json — bulk fermentation (the FIRST rise), where trapped CO2 from yeast.json's own isLeaveningAgent activity makes kneaded dough visibly expand. Real technique also has a SECOND, shorter rise after shaping ('final proof') — this repo does not model shaping as a separate step at all (dough.json's own multiIngredientLimitNote/the shape-verb gap), so only ONE proof stage is represented; a recipe wanting the full two-rise sequence can still call this action twice (nothing prevents it), just without a SHAPE step genuinely separating them.",
+    "durationNote": "1800-5400s (30-90 minutes) — commonly-cited bulk-fermentation range at typical room temperature (~75°F/24°C) until the dough has roughly doubled in size (this action's own verification.description). Real proofing time is genuinely, strongly temperature-dependent (warmer proofs faster, colder proofs slower — 'cold retard' overnight in a refrigerator is a real, deliberately slow technique used for flavor development, taking many hours to a full day) — NOT computed here; this range covers the common warm-room-temperature case only, the same informational-only depth every other technique parameter in this vocabulary already commits to. Confidence: commonly_cited_unverified.",
+    "leaveningNote": "requiredTargetCapability: isProofable (dough.json) — deliberately does NOT also require an isLeaveningAgent ingredient to be present/consumed: by the time PROOF is called, any yeast already went into the dough via an earlier step (dough.json's own multiIngredientLimitNote names the real multi-instance-COMBINE gap this creates for an actual leavened-bread recipe), so this action has no way to check FOR yeast having been incorporated short of a state/tag this repo doesn't track that specifically. Named as a real, honest limit: calling PROOF on dough that was never leavened would 'succeed' mechanically (transformedState still fires) even though real UNLEAVENED dough does not meaningfully rise — this action does not distinguish the two cases.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): a real, elapsed-time biological process with a real observable termination (visibly doubled in size) — the same PASSIVE/ambient shape as INFUSE/DISSOLVE, not an actively-worked process. Classified continuous per TICKET 1's rule.",
+    "maxDurationSecondsNote": "Reused directly from this action's own already-cited durationSeconds.numericRange.max (5400s) — same convention as fry.json's/par-fry.json's identically-named notes. A real cold-retard proof genuinely exceeds this (many hours to overnight) — this ceiling covers the common warm-room-temperature case this action's own durationNote scopes to, not every real proofing technique.",
+    "requiresActiveAttentionNote": "Added the same change as this action itself, not a later audit — classified PASSIVE. The archetypal 'walk away and come back' step in all of baking — proofing dough is literally letting it sit, the same profile as REST/MARINATE/BOIL once established."
+  },
+  "verification": {
+    "method": "visual",
+    "description": "Dough has visibly increased in volume, commonly cited as roughly doubled in size for a standard bulk ferment",
+    "confidence": "medium"
+  },
+  "hazards": [],
+  "retrySafe": true
+}

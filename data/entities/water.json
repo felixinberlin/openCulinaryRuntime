@@ -17,7 +17,8 @@
   "capabilities": {
     "isBoilingMedium": true,
     "isDissolvingMedium": true,
-    "isPourable": true
+    "isPourable": true,
+    "isDoughLiquid": true
   },
   "thermophysical": {
     "densityKgPerM3": 1000,
@@ -38,6 +39,7 @@
     "spiceLock": false
   },
   "metadata": {
-    "notes": "isBoilingMedium makes water satisfy BOIL's requiredIngredientCapabilities (data/actions/boil.json), the same pattern as oil.json/isFryingMedium for FRY. isDissolvingMedium (added 2026-08-13) satisfies DISSOLVE's requiredIngredientCapabilities (data/actions/dissolve.json) — a separate flag from isBoilingMedium even though it's the same water, since 'water as what salt dissolves into' and 'water as what something else boils in' are genuinely different culinary roles, matching this codebase's one-capability-per-verb convention (see oil.json's isFryingMedium/isEmulsifier split). isPourable (added 2026-08-16) is deliberately WEAKER and more general than isBoilingMedium — the physical act of pouring a liquid into a vessel (data/actions/fill.json) doesn't care which cooking method comes later; see oil.json's identical isPourable for why this needed to be its own shared capability rather than overloading isBoilingMedium onto oil too."
+    "notes": "isBoilingMedium makes water satisfy BOIL's requiredIngredientCapabilities (data/actions/boil.json), the same pattern as oil.json/isFryingMedium for FRY. isDissolvingMedium (added 2026-08-13) satisfies DISSOLVE's requiredIngredientCapabilities (data/actions/dissolve.json) — a separate flag from isBoilingMedium even though it's the same water, since 'water as what salt dissolves into' and 'water as what something else boils in' are genuinely different culinary roles, matching this codebase's one-capability-per-verb convention (see oil.json's isFryingMedium/isEmulsifier split). isPourable (added 2026-08-16) is deliberately WEAKER and more general than isBoilingMedium — the physical act of pouring a liquid into a vessel (data/actions/fill.json) doesn't care which cooking method comes later; see oil.json's identical isPourable for why this needed to be its own shared capability rather than overloading isBoilingMedium onto oil too.",
+    "isDoughLiquidNote": "Added 2026-08-17, ROADMAP.md's baking epic — data/actions/combine_dough.json's requiredSecondaryCapability, satisfied by water as the hydrating liquid that turns flour into dough. A fourth, deliberately separate flag from the three above for the same one-capability-per-verb reasoning: 'water as what hydrates flour into dough' is a real, different culinary role from boiling/dissolving/pouring, even though nothing about the physical water changes."
   }
 }

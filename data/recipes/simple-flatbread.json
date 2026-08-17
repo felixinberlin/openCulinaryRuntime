@@ -1,0 +1,39 @@
+{
+  "id": "simple_flatbread",
+  "names": {
+    "en": "Simple Flatbread",
+    "es": "Pan Plano Sencillo"
+  },
+  "initialInventory": [
+    { "id": "flour-1", "entityId": "flour", "state": "raw", "tags": [] },
+    { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
+    { "id": "oil-1", "entityId": "oil", "state": "cold", "tags": [] },
+    {
+      "id": "salt-1",
+      "entityId": "salt",
+      "state": "dry",
+      "tags": [],
+      "quantity": { "kind": "imprecise", "descriptor": "pinch", "citation": { "source": "Commonly cited culinary convention — a pinch of salt in basic flatbread dough", "confidence": "commonly_cited_unverified" } }
+    }
+  ],
+  "availableTools": ["bowl", "pan"],
+  "sequence": [
+    {
+      "actionId": "combine_dough",
+      "targetInstanceId": "flour-1",
+      "secondaryInstanceId": "water-1",
+      "params": {},
+      "availableIngredientInstanceIds": []
+    },
+    { "actionId": "salt", "targetInstanceId": "dough-1", "params": { "timing": "before_cooking" }, "availableIngredientInstanceIds": ["salt-1"] },
+    { "actionId": "knead", "targetInstanceId": "dough-1", "params": { "durationSeconds": "480", "developmentLevel": "windowpane" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "rest", "targetInstanceId": "dough-1", "params": { "durationSeconds": "600" }, "availableIngredientInstanceIds": [] },
+    { "actionId": "fry", "targetInstanceId": "dough-1", "params": { "heatLevel": "medium", "durationSeconds": "180", "doneness": "golden" }, "availableIngredientInstanceIds": ["oil-1"] }
+  ],
+  "metadata": {
+    "notes": "This repo's first real recipe to exercise the whole baking epic (flour.json/dough.json/combine_dough.json/knead.json), 2026-08-17 — deliberately an UNLEAVENED flatbread (no yeast), the honest anchor dish: real roti/chapati/tortilla-de-harina-style breads are made exactly this way (flour + water + salt, kneaded, rested, then cooked in a hot pan), and skipping yeast entirely sidesteps the real, named multi-ingredient-COMBINE engine limit (dough.json's own multiIngredientLimitNote) that blocks a genuinely LEAVENED bread recipe from being built yet — this is not a workaround or a lesser proof, it's a real, complete, correct dish in its own right.",
+    "spawnIdNote": "dough-1 is this recipe's first and only spawn event (combine_dough's own combinesInto) — recipe-runner.ts's spawnCounter is global across the whole recipe, starting at 0 and incrementing per spawn regardless of entity type, so the first spawn in a recipe with no earlier PEEL/SEPARATE/etc. byproducts is always '<entityId>-1'. Verified by actually running this recipe (npm run recipe -- simple_flatbread), not hand-derived and assumed correct.",
+    "friedNotBakedNote": "Cooked via FRY (a hot pan), not BAKE (an oven), even though dough.json asserts both isFryable and isBakeable — matching real technique: roti/chapati/tortilla-de-harina are traditionally griddle/pan-cooked, not oven-baked; a real oven-baked flatbread (pita, naan) is a genuine, different real dish this recipe does not attempt. oil-1 is included specifically because FRY's own requiredIngredientCapabilities (isFryingMedium) is unconditional — even a real, nearly-dry pan-fried flatbread commonly gets a light oil brushing, so this isn't fighting FRY's existing semantics, just choosing the closest real technique that satisfies them.",
+    "restNote": "The 600s (10 minute) bench rest after kneading, before cooking, is real, common technique — letting the gluten relax makes the dough easier to roll/shape without springing back, the same real mechanism rest.json's own genericityNote already names for tortilla-de-patatas' combine-to-fry rest, applied here to a structurally different dish for a structurally similar reason (gluten relaxation, not heat/moisture redistribution)."
+  }
+}

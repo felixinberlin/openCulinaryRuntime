@@ -341,6 +341,39 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   spoilage risk), not a quality-only one like `potato.json`'s
   `doNotRefrigerate`. Confidence: `commonly_cited_unverified` for all of
   the above, same tier and same caveat as `butter.json`'s own citations.
+- **USDA FoodData Central, wheat flour (white, all-purpose, unenriched)
+  and yeast (baker's, active dry)** (added 2026-08-17, `flour.json`/
+  `yeast.json`'s `composition` blocks, ROADMAP.md's baking epic) —
+  flour: water ~11.92g, protein ~10.33g, fat ~0.98g, carbohydrate
+  ~76.31g per 100g; yeast: water ~8g, protein ~36g, fat ~2.5g,
+  carbohydrate ~41g per 100g (a minor fact for yeast — its real culinary
+  role is biological leavening, not nourishment). Confidence:
+  `commonly_cited_unverified`, same caveat as this repo's other
+  composition citations.
+- **Peter Reinhart, *The Bread Baker's Apprentice*** (and widely
+  corroborated across baking references) — the professional "windowpane
+  test" (stretching a piece of dough thin enough to see light through
+  without tearing) as the standard check for sufficient gluten
+  development. Used in `data/actions/knead.json`'s `developmentLevel`
+  parameter and `verification.description`. Confidence:
+  `commonly_cited_unverified`.
+- **Commonly-cited baking references on hydration, kneading, and
+  bulk-fermentation timing** (convergent, not independently re-verified
+  against a primary source this session) — standard bread-dough
+  hydration ~65% baker's percentage (used to compute `dough.json`'s own
+  weighted composition from `flour.json`/`water.json`); by-hand kneading
+  ~8-10 minutes to windowpane; bulk fermentation ~30-90 minutes at room
+  temperature (~75°F/24°C) until roughly doubled in size. Used in
+  `data/actions/knead.json`/`proof.json`'s own `durationSeconds` ranges.
+  Confidence: `commonly_cited_unverified`.
+- **FDA/CDC documented raw-flour pathogen risk** (E. coli O121/O26; real
+  multi-state outbreaks, including a widely-reported 2016 recall) — used
+  in `flour.json`'s/`dough.json`'s `rawContaminationRiskStates` (the same
+  mechanism, `src/tool-hygiene.ts`, already established for raw egg — a
+  surface-contact/handling risk, not a cook-to-temperature CCP, since
+  normal baking already far exceeds any real pathogen-kill requirement
+  for this risk; the actual danger is eating raw dough/batter before any
+  heat is applied at all). Confidence: `commonly_cited_unverified`.
 - **U.S. Department of Energy consumer cooktop-efficiency guidance** and
   commonly-cited consumer appliance spec figures — used in
   `data/heat-sources/gas.json`/`vitro.json`'s `citation` for typical

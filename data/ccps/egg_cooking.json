@@ -10,12 +10,30 @@
   "pathogen": "Salmonella spp.",
   "advisoryOnly": true,
   "source": "USDA FoodSafety.gov 'Safe Minimum Internal Temperature Chart' (egg dishes: 160°F / 71°C, instantaneous) — https://www.foodsafety.gov/food-safety-charts/safe-minimum-internal-temperature. heldC/heldSeconds (145°F / 63°C for 15 seconds) is the FDA Food Code §3-401.11(A) time-temperature-equivalence figure widely cited for shell eggs prepared for immediate service. advisoryOnly: true because the FDA Food Code (§3-603.11) explicitly recognizes eggs cooked to order with a still-runny yolk as a permitted 'increased risk' practice requiring a consumer advisory, not a banned one.",
+  "domainFacts": {
+    "eggWhiteCoagulationTemp": {
+      "value": { "min": 62, "max": 65 },
+      "unit": "celsius",
+      "citation": {
+        "source": "Harold McGee, On Food and Cooking (standard food-science reference for ovalbumin/ovotransferrin denaturation ranges)",
+        "confidence": "commonly_cited_unverified"
+      },
+      "verified": false,
+      "note": "Informational context for why a 'soft' egg is possible below this CCP's own instantaneousC/heldC at all — NOT itself a safety threshold; engine.ts never reads this."
+    },
+    "eggYolkCoagulationTemp": {
+      "value": { "min": 65, "max": 70 },
+      "unit": "celsius",
+      "citation": {
+        "source": "Harold McGee, On Food and Cooking (standard food-science reference for ovalbumin/ovotransferrin denaturation ranges)",
+        "confidence": "commonly_cited_unverified"
+      },
+      "verified": false,
+      "note": "Same status as eggWhiteCoagulationTemp above — informational, not enforced."
+    }
+  },
   "metadata": {
     "note": "Two-point simplification, not the Food Code's full multi-point (temperature, time) table — treat instantaneousC/heldC as verified anchors from the sources above, not a reconstruction of every intermediate point on that curve.",
-    "coagulationReferenceC": {
-      "eggWhite": [62, 65],
-      "eggYolk": [65, 70],
-      "note": "Standard food-science figures (ovalbumin/ovotransferrin denaturation ranges, e.g. as summarized in Harold McGee, On Food and Cooking) for when white vs. yolk visually set — informational context for why a 'soft' egg is possible below the CCP at all, not itself a safety threshold."
-    }
+    "domainFactsNote": "coagulationReferenceC migrated 2026-08-17 into two real, typed domainFacts entries (ingredient.ts's DomainFactSchema, ROADMAP.md's 'Structured DomainFact/PhysicalProperty records' gap) — this repo's own named 'right instinct already present' example, promoted from an ad-hoc, UNVALIDATED object sitting inside metadata (z.record(z.string(), z.unknown()) — a malformed shape here would have silently passed schema validation before this change) to a first-class, Zod-validated field. verified: false on both is the honest value: this repo has never independently checked these specific numbers against McGee's actual text this session, only recalled them as the standard figures — a real, separate fact from citation.confidence (which already says a named source exists)."
   }
 }

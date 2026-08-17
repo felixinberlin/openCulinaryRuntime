@@ -62,4 +62,62 @@ describe("CriticalControlPointSchema", () => {
       })
     );
   });
+
+  // domainFacts — 2026-08-17, ROADMAP.md's "Structured DomainFact/
+  // PhysicalProperty records" gap, egg_cooking.json's coagulationReferenceC
+  // migration being the concrete forcing case.
+  test("domainFacts defaults to {} — every CCP file written before this field existed needs no change", () => {
+    const ccp = CriticalControlPointSchema.parse({
+      id: "x",
+      names: { en: "x" },
+      instantaneousC: 74,
+      heldC: 57,
+      heldSeconds: 60,
+      pathogen: "Salmonella spp.",
+      source: "test fixture",
+    });
+    assert.deepEqual(ccp.domainFacts, {});
+  });
+
+  test("domainFacts accepts a real, typed, cited numeric-range fact keyed by an author-chosen id", () => {
+    const ccp = CriticalControlPointSchema.parse({
+      id: "egg_cooking",
+      names: { en: "x" },
+      instantaneousC: 71,
+      heldC: 63,
+      heldSeconds: 15,
+      pathogen: "Salmonella spp.",
+      source: "test fixture",
+      domainFacts: {
+        eggWhiteCoagulationTemp: {
+          value: { min: 62, max: 65 },
+          unit: "celsius",
+          citation: { source: "Harold McGee, On Food and Cooking", confidence: "commonly_cited_unverified" },
+          verified: false,
+        },
+      },
+    });
+    assert.deepEqual(ccp.domainFacts.eggWhiteCoagulationTemp.value, { min: 62, max: 65 });
+  });
+
+  test("a malformed domainFacts entry (missing unit) is rejected — exactly the validation the old ad-hoc metadata object never had", () => {
+    assert.throws(() =>
+      CriticalControlPointSchema.parse({
+        id: "x",
+        names: { en: "x" },
+        instantaneousC: 74,
+        heldC: 57,
+        heldSeconds: 60,
+        pathogen: "Salmonella spp.",
+        source: "test fixture",
+        domainFacts: {
+          someFact: {
+            value: 100,
+            citation: { source: "test", confidence: "standard_reference" },
+            verified: true,
+          },
+        },
+      })
+    );
+  });
 });

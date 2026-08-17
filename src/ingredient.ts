@@ -67,6 +67,73 @@ export const CitationSchema = z.object({
 });
 export type Citation = z.infer<typeof CitationSchema>;
 
+/** A `{min, max}` numeric range, refined so `min <= max` — the exact
+ *  "range, not a false-precision point value" shape `YieldFractionSchema`/
+ *  `PhysicalDimensionsSchema`/`potato-doneness.ts`/`egg-doneness.ts`/
+ *  `StorageLifeSchema` (below) all already commit to for a real,
+ *  cited-but-variable culinary figure. Exported (added 2026-08-17,
+ *  alongside `DomainFactSchema`) so a single numeric-range shape is shared
+ *  rather than each new schema quietly reinventing an identical `{min,
+ *  max}` object with its own `refine`. */
+export const NumericRangeSchema = z
+  .object({ min: z.number(), max: z.number() })
+  .refine((r) => r.min <= r.max, { message: "min must be <= max" });
+export type NumericRange = z.infer<typeof NumericRangeSchema>;
+
+/**
+ * A single structured, typed, cited numeric fact — `ROADMAP.md`'s
+ * "Structured `DomainFact`/`PhysicalProperty` records" gap, closed
+ * 2026-08-17. The problem this exists to fix: this repo is full of real,
+ * cited numeric facts recorded as free-text `metadata.notes` prose — fine
+ * for a human reading the file, but `ENGINE_INVARIANTS.md` #10 ("LLMs are
+ * never authoritative... it never directly asserts world state") means
+ * nothing should ever need an LLM (or any other prose-parser) to EXTRACT a
+ * safety-critical number from a paragraph at runtime. `domainFacts` fields
+ * (added alongside, e.g., `CriticalControlPointSchema.domainFacts`) exist
+ * so a robot's planner/verifier can read `ccp.domainFacts.someFactId.value`
+ * directly — typed, validated by Zod, no parsing involved.
+ *
+ * `egg_cooking.json`'s old `metadata.coagulationReferenceC` was this
+ * repo's own "right instinct already present" (a semi-structured object of
+ * numeric ranges) that this schema was named specifically to generalize —
+ * see that file's own migration for the concrete before/after. Note what
+ * this does NOT do: it doesn't replace `metadata.notes` (most prose in this
+ * repo is genuinely prose — technique explanation, reasoning, caveats —
+ * not a single extractable number, and forcing all of it into this shape
+ * would be a worse fit, not a better one); it also isn't retrofitted onto
+ * `YieldFractionSchema`/`StorageLifeSchema` above/below, which predate it
+ * and already work — this is the general-purpose FUTURE shape for a new
+ * one-off numeric fact, not a mandate to migrate every existing
+ * range-shaped schema onto it.
+ *
+ * `verified` is a REAL, separate axis from `citation.confidence`, not a
+ * duplicate of it: `confidence` says whether a canonical source is even
+ * NAMED (`standard_reference` vs. `commonly_cited_unverified`); `verified`
+ * says whether THIS SPECIFIC number was actually independently checked via
+ * a live lookup this session, as opposed to recalled/inherited — the exact
+ * distinction this repo has repeatedly made in prose already (e.g.
+ * `egg_pasteurization_raw.json`'s `independentVerificationNote`, or any
+ * `LEARNINGS_*.md` entry saying "verified via direct lookup, not
+ * recalled") without ever having a queryable field for it before now. A
+ * `standard_reference`-confidence fact can still be `verified: false` (a
+ * real, named textbook is cited, but nobody in this session opened it to
+ * confirm the number), and that's an honest, common combination, not a
+ * contradiction.
+ */
+export const DomainFactSchema = z.object({
+  /** A point value OR a range — many real culinary/physical facts (e.g.
+   *  "egg white sets at 62-65°C") are honestly a range, not a single
+   *  number; forcing one shape would either misrepresent a real range as
+   *  false precision, or force a genuinely single-valued fact (a specific
+   *  gram weight) to carry a pointless `min === max` pair. */
+  value: z.union([z.number(), NumericRangeSchema]),
+  unit: z.string().min(1),
+  citation: CitationSchema,
+  verified: z.boolean(),
+  note: z.string().optional(),
+});
+export type DomainFact = z.infer<typeof DomainFactSchema>;
+
 /**
  * `producedByproducts`/`byproductsByAction` below (`EntitySchema`) record
  * WHAT spawns when this entity's parent is processed — never HOW MUCH,
@@ -104,14 +171,6 @@ export const YieldFractionSchema = z
   .refine((y) => y.min <= y.max, { message: "min must be <= max" });
 export type YieldFraction = z.infer<typeof YieldFractionSchema>;
 
-/** A `{min, max}` day/hour/month range, refined so `min <= max` — the exact
- *  "range, not a false-precision point value" shape `YieldFractionSchema`/
- *  `PhysicalDimensionsSchema`/`potato-doneness.ts`/`egg-doneness.ts` all
- *  already commit to for a real, cited-but-variable culinary figure. */
-const RangeSchema = z
-  .object({ min: z.number().positive(), max: z.number().positive() })
-  .refine((r) => r.min <= r.max, { message: "min must be <= max" });
-
 /**
  * Real, cited "how long is this safe/good for" storage guidance — closes
  * `ROADMAP.md`'s long-named "Storage/shelf-life common knowledge" gap
@@ -145,15 +204,15 @@ const RangeSchema = z
 export const StorageLifeSchema = z
   .object({
     /** How long this keeps under active refrigeration (~40°F/4°C or below). */
-    refrigeratedDays: RangeSchema.optional(),
+    refrigeratedDays: NumericRangeSchema.optional(),
     /** How long this is safe to leave at room/ambient temperature before
      *  discarding — the USDA "Danger Zone (40°F-140°F)" 2-hour rule for a
      *  perishable food, when it applies. */
-    roomTempHours: RangeSchema.optional(),
+    roomTempHours: NumericRangeSchema.optional(),
     /** How long this keeps in a cool, dry pantry/counter WITHOUT
      *  refrigeration — for shelf-stable raw goods (whole garlic bulb) or an
      *  ingredient that is actively better NOT refrigerated (raw potato). */
-    pantryMonths: RangeSchema.optional(),
+    pantryMonths: NumericRangeSchema.optional(),
     /** True when refrigerating this specific state is itself the wrong
      *  advice (not just unnecessary) — a real, cited, QUALITY-not-safety
      *  fact for raw potato (starch converts to sugar below ~42°F/6°C,

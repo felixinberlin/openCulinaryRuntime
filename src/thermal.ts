@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DomainFactSchema } from "./ingredient.ts";
 
 /**
  * The standard microbiological thermal-death-time model — D-value/z-value
@@ -96,6 +97,22 @@ export const CriticalControlPointSchema = z.object({
    *  fixed two-point check is the honest ceiling for those, not a
    *  placeholder waiting to be upgraded. */
   thermalModel: ThermalInactivationModelSchema.optional(),
+  /**
+   * Structured, typed reference facts related to this CCP but not
+   * THEMSELVES the enforced threshold (`ingredient.ts`'s `DomainFactSchema`,
+   * `ROADMAP.md`'s "Structured DomainFact/PhysicalProperty records" gap,
+   * closed 2026-08-17) — e.g. `egg_cooking.json`'s coagulation temperature
+   * ranges, informational context for why a "soft" egg is possible below
+   * this CCP's own `instantaneousC`/`heldC` at all, not a second safety
+   * threshold. Keyed by an author-chosen fact id (e.g.
+   * `"eggWhiteCoagulationC"`). Optional and defaults to `{}` — every CCP
+   * file written before this field existed needs no change; `engine.ts`'s
+   * `applyAction` never reads this (it only ever consults
+   * `instantaneousC`/`heldC`/`heldSeconds`/`thermalModel` above for actual
+   * enforcement), so adding a `domainFacts` entry can never change what a
+   * recipe step does or doesn't pass.
+   */
+  domainFacts: z.record(z.string(), DomainFactSchema).default({}),
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 export type CriticalControlPoint = z.infer<typeof CriticalControlPointSchema>;

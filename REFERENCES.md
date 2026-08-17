@@ -661,7 +661,13 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   re-verified this session.
 - **Harold McGee, *On Food and Cooking*** — general food-science reference
   used for: egg white/yolk coagulation temperature ranges
-  (`data/ccps/egg_cooking.json`'s `coagulationReferenceC`), typical
+  (`data/ccps/egg_cooking.json`'s `domainFacts.eggWhiteCoagulationTemp`/
+  `eggYolkCoagulationTemp` — migrated 2026-08-17 from the old ad-hoc
+  `metadata.coagulationReferenceC` object into `ingredient.ts`'s new
+  `DomainFactSchema`, `ROADMAP.md`'s "Structured DomainFact/
+  PhysicalProperty records" gap; both entries' own `verified: false`
+  records the same fact this citation's `confidence` tier already does —
+  recalled, not independently re-checked against McGee's text), typical
   shallow-frying/Maillard temperature bands (`fry.json`'s `heatLevel`
   note), and open-fire cooking efficiency framing
   (`data/heat-sources/wood_fire.json`). Confidence: `commonly_cited_unverified`

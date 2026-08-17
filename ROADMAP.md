@@ -62,6 +62,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Unit tests per forbidden-transition rule — 42 real, shipped invalidTransitions rules (potato/egg/egg_cracked/onion) run against the real engine, including a real redundancy finding (egg's own PEEL prerequisite makes some entries structurally dead weight) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:invalid-transitions` |
 | POACH with any vessel — the last verb holding an exact-id tool check generalized to `isVessel`, correcting a real overclaimed "standard" technique note along the way (two real, cited, different vessel shapes for two real techniques) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:poach-any-vessel` |
 | Storage/shelf-life — real, cited, state-keyed storageLifeByState (egg raw vs. boiled genuinely different; potato's doNotRefrigerate), surfaced via recipe-explain.ts's storageSummary and recipe-narrator.ts's new section, computed over all 17 real recipes | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:storage-life` |
+| Structured DomainFact records — egg_cooking.json's ad-hoc coagulationReferenceC migrated to typed, Zod-validated domainFacts; a malformed entry now actually rejected; queryable via `npm run ask -- fact`, zero prose parsing | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:domain-facts` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -2176,15 +2177,64 @@ domain facts.
       the right physical situation) and simpler (shorter, standards-backed,
       matches real commercial liquid-egg practice) — not a tradeoff between
       rigor and convenience.
-- [ ] Structured `DomainFact`/`PhysicalProperty` records (typed value, unit,
-      source, `verified: boolean`) alongside — not replacing — the prose
-      `metadata.notes` this repo is full of. A robot's planner/verifier
-      cannot safely consult an English paragraph for a safety-critical number
-      at runtime; having anything interpret one to extract such a number
-      (most obviously an LLM) is exactly what `ENGINE_INVARIANTS.md` #10
-      forbids. `egg_cooking.json`'s `metadata.coagulationReferenceC` is the
-      right instinct already present, just not yet a consistent, first-class
-      pattern.
+- [x] **Structured `DomainFact`/`PhysicalProperty` records — closed
+      2026-08-17.** `ingredient.ts`'s new `DomainFactSchema` (`value: number
+      | NumericRangeSchema`, `unit`, `citation` — reusing the existing
+      `CitationSchema` rather than a second, parallel source-string field —
+      and a real, previously-nonexistent `verified: boolean`) plus
+      `CriticalControlPointSchema.domainFacts` (`thermal.ts`), keyed by an
+      author-chosen fact id. `verified` is a genuinely NEW, separate axis
+      from `citation.confidence`, not a duplicate of it: `confidence` says
+      whether a canonical source is even NAMED; `verified` says whether
+      THIS SPECIFIC number was independently double-checked via a live
+      lookup this session, as opposed to recalled/inherited — a real
+      distinction this repo had already been making constantly in PROSE
+      (`egg_pasteurization_raw.json`'s own `independentVerificationNote`;
+      any `LEARNINGS_*.md` entry saying "verified via direct lookup, not
+      recalled") without ever having a queryable field for it before now.
+      \
+      `egg_cooking.json`'s `metadata.coagulationReferenceC` — this entry's
+      own named "right instinct already present" — is the concrete,
+      migrated forcing case: promoted from an ad-hoc object sitting inside
+      `metadata: z.record(z.string(), z.unknown())` (zero validation — a
+      malformed shape there silently passed) to two real, Zod-validated
+      `domainFacts` entries (`eggWhiteCoagulationTemp`/
+      `eggYolkCoagulationTemp`), both honestly `verified: false` (McGee is
+      named, but nobody opened the actual text this session). Deliberately
+      scoped narrow, not sprayed across every schema speculatively: only
+      `CriticalControlPointSchema` gained a `domainFacts` field — a repo-
+      wide grep for this exact ad-hoc-structured-numeric-fact-in-metadata
+      shape found `coagulationReferenceC` was genuinely the ONLY instance
+      of it anywhere in `data/`, so `EntitySchema`/`ActionSchema` were NOT
+      also given the field; doing so with zero real data to populate it
+      would have repeated the exact declared-but-dead-capability mistake
+      this repo has caught and fixed multiple times before (`pan.json`'s
+      hot/cold, `potato.json`'s mashed). Explicitly does NOT replace
+      `metadata.notes` prose — the overwhelming majority of it is genuine
+      reasoning/technique explanation, not a single extractable number, and
+      this schema was never meant to absorb that; also NOT retrofitted onto
+      `YieldFractionSchema`/`StorageLifeSchema`, which predate it and
+      already work.
+      \
+      Surfaced two ways: `src/query.ts`'s new `answerAboutDomainFact`
+      (the `CriticalControlPointSchema.domainFacts` sibling of the already-
+      closed `answerAboutParameter`) and `scripts/ask.ts`'s new `fact`
+      subcommand (`npm run ask -- fact egg_cooking
+      eggYolkCoagulationTemp`) — directly closes this gap's own stated
+      problem ("a robot's planner/verifier cannot safely consult an English
+      paragraph for a safety-critical number at runtime... `ENGINE_
+      INVARIANTS.md` #10"). `engine.ts`'s `applyAction` deliberately never
+      reads `domainFacts` at all — these are reference facts, not enforced
+      thresholds; `instantaneousC`/`heldC`/`heldSeconds`/`thermalModel`
+      remain the only fields actually consulted for enforcement, unchanged.
+      Proven via `npm run capability-test:domain-facts`
+      (`scripts/domain-fact-as-a-robot.ts`) — typed access with zero prose
+      parsing, a real computation (measured-temperature-in-range check)
+      using the structured value directly, a malformed `domainFacts` entry
+      (missing `unit`) actually rejected by Zod where the old ad-hoc object
+      would have silently passed, and the `verified`-vs-`confidence`
+      distinction demonstrated on real data. 9 new unit tests
+      (`tests/ingredient.test.ts`, `tests/thermal.test.ts`).
 - [x] **A real domain-question query interface — closed 2026-08-12.**
       `src/query.ts`'s `answerAboutParameter` + `npm run ask -- <actionId>
       <parameterId>`: given a question like "how often should I pour olive

@@ -1447,6 +1447,49 @@ was made. Don't rewrite or delete old entries — append.
   reactivated/covered rather than letting an old declaration quietly
   imply more than was ever built.
 
+### `DomainFactSchema` — a repo-wide grep, not intuition, decided how far to spread a new field
+
+- **2026-08-17.** The roadmap item named one concrete forcing case
+  (`egg_cooking.json`'s `coagulationReferenceC`) but the schema itself is
+  obviously general-purpose — the tempting move was adding
+  `domainFacts` to `EntitySchema`/`ActionSchema` too, "since it'll
+  obviously be useful there eventually." Ran an actual grep across every
+  `data/*.json` file first, looking for the specific shape the gap
+  describes (a numeric fact sitting in an untyped `metadata` object)
+  instead of guessing. Result: `coagulationReferenceC` was the ONLY
+  instance of that shape anywhere in this repo — every other real cited
+  number already lives in a dedicated typed field (`thermophysical`,
+  `physicalDimensions`, `storageLifeByState`, or one of the many small
+  standalone modules like `egg-doneness.ts`/`cut-dimensions.ts`). Adding
+  `domainFacts` to schemas with zero real data to put in it would have
+  been exactly the "declared but dead" mistake this repo has caught and
+  fixed multiple times already (`pan.json`'s unreachable hot/cold states,
+  `potato.json`'s unwired `mashed`) — this time self-inflicted in a brand
+  new mechanism instead of found later. Checking "is there actually a
+  second real case" BEFORE generalizing, not after, is the same discipline
+  `requiredToolCapabilities` was held to (`saucepan.json`/`wok.json`
+  existing specifically to prove FRY/BOIL's fix wasn't a disguised special
+  case) — applied here in the opposite direction: the check came back
+  negative, so the field correctly stayed narrow instead of being padded
+  out to look more "finished."
+- **`verified: boolean` needed to be justified as a genuinely NEW axis, not
+  just a restatement of `CitationSchema.confidence`, before it earned a
+  place in the schema** — the two are easy to conflate (both are "how much
+  do we trust this number"). What separates them, concretely: `confidence`
+  is answerable by reading the file once ("is a named source given, yes or
+  no"); `verified` is answerable only by knowing what actually happened
+  THIS SESSION ("did anyone re-open that source and re-check this specific
+  figure"). The repo already had real, concrete examples of both
+  combinations before this field existed — `egg_pasteurization_raw.json`'s
+  65-minute figure is `standard_reference` (a named FDA-adjacent process)
+  AND was independently re-verified against peer-reviewed literature
+  (2026-08-14, `LEARNINGS_PROCESS.md`) — `verified: true` territory; the
+  McGee coagulation figures are `commonly_cited_unverified` and were never
+  independently re-checked — `verified: false`. A field is worth adding to
+  a schema once real, DIFFERENT, already-occurred cases exist that would
+  populate it differently, not just because the concept sounds coherent in
+  the abstract.
+
 ### PAR_FRY's place-readiness wiring — a same-shaped gap that widened, not duplicated, an existing branch
 
 - **2026-08-17.** `shared-pan-heat-as-a-robot.ts`'s own closing note had

@@ -8,6 +8,8 @@ import {
   QuantitySchema,
   YieldFractionSchema,
   AllergenSchema,
+  NumericRangeSchema,
+  DomainFactSchema,
   isTerminalState,
 } from "../src/ingredient.ts";
 import { makeEntity } from "./helpers.ts";
@@ -82,6 +84,65 @@ describe("YieldFractionSchema", () => {
 
   test("requires a citation and ofParentEntityId — not silently optional", () => {
     assert.throws(() => YieldFractionSchema.parse({ min: 0.1, max: 0.2 }));
+  });
+});
+
+// NumericRangeSchema/DomainFactSchema — 2026-08-17, ROADMAP.md's "Structured
+// DomainFact/PhysicalProperty records" gap.
+describe("NumericRangeSchema", () => {
+  test("accepts min <= max, including negative values (e.g. a freezing point)", () => {
+    assert.doesNotThrow(() => NumericRangeSchema.parse({ min: -18, max: -10 }));
+    assert.doesNotThrow(() => NumericRangeSchema.parse({ min: 5, max: 5 })); // min === max is legal
+  });
+
+  test("rejects min > max — not a real range", () => {
+    assert.throws(() => NumericRangeSchema.parse({ min: 10, max: 5 }));
+  });
+});
+
+describe("DomainFactSchema", () => {
+  const citation = { source: "test fixture", confidence: "commonly_cited_unverified" as const };
+
+  test("value accepts either a single number or a NumericRangeSchema range", () => {
+    assert.doesNotThrow(() =>
+      DomainFactSchema.parse({ value: 100, unit: "celsius", citation, verified: true })
+    );
+    assert.doesNotThrow(() =>
+      DomainFactSchema.parse({
+        value: { min: 62, max: 65 },
+        unit: "celsius",
+        citation,
+        verified: false,
+      })
+    );
+  });
+
+  test("rejects a range value with min > max even nested inside the union", () => {
+    assert.throws(() =>
+      DomainFactSchema.parse({
+        value: { min: 65, max: 62 },
+        unit: "celsius",
+        citation,
+        verified: false,
+      })
+    );
+  });
+
+  test("requires citation, unit, and verified — none silently optional", () => {
+    assert.throws(() => DomainFactSchema.parse({ value: 100, unit: "celsius", citation }));
+    assert.throws(() => DomainFactSchema.parse({ value: 100, citation, verified: true }));
+    assert.throws(() => DomainFactSchema.parse({ value: 100, unit: "celsius", verified: true }));
+  });
+
+  test("verified is a real, independent axis from citation.confidence — a standard_reference fact can still be verified: false", () => {
+    const fact = DomainFactSchema.parse({
+      value: 100,
+      unit: "celsius",
+      citation: { source: "a named textbook", confidence: "standard_reference" },
+      verified: false,
+    });
+    assert.equal(fact.citation.confidence, "standard_reference");
+    assert.equal(fact.verified, false);
   });
 });
 

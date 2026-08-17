@@ -1,5 +1,7 @@
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
+import type { CriticalControlPoint } from "./thermal.ts";
+import type { DomainFact } from "./ingredient.ts";
 
 /**
  * A real query interface over the structured domain data — the answer to
@@ -87,4 +89,34 @@ export function answerAboutParameter(
     relevantNotes,
     recipeUsages,
   };
+}
+
+/**
+ * The `CriticalControlPointSchema.domainFacts` sibling of
+ * `answerAboutParameter` above (`ingredient.ts`'s `DomainFactSchema`,
+ * `ROADMAP.md`'s "Structured DomainFact/PhysicalProperty records" gap,
+ * closed 2026-08-17) — the concrete answer to that gap's own stated
+ * problem: "a robot's planner/verifier cannot safely consult an English
+ * paragraph for a safety-critical number at runtime." This returns the
+ * already-validated, already-typed `DomainFact` object directly — no
+ * prose parsing involved, matching `ENGINE_INVARIANTS.md` #10 the same way
+ * `answerAboutParameter` already does for action parameters.
+ */
+export interface DomainFactAnswer {
+  ccpId: string;
+  ccpNameEn: string;
+  factId: string;
+  fact: DomainFact;
+}
+
+export function answerAboutDomainFact(
+  ccps: Map<string, CriticalControlPoint>,
+  ccpId: string,
+  factId: string
+): DomainFactAnswer | undefined {
+  const ccp = ccps.get(ccpId);
+  if (!ccp) return undefined;
+  const fact = ccp.domainFacts[factId];
+  if (!fact) return undefined;
+  return { ccpId: ccp.id, ccpNameEn: ccp.names.en, factId, fact };
 }

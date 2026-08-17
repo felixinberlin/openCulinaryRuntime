@@ -1923,3 +1923,45 @@ was made. Don't rewrite or delete old entries — append.
   prove the new mechanism at all. Grepped every `data/actions/*.json` for
   a real one rather than reaching for the nearest already-loaded fixture,
   which would have silently proven nothing.
+
+## 2026-08-17 (whole-project review)
+
+- **A prior session's own doc comment can be the cleanup checklist, if it
+  admitted the duplication at the time rather than hiding it.**
+  `dag-scheduler.ts`'s `scheduleDagFromSteps` had said, in its own words,
+  "same extraction as `in-progress-action.ts`'s `beginAction` —
+  deliberately NOT re-implemented differently here" since the day it was
+  written — an honest acknowledgment of parallel logic, not a claim it
+  was shared. A whole-project review turned that admission into an actual
+  fix: extracted `parseDurationSecondsParam` into `in-progress-action.ts`
+  (the file whose own domain — reading a caller-requested duration off an
+  action's `params` — the logic conceptually belongs to) and had
+  `dag-scheduler.ts` import it instead of re-deriving the identical
+  `Number(raw)`/`!Number.isNaN(...)` shape a second time. Proven
+  behavior-preserving, not just assumed: `tests/dag-execution.test.ts`'s
+  existing cases and `scripts/dag-schedule-as-a-robot.ts`'s real-data
+  output were both re-run and produced byte-identical results before and
+  after.
+- **`ROADMAP.md` got the exact same size-driven split `LEARNINGS.md` got
+  on 2026-08-15, for the identical reason: one section ("Common culinary
+  knowledge coverage") had grown to 1,673 of the file's 3,221 lines** —
+  over half the file, and the single biggest impediment to actually
+  finding anything in it. Split into `ROADMAP_KNOWLEDGE.md`, content
+  moved verbatim — checked via a literal reconstruction diff (concatenate
+  the unchanged head, the extracted section, and the unchanged tail; diff
+  against the original file) rather than eyeballing it, the same
+  "checked line-for-line, not just believed" discipline the `LEARNINGS.md`
+  split itself used.
+- **`CLAUDE.md`'s own "Module layout" section — the first thing any future
+  session reads — had gone stale by SIX real additions**
+  (`in-progress-action.ts`, `dag-scheduler.ts`, the DAG-execution engine
+  wiring, the SEASON generalization, tool-lock scheduling, and the entire
+  baking epic), none mentioned, despite `CLAUDE.md`'s own explicit stated
+  rule ("don't let this section... go stale... update the doc that
+  describes it in the same change, not 'later'"). Worth naming plainly: that
+  rule was NOT followed for several of this session's own commits — the
+  fix went into `ROADMAP.md`/`LEARNINGS_ENGINE.md` each time (both real
+  and necessary) but `CLAUDE.md` itself was missed repeatedly until a
+  dedicated review caught it. A per-commit discipline this good still
+  benefits from a periodic whole-file audit, not just trusting each
+  individual change to have remembered every doc that name-checks it.

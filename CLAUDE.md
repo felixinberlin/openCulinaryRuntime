@@ -6,12 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
-`heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`, `altitude.ts`), `data/` has real entities/actions/recipes/CCPs/
-heat-sources (potato, egg + its byproducts, garlic, alioli variants, gas/vitro/wood
-heat providers, ...), and `scripts/` has runnable demos plus `validate.ts`. Commands:
+`heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`, `altitude.ts`,
+`execution-bounds.ts`, `in-progress-action.ts`, `dag-scheduler.ts`), `data/` has real
+entities/actions/recipes/CCPs/heat-sources (potato, egg + its byproducts, garlic,
+onion, oil, salt/pepper/chili/acid, butter, milk, flour/yeast/dough, alioli variants,
+gas/vitro/wood heat providers, ...), and `scripts/` has runnable demos plus
+`validate.ts`. Commands:
 `npm test` (`node:test` unit suite over `tests/*.test.ts` — synthetic fixtures against
 `engine.ts`/`action.ts`/`ingredient.ts`/`thermal.ts`/`place.ts`/`potato-doneness.ts`/
-`altitude.ts`, no `data/*.json` dependency),
+`altitude.ts`/`execution-bounds.ts`/`in-progress-action.ts`/`dag-scheduler.ts`, no
+`data/*.json` dependency),
 `npm run validate` (schema + cross-reference check over the real `data/*.json`, PLUS
 (2026-08-14) an actual end-to-end simulation of every `data/recipes/*.json` via
 `recipe-runner.ts`'s `runRecipe` — not just static id cross-checking — the
@@ -171,9 +175,78 @@ on `egg_yolk-3` — exactly the ticket's own best demo case) via a new
 second, parallel re-derivation of the spawn-id naming scheme — see
 `LEARNINGS_ENGINE.md` 2026-08-16 for the full reasoning.
 
+A seventh, 2026-08-17: `src/in-progress-action.ts` (`beginAction`/
+`progressStatus`/`fractionOfRequestedDuration`/`remainingRequestedSeconds`) —
+the query half of ROADMAP.md's "Heat as a shared, time-varying property of a
+PLACE" gap: given a `continuous` action that started some simulated seconds
+ago, answers whether it's still below its CCP safety floor, in progress, at
+its own caller-requested duration, or past `execution-bounds.ts`'s forced
+timeout ceiling — composing directly with that module's `ExecutionBound`
+rather than a second source of truth. Same standalone-module-before-engine-
+wiring precedent; `engine.ts`'s `applyAction` stays atomic and unaware of it.
+Proven via `tests/in-progress-action.test.ts` and `npm run
+capability-test:in-progress-action` (`scripts/check-in-on-a-cooking-
+instance-as-a-robot.ts`).
+
+An eighth, same day: `src/dag-scheduler.ts` (`resolveStepId`/
+`deriveDependsOn`/`topologicalOrder`/`scheduleDag`/`scheduleDagFromSteps`) —
+ROADMAP.md's "Recipe execution as a DAG" ticket, deliberately scoped:
+computes a deterministic concurrent-execution SCHEDULE as read-only
+information (real "10 minutes, not 15" savings, real tool-lock contention —
+`DagNode.requiredToolIds`, closing a gap this module's own doc comment named
+against itself the same day it shipped), but does NOT make `recipe-runner.ts`
+execute steps concurrently — genuine concurrent mutation of the shared
+inventory `Map` would violate `ENGINE_INVARIANTS.md` #9's determinism
+guarantee. `RecipeStepSchema` (`recipe.ts`) gained optional `id`/`dependsOn`
+fields (fully backward compatible); `topologicalOrder` IS wired into
+`runRecipe` for real (execute in dependency-respecting order, still
+single-pass/deterministic — a cyclic recipe is caught before touching
+inventory). `action.ts` gained `requiresActiveAttention` (ACTIVE vs. PASSIVE,
+audited across all 26 `continuous` actions). Proven via `tests/
+dag-execution.test.ts` and `npm run capability-test:dag-schedule`
+(`data/recipes/garlic-oil-potatoes.json` retrofitted with explicit
+`id`/`dependsOn` as the real join-node proof).
+
+Same day, `action.ts` also gained `outputs.addsTagFromParameter` and
+`requiredIngredientCapabilityFromParameter` — closing ROADMAP.md's
+2026-08-13-deferred SEASON generalization (`data/actions/season.json`, ADDITIVE
+alongside the still-unchanged `salt.json`/`pepper.json`/`chili.json`/
+`acid.json`) — a deliberate, NAMED adaptation of `transformedStateFromParameter`'s
+pattern (a value-to-tag MAP, not a raw passthrough) plus a real new
+`ExecutionResult.matchedIngredientInstanceId` field (`npm run
+capability-test:season-verb`).
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.
+
+### Recent content epics (not new `src/*.ts` modules — see `ROADMAP.md` for the full entries)
+
+- **Baking, 2026-08-17**: `data/entities/flour.json`/`yeast.json`/`dough.json`
+  (this repo's second-ever composite entity) + `data/actions/combine_dough.json`/
+  `knead.json`/`proof.json`. Real anchor dish: `data/recipes/simple-flatbread.json`
+  (deliberately UNLEAVENED — a real, honestly-named engine limit, not yet built,
+  blocks a true leavened-bread recipe: `COMBINE`-shaped actions only ever merge
+  TWO instances, and real yeasted bread needs three). `npm run
+  capability-test:bake-bread` proves the leavened-path mechanisms (yeast
+  activation, `PROOF`) directly, independent of that gap.
+- **Milk, 2026-08-17**: `data/entities/milk.json`, this repo's first dairy
+  liquid — closes a gap `mashed-potatoes.json`'s own prose had already named
+  without the recipe actually containing milk.
+- Two external-document triages (2026-08-17): a generic cooking-tips document
+  (`scripts/cooking-common-sense-triage-as-a-robot.ts`) and a physical-
+  feasibility-rules document (`scripts/physical-feasibility-rules-as-a-robot.ts`,
+  found a real `DRAIN` statePrerequisite gap) — both moved to `olddocs/` after
+  triage, per the established convention.
+- A self-authored (not externally triaged) common-sense audit, same day
+  (`scripts/self-authored-common-sense-rules-as-a-robot.ts`) — found and fixed
+  a real structural gap: `requiredSecondaryCapability` checked a COMBINE-shaped
+  action's secondary instance for CAPABILITY only, never STATE, until
+  `engine.ts`'s `checkStatePrerequisite` helper was extended to cover it too.
+- "Ticket 1" (2026-08-17): a user-supplied refactor ticket asking to remove
+  `openFoodFactsId`/`usdaFoodDataId` from the core schema — checked and closed
+  as already-satisfied; neither field, nor any external-database coupling,
+  has ever existed in this repo's core schema.
 
 ### Planned satellite projects
 

@@ -7,6 +7,7 @@ import {
   progressStatus,
   fractionOfRequestedDuration,
   remainingRequestedSeconds,
+  parseDurationSecondsParam,
 } from "../src/in-progress-action.ts";
 import type { ExecutionBound } from "../src/execution-bounds.ts";
 import { makeAction } from "./helpers.ts";
@@ -33,6 +34,22 @@ const mashContinuousNoDurationParam = makeAction({
   maxDurationSeconds: 600,
   outputs: {},
 }); // real shape: MASH has no durationSeconds parameter at all
+
+describe("parseDurationSecondsParam — the shared helper dag-scheduler.ts also reuses", () => {
+  test("parses a valid numeric string", () => {
+    assert.equal(parseDurationSecondsParam({ durationSeconds: "300" }), 300);
+  });
+
+  test("undefined when the param is absent", () => {
+    assert.equal(parseDurationSecondsParam({}), undefined);
+  });
+
+  test("undefined for a malformed value, never NaN leaking out", () => {
+    const result = parseDurationSecondsParam({ durationSeconds: "not-a-number" });
+    assert.equal(result, undefined);
+    assert.notEqual(result, NaN); // trivially true, but the real point: it's undefined, not NaN
+  });
+});
 
 describe("beginAction — applicability and requestedDurationSeconds extraction", () => {
   test("returns undefined for an instantaneous action", () => {

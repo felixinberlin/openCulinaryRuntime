@@ -210,6 +210,7 @@ Read in roughly this order to get oriented:
 | `CLAUDE_DEV_CTX.md` | The original architecture blueprint/system-prompt this was built from. |
 | `CLAUDE.md` | Ground truth on how the plan diverged from what's actually built, file-by-file, plus repo commands and conventions. |
 | `ROADMAP.md` | Phased build plan and the full capability-test table — which real dishes are provably makeable today. |
+| `ROADMAP_KNOWLEDGE.md` | Split out of `ROADMAP.md` 2026-08-17 — the closed/open ledger of real-world cooking-domain coverage (ingredients, technique verbs, HACCP facts) and every epic that grew out of it (heat-as-a-place, DAG execution, baking, SEASON, ...). |
 | `AUTHORING.md` | How to actually write a new recipe from the command line — the real `validate-recipe` loop, a worked example, and the honest current state of Cooklang support (none, yet — and why). |
 | `LEARNINGS.md` | Index into the dated learnings log — split into `LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`, `LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md` (schema/engine gotchas, food-science/technique tradeoffs, CLI-tooling notes, and working-method/verification lessons, respectively). |
 | `REFERENCES.md` | Bibliography — every safety threshold and technique claim traced to a real source. |

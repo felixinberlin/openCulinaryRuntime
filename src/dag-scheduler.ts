@@ -1,5 +1,6 @@
 import type { Action } from "./action.ts";
 import type { RecipeStep } from "./recipe.ts";
+import { parseDurationSecondsParam } from "./in-progress-action.ts";
 
 /**
  * ROADMAP.md's "Recipe execution as a DAG" entry — a directed-ticket
@@ -270,14 +271,14 @@ export function scheduleDag(nodes: readonly DagNode[]): DagSchedule {
 
 /**
  * The real end-to-end entry point against actual `RecipeStep`s/loaded
- * `Action`s: resolves each step's duration from its OWN `params.
- * durationSeconds` when the action declares that parameter (same
- * extraction as `in-progress-action.ts`'s `beginAction` — deliberately
- * NOT re-implemented differently here), falling back to 0 for a step with
- * no caller-specified duration (an instantaneous action, or a continuous
- * one called without `durationSeconds` — this is a scheduling ESTIMATE,
- * not a safety bound; `execution-bounds.ts`'s `maxDurationSeconds` is the
- * real ceiling for that separate concern). `active` is
+ * `Action`s: resolves each step's duration via `in-progress-action.ts`'s
+ * `parseDurationSecondsParam` (the SAME extraction `beginAction` there
+ * uses — a shared function, not parallel duplicated logic), falling back
+ * to 0 for a step with no caller-specified duration (an instantaneous
+ * action, or a continuous one called without `durationSeconds` — this is
+ * a scheduling ESTIMATE, not a safety bound; `execution-bounds.ts`'s
+ * `maxDurationSeconds` is the real ceiling for that separate concern).
+ * `active` is
  * `action.requiresActiveAttention` when the action is continuous and
  * that field has been audited, else `true` for EVERY instantaneous
  * action (this vocabulary's real, structural rule — see
@@ -306,9 +307,7 @@ export function scheduleDagFromSteps(
   const nodes: DagNode[] = topo.order.map((id) => {
     const step = byId.get(id)!;
     const action = actions.get(step.actionId);
-    const durationRaw = step.params["durationSeconds"];
-    const parsed = durationRaw !== undefined ? Number(durationRaw) : undefined;
-    const durationSeconds = parsed !== undefined && !Number.isNaN(parsed) ? parsed : 0;
+    const durationSeconds = parseDurationSecondsParam(step.params) ?? 0;
     const active =
       action?.actionKind !== "continuous" ? true : (action.requiresActiveAttention ?? true);
     // requiredTools only — requiredToolCapabilities deliberately excluded,

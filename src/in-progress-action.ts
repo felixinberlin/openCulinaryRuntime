@@ -63,6 +63,28 @@ export interface InProgressAction {
 }
 
 /**
+ * Reads a step's own `params.durationSeconds` — the shared extraction
+ * `beginAction` below and `dag-scheduler.ts`'s `scheduleDagFromSteps` both
+ * need (added 2026-08-17, a real, small duplication a whole-project review
+ * found and closed: both files independently parsed the identical
+ * `raw !== undefined ? Number(raw) : undefined` / `!Number.isNaN(...)`
+ * shape). `undefined` for an absent or malformed value — never `NaN`
+ * leaking downstream, and never guessed at; see `InProgressAction.
+ * requestedDurationSeconds`'s own doc comment for why `undefined` here is a
+ * real, first-class "not applicable," not an error. Callers that want a
+ * different fallback (e.g. `dag-scheduler.ts`'s `0` for an unparameterized
+ * duration) apply it themselves — this only does the parsing, not the
+ * fallback policy, since that's genuinely different between callers.
+ */
+export function parseDurationSecondsParam(
+  params: Readonly<Record<string, string>>
+): number | undefined {
+  const raw = params["durationSeconds"];
+  const parsed = raw !== undefined ? Number(raw) : undefined;
+  return parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined;
+}
+
+/**
  * Begins tracking an already-validated continuous action. Returns
  * `undefined` for an `instantaneous` action (CUT, PEEL, ... — there is no
  * partial-completion concept for a single discrete act; `ENGINE_INVARIANTS.md`
@@ -77,10 +99,7 @@ export function beginAction(
   startedAtSeconds: number
 ): InProgressAction | undefined {
   if (action.actionKind !== "continuous") return undefined;
-  const raw = params["durationSeconds"];
-  const parsed = raw !== undefined ? Number(raw) : undefined;
-  const requestedDurationSeconds =
-    parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined;
+  const requestedDurationSeconds = parseDurationSecondsParam(params);
   return { actionId: action.id, startedAtSeconds, requestedDurationSeconds };
 }
 

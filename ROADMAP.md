@@ -931,13 +931,13 @@ covered by what exists:**
       the four egg-derived entities; no probability/detection modeling. See
       `src/tool-hygiene.ts`'s own top doc comment for the full reasoning and
       `LEARNINGS_ENGINE.md` 2026-08-16 for the design-process notes.
-- [ ] **Far more staple ingredients/entities.** Still no flour, milk/cheese,
+- [ ] **Far more staple ingredients/entities.** Still no flour, cheese,
       herbs, sugar, or any protein besides egg. (Onion closed 2026-08-16,
-      vinegar/acid closed 2026-08-15 — both corrected out of this line the
-      same change that closed them; see this bullet's own dated entries
-      below.) The vocabulary's technique DEPTH (HACCP, carryover cooking,
-      emulsion chemistry) remains disproportionate to its ingredient
-      BREADTH.
+      vinegar/acid closed 2026-08-15, milk closed 2026-08-17 — all
+      corrected out of this line the same change that closed them; see
+      this bullet's own dated entries below.) The vocabulary's technique
+      DEPTH (HACCP, carryover cooking, emulsion chemistry) remains
+      disproportionate to its ingredient BREADTH.
       **Partial progress 2026-08-14/15:** a second `isFryingMedium` entity
       (`sunflower_oil.json`, proving `fry.json`'s
       `requiredIngredientCapabilities` check was already substitutable —
@@ -983,9 +983,30 @@ covered by what exists:**
       `capabilityAmbiguityNote`. Proven end-to-end via
       `data/recipes/tortilla-de-patatas-con-cebolla.json`
       (`npm run recipe -- tortilla_de_patatas_con_cebolla`), simulated
-      with zero step errors by `npm run validate`. Flour, milk/cheese
-      (beyond plain butter), herbs, sugar, and any protein besides egg
-      remain unbuilt.
+      with zero step errors by `npm run validate`. Flour, cheese, herbs,
+      sugar, and any protein besides egg remain unbuilt.
+      **Milk closed 2026-08-17** (`data/entities/milk.json`) — this
+      repo's first dairy LIQUID (`butter.json` is dairy but solid/semi-
+      solid), real forcing case: `mashed-potatoes.json` cited "dilutes the
+      butter/milk added during mashing" in its own notes since the day it
+      was written without actually containing any milk — a real,
+      previously-unnoticed gap. `milk.json` and `butter.json` both now
+      assert a new, shared `isMashEnrichment` capability — deliberately
+      NOT wired as a `requiredIngredientCapabilities` entry on
+      `mash.json`: a plain, unenriched mash is real, valid technique too,
+      so making enrichment mandatory would incorrectly block it, the same
+      "physical feasibility only, not culinary preference" restraint this
+      vocabulary holds everywhere. Real composition/thermophysical/
+      `storageLifeByState` citations (USDA FoodData Central, USDA
+      FoodKeeper — `REFERENCES.md`); `possibleStates: ['cold','warmed']`
+      names the real "warm the milk before adding" technique honestly as
+      unmodeled (no dedicated WARM action exists — INFUSE/BOIL/SIMMER
+      don't fit, they're built around a target ingredient being processed
+      IN the liquid, not the liquid itself being gently warmed alone).
+      Proven via `npm run recipe -- mashed_potatoes` (re-run end-to-end
+      with `milk-1` now in the MASH step's `availableIngredientInstanceIds`,
+      zero step errors) — no new capability-test script needed, the real
+      recipe itself is the proof.
       **Triaged 2026-08-15 against a user-supplied Reddit thread**
       (r/Cooking, "Engineer brain struggling with cooking," 760 upvotes,
       219 comments — copy-pasted into the repo, moved to

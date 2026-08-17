@@ -1463,3 +1463,31 @@ was made. Don't rewrite or delete old entries — append.
   test isn't "how different are the numbers," it's "is the same physical
   mechanism producing both."
 
+- **A real content gap can be sitting in plain sight inside this repo's
+  own prose, not just missing from the ingredient list.**
+  `mashed-potatoes.json`'s own metadata had said "dilutes the butter/milk
+  added during mashing" since the day that recipe was written — a
+  correct, real technique fact — while the recipe itself contained no
+  milk at all. Nobody had to go looking for "what staple ingredient is
+  missing" in the abstract; the gap was already named, just not acted
+  on, inside a file this session had already written. Worth a general
+  habit: when adding a real citation/note that references something the
+  repo doesn't actually have yet (an ingredient, a mechanism), that's
+  worth flagging as a live gap right there, not just accurate prose about
+  an absent thing.
+- **`isMashEnrichment` was added as a real, shared capability on both
+  `butter.json` and the new `milk.json`, but deliberately NOT wired as a
+  requirement on `mash.json`** — the disciplined choice, not the lazy
+  one: real technique can and does mash a potato with nothing added
+  (unusual, but not physically impossible, and a genuine choice for some
+  diets/recipes), so making enrichment mandatory would have been a
+  culinary-PREFERENCE constraint dressed up as a physical-feasibility
+  one, the exact category error this vocabulary's `invalidTransitions`/
+  `statePrerequisites` discipline has repeatedly corrected itself over
+  this session (garlic/potato peeling-after-boiling, DRAIN on a raw
+  potato). The capability still exists, unused as a hard gate, so a
+  FUTURE validation pass (real gap, named not built: "if an enrichment
+  ingredient is supplied, is it actually a valid one") has something
+  real to check against without this addition having overreached its own
+  actual forcing case.
+

@@ -327,6 +327,20 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   different-fats.ts`). Confidence: `commonly_cited_unverified` — this
   repo has not looked up the primary WFLO document directly, same
   caveat as `potato.json`/`garlic.json`.
+- **USDA FoodData Central, whole milk (3.25% fat)** and standard published
+  dairy-processing reference values (added 2026-08-17, `milk.json`'s
+  `composition`/`thermophysical`/`storageLifeByState` blocks) — this
+  repo's first dairy LIQUID entity, the direct forcing case being
+  `mashed-potatoes.json` (real technique adds both butter AND milk/cream,
+  not butter alone). Composition (water ~88g, protein ~3.15g, fat ~3.25g,
+  carbohydrate ~4.8g — almost entirely lactose — per 100g); density
+  (~1.03 kg/L) and specific heat (~3.93 kJ/(kg·K), close to water's own
+  4186 given milk's ~88% water content); `refrigeratedDays: 5-7` for
+  opened whole milk, from USDA FoodKeeper (foodsafety.gov) and convergent
+  consumer dairy-storage sources — a real, safety-relevant figure (genuine
+  spoilage risk), not a quality-only one like `potato.json`'s
+  `doNotRefrigerate`. Confidence: `commonly_cited_unverified` for all of
+  the above, same tier and same caveat as `butter.json`'s own citations.
 - **U.S. Department of Energy consumer cooktop-efficiency guidance** and
   commonly-cited consumer appliance spec figures — used in
   `data/heat-sources/gas.json`/`vitro.json`'s `citation` for typical

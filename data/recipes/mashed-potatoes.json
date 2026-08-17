@@ -8,6 +8,7 @@
     { "id": "potato-1", "entityId": "potato", "state": "raw", "tags": [] },
     { "id": "water-1", "entityId": "water", "state": "cold", "tags": [] },
     { "id": "butter-1", "entityId": "butter", "state": "cold", "tags": [] },
+    { "id": "milk-1", "entityId": "milk", "state": "cold", "tags": [] },
     {
       "id": "salt-1",
       "entityId": "salt",
@@ -29,11 +30,12 @@
     },
     { "actionId": "drain", "targetInstanceId": "potato-1", "params": { "method": "colander_shake" }, "availableIngredientInstanceIds": [] },
     { "actionId": "rest", "targetInstanceId": "potato-1", "params": { "durationSeconds": "180" }, "availableIngredientInstanceIds": [] },
-    { "actionId": "mash", "targetInstanceId": "potato-1", "params": { "consistency": "smooth" }, "availableIngredientInstanceIds": ["butter-1"] },
+    { "actionId": "mash", "targetInstanceId": "potato-1", "params": { "consistency": "smooth" }, "availableIngredientInstanceIds": ["butter-1", "milk-1"] },
     { "actionId": "salt", "targetInstanceId": "potato-1", "params": { "timing": "after_cooking" }, "availableIngredientInstanceIds": ["salt-1"] }
   ],
   "metadata": {
     "notes": "This repo's first real recipe to actually exercise MASH (data/actions/mash.json), closed 2026-08-13 but never previously exercised by a real dish. Triaged 2026-08-17 from an externally-supplied '300 Common Sense Cooking Rules' document (moved to olddocs/ after triage) — the real DRAIN(colander_shake) -> REST(brief steam-dry, 180s) -> MASH sequence is rule #253's own cited technique: surface water left on a just-boiled potato dilutes butter/milk and produces a gluier mash. See potato.json's own steamDryBeforeMashNote, drain.json's mashedPotatoUseCaseNote, and rest.json's updated durationSecondsNote (widened to a 60s floor specifically for this shorter real case) for the full citation chain.",
-    "boilDurationNote": "1200s (20 minutes) for quartered potato pieces sits within src/potato-doneness.ts's own POTATO_BOIL_DONENESS cited range for that piece size, not an arbitrary pick."
+    "boilDurationNote": "1200s (20 minutes) for quartered potato pieces sits within src/potato-doneness.ts's own POTATO_BOIL_DONENESS cited range for that piece size, not an arbitrary pick.",
+    "milkAddedNote": "milk-1 added 2026-08-17, closing a gap this file's own notes above had already NAMED ('dilutes butter/milk') without actually containing milk — real mashed-potato technique almost universally adds both butter AND milk/cream, not butter alone; a butter-only mash is a real but less common style. See data/entities/milk.json (this repo's first dairy liquid) for the full citation and capability chain (isMashEnrichment, shared with butter.json). Used at state 'cold', not 'warmed' — milk.json's own warmingTechniqueNote names the real warm-before-adding technique honestly as unmodeled (no WARM action exists in this vocabulary yet)."
   }
 }

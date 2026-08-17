@@ -1,0 +1,68 @@
+{
+  "id": "milk",
+  "kind": "ingredient",
+  "names": {
+    "en": "Milk",
+    "es": "Leche"
+  },
+  "aggregationState": "liquid",
+  "structure": {
+    "composite": false,
+    "components": []
+  },
+  "composition": {
+    "nutrientsPer100g": {
+      "water_g": 88.13,
+      "protein_g": 3.15,
+      "fat_g": 3.25,
+      "carbohydrate_g": 4.8
+    },
+    "citation": {
+      "source": "USDA FoodData Central, whole milk (3.25% fat) — commonly-cited composition figures.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Same caveat as potato.json/garlic.json/butter.json: this repo has not looked up the exact current FDC entry/ID to confirm the precise values. carbohydrate_g here is almost entirely lactose."
+    }
+  },
+  "allergens": ["milk"],
+  "possibleStates": ["cold", "warmed"],
+  "possibleTags": [],
+  "allowedTransformations": [],
+  "producedByproducts": [],
+  "capabilities": {
+    "isMashEnrichment": true
+  },
+  "thermophysical": {
+    "densityKgPerM3": 1030,
+    "specificHeatJPerKgK": 3930,
+    "citation": {
+      "source": "Standard published dairy-processing reference values for whole milk — density ~1.03 kg/L, specific heat ~3.93 kJ/(kg·K), both close to water's own (4186 J/(kg·K)) given milk's ~88% water content (composition above).",
+      "confidence": "commonly_cited_unverified",
+      "note": "No thermalConductivityWPerMK or smokePointC — unlike butter.json/oil.json, milk is never used in this vocabulary as a frying medium or heated to a phase-change/smoke-point ceiling, so those fields would be unused numbers, same reasoning garlic_peel.json's metadata gives for omitting fields nothing here actually consumes."
+    }
+  },
+  "storageLifeByState": {
+    "cold": {
+      "refrigeratedDays": { "min": 5, "max": 7 },
+      "citation": {
+        "source": "USDA FoodKeeper (foodsafety.gov) and convergent consumer dairy-storage sources — opened whole milk, refrigerated at or below 40°F/4°C.",
+        "confidence": "commonly_cited_unverified",
+        "note": "A real safety-relevant figure, not just a quality one: unlike raw potato's doNotRefrigerate note, milk is a genuinely perishable dairy product with a real spoilage risk past this window, not merely a taste/texture change."
+      }
+    }
+  },
+  "sensory": {
+    "taste": ["sweet", "umami"],
+    "texture": ["liquid"],
+    "color": "white"
+  },
+  "cooklang": {
+    "canonicalToken": "leche",
+    "spiceLock": false
+  },
+  "metadata": {
+    "notes": "Added 2026-08-17, ROADMAP.md's 'Far more staple ingredients/entities' gap — the first dairy LIQUID in this vocabulary (butter.json, added 2026-08-14, is dairy but solid/semi-solid). Direct forcing case: real mashed-potato technique almost universally adds warmed milk or cream alongside butter, not butter alone — mashed-potatoes.json (this repo's own recipe, closed 2026-08-17) originally used only butter-1, a real, named gap this entity closes. isMashEnrichment: true (a NEW capability, also added to butter.json this same change) is the shared flag both dairy fats/liquids assert — see mashEnrichmentNote below for why it's informational, not an enforced MASH precondition.",
+    "mashEnrichmentNote": "Deliberately NOT wired as a requiredIngredientCapabilities entry on data/actions/mash.json: real technique can and does mash a potato with nothing added at all (a plain, dry mash — unusual but not physically impossible, and a real choice for some diets/recipes), so making enrichment a hard precondition would incorrectly block a valid technique, the same 'physical feasibility only, not culinary preference' restraint this vocabulary applies everywhere else (e.g. FRY has no statePrerequisites forbidding a direct raw-to-fried path). isMashEnrichment exists so a future validation pass COULD check 'if an enrichment ingredient is supplied, is it actually a real one' without also making enrichment mandatory — named as a real, deliberately-unbuilt follow-up, not implied already enforced.",
+    "warmingTechniqueNote": "Real, commonly-cited technique this entity's own possibleStates ('cold'/'warmed') name but do NOT enforce or connect to any action: cold milk/cream added directly to hot mashed potato can shock the starch and produce a gluier, less fluffy result, so recipes commonly warm the milk first (in a small pot or the microwave) before incorporating it. No dedicated WARM action exists in this vocabulary to transition milk from 'cold' to 'warmed' — INFUSE/BOIL/SIMMER don't fit (they're built around a specific target ingredient being infused/boiled IN the liquid, not the liquid itself being gently warmed alone) — named honestly as a real, unbuilt gap rather than force-fit into an existing verb that doesn't actually match the technique. mashed-potatoes.json's own milk-1 instance is used at state 'cold' for exactly this reason: 'warmed' is a real, reachable state with no action that reaches it yet.",
+    "allergensNote": "'milk', matching butter.json's identical FDA-labeling reasoning — this IS the literal named allergen, not a derived/processed product that happens to contain milk-derived components."
+  }
+}

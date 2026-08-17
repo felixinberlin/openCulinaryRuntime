@@ -1,0 +1,76 @@
+{
+  "id": "season",
+  "verb": "SEASON",
+  "names": {
+    "en": "Season",
+    "es": "Sazonar"
+  },
+  "requiredTools": [],
+  "requiredTargetCapability": "isSeasonable",
+  "validTargetKinds": ["ingredient"],
+  "requiredIngredientCapabilityFromParameter": {
+    "parameter": "seasoningType",
+    "capabilityByValue": {
+      "salt": "isSaltySeasoning",
+      "pepper": "isPepperySeasoning",
+      "chili": "isSpicySeasoning",
+      "acid": "isAcid"
+    }
+  },
+  "parameters": [
+    {
+      "id": "seasoningType",
+      "names": {
+        "en": "Seasoning type",
+        "es": "Tipo de condimento"
+      },
+      "required": true,
+      "allowedValues": ["salt", "pepper", "chili", "acid"]
+    },
+    {
+      "id": "timing",
+      "names": {
+        "en": "Timing relative to cooking",
+        "es": "Momento respecto a la cocción"
+      },
+      "required": false,
+      "allowedValues": ["before_cooking", "during_cooking", "after_cooking"]
+    }
+  ],
+  "outputs": {
+    "addsTagFromParameter": {
+      "parameter": "seasoningType",
+      "tagByValue": {
+        "salt": "salted",
+        "pepper": "peppered",
+        "chili": "chili_seasoned",
+        "acid": "acidified"
+      }
+    },
+    "spawnsTargetByproducts": false
+  },
+  "duration": "variable",
+  "precision": "optional",
+  "actionKind": "instantaneous",
+  "metadata": {
+    "notes": "Closed 2026-08-17, ROADMAP.md's own 'Explicitly deferred' SEASON entry — SALT/PEPPER/CHILI/ACID's shared shape (requiredTargetCapability: isSeasonable, addsTag, the same timing parameter) generalized into one parameter-driven verb, once the two named blocking engine features actually existed: action.ts's requiredIngredientCapabilityFromParameter and outputs.addsTagFromParameter (both added the same change, see their own doc comments for exactly what they do and why addsTagFromParameter is a value-to-tag MAP rather than a literal reuse of transformedStateFromParameter's raw-passthrough shape). ADDITIVE, not a replacement: salt.json/pepper.json/chili.json/acid.json are UNCHANGED and still used by all 18 real recipes that season something — rewriting those would be pure churn for zero functional gain, the same call this repo's DAG-execution ticket made about not migrating RecipeStep's array representation. SEASON is a genuinely new, proven-working alternative (scripts/season-as-a-robot.ts, npm run capability-test:season-verb) for a caller that wants ONE verb with a seasoningType parameter instead of four separate ones — e.g. a planner/authoring tool building a step from a variable at runtime, where 'which of four fixed verb ids do I call' is a real, awkward branch this collapses into 'which value do I pass.'",
+    "wasDeferredNote": "The original ROADMAP.md entry named exactly two blockers, both now closed: (1) ActionOutputsSchema had no addsTagFromParameter counterpart to transformedStateFromParameter at all — closed, with a real, named adaptation (a value-to-tag map, not a raw passthrough — pepper.json's own notes explained why a raw passthrough doesn't work: the real tags ('salted'/'peppered'/'chili_seasoned'/'acidified') aren't the same strings as a natural parameter value ('salt'/'pepper'/'chili'/'acid'), and renaming EntitySchema.possibleTags across every entity to match would have been real, unnecessary breakage). (2) requiredIngredientCapabilities only checked presence, never identified WHICH instance satisfied it — closed via the new requiredIngredientCapabilityFromParameter field, which ALSO surfaces the matched instance id on ExecutionResult.matchedIngredientInstanceId, a real, additional capability the static list structurally cannot offer (it never varies per-call, so there's nothing case-specific to report).",
+    "capabilityMappingNote": "requiredIngredientCapabilityFromParameter.capabilityByValue reuses the EXACT four capability flags salt.json/pepper.json/chili.json/acid.json already assert (isSaltySeasoning/isPepperySeasoning/isSpicySeasoning/isAcid) — not new ones. This means every existing seasoning entity (salt.json, kosher_salt.json, flaky_salt.json, black_pepper.json, chili_flakes.json, vinegar.json) is immediately usable via SEASON with zero data changes, the identical interchangeability salt-crystal-size's own closure already proved for the SALT verb specifically.",
+    "timingNote": "Same parameter, same informational-only depth, as salt.json/pepper.json/chili.json/acid.json's own timingNote fields — SEASON does not collapse their four genuinely different real timing-chemistry rationales (osmosis/browning for salt, aromatic degradation for pepper, fat-solubility for chili, chlorophyll/browning-interference for acid) into one, it just doesn't repeat all four here; see each of those four files for the real citation-backed reasoning behind why timing matters differently for each.",
+    "retrySafeNote": "retrySafe: true — same reasoning as salt.json: engine.ts guards both addsTag and addsTagFromParameter against duplicates, so re-running this after an interruption is a silent no-op, not a double effect.",
+    "actionKindNote": "Song, Huang, Sun, Tian, Wang & Li, arXiv:2608.04768 (2026, PAPER_NOTES_2608.04768.md, REFERENCES.md): same reasoning as salt.json — manual_confirmation verification matches the paper's instantaneous class exactly. requiresActiveAttention (action.ts, DAG-execution ticket) is deliberately NOT set here, matching salt.json/pepper.json/chili.json/acid.json — that field only applies to actionKind: 'continuous' (dag-scheduler.ts's own scheduleDagFromSteps already treats every instantaneous action as active by definition, per requiresActiveAttention's own doc comment, so setting it here would be redundant at best and confusing at worst)."
+  },
+  "verification": {
+    "method": "manual_confirmation",
+    "description": "No reliable sensor check for 'properly seasoned' in this vocabulary — taste isn't modeled at all",
+    "confidence": "low"
+  },
+  "hazards": [
+    {
+      "type": "irritant",
+      "severity": "low",
+      "note": "When seasoningType is 'chili': capsaicin can irritate eyes/skin/mucous membranes on contact, even for flaked, not fresh, chili — wash hands before touching your face. Not applicable for the other three seasoningType values, but hazards is a flat per-ACTION list, not conditional per parameter value — named here rather than silently omitted, matching chili.json's own identical hazard."
+    }
+  ],
+  "retrySafe": true
+}

@@ -143,6 +143,16 @@ export interface ExecutionResult {
    *  comment above) — e.g. a duration below an advisoryOnly CCP's
    *  heldSeconds. Empty when no CCP applies or the threshold was met. */
   warnings: string[];
+  /** The specific `availableIngredients` instance id that satisfied
+   *  `action.requiredIngredientCapabilityFromParameter` (SEASON
+   *  generalization, 2026-08-17) — `undefined` when the action has no such
+   *  field (the overwhelming majority). The real, additional thing this
+   *  offers over the static `requiredIngredientCapabilities` list: WHICH
+   *  instance matched, not just that some qualifying one existed — see
+   *  that field's own doc comment (action.ts) for why. Still checked for
+   *  presence only, same limit as every other ingredient-capability check
+   *  in this engine — not consumed/decremented from inventory. */
+  matchedIngredientInstanceId?: string;
 }
 
 /**
@@ -287,6 +297,44 @@ export function applyAction(
     }
   }
 
+  // requiredIngredientCapabilityFromParameter (2026-08-17, SEASON
+  // generalization, action.ts's own doc comment) — the required capability
+  // is looked up from the ACTUAL value supplied for the named parameter,
+  // not a fixed list. Deliberately checked BEFORE the generic parameter
+  // validation loop below: a malformed/unrecognized parameter value here
+  // gets ITS OWN clear error (naming the specific missing mapping) rather
+  // than falling through to the generic allowedValues rejection, even
+  // though the loop below would also eventually reject it — this fails
+  // faster and with a more specific message. Unlike the static loop above,
+  // this ALSO records WHICH instance id satisfied it — the real,
+  // additional capability a fixed list cannot offer, since a fixed list
+  // never varies per-call in the first place.
+  let matchedIngredientInstanceId: string | undefined;
+  if (action.requiredIngredientCapabilityFromParameter) {
+    const { parameter, capabilityByValue } = action.requiredIngredientCapabilityFromParameter;
+    const value = params[parameter];
+    if (value === undefined) {
+      throw new Error(
+        `${action.verb} needs "${parameter}" to determine which ingredient capability is required.`
+      );
+    }
+    const capability = capabilityByValue[value];
+    if (!capability) {
+      throw new Error(
+        `${action.verb} has no known ingredient capability for "${parameter}: ${value}" (known: ${Object.keys(capabilityByValue).join(", ")}).`
+      );
+    }
+    const matchId = [...availableIngredients].find(
+      (id) => entities.get(id)?.capabilities[capability] === true
+    );
+    if (!matchId) {
+      throw new Error(
+        `${action.verb} requires an available ingredient with capability "${capability}" (for "${parameter}: ${value}"), but none is on hand.`
+      );
+    }
+    matchedIngredientInstanceId = matchId;
+  }
+
   for (const param of action.parameters) {
     const value = params[param.id];
     if (value === undefined) {
@@ -348,6 +396,26 @@ export function applyAction(
   let nextTags = instance.tags;
   if (action.outputs.addsTag && !instance.tags.includes(action.outputs.addsTag)) {
     nextTags = [...instance.tags, action.outputs.addsTag];
+  } else if (action.outputs.addsTagFromParameter) {
+    // Mirrors transformedStateFromParameter's own param-lookup, adapted for
+    // a VALUE-TO-TAG map rather than a raw passthrough — see
+    // action.ts's addsTagFromParameter doc comment for why. The refine()
+    // on ActionOutputsSchema already guarantees addsTag/addsTagFromParameter
+    // never coexist, so this is a real else-branch, not an overlapping check.
+    const { parameter, tagByValue } = action.outputs.addsTagFromParameter;
+    const value = params[parameter];
+    if (value === undefined) {
+      throw new Error(`${action.verb} needs "${parameter}" to determine which tag to add.`);
+    }
+    const tag = tagByValue[value];
+    if (!tag) {
+      throw new Error(
+        `${action.verb} has no known tag for "${parameter}: ${value}" (known: ${Object.keys(tagByValue).join(", ")}).`
+      );
+    }
+    if (!instance.tags.includes(tag)) {
+      nextTags = [...instance.tags, tag];
+    }
   }
 
   const updated: Instance = { entityId: instance.entityId, state: nextState, tags: nextTags };
@@ -472,5 +540,5 @@ export function applyAction(
     }
   }
 
-  return { instance: updated, spawned, destroyed, secondaryDestroyed, warnings };
+  return { instance: updated, spawned, destroyed, secondaryDestroyed, warnings, matchedIngredientInstanceId };
 }

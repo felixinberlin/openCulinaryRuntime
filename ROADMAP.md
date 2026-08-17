@@ -601,12 +601,45 @@ proven runnable, not just asserted.
       likely to be misapplied. 5 new unit tests.
 
 **Explicitly deferred, with the real reason why (not silently skipped):**
-- [ ] Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven `SEASON`
-      verb — needs a real engine feature (`addsTagFromParameter`, mirroring
-      `transformedStateFromParameter`) plus a way for
-      `requiredIngredientCapabilities` to identify WHICH specific instance
-      satisfied the check, not just that one did. Out of scope while engine
-      work is explicitly paused; the 3 separate verbs work correctly today.
+- [x] **Generalizing `SALT`/`PEPPER`/`CHILI` into one parameter-driven
+      `SEASON` verb — closed 2026-08-17.** Deferred since 2026-08-13 on
+      "engine work is explicitly paused" — stale by this point in the
+      session (the DAG-execution ticket, `in-progress-action.ts`, and
+      `checkStatePrerequisite`'s secondary-instance fix all touched
+      `engine.ts` first), so revisited once real engine work was already
+      back on the table. Both of this entry's own named blockers actually
+      built: `action.ts` gained `outputs.addsTagFromParameter` (a
+      deliberate, NAMED adaptation of `transformedStateFromParameter`'s
+      pattern, not a literal reuse — a raw parameter-value passthrough
+      doesn't work here, since the real tags
+      ("salted"/"peppered"/"chili_seasoned"/"acidified") aren't the same
+      strings as the values that select them
+      ("salt"/"pepper"/"chili"/"acid"), so this carries an explicit
+      value-to-tag map instead) and `requiredIngredientCapabilityFromParameter`
+      (the required capability is looked up from the parameter value
+      actually supplied, and — the real, additional thing a fixed list
+      structurally cannot offer — `engine.ts`'s `applyAction` now reports
+      WHICH specific ingredient instance satisfied it, a new
+      `ExecutionResult.matchedIngredientInstanceId` field). New
+      `data/actions/season.json` reuses the EXACT four existing capability
+      flags (`isSaltySeasoning`/`isPepperySeasoning`/`isSpicySeasoning`/
+      `isAcid`) and existing `timing` parameter — every seasoning entity
+      already in this vocabulary (salt/kosher_salt/flaky_salt/
+      black_pepper/chili_flakes/vinegar) works with `SEASON` immediately,
+      zero data changes. Deliberately ADDITIVE, not a migration:
+      `salt.json`/`pepper.json`/`chili.json`/`acid.json` are unchanged and
+      still what all 18 real seasoning-using recipes actually call —
+      rewriting those would be pure churn for zero functional gain, the
+      identical call the DAG-execution ticket made about not migrating
+      `RecipeStep`'s array representation. Proven via 7 new unit tests
+      (`tests/engine.test.ts`, synthetic fixtures — including the real bug
+      a flat `requiredIngredientCapabilities` list could not catch: asking
+      for `seasoningType: "salt"` while only chili flakes are on hand must
+      fail specifically, not just "no ingredient present") and
+      `scripts/season-as-a-robot.ts`
+      (`npm run capability-test:season-verb`) — one real potato instance
+      seasoned all four real ways through the one new verb, tags
+      accumulating coherently.
 - [x] **Salt crystal/grind size as distinct products — closed 2026-08-17.**
       (Pepper's own whole/cracked/ground progression was already
       partially modeled via `CRUSH` before this session and is

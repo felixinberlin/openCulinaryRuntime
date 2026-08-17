@@ -978,3 +978,115 @@ describe("applyAction — HACCP / CCP enforcement", () => {
     );
   });
 });
+
+describe("requiredIngredientCapabilityFromParameter / addsTagFromParameter — SEASON generalization (2026-08-17)", () => {
+  const potato = makeEntity({ id: "potato", capabilities: { isSeasonable: true } });
+  const saltEntity = makeEntity({ id: "salt", capabilities: { isSaltySeasoning: true } });
+  const pepperEntity = makeEntity({ id: "black_pepper", capabilities: { isPepperySeasoning: true } });
+  const entities = new Map([
+    ["potato", potato],
+    ["salt", saltEntity],
+    ["black_pepper", pepperEntity],
+  ]);
+  const season = makeAction({
+    id: "season",
+    requiredTargetCapability: "isSeasonable",
+    requiredIngredientCapabilityFromParameter: {
+      parameter: "seasoningType",
+      capabilityByValue: { salt: "isSaltySeasoning", pepper: "isPepperySeasoning" },
+    },
+    parameters: [{ id: "seasoningType", required: true, allowedValues: ["salt", "pepper"] }],
+    outputs: {
+      addsTagFromParameter: {
+        parameter: "seasoningType",
+        tagByValue: { salt: "salted", pepper: "peppered" },
+      },
+    },
+  });
+  const target: Instance = { entityId: "potato", state: "raw", tags: [] };
+
+  test("resolves the correct capability AND tag for seasoningType: salt, with a salt ingredient present", () => {
+    const result = applyAction(
+      target,
+      season,
+      entities,
+      NO_TOOLS,
+      { seasoningType: "salt" },
+      new Set(["salt"])
+    );
+    assert.deepEqual(result.instance.tags, ["salted"]);
+    assert.equal(result.matchedIngredientInstanceId, "salt");
+  });
+
+  test("resolves the DIFFERENT correct capability AND tag for seasoningType: pepper, with pepper present", () => {
+    const result = applyAction(
+      target,
+      season,
+      entities,
+      NO_TOOLS,
+      { seasoningType: "pepper" },
+      new Set(["black_pepper"])
+    );
+    assert.deepEqual(result.instance.tags, ["peppered"]);
+    assert.equal(result.matchedIngredientInstanceId, "black_pepper");
+  });
+
+  test("rejects seasoningType: salt when only a pepper ingredient is available — the exact bug the flat requiredIngredientCapabilities list would have missed", () => {
+    assert.throws(
+      () =>
+        applyAction(target, season, entities, NO_TOOLS, { seasoningType: "salt" }, new Set(["black_pepper"])),
+      /requires an available ingredient with capability "isSaltySeasoning"/
+    );
+  });
+
+  test("rejects a seasoningType with no known capability mapping", () => {
+    const badAction = makeAction({
+      id: "season",
+      requiredTargetCapability: "isSeasonable",
+      requiredIngredientCapabilityFromParameter: {
+        parameter: "seasoningType",
+        capabilityByValue: { salt: "isSaltySeasoning" },
+      },
+      outputs: {},
+    });
+    assert.throws(
+      () =>
+        applyAction(target, badAction, entities, NO_TOOLS, { seasoningType: "chili" }, new Set(["salt"])),
+      /no known ingredient capability for "seasoningType: chili"/
+    );
+  });
+
+  test("matchedIngredientInstanceId is undefined when the action has no requiredIngredientCapabilityFromParameter at all", () => {
+    const plainSalt = makeAction({
+      id: "salt",
+      requiredTargetCapability: "isSeasonable",
+      outputs: { addsTag: "salted" },
+    });
+    const result = applyAction(target, plainSalt, entities, NO_TOOLS);
+    assert.equal(result.matchedIngredientInstanceId, undefined);
+  });
+
+  test("addsTag and addsTagFromParameter are mutually exclusive at the schema level", () => {
+    assert.throws(() =>
+      makeAction({
+        id: "bad",
+        outputs: { addsTag: "salted", addsTagFromParameter: { parameter: "x", tagByValue: {} } },
+      })
+    );
+  });
+
+  test("addsTagFromParameter rejects an unrecognized value with a clear error, not a silent no-op", () => {
+    const result0 = applyAction(target, season, entities, NO_TOOLS, { seasoningType: "salt" }, new Set(["salt"]));
+    assert.deepEqual(result0.instance.tags, ["salted"]); // sanity: normal path still works
+    const badTagAction = makeAction({
+      id: "season",
+      requiredTargetCapability: "isSeasonable",
+      parameters: [{ id: "seasoningType", required: true, allowedValues: ["salt"] }],
+      outputs: { addsTagFromParameter: { parameter: "seasoningType", tagByValue: {} } }, // no mapping at all
+    });
+    assert.throws(
+      () => applyAction(target, badTagAction, entities, NO_TOOLS, { seasoningType: "salt" }),
+      /has no known tag for "seasoningType: salt"/
+    );
+  });
+});

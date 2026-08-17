@@ -1844,3 +1844,47 @@ was made. Don't rewrite or delete old entries — append.
   problem, rather than changing `RecipeStepError`'s shape (e.g. making
   `step` optional) just to accommodate one rare case — the existing type
   stayed exactly as strict as it already was for every other caller.
+
+- **A deferred ticket's OWN stated reason for deferral needs re-checking,
+  not just the ticket's substance, once the surrounding conditions have
+  changed.** "SEASON" was deferred in 2026-08-13 specifically because
+  "engine work is explicitly paused" — a real, correct reason at the
+  time. By 2026-08-17, several other tickets this session had already
+  touched `engine.ts` directly (the DAG-execution ticket's
+  `topologicalOrder` wiring into `runRecipe`, `checkStatePrerequisite`'s
+  secondary-instance extension, `execution-bounds.ts`). The substance of
+  SEASON's own blockers hadn't changed at all — but the STATED REASON for
+  leaving them alone had quietly stopped being true partway through the
+  session, and nothing would have caught that automatically; it only
+  surfaced because a "what's next" check re-read the deferred entry's own
+  wording rather than treating "deferred" as a permanent, settled state.
+- **`addsTagFromParameter` deliberately does NOT mirror
+  `transformedStateFromParameter`'s exact shape (a bare string naming a
+  parameter, with the raw value used directly), even though the ROADMAP
+  entry that requested it said "mirroring transformedStateFromParameter."**
+  A literal mirror would mean the added TAG equals the parameter's raw
+  VALUE — but the real seasoning tags
+  (`salted`/`peppered`/`chili_seasoned`/`acidified`) are not the same
+  strings as the values that select them
+  (`salt`/`pepper`/`chili`/`acid`), so a literal mirror would have forced
+  either renaming `EntitySchema.possibleTags` across every entity that
+  already uses the real tag names (real, unnecessary breakage of working
+  data) or picking awkward parameter values that happen to match existing
+  tags (a worse authoring experience, contorted to fit the mechanism
+  rather than the mechanism fitting the real need). Built as an explicit
+  value-to-tag MAP instead — same spirit (a parameter drives the output),
+  different shape — and named the deviation explicitly in both the
+  field's own doc comment and `ROADMAP.md`'s closure entry, rather than
+  silently implementing something narrower than requested while claiming
+  to have followed the request as stated.
+- **`requiredIngredientCapabilityFromParameter`'s error-checking order
+  matters and was deliberately sequenced BEFORE the generic
+  `action.parameters` validation loop, not after**: an unrecognized
+  `seasoningType` value gets ITS OWN specific error naming the missing
+  capability mapping, rather than falling through to the generic
+  `allowedValues` rejection that would ALSO eventually catch it but with
+  a less specific message. Both loops would reject a truly bad value
+  either way (redundant safety, not a correctness gap), but ordering the
+  more specific, more informative check first is a real, small
+  authoring-experience decision worth making deliberately rather than
+  leaving to whichever loop happens to run first in the file.

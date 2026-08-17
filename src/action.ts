@@ -80,6 +80,29 @@ export const ActionOutputsSchema = z
      * is orthogonal to cooking method/form, unlike boiled vs. fried.
      */
     addsTag: z.string().optional(),
+    /**
+     * The parameter-driven sibling of `addsTag` above, added 2026-08-17
+     * alongside `requiredIngredientCapabilityFromParameter` — the other
+     * half of the SEASON generalization. Deliberately NOT a bare string
+     * naming a parameter id the way `transformedStateFromParameter` is
+     * (where the raw parameter VALUE becomes the state directly, e.g.
+     * shape: "diced" -> state "diced"): seasoning's real tags
+     * ("salted"/"peppered"/"chili_seasoned"/"acidified") are not the same
+     * strings as the parameter values that select them
+     * ("salt"/"pepper"/"chili"/"acid"), and forcing them to match would
+     * mean renaming `EntitySchema.possibleTags` across every entity that
+     * already uses the real tag names — real churn for zero benefit. So
+     * this carries an explicit VALUE-TO-TAG map instead, the same shape as
+     * `requiredIngredientCapabilityFromParameter.capabilityByValue` above,
+     * a deliberate, named adaptation of `transformedStateFromParameter`'s
+     * pattern rather than a literal reuse of its shape.
+     */
+    addsTagFromParameter: z
+      .object({
+        parameter: z.string().min(1),
+        tagByValue: z.record(z.string(), z.string()),
+      })
+      .optional(),
     /** If true, entities listed in the target's own `producedByproducts` are spawned. */
     spawnsTargetByproducts: z.boolean().default(false),
     /**
@@ -111,6 +134,9 @@ export const ActionOutputsSchema = z
   .refine((o) => !(o.combinesInto && (o.transformedState || o.transformedStateFromParameter)), {
     message:
       "combinesInto is mutually exclusive with transformedState/transformedStateFromParameter",
+  })
+  .refine((o) => !(o.addsTag && o.addsTagFromParameter), {
+    message: "addsTag and addsTagFromParameter are mutually exclusive",
   });
 export type ActionOutputs = z.infer<typeof ActionOutputsSchema>;
 
@@ -238,6 +264,40 @@ export const ActionSchema = z
      * recipe-level inventory in ROADMAP.md Phase 4, not this per-action check.
      */
     requiredIngredientCapabilities: z.array(z.string()).default([]),
+    /**
+     * The parameter-driven sibling of `requiredIngredientCapabilities` above
+     * — added 2026-08-17 (ROADMAP.md's "Generalizing SALT/PEPPER/CHILI into
+     * one parameter-driven SEASON verb" entry) for the real case that field
+     * alone cannot express: which capability is required depends on a
+     * PARAMETER VALUE chosen at call time, not one fixed list checked every
+     * time regardless of what was asked for. `season.json` is the concrete
+     * forcing case: `SEASON` with `seasoningType: "salt"` must require an
+     * available `isSaltySeasoning` ingredient specifically, not accept ANY
+     * seasoning capability from `requiredIngredientCapabilities`'s flat OR-
+     * across-availableIngredients check — the wrong ingredient (chili
+     * flakes) satisfying a `seasoningType: "salt"` call would be a real,
+     * silent correctness bug this field exists to prevent.
+     *
+     * `parameter` names one of this action's own `parameters[].id` (the
+     * same convention `outputs.transformedStateFromParameter`/
+     * `outputs.addsTagFromParameter` use); `capabilityByValue` maps each of
+     * that parameter's `allowedValues` to the specific capability required
+     * for that value. `engine.ts`'s `applyAction` looks up the capability
+     * for the ACTUAL value supplied, checks it the same way
+     * `requiredIngredientCapabilities` does (presence among
+     * `availableIngredients`, not consumed/decremented — same limit), and —
+     * the real, additional thing this field enables that the static list
+     * cannot — records WHICH specific instance id satisfied it
+     * (`ExecutionResult.matchedIngredientInstanceId`), not just that some
+     * qualifying instance existed. Optional; unset for every action that
+     * isn't parameter-driven this way (the overwhelming majority).
+     */
+    requiredIngredientCapabilityFromParameter: z
+      .object({
+        parameter: z.string().min(1),
+        capabilityByValue: z.record(z.string(), z.string()),
+      })
+      .optional(),
     /**
      * The capability a SECONDARY instance must assert `true` for a COMBINE-
      * shaped action — distinct from requiredIngredientCapabilities, which only

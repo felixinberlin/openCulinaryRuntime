@@ -1275,8 +1275,6 @@ was made. Don't rewrite or delete old entries — append.
   two confidence tiers, applied here to a session-specific fetch failure
   rather than a recalled-vs-checked distinction.
 
-## 2026-08-17
-
 ### ROAST/ALKALINE_PARBOIL — checking a tool entity's dead states while wiring an unrelated verb found a real, second instance of an already-diagnosed gap
 
 - **Wiring `ROAST`'s `requiredTools: ["oven"]` prompted a quick look at

@@ -1924,8 +1924,6 @@ was made. Don't rewrite or delete old entries — append.
   a real one rather than reaching for the nearest already-loaded fixture,
   which would have silently proven nothing.
 
-## 2026-08-17 (whole-project review)
-
 - **A prior session's own doc comment can be the cleanup checklist, if it
   admitted the duplication at the time rather than hiding it.**
   `dag-scheduler.ts`'s `scheduleDagFromSteps` had said, in its own words,

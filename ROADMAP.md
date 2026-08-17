@@ -1968,6 +1968,38 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       a real, separate, unbuilt mechanism, named in that recipe's own
       `dagNote`. See `LEARNINGS_ENGINE.md` 2026-08-17 for the design
       reasoning, especially the determinism-vs-"parallel threads" call.
+      **Extended the same day: tool-lock scheduling** — closes
+      `dag-scheduler.ts`'s own top doc comment, which had explicitly named
+      "unlimited passive capacity... a genuinely resource-constrained
+      kitchen has a finite number of burners/pots too, not modeled" as a
+      real, open gap the moment the module first shipped, and directly
+      closes `WORLD_MODEL_OPTIMIZATION.md`'s named-but-unbuilt
+      `toolLockBehavior` idea ("a tool held exclusively for a duration,
+      e.g. can't fry two things in the same pan at once"). New
+      `DagNode.requiredToolIds: string[]` (default `[]`, fully backward
+      compatible) — `scheduleDag` now tracks per-tool exclusive occupancy
+      alongside the existing shared-actor constraint, a genuinely
+      DIFFERENT resource: a PASSIVE node (ROAST) still locks its oven for
+      its whole duration even though it never touches the actor
+      constraint at all. `scheduleDagFromSteps` derives `requiredToolIds`
+      from the real, loaded `Action.requiredTools` — deliberately scoped
+      to EXACT tool ids only, not `requiredToolCapabilities`
+      (substitutable — e.g. BOIL/FRY/CARAMELIZE's own
+      `isDeepVessel`/`isFryingVessel`), since which specific capability-
+      satisfying tool a step actually occupies is genuinely ambiguous
+      without real per-recipe tool-INSTANCE tracking this schema doesn't
+      have (`RecipeScript.availableTools` is a flat list of tool TYPES,
+      not individually addressable instances the way ingredients are) —
+      named as a real, honest limit, not guessed at. Proven via 7 new
+      unit tests (`tests/dag-execution.test.ts`, synthetic fixtures —
+      including proof that empty `requiredToolIds` is a true no-op,
+      zero regression for every node built before this field existed) and
+      a real-data case D in `scripts/dag-schedule-as-a-robot.ts`: two
+      genuinely independent, both-PASSIVE `ROAST` steps (potato, garlic —
+      both real, already `isRoastable`) at `roast.json`'s own real cited
+      3000s/50min duration (`crispy-roast-potatoes.json`) correctly
+      serialize to 6000s/100min on the shared `oven`, not the 3000s/50min
+      an unconstrained-passive model would have shown.
 
 ## Phase 4 — Validation engine
 - [ ] `OcrValidationEngine` class as a named class — `engine.ts`'s

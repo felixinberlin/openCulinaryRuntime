@@ -135,8 +135,8 @@ describe("topologicalOrder — cycle detection (acceptance criterion)", () => {
 describe("scheduleDag — the exact acceptance-criterion scenario", () => {
   test("10 minutes of passive boiling concurrent with 5 minutes of active chopping executes in exactly 10 simulated minutes, not 15", () => {
     const nodes: DagNode[] = [
-      { id: "boil_water", dependsOn: [], durationSeconds: 600, active: false },
-      { id: "chop_onions", dependsOn: [], durationSeconds: 300, active: true },
+      { id: "boil_water", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: [] },
+      { id: "chop_onions", dependsOn: [], durationSeconds: 300, active: true, requiredToolIds: [] },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.totalSeconds, 600); // 10 minutes, NOT 900 (15 minutes)
@@ -148,8 +148,8 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
 
   test("two ACTIVE tasks cannot overlap — the single shared actor resource serializes them", () => {
     const nodes: DagNode[] = [
-      { id: "chop_a", dependsOn: [], durationSeconds: 300, active: true },
-      { id: "chop_b", dependsOn: [], durationSeconds: 300, active: true },
+      { id: "chop_a", dependsOn: [], durationSeconds: 300, active: true, requiredToolIds: [] },
+      { id: "chop_b", dependsOn: [], durationSeconds: 300, active: true, requiredToolIds: [] },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.totalSeconds, 600); // serialized: 300 + 300, not max(300,300)
@@ -159,8 +159,8 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
 
   test("two PASSIVE tasks fully overlap — unlimited passive capacity", () => {
     const nodes: DagNode[] = [
-      { id: "boil_a", dependsOn: [], durationSeconds: 600, active: false },
-      { id: "marinate_b", dependsOn: [], durationSeconds: 900, active: false },
+      { id: "boil_a", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: [] },
+      { id: "marinate_b", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: [] },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.totalSeconds, 900); // max, not sum
@@ -170,9 +170,9 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
 
   test("join node (Step C 'toss pasta in sauce' waits for BOTH A and B): starts only once the LATER of the two finishes", () => {
     const nodes: DagNode[] = [
-      { id: "boil_pasta", dependsOn: [], durationSeconds: 600, active: false }, // finishes at 600
-      { id: "simmer_sauce", dependsOn: [], durationSeconds: 900, active: false }, // finishes at 900
-      { id: "toss", dependsOn: ["boil_pasta", "simmer_sauce"], durationSeconds: 60, active: true },
+      { id: "boil_pasta", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: [] }, // finishes at 600
+      { id: "simmer_sauce", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: [] }, // finishes at 900
+      { id: "toss", dependsOn: ["boil_pasta", "simmer_sauce"], durationSeconds: 60, active: true, requiredToolIds: [] },
     ];
     const schedule = scheduleDag(nodes);
     assert.equal(schedule.nodes.get("toss")!.startSeconds, 900); // NOT 600 — must wait for the later dependency
@@ -182,14 +182,73 @@ describe("scheduleDag — the exact acceptance-criterion scenario", () => {
 
   test("join node correctly does NOT start early even if it's ready before the actor is free from something else", () => {
     const nodes: DagNode[] = [
-      { id: "prep", dependsOn: [], durationSeconds: 100, active: true }, // actor busy 0-100
-      { id: "boil", dependsOn: [], durationSeconds: 50, active: false }, // finishes at 50, well before prep
-      { id: "combine", dependsOn: ["prep", "boil"], durationSeconds: 30, active: true },
+      { id: "prep", dependsOn: [], durationSeconds: 100, active: true, requiredToolIds: [] }, // actor busy 0-100
+      { id: "boil", dependsOn: [], durationSeconds: 50, active: false, requiredToolIds: [] }, // finishes at 50, well before prep
+      { id: "combine", dependsOn: ["prep", "boil"], durationSeconds: 30, active: true, requiredToolIds: [] },
     ];
     const schedule = scheduleDag(nodes);
     // combine's readySeconds = max(finish(prep)=100, finish(boil)=50) = 100;
     // actor is free at 100 too (prep just finished) — so combine starts at 100, not 50.
     assert.equal(schedule.nodes.get("combine")!.startSeconds, 100);
+  });
+});
+
+describe("scheduleDag — tool-lock behavior (WORLD_MODEL_OPTIMIZATION.md's toolLockBehavior, 2026-08-17)", () => {
+  test("two otherwise-independent PASSIVE steps sharing the SAME tool cannot overlap — 'can't fry two things in the same pan at once'", () => {
+    const nodes: DagNode[] = [
+      { id: "fry_a", dependsOn: [], durationSeconds: 300, active: false, requiredToolIds: ["pan"] },
+      { id: "fry_b", dependsOn: [], durationSeconds: 300, active: false, requiredToolIds: ["pan"] },
+    ];
+    const schedule = scheduleDag(nodes);
+    // Without the tool lock, two independent passive nodes would fully overlap (see the
+    // "two PASSIVE tasks fully overlap" test above) -> totalSeconds would be 300. WITH it,
+    // they must serialize on the shared pan: 300 + 300 = 600.
+    assert.equal(schedule.totalSeconds, 600);
+    assert.equal(schedule.nodes.get("fry_a")!.startSeconds, 0);
+    assert.equal(schedule.nodes.get("fry_b")!.startSeconds, 300);
+  });
+
+  test("two independent steps using DIFFERENT tools still overlap fully — the lock is per-tool, not global", () => {
+    const nodes: DagNode[] = [
+      { id: "boil_in_pot", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: ["pot"] },
+      { id: "roast_in_oven", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: ["oven"] },
+    ];
+    const schedule = scheduleDag(nodes);
+    assert.equal(schedule.totalSeconds, 900); // max, not sum — genuinely different resources
+    assert.equal(schedule.nodes.get("boil_in_pot")!.startSeconds, 0);
+    assert.equal(schedule.nodes.get("roast_in_oven")!.startSeconds, 0);
+  });
+
+  test("a PASSIVE step still locks its tool even though it never touches the actor constraint", () => {
+    const nodes: DagNode[] = [
+      { id: "boil_passive", dependsOn: [], durationSeconds: 500, active: false, requiredToolIds: ["pot"] },
+      { id: "boil_again", dependsOn: [], durationSeconds: 100, active: false, requiredToolIds: ["pot"] },
+    ];
+    const schedule = scheduleDag(nodes);
+    // Both are passive (never wait on the actor), but the SECOND still can't start until the
+    // pot itself frees up — a real, different constraint from the actor one.
+    assert.equal(schedule.nodes.get("boil_again")!.startSeconds, 500);
+    assert.equal(schedule.totalSeconds, 600);
+  });
+
+  test("a node with multiple requiredToolIds waits for ALL of them to be free", () => {
+    const nodes: DagNode[] = [
+      { id: "occupy_pan", dependsOn: [], durationSeconds: 200, active: false, requiredToolIds: ["pan"] },
+      { id: "occupy_pot", dependsOn: [], durationSeconds: 50, active: false, requiredToolIds: ["pot"] },
+      { id: "needs_both", dependsOn: [], durationSeconds: 30, active: false, requiredToolIds: ["pan", "pot"] },
+    ];
+    const schedule = scheduleDag(nodes);
+    // needs_both can't start until BOTH the pan (free at 200) and the pot (free at 50) are free.
+    assert.equal(schedule.nodes.get("needs_both")!.startSeconds, 200);
+  });
+
+  test("empty requiredToolIds (the default) behaves exactly as before this field existed — no regression", () => {
+    const nodes: DagNode[] = [
+      { id: "a", dependsOn: [], durationSeconds: 600, active: false, requiredToolIds: [] },
+      { id: "b", dependsOn: [], durationSeconds: 900, active: false, requiredToolIds: [] },
+    ];
+    const schedule = scheduleDag(nodes);
+    assert.equal(schedule.totalSeconds, 900); // full overlap, same as the no-tool-lock case
   });
 });
 
@@ -207,10 +266,31 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
     outputs: { transformedState: "caramelized" },
   });
   const peelAction = makeAction({ id: "peel", actionKind: "instantaneous", outputs: { transformedState: "peeled" } });
+  const fryAction = makeAction({
+    id: "fry",
+    actionKind: "continuous",
+    requiresActiveAttention: true,
+    requiredTools: ["pan"],
+    outputs: { transformedState: "fried" },
+  });
+  // PASSIVE and tool-locked — isolates the tool-lock proof below from the
+  // (separately already-proven) actor constraint: two genuinely passive
+  // steps would otherwise fully overlap (see scheduleDag's own "two
+  // PASSIVE tasks fully overlap" test), so if these two instead serialize,
+  // requiredToolIds derivation is what's actually responsible for it.
+  const simmerAction = makeAction({
+    id: "simmer",
+    actionKind: "continuous",
+    requiresActiveAttention: false,
+    requiredTools: ["pot"],
+    outputs: { transformedState: "simmered" },
+  });
   const actions = new Map([
     ["boil", boilAction],
     ["caramelize", caramelizeAction],
     ["peel", peelAction],
+    ["fry", fryAction],
+    ["simmer", simmerAction],
   ]);
 
   test("duration is read from the step's own params.durationSeconds, matching in-progress-action.ts's extraction exactly", () => {
@@ -239,6 +319,36 @@ describe("scheduleDagFromSteps — real RecipeStep/Action integration", () => {
     // Should not throw — just falls back to active: true, duration: 0.
     const schedule = scheduleDagFromSteps(sequence, actions);
     assert.equal(schedule.nodes.get("mystery")!.finishSeconds, 0);
+  });
+
+  test("requiredToolIds is derived from the real action's requiredTools — two independent, PASSIVE steps sharing 'pot' still correctly serialize", () => {
+    const sequence = [
+      step({
+        id: "simmer_a",
+        actionId: "simmer",
+        targetInstanceId: "potato-1",
+        params: { durationSeconds: "300" },
+        dependsOn: [],
+      }),
+      step({
+        id: "simmer_b",
+        actionId: "simmer",
+        targetInstanceId: "onion-1",
+        params: { durationSeconds: "300" },
+        dependsOn: [], // genuinely independent — no dependsOn, and both PASSIVE, so the
+        // actor constraint alone would let these fully overlap; only a correctly-derived
+        // requiredToolIds (["pot"], from simmerAction.requiredTools) forces serialization.
+      }),
+    ];
+    const schedule = scheduleDagFromSteps(sequence, actions);
+    assert.deepEqual(schedule.nodes.get("simmer_a")!, { id: "simmer_a", startSeconds: 0, finishSeconds: 300 });
+    assert.deepEqual(schedule.nodes.get("simmer_b")!, { id: "simmer_b", startSeconds: 300, finishSeconds: 600 });
+  });
+
+  test("requiredToolIds derivation: an action with no requiredTools at all (PEEL) schedules with no tool lock at all", () => {
+    const sequence = [step({ id: "peel_potato", actionId: "peel", targetInstanceId: "potato-1", dependsOn: [] })];
+    const schedule = scheduleDagFromSteps(sequence, actions);
+    assert.equal(schedule.nodes.get("peel_potato")!.startSeconds, 0); // no tool wait, nothing to conflict with
   });
 
   test("a cyclic dependsOn among real RecipeSteps throws rather than producing a nonsensical schedule", () => {

@@ -34,6 +34,19 @@ import type { RecipeStep } from "../src/recipe.ts";
  *    genuinely independent of CARAMELIZE onion (a real, cited 900s/15min
  *    minimum, `caramelize.json`'s own numericRange) — total concurrent
  *    time vs. what a strictly linear array would have forced.
+ * D. Tool-lock behavior (`WORLD_MODEL_OPTIMIZATION.md`'s `toolLockBehavior`,
+ *    closed 2026-08-17 alongside this ticket) against REAL data: `ROAST`
+ *    (`roast.json`) requires the exact tool `oven`, both PASSIVE
+ *    (`requiresActiveAttention: false` — see that field's own note). Two
+ *    genuinely independent ROAST steps (potato, garlic — both real,
+ *    already `isRoastable`) with NO `dependsOn` between them would fully
+ *    overlap under B/C's model (unlimited passive capacity); with
+ *    `requiredToolIds` correctly derived from `roast.json`'s own
+ *    `requiredTools`, they must serialize on the single shared oven — the
+ *    exact "can't roast two things in the same oven at once" case the
+ *    ticket names, proven against a real cited duration
+ *    (`crispy-roast-potatoes.json`'s own 3000s/50min figure), not a
+ *    synthetic number.
  */
 
 const root = join(import.meta.dirname, "..");
@@ -127,6 +140,42 @@ console.log(
     `real time a chef does not have to stand idle.`
 );
 
+console.log("\n=== D. Tool-lock behavior — real ROAST steps correctly serialize on the shared oven ===\n");
+const roastAction = actions.get("roast")!;
+console.log(
+  `  roast.json requiredTools: [${roastAction.requiredTools.join(", ")}], requiresActiveAttention: ` +
+    `${roastAction.requiresActiveAttention} (PASSIVE — both roasts free the actor's hands, but NEITHER frees the oven).`
+);
+const toolLockSequence: RecipeStep[] = [
+  {
+    id: "roast_potato",
+    dependsOn: [],
+    actionId: "roast",
+    targetInstanceId: "potato-1",
+    params: { durationSeconds: "3000" }, // 50 min — crispy-roast-potatoes.json's own real cited figure
+    availableIngredientInstanceIds: [],
+  },
+  {
+    id: "roast_garlic",
+    dependsOn: [], // genuinely independent — no dependsOn, and both PASSIVE
+    actionId: "roast",
+    targetInstanceId: "garlic-1",
+    params: { durationSeconds: "3000" },
+    availableIngredientInstanceIds: [],
+  },
+];
+const toolLockSchedule = scheduleDagFromSteps(toolLockSequence, actions);
+const roastPotato = toolLockSchedule.nodes.get("roast_potato")!;
+const roastGarlic = toolLockSchedule.nodes.get("roast_garlic")!;
+console.log(
+  `  roast_potato: start ${roastPotato.startSeconds}s, finish ${roastPotato.finishSeconds}s. ` +
+    `roast_garlic: start ${roastGarlic.startSeconds}s, finish ${roastGarlic.finishSeconds}s.`
+);
+console.log(
+  `  Total: ${toolLockSchedule.totalSeconds}s (${toolLockSchedule.totalSeconds / 60}min) — correctly SERIALIZED ` +
+    `(6000s/100min) on the shared oven, not the 3000s/50min B/C's unconstrained-passive model would have shown.`
+);
+
 console.log(
   "\nStill NOT closed, honestly named rather than implied covered: this SCHEDULES/ESTIMATES concurrency as " +
     "read-only information — recipe-runner.ts's runRecipe still executes ONE step at a time, in a real, safe, " +
@@ -136,5 +185,11 @@ console.log(
     "comment). No multi-actor modeling exists (one shared 'active' resource, not N robots/chefs). No Cooklang " +
     "importer exists yet to generate dependsOn edges FROM (CLAUDE.md's own module table) — every existing " +
     "linear recipe already gets the equivalent treatment via deriveDependsOn's auto-sequential fallback, proven " +
-    "by tests/dag-execution.test.ts's own backward-compatibility case, not a separate Cooklang-specific path."
+    "by tests/dag-execution.test.ts's own backward-compatibility case, not a separate Cooklang-specific path. " +
+    "Tool-lock scheduling (D) is deliberately scoped to requiredTools (exact tool id) ONLY, not " +
+    "requiredToolCapabilities (substitutable, e.g. BOIL/FRY/CARAMELIZE's own isDeepVessel/isFryingVessel) — " +
+    "which SPECIFIC capability-satisfying tool a step occupies is genuinely ambiguous without real per-recipe " +
+    "tool-instance tracking this schema doesn't have (RecipeScript.availableTools is a flat list of tool TYPES, " +
+    "not individually tracked instances the way RecipeInstanceSchema tracks ingredients) — case C's BOIL/" +
+    "CARAMELIZE demo above is therefore NOT tool-locked at all, correctly, since neither declares requiredTools."
 );

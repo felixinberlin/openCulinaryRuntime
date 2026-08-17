@@ -150,6 +150,28 @@ export interface DagNode {
    *  loaded `Action`; only `scheduleDag` itself takes it as a raw input,
    *  for direct unit testing without a full `Action`/`RecipeStep` pair. */
   active: boolean;
+  /**
+   * Tool entity ids this node occupies EXCLUSIVELY for its whole duration
+   * — added 2026-08-17, `WORLD_MODEL_OPTIMIZATION.md`'s named-but-unbuilt
+   * `toolLockBehavior` idea ("a tool held exclusively for a duration, e.g.
+   * can't fry two things in the same pan at once"), the direct sequel to
+   * this file's own top doc comment naming "unlimited passive capacity"
+   * as a real, named simplification. A DIFFERENT constraint from `active`:
+   * a PASSIVE node (BOIL) still occupies its pot for its whole duration
+   * even though it frees the actor's hands — the pot itself, not the
+   * actor, is the scarce resource being modeled here. Defaults to `[]`
+   * (no tool lock) — every node built before this field existed is
+   * unaffected. Deliberately scoped to `requiredTools` (exact tool id)
+   * ONLY, not `requiredToolCapabilities` (substitutable — e.g. "any deep
+   * vessel"): which SPECIFIC capability-satisfying tool a step actually
+   * occupies is genuinely ambiguous without a real per-recipe tool-
+   * instance binding this schema doesn't have (unlike ingredients,
+   * `RecipeScript.availableTools` is a flat list of tool TYPES available
+   * throughout the whole recipe, not `RecipeInstanceSchema`-style
+   * individually tracked instances) — named as a real, honest limit
+   * rather than guessed at.
+   */
+  requiredToolIds: string[];
 }
 
 export interface ScheduledNode {
@@ -169,11 +191,14 @@ export interface DagSchedule {
 
 /**
  * The scheduler itself: a deterministic GREEDY list-scheduling algorithm
- * over one shared "active" resource (one actor's hands) plus unlimited
- * "passive" capacity (any number of pots/ovens/marinating bowls can run
- * at once, unconstrained — a real simplification, named here rather than
- * silently assumed: a genuinely resource-constrained kitchen has a finite
- * number of burners/pots too, not modeled).
+ * over one shared "active" resource (one actor's hands) plus per-tool
+ * exclusive-occupancy resources (`requiredToolIds` — added 2026-08-17,
+ * `toolLockBehavior`), with genuinely unlimited capacity ONLY for whatever
+ * neither of those two constraints covers (e.g. two independent MARINATE
+ * steps in two different, unnamed bowls really can run fully concurrently
+ * — a real simplification, still named rather than silently assumed: a
+ * genuinely resource-constrained kitchen has a finite number of bowls
+ * too, just not modeled at that granularity here).
  *
  * NOT claimed to be provably minimal-makespan — true resource-constrained
  * project scheduling with precedence constraints is NP-hard in general;
@@ -200,6 +225,7 @@ export function scheduleDag(nodes: readonly DagNode[]): DagSchedule {
   const scheduled = new Map<string, ScheduledNode>();
 
   let actorFreeAtSeconds = 0;
+  const toolFreeAtSeconds = new Map<string, number>();
   // Process in a topological-compatible order: since `nodes` must already
   // respect dependency order for this to be correct (the caller's own
   // `topologicalOrder` output, or any order where every dependency
@@ -216,15 +242,22 @@ export function scheduleDag(nodes: readonly DagNode[]): DagSchedule {
       return Math.max(max, depFinish);
     }, 0);
 
-    let startSeconds: number;
-    if (node.active) {
-      startSeconds = Math.max(readySeconds, actorFreeAtSeconds);
-    } else {
-      startSeconds = readySeconds; // unlimited passive capacity — never waits on the actor
+    // A node waits on EVERY constraint that applies to it: its own
+    // dependencies (readySeconds), the shared actor if it's active, AND
+    // every tool it exclusively occupies — a passive BOIL still waits for
+    // its own pot to free up even though it doesn't touch the actor
+    // constraint at all.
+    let startSeconds = readySeconds;
+    if (node.active) startSeconds = Math.max(startSeconds, actorFreeAtSeconds);
+    for (const toolId of node.requiredToolIds) {
+      startSeconds = Math.max(startSeconds, toolFreeAtSeconds.get(toolId) ?? 0);
     }
     const finishSeconds = startSeconds + node.durationSeconds;
 
     if (node.active) actorFreeAtSeconds = finishSeconds;
+    for (const toolId of node.requiredToolIds) {
+      toolFreeAtSeconds.set(toolId, finishSeconds);
+    }
     finishOf.set(id, finishSeconds);
     scheduled.set(id, { id, startSeconds, finishSeconds });
   }
@@ -275,7 +308,12 @@ export function scheduleDagFromSteps(
     const parsed = durationRaw !== undefined ? Number(durationRaw) : undefined;
     const durationSeconds = parsed !== undefined && !Number.isNaN(parsed) ? parsed : 0;
     const active = action?.actionKind !== "continuous" ? true : (action.requiresActiveAttention ?? true);
-    return { id, dependsOn: edges.get(id) ?? [], durationSeconds, active };
+    // requiredTools only — requiredToolCapabilities deliberately excluded,
+    // see DagNode.requiredToolIds' own doc comment for why (which specific
+    // capability-satisfying tool a step occupies is genuinely ambiguous
+    // without per-recipe tool-instance tracking this schema doesn't have).
+    const requiredToolIds = action?.requiredTools ?? [];
+    return { id, dependsOn: edges.get(id) ?? [], durationSeconds, active, requiredToolIds };
   });
   return scheduleDag(nodes);
 }

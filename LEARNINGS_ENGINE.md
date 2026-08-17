@@ -1888,3 +1888,38 @@ was made. Don't rewrite or delete old entries — append.
   more specific, more informative check first is a real, small
   authoring-experience decision worth making deliberately rather than
   leaving to whichever loop happens to run first in the file.
+
+- **A module's own doc comment naming a real, deliberate simplification
+  ("unlimited passive capacity... not modeled") is a genuine backlog
+  item, not just an honesty disclaimer to write once and leave alone.**
+  `dag-scheduler.ts` named the missing tool-contention constraint the
+  same day it first shipped; picking it up as the very next "what's
+  next" turn (rather than a newer, unrelated item) meant the real
+  motivating example was already fully worked out — no new research
+  needed, just building the thing the doc comment had already specified.
+  Worth treating a "not modeled, named here" sentence as a live todo with
+  a known shape, not a closed matter once it's been written down once.
+- **Distinguishing "the actor is busy" from "the tool is busy" as TWO
+  separate constraints, not one, was the real design decision — a
+  passive `ROAST` occupies its oven for the whole duration even though it
+  frees the actor's hands immediately.** Collapsing these into one shared
+  resource (as if "busy" only ever meant one thing) would have been a
+  real, silent modeling error: it would have correctly serialized two
+  ACTIVE tasks needing the same tool (already covered by the actor
+  constraint) but WRONGLY allowed two PASSIVE tasks sharing one oven to
+  overlap, since neither touches the actor at all. Both constraints are
+  now checked independently and a node's start time is the max across
+  every one that applies to it — proven directly by a dedicated test
+  ("a PASSIVE step still locks its tool even though it never touches the
+  actor constraint") rather than assumed to follow from the design.
+- **Checked which real actions actually HAVE an exact `requiredTools`
+  entry before picking a real-data demo, rather than assuming the
+  existing BOIL/CARAMELIZE case from the ticket's own case C would also
+  exercise the new mechanism.** It doesn't: BOIL/FRY/CARAMELIZE all use
+  `requiredToolCapabilities` (substitutable — "any deep vessel"), which
+  this feature deliberately does NOT cover (see its own scoping note) —
+  so that existing demo stays correctly tool-lock-free, and a genuinely
+  different real case (`ROAST`, `requiredTools: ["oven"]`) was needed to
+  prove the new mechanism at all. Grepped every `data/actions/*.json` for
+  a real one rather than reaching for the nearest already-loaded fixture,
+  which would have silently proven nothing.

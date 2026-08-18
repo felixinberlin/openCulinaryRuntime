@@ -1422,24 +1422,62 @@ domain facts.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 - [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.
-- [ ] Cooklang parser. Partial groundwork exists — every entity has a
-      `cooklang: { canonicalToken, spiceLock }` field (`ajo`, `huevo`,
-      `sal`, ...) — but nothing reads or writes actual `.cook` text yet.
-      **Design note added 2026-08-15, `AUTHORING.md` §2**: this is really
-      two separate problems, not one. Parsing Cooklang's own syntax
-      (`@ingredient{qty%unit}`, `#cookware{}`, `~{timer}`) is mechanical
-      and can be built whenever prioritized. Turning step PROSE ("fry the
-      potatoes until golden") into this repo's typed `actionId`/
-      parameter shape is NOT mechanical — that's the same free-text →
-      structured-intent translation `ENGINE_INVARIANTS.md` #10 already
-      scopes to an LLM/human proposing a draft, never asserting it as
-      valid. The real design payoff: that translator doesn't need its
-      own validation logic at all — it only needs to produce a first
-      (possibly incomplete/wrong) `RecipeScript` draft and hand it to the
-      existing `validate-recipe` loop (`AUTHORING.md` §1), which already
-      throws the real alarms needed to iterate a draft toward correct.
-- [ ] Cooklang scaling multipliers / spice-lock preservation.
-- [ ] Cooklang ⇄ OCR JSON round-trip tests.
+- [x] **Cooklang parser + entity-matching import + mechanical export —
+      closed 2026-08-18, `src/cooklang.ts`.** Built exactly along the
+      boundary `AUTHORING.md` §2 drew ahead of any code existing (kept
+      below verbatim as the design record, still accurate):
+      this is really two separate problems, not one. Parsing Cooklang's
+      own syntax (`@ingredient{qty%unit}`, `#cookware{}`, `~{timer}`,
+      `>> metadata`, `-- comments`, `[- block comments -]`) is mechanical
+      — built now as `parseCooklang`, real grammar, no judgment calls
+      (citation: `REFERENCES.md`'s new "Interoperability formats"
+      section). Turning step PROSE ("fry the potatoes until golden") into
+      this repo's typed `actionId`/parameter shape is still NOT mechanical
+      — that's the same free-text → structured-intent translation
+      `ENGINE_INVARIANTS.md` #10 scopes to an LLM/human proposing a draft,
+      never asserted as valid, and this module deliberately does not
+      attempt it: `CooklangStep.text` keeps a step's prose verbatim for
+      that still-unbuilt translator to consume, `parseCooklang`'s output is
+      not a `RecipeStep`. `importCooklangDraft` closes the one piece of
+      "mechanical" that's genuinely useful before the translator exists:
+      matching every `@token` against `Entity.cooklang.canonicalToken` (or,
+      failing that, the entity's bare `id` — a documented symmetric
+      fallback with `exportToCooklang`'s own) to propose `RecipeInstance[]`
+      for `initialInventory`, with unresolved tokens named, not silently
+      dropped. `exportToCooklang` is the reverse and fully mechanical in
+      the other direction — an OCR `RecipeScript` already carries
+      everything Cooklang syntax needs (entity tokens, quantities, action
+      names, durations), so there's no LLM-in-the-loop problem exporting;
+      it deliberately does not synthesize natural-language prose, each
+      step line is the action's own `names.en` plus tokenized references
+      and a plain parameter list. Composes with `recipe-runner.ts`'s real
+      `spawnedEntityIds` (optional param) to resolve instances SPAWNED
+      mid-recipe (e.g. `SEPARATE`'s `egg_yolk` output) to real tokens too —
+      same real-ground-truth-composition precedent as
+      `execution-bounds.ts`/`in-progress-action.ts`, not a second static
+      re-derivation of the spawn-naming scheme. Proven via
+      `tests/cooklang.test.ts` (23 synthetic-fixture unit tests) and `npm
+      run capability-test:cooklang` (`scripts/cooklang-as-a-robot.ts`) —
+      the latter runs the full round trip against REAL `data/entities/*.json`
+      and a REAL recipe with a genuine `SEPARATE` spawn
+      (`handmade-alioli-egg-yolk.json`), not synthetic fixtures.
+- [x] **Cooklang spice-lock preservation — closed 2026-08-18, same change
+      as the parser above.** The `=` prefix on a locked quantity (e.g.
+      `@sal{=1%tsp}`) round-trips import → export → import unchanged.
+- [ ] **Cooklang scaling multipliers — still open.** Deliberately NOT
+      built: `ingredient.ts`'s `QuantitySchema` doc comment already states
+      no recipe-scaling engine exists anywhere in this repo to scale
+      against, so there is nothing for a multiplier to multiply yet.
+      Preservation (above) and multiplication are genuinely two different
+      features — don't conflate a closed checkbox on one as covering the
+      other.
+- [x] **Cooklang ⇄ OCR JSON round-trip tests — closed 2026-08-18**, same
+      change (`tests/cooklang.test.ts`'s `exportToCooklang` describe block,
+      `scripts/cooklang-as-a-robot.ts`'s Part B). Scoped to what actually
+      round-trips today: ingredient/cookware token identity and quantity —
+      NOT a full `RecipeStep` (`actionId`/`params`) round trip, since
+      Cooklang's own text never encoded that structured shape to begin
+      with (see the prose-translation gap named above).
 
 ## Phase 6 — Nutrition extension (`nutrition-extension.ts`)
 - [ ] `UsdaMealPatternContributionSchema`. Not started. Every entity already

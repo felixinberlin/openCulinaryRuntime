@@ -167,42 +167,45 @@ happened to already be satisfied, not that there were none.
 
 ## 2. Cooklang — the honest answer
 
-**No, not today.** Checked directly, not assumed: nothing in this repo
-parses `.cook` syntax. `ROADMAP.md`'s Phase 5 has been sitting unstarted
-since before this session; every entity has a `cooklang: {canonicalToken,
-spiceLock}` field (`ajo`, `huevo`, `sal`, ...) but nothing reads or
-writes actual Cooklang text.
+**Half of this is real now, closed 2026-08-18 in `src/cooklang.ts` — the
+other half is exactly as unbuilt as this section originally said, and for
+the same reason.** This section is kept close to its original 2026-08-15
+form (design ahead of code) because the boundary it drew turned out to be
+exactly where the real implementation split too — the update below marks
+what moved from "should eventually" to "does today," not a rewrite of the
+reasoning:
 
-But the way it *should* eventually connect is worth writing down now,
-because it's not a new idea — it's this repo's own already-decided rule
-for exactly this situation (`ENGINE_INVARIANTS.md` #10 / `CONCEPT.md`
-§14, the same boundary `src/query.ts` already runs on: **an LLM may turn
-free text into a structured proposal; it never asserts world state, and
-it never decides validation rules — the deterministic engine has final
-say**):
-
-1. **Parsing Cooklang's syntax is mechanical and real, buildable
-   whenever it's prioritized**: `@ingredient{qty%unit}`, `#cookware{}`,
-   `~{timer}` — a straightforward grammar, no judgment calls, no
-   citations needed.
+1. **Parsing Cooklang's syntax is mechanical — now real.**
+   `parseCooklang` (`src/cooklang.ts`) implements the actual grammar
+   (`@ingredient{qty%unit}`, `#cookware{}`, `~{timer}`, `>> metadata`,
+   `-- comments`, `[- block comments -]`; citation in `REFERENCES.md`).
+   `importCooklangDraft` goes one step further and matches every
+   `@token` against a real `Entity.cooklang.canonicalToken`, proposing
+   `RecipeInstance[]` for `initialInventory` — still a best-effort MATCH,
+   not a validation claim (unresolved tokens are named, not dropped).
+   `exportToCooklang` is the mechanical reverse: an OCR `RecipeScript`
+   already carries everything Cooklang needs, so exporting has no
+   free-text-generation problem to begin with.
 2. **Turning step PROSE into this repo's typed verb+parameter shape is
-   NOT mechanical.** "Fry the potatoes until golden" doesn't carry an
-   `actionId`, an `oilTempC`, a `shape` — Cooklang doesn't have this
-   repo's closed, typed action vocabulary at all. Producing a
-   `RecipeStep` from that sentence is exactly the free-text →
-   structured-intent translation `ENGINE_INVARIANTS.md` #10 already
-   scopes to an LLM or a human, producing a *proposal*, never treated as
-   already-valid.
-3. **The connection is exactly what you're picturing, and it needs
-   nothing new on the validation side**: that translation step's job is
-   only to produce a first DRAFT `RecipeScript` — however incomplete or
-   wrong — and hand it to the exact same loop in §1. `validate-recipe`
-   doesn't need to know or care whether a draft came from a human typing
-   JSON by hand or an LLM translating a `.cook` file; "the alarms that
-   help extend a human recipe to our system" already exist today. Real
-   Cooklang support would mostly be a new way to generate the FIRST
-   draft that loop starts from — not a second validator, not a special
-   case.
+   STILL NOT mechanical, and `cooklang.ts` deliberately does not attempt
+   it.** "Fry the potatoes until golden" doesn't carry an `actionId`, an
+   `oilTempC`, a `shape` — Cooklang doesn't have this repo's closed, typed
+   action vocabulary at all. Producing a `RecipeStep` from that sentence
+   is exactly the free-text → structured-intent translation
+   `ENGINE_INVARIANTS.md` #10 already scopes to an LLM or a human,
+   producing a *proposal*, never treated as already-valid.
+   `CooklangStep.text` keeps a parsed step's prose verbatim, tokens
+   inline, specifically so this still-unbuilt translator has something
+   real to consume later.
+3. **The connection is exactly what this section originally pictured,
+   and it still needs nothing new on the validation side**: that
+   translation step's job would only be to produce a first DRAFT
+   `RecipeScript` — however incomplete or wrong — and hand it to the
+   exact same loop in §1, same as `importCooklangDraft`'s own proposed
+   inventory already must be. `validate-recipe` doesn't need to know or
+   care whether a draft came from a human typing JSON by hand or an LLM
+   translating a `.cook` file's step prose; "the alarms that help extend
+   a human recipe to our system" already exist today.
 
 ## 3. Named, not built — real gaps in today's loop
 
@@ -218,8 +221,10 @@ the worked example above. Still open:
   "worth double-checking."
 - **No fuzzy-match suggestion for a typo'd entity/action id.** Get one
   wrong and you get "Unknown action/entity," not "did you mean...".
-- **The Cooklang parser + prose-to-verb translator itself** (§2) — the
-  single largest piece of this document that's design, not
+- **The Cooklang prose-to-verb translator** (§2 point 2) — the syntax
+  parser + entity-matching import + mechanical export half of §2 closed
+  2026-08-18 (`src/cooklang.ts`); this translator (free-text step prose →
+  typed `actionId`/parameters) is the one piece still design, not
   implementation.
 
 None of these are built by writing this document — named here so the

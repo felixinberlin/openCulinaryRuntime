@@ -1963,3 +1963,61 @@ was made. Don't rewrite or delete old entries — append.
   dedicated review caught it. A per-commit discipline this good still
   benefits from a periodic whole-file audit, not just trusting each
   individual change to have remembered every doc that name-checks it.
+
+## 2026-08-18
+
+- **Multi-word Cooklang names are unambiguous WITHOUT a hand-rolled
+  lookahead scanner, if the name-run's own character class simply
+  excludes every other token's marker/brace characters.** Building
+  `src/cooklang.ts`'s `parseCooklang`, the obvious worry was: a regex
+  greedily matching `word(\s+word)*` before requiring an immediate `{`
+  could swallow an unrelated LATER token's braces (`@aceite de oliva to
+  the pan and mix{}` wrongly reading everything up to that stray `{}` as
+  one ingredient name). It doesn't, for a structural reason worth
+  remembering: because the word-run's character class
+  (`[A-Za-z0-9_'-]`) contains none of `@`/`#`/`~`/`{`/`}`, reaching any
+  OTHER token's marker character always ends the run first — the regex
+  engine's own backtracking can never bridge across a real `@`/`#`/`~`
+  to reach a `{` that belongs to a different token. The one real,
+  documented limitation this leaves: plain prose words with no other
+  marker in between (`@salt to the mixing bowl and combine.{note}`) can
+  still be misread — the same authoring discipline real Cooklang
+  requires (write `{}` immediately after the intended name).
+- **A character class copy-pasted from "words + separators" into a
+  regex used for TWO different purposes (multi-word names AND bare
+  single-word fallback) silently broke the bare case**, and only showed
+  up as a wrong VALUE, not a parse failure: `[A-Za-z0-9_'.-]+` included
+  `.` so a sentence-ending period after a bare token (`Salt @sal.`)
+  parsed as token `"sal."` instead of `"sal"` — passed schema validation,
+  failed entity resolution, and looked exactly like a coverage gap
+  ("unresolved token: sal.") rather than a parser bug, until traced back.
+  Caught by round-tripping a REAL recipe through export→import in a
+  smoke test before writing the formal test suite, not by unit-testing
+  the parser in isolation first — the isolated unit tests for the bare
+  form used inputs without trailing punctuation and would not have
+  caught it on their own.
+- **An empty capture group (`+` where `*` was needed) silently drops an
+  entire token FORM, not just an edge case.** The braced-token regex
+  required its name-run to be non-empty (`+`), which is correct for
+  named ingredients/cookware but wrong for Cooklang's UNNAMED timer form
+  (`~{5%minutes}`, no name between `~` and `{`) — that whole form simply
+  never matched, `timers` came back empty with no error anywhere. Same
+  root-cause shape as the `.`-in-charset bug above: a single shared regex
+  serving multiple token kinds needs each kind's own grammar checked
+  against real examples of ALL its forms (named vs. unnamed, braced vs.
+  bare), not just the form that happened to be top-of-mind while writing
+  it.
+- **Export's own fallback (bare `entity.id` when `Entity.cooklang` is
+  absent) has to be import-resolvable too, or it's a one-way hole, not a
+  documented approximation.** `exportToCooklang` always falls back to
+  `entity.id` as the Cooklang token for a tool entity like `pan`/`knife`
+  (neither has a `cooklang` field). Without a matching fallback on
+  import, that specific, self-created token would round-trip to
+  "unresolved" every time — a bug the export side can't see on its own,
+  only visible by actually re-importing what was exported. Fixed by
+  making `importCooklangDraft` try `Entity.cooklang.canonicalToken`
+  first, then fall back to the entity's own `id`, mirroring the export
+  fallback exactly rather than leaving it asymmetric. General lesson: a
+  new export fallback and a new import fallback are really one
+  decision, not two independent ones — write the round-trip test before
+  considering either "done."

@@ -1089,6 +1089,20 @@ per that ticket's own instruction.
   Robotics* 41(5):1596–1616. Survey — the fastest route into the rest of
   this literature.
 
+## Interoperability formats
+
+- **Cooklang specification** — https://cooklang.org/docs/spec/. The
+  grammar `src/cooklang.ts`'s `parseCooklang` implements: `@ingredient
+  {quantity%unit}`, `#cookware{}`, `~timer{quantity%unit}`, `>> metadata:
+  value`, `-- line comments`, `[- block comments -]`. `CLAUDE_DEV_CTX.md`'s
+  own interop rule — treat Cooklang as the primary human-writable format,
+  preserve `=`-prefixed "spice lock" quantities that don't scale linearly
+  — is this repo's own addition on top of the base spec, not itself part
+  of it; `cooklang.ts`'s top doc comment states exactly which half of that
+  rule is actually implemented (spice-lock preservation) vs. still open
+  (scaling multipliers — no scaling engine exists anywhere in this repo to
+  scale against, `ingredient.ts`'s `QuantitySchema` doc comment).
+
 ## Simulation / robot-execution research
 
 Full comparison and sourcing already lives in `SIMULATION_TARGETS.md` —

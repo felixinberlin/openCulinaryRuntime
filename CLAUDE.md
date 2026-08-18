@@ -78,7 +78,7 @@ listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 | `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
 | `nutrition-extension.ts` | Not built | |
 | `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS_ENGINE.md` 2026-08-15 |
-| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | Not built | `cooklang` fields exist on entities (`canonicalToken`, `spiceLock`) but nothing reads/writes actual Cooklang text yet |
+| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` — `parseCooklang`/`importCooklangDraft`/`exportToCooklang`, closed 2026-08-18 | Cooklang syntax parsing + entity-matching import + mechanical export are real; `compileToSchemaOrgIngredient`/Schema.org export and the free-text step-prose→`actionId` translator are still not built — see the "ninth" entry below and `AUTHORING.md` §2 |
 
 `src/registry.ts` (loading `data/*.json` by directory into typed `Map`s) also isn't
 in the original plan — the whole `data/` directory of JSON files, validated against
@@ -215,6 +215,35 @@ alongside the still-unchanged `salt.json`/`pepper.json`/`chili.json`/
 pattern (a value-to-tag MAP, not a raw passthrough) plus a real new
 `ExecutionResult.matchedIngredientInstanceId` field (`npm run
 capability-test:season-verb`).
+
+A ninth, 2026-08-18: `src/cooklang.ts` (`parseCooklang`/`importCooklangDraft`/
+`exportToCooklang`) — `ROADMAP.md` Phase 5's Cooklang parser/exporter, scoped
+exactly along the mechanical-vs-not boundary `AUTHORING.md` §2 drew before any
+code existed. `parseCooklang` is a real grammar (`@ingredient{qty%unit}`,
+`#cookware{}`, `~{timer}`, `>> metadata`, `-- comments`, `[- block comments -]`,
+citation in `REFERENCES.md`'s new "Interoperability formats" section) — no
+judgment calls. `importCooklangDraft` matches every `@token` against a real
+`Entity.cooklang.canonicalToken` (or, failing that, the entity's bare `id` — a
+documented symmetric fallback with the export direction) to propose
+`RecipeInstance[]`, unresolved tokens named rather than dropped — still a
+DRAFT, never asserted valid on its own. `exportToCooklang` is the fully
+mechanical reverse (an OCR `RecipeScript` already carries everything Cooklang
+needs — no prose synthesis, so no LLM-in-the-loop problem exporting), and
+composes with `recipe-runner.ts`'s real `spawnedEntityIds` (optional param) to
+resolve instances SPAWNED mid-recipe to real tokens too — same
+compose-with-real-ground-truth precedent as `execution-bounds.ts`/
+`in-progress-action.ts`. Deliberately NOT built here, named rather than
+hidden: the free-text step-prose → typed `actionId`/parameter translator
+(`ENGINE_INVARIANTS.md` #10's LLM-proposes/engine-decides boundary — ordinary
+prose has no closed action vocabulary to translate into automatically) and
+Cooklang scaling multipliers (no recipe-scaling engine exists anywhere in this
+repo to scale against, `ingredient.ts`'s `QuantitySchema` doc comment).
+Spice-lock (`=`-prefixed quantities) round-trips faithfully. Proven via
+`tests/cooklang.test.ts` (23 synthetic-fixture unit tests, same
+no-`data/*.json`-dependency discipline as every other test file) and `npm run
+capability-test:cooklang` (`scripts/cooklang-as-a-robot.ts`) — the latter
+against REAL `data/entities/*.json` and a REAL recipe with a genuine
+`SEPARATE` spawn (`handmade-alioli-egg-yolk.json`).
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

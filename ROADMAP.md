@@ -73,7 +73,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Simple flatbread** (this repo's first real dish from the baking epic — flour/dough/KNEAD, unleavened, real roti/chapati/tortilla-de-harina technique; PROOF/yeast independently proven but not yet in one recipe, blocked on the real 3+-input COMBINE gap) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- simple_flatbread` / `npm run capability-test:bake-bread` |
 | **Cooklang import/export** (real `.cook` grammar parser + entity-matching import + mechanical export, round-tripped against real data and a real `SEPARATE` spawn via `recipe-runner.ts`'s `spawnedEntityIds`) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:cooklang` |
 | **Cooklang prose-to-verb translator** (real, bounded, deterministic keyword/allowed-value matcher over `data/actions/*.json` — no LLM call; recovers all 6 real `actionId`s of `handmade_alioli_egg_yolk` round-tripped purely through Cooklang text; found and correctly reports a genuine 4-way verb collision in `combine*.json`) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:cooklang-translate` |
-| **Execution Graph as Compiler IR** (`src/execution-graph.ts` — a decoupled `ExecutionGraph` IR a runtime could consume without knowing about recipes/entities; real fan-in dependency proven against `garlic_oil_potatoes`' own `fry_potato` join node; honest rejection proven against `tortilla_de_patatas`' spawned-instance reference) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:execution-graph` |
+| **Execution Graph as Compiler IR** (`src/execution-graph.ts`/`src/execution-graph-compiler.ts` — a decoupled `ExecutionGraph` IR + minimal builder API a runtime could consume without knowing about recipes/entities; real fan-in dependency proven against `garlic_oil_potatoes`' own `fry_potato` join node; honest rejection proven against `tortilla_de_patatas`' spawned-instance reference) | ✅ Makeable, closed/revised 2026-08-18 | `npm run capability-test:execution-graph` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1423,77 +1423,109 @@ domain facts.
       definitions as-is, not a new structured-fact schema) but real and
       running today, not just proposed.
 
-## Phase 4.6 — Execution Graph as Compiler IR (`src/execution-graph.ts`, new, 2026-08-18)
+## Phase 4.6 — Execution Graph as Compiler IR (`src/execution-graph.ts` + `src/execution-graph-compiler.ts`, new, 2026-08-18)
 
 A user-supplied ticket, not previously scoped anywhere in this document or
 `CLAUDE_DEV_CTX.md` — a genuinely new architectural piece, same "no
 counterpart in the original plan" bucket as `place.ts`/`heat-source.ts`/
-`egg-doneness.ts` etc. (`CLAUDE.md`'s module-layout table).
+`egg-doneness.ts` etc. (`CLAUDE.md`'s module-layout table). **Revised the
+same day** by a second, more precise ticket ("don't make ExecutionGraph a
+fancy version of `Recipe.steps`... the machine-oriented contract between
+planning and execution") — the entry below describes the REVISED,
+current shape; the first pass (one file, richer `Condition`/`Effect`
+kinds, no separate builder API) was superseded before it saw a second
+commit. See `LEARNINGS_ENGINE.md` 2026-08-18 for what the revision
+actually changed and why.
 
-- [x] **`ExecutionGraph`/`ExecutionNode`/`ExecutionEdge` types — closed
-      2026-08-18.** A compiler IR, deliberately DECOUPLED from this repo's
-      own `Instance`/`RecipeStep`/`RecipeScript` types — a future runtime
-      consuming this graph never needs to import `recipe.ts`, resolve
-      anything against `data/entities/*.json`, or know what a recipe,
-      Cooklang, or a planner even is. `Condition`/`Effect` are closed
-      discriminated unions mapped 1:1 onto the real fields `engine.ts`'s
-      `applyAction` actually checks/produces (`Entity.statePrerequisites`,
-      `requiredTargetCapability`/`requiredToolCapabilities`/
-      `requiredIngredientCapabilities`/`requiredSecondaryCapability`;
-      `outputs.transformedState(FromParameter)`/`addsTag(FromParameter)`/
-      `destroysTarget`/`spawnsTargetByproducts`/`combinesInto`) — not a
-      generic/open-ended `{subject, property, value}` bag a runtime would
-      have to further interpret.
-- [x] **`compileToExecutionGraph` — closed 2026-08-18.** A real, bounded
-      compiler pass: resolves every step's instance references to real
-      `entityId`s (via `recipe.initialInventory` only — see below),
-      statically re-derives whether each step's real preconditions would
-      actually be satisfiable (a bounded internal state/tag model, seeded
-      from `initialInventory`, updated by each node's own predicted
-      effects as the graph is walked in dependency order), and rejects
-      compilation — collecting EVERY error found, not just the first —
-      when an entity/capability/state prerequisite can't be resolved or
-      satisfied. Reuses `dag-scheduler.ts`'s `topologicalOrder`/
-      `deriveDependsOn`/`resolveStepId` for graph structure and cycle
-      detection rather than re-deriving dependency logic a second time —
-      "ensure graph dependencies are explicit rather than array position"
-      was ALREADY this repo's own rule (`RecipeStepSchema.dependsOn`,
-      closed 2026-08-17), not a new mechanism this ticket needed to build.
-      Never calls `engine.ts`'s `applyAction` or `recipe-runner.ts`'s
-      `runRecipe` — no mutation, no simulated time, the compiler produces
-      a graph and nothing else, per the ticket's own explicit requirement.
-      **Deliberately, honestly out of scope**: resolving a SPAWNED
-      instance's entity id (e.g. a step targeting `egg_yolk-3`,
-      `SEPARATE`'s own output) — that requires actually running the
-      recipe (`recipe-runner.ts`'s real `spawnedEntityIds`), which this
-      pass never does; such a step fails compilation with a clear, named
+- [x] **Split into two files along the ticket's own architecture
+      diagram** — `execution-graph.ts` (the IR + its minimal builder API:
+      `createExecutionGraph`/`addNode`/`addDependency`/
+      `validateExecutionGraph`/`serializeExecutionGraph`/
+      `deserializeExecutionGraph`) imports NOTHING from this repo's
+      domain, only `zod` — a runtime consuming this graph never needs
+      `recipe.ts`, `data/entities/*.json`, or any notion of what a
+      recipe/Cooklang/planner is. `execution-graph-compiler.ts` (the
+      domain-aware PRODUCER, `compileToExecutionGraph`) is a separate
+      file built ON TOP of the minimal API, not reaching into IR
+      internals — the boundary is enforced at the import-graph level,
+      not just by convention.
+- [x] **`ExecutionGraph`/`ExecutionNode`/`ExecutionEdge`/`ExecutionInput`
+      types.** `ExecutionInput` (new in the revision) is `{ entityId,
+      role? }` — a node's inputs reference concrete WORLD entity ids
+      directly (`"potato-1"`, matching the ticket's own literal examples
+      throughout), never a copy of entity data. `Condition`/`Effect` are
+      closed discriminated unions using `type`/`entityId` (renamed from
+      the first pass's `kind`/`instanceId` to match the ticket's own
+      vocabulary), narrowed to `state`/`capability` (`Condition`) and
+      `state`/`tag`/`destroy`/`spawn`/`combine` (`Effect`) — deliberately
+      NARROWER than the first pass's richer tool/toolCapability/
+      ingredientCapability kinds (a real, explicit simplification: "needs
+      SOME available ingredient/tool with capability X" is an
+      existentially-quantified world-fact, not a fact about one specific
+      resolved input, and doesn't fit this IR's entity-fact shape without
+      inventing a kind the ticket never asked for — the compiler still
+      VALIDATES those requirements for real, it just doesn't re-emit them
+      as graph `Condition`s). `ExecutionEdge` dropped its `type:
+      "dependency"` literal field from the first pass — every edge in
+      this graph IS a dependency, no second kind to distinguish from.
+- [x] **The minimal builder API.** `addNode`/`addDependency` mutate the
+      `ExecutionGraph` object under construction (the conventional
+      graph-builder shape, matching the ticket's own `addNode(graph,
+      node)` signature) and fail fast (duplicate node id, unknown node
+      reference, self-loop) at construction time.
+      `validateExecutionGraph` is now a SEPARATE, narrowly-scoped
+      function checking STRUCTURE only (unique node ids, every edge
+      references a real node, no self-loops, the graph is acyclic —
+      **"ExecutionGraph must be a DAG,"** documented per the ticket's own
+      instruction) — it does NOT check domain semantics (capability
+      discovery/state inference are this ticket's own explicit
+      non-goals; that validation still happens for real, just inside
+      `compileToExecutionGraph`, not this function). Self-contained Kahn's
+      algorithm, no dependency on `dag-scheduler.ts` (which operates on
+      `RecipeStep[]` — this function must work on a bare `ExecutionGraph`
+      alone). `serializeExecutionGraph`/`deserializeExecutionGraph` round
+      -trip through plain JSON, schema-validated on both ends.
+- [x] **`compileToExecutionGraph` (`execution-graph-compiler.ts`).** A
+      real, bounded compiler pass: resolves every step's instance
+      references to real entity TYPES (via `recipe.initialInventory`
+      only — see below; kept as a separate `entityTypes` map on
+      `CompileResult`, NOT on `ExecutionGraph` itself, since the IR only
+      ever needs the world id, never the abstract type), statically
+      re-derives whether each step's real preconditions would actually
+      be satisfiable (a bounded internal state/tag model, seeded from
+      `initialInventory`, updated by each node's own predicted effects as
+      the graph is walked in dependency order), and rejects compilation
+      — collecting EVERY error found, not just the first. Reuses
+      `dag-scheduler.ts`'s `topologicalOrder`/`deriveDependsOn`/
+      `resolveStepId` for graph structure and cycle detection. Never
+      calls `engine.ts`'s `applyAction` or `recipe-runner.ts`'s
+      `runRecipe` — no mutation, no simulated time. **Deliberately,
+      honestly out of scope**: resolving a SPAWNED instance's entity id
+      (e.g. a step targeting `egg_yolk-3`, `SEPARATE`'s own output) —
+      requires actually running the recipe
+      (`recipe-runner.ts`'s real `spawnedEntityIds`), which this pass
+      never does; such a step fails compilation with a clear, named
       reason instead of a guess, proven live against
-      `tortilla-de-patatas.json`'s own `BEAT` on `egg_cracked-3`. Anything
-      CCP/HACCP/thermal/timing stays runtime's job, unchanged.
-- [x] **`checkExecutionOrder` — closed 2026-08-18, a minimal read-only
-      structural check, explicitly NOT a runtime** (the ticket's own
-      "keep execution of the graph outside the compiler" — this lives in
-      the same module as a small, pure, non-mutating companion, not
-      bundled into `compileToExecutionGraph` itself, and doesn't attempt
-      anything the ticket's non-goals list, e.g. parallel execution or
-      recovery). Given a candidate execution order, confirms it never
-      runs a node before every edge pointing into it is satisfied — the
-      concrete proof that "a dependency prevents slice from executing
-      before peel" the ticket asked for.
-- Proven via `tests/execution-graph.test.ts` (19 synthetic-fixture unit
-  tests — linear peel→slice→fry matching the ticket's own worked example
-  almost verbatim, a real fan-in non-linear branch, every rejection case,
-  `combinesInto` handling, a no-mutation check) and `npm run
-  capability-test:execution-graph`
-  (`scripts/execution-graph-as-a-robot.ts`) — against REAL
-  `data/entities/*.json`/`data/actions/*.json` and three real recipes:
-  `salted-fried-potatoes.json` (fully linear, compiles + round-trips
-  through `JSON.stringify`/`parse` with no runtime), `garlic-oil-
-  potatoes.json` (a REAL fan-in — `fry_potato` already depends on both
-  `cut_potato` and `infuse_oil`, `dag-scheduler.ts`'s own 2026-08-17
-  join-node proof, now reused for a second, different purpose), and
-  `tortilla-de-patatas.json` (the honest spawned-instance rejection,
-  live). See `LEARNINGS_ENGINE.md` 2026-08-18.
+      `tortilla-de-patatas.json`'s own `BEAT` on `egg_cracked-3`.
+- [x] **`checkExecutionOrder` — a minimal read-only structural check,
+      explicitly NOT a runtime**, lives in `execution-graph.ts` (no
+      recipe dependency). Given a candidate execution order, confirms it
+      never runs a node before every edge pointing into it is satisfied —
+      the concrete proof that "a dependency prevents slice from executing
+      before peel."
+- Proven via `tests/execution-graph.test.ts` (22 synthetic-fixture unit
+  tests, ZERO `RecipeScript`/`Entity`/`Action` anywhere — the linear
+  peel→slice→fry graph, entity-reference-by-id checks, precondition/
+  effect fidelity, every invalid-graph case, branching/fan-in,
+  determinism, serialization round-trip, all built via the minimal API
+  directly) plus `tests/execution-graph-compiler.test.ts` (16 tests, the
+  domain-aware compiler specifically) and `npm run
+  capability-test:execution-graph` (`scripts/execution-graph-as-a-robot.ts`)
+  — Part A builds a graph with the pure IR and ZERO domain data; Parts
+  B–D compile three real recipes (`salted-fried-potatoes.json`: linear;
+  `garlic-oil-potatoes.json`: a REAL fan-in — `fry_potato` already
+  depends on both `cut_potato` and `infuse_oil`; `tortilla-de-patatas.json`:
+  the honest spawned-instance rejection, live).
 
 **Relationship to `dag-scheduler.ts`, named explicitly so the two aren't
 confused**: `dag-scheduler.ts` computes a SCHEDULE (concurrent-execution
@@ -1501,9 +1533,10 @@ timing estimate, tool-lock contention) directly over this repo's OWN
 `RecipeStep`/`Action` types, for `recipe-runner.ts`'s own use. This module
 compiles a STANDALONE, portable IR meant to be handed to a completely
 different, not-yet-built consumer that has no dependency on this repo's
-internal types at all. Different artifacts, different purposes — this
-module reuses `dag-scheduler.ts`'s dependency-derivation logic rather than
-duplicating it, but does not replace or wrap it.
+internal types at all. Different artifacts, different purposes —
+`execution-graph-compiler.ts` reuses `dag-scheduler.ts`'s
+dependency-derivation logic rather than duplicating it, but does not
+replace or wrap it.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 - [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.

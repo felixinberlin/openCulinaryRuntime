@@ -1,102 +1,142 @@
 import { join } from "node:path";
 import { loadEntities, loadActions, loadRecipes } from "../src/registry.ts";
-import { compileToExecutionGraph, checkExecutionOrder } from "../src/execution-graph.ts";
+import { compileToExecutionGraph } from "../src/execution-graph-compiler.ts";
+import {
+  createExecutionGraph,
+  addNode,
+  addDependency,
+  validateExecutionGraph,
+  serializeExecutionGraph,
+  deserializeExecutionGraph,
+  checkExecutionOrder,
+} from "../src/execution-graph.ts";
 
 /**
- * Capability test for `src/execution-graph.ts` — the "Implement Execution
- * Graph as Compiler IR" ticket, closed 2026-08-18. Three real recipes,
- * three different real outcomes — not synthetic fixtures (those live in
- * `tests/execution-graph.test.ts`), proving the compiler against this
- * repo's actual `data/entities/*.json`/`data/actions/*.json`/
- * `data/recipes/*.json`.
+ * Capability test for the "Execution Graph" ticket (revised 2026-08-18) —
+ * `src/execution-graph.ts` (the pure IR + minimal builder API) and
+ * `src/execution-graph-compiler.ts` (the domain-aware producer built on
+ * top of it). Four parts:
  *
- * A. `salted-fried-potatoes.json` — a fully linear recipe (wash -> peel ->
- *    cut -> fry -> drain -> salt), every instance already in
- *    `initialInventory`. Compiles cleanly; checked against the ticket's
- *    own acceptance criteria (a deterministic graph, inspectable without
- *    a runtime).
- * B. `garlic-oil-potatoes.json` — a REAL recipe already authored with
- *    explicit step `id`/`dependsOn` (`dag-scheduler.ts`'s own join-node
- *    proof), with `fry_potato` depending on BOTH `cut_potato` and
- *    `infuse_oil` — a genuine fan-in, the exact non-linear shape the
- *    ticket's own diagram draws (peel/slice/fry with a converging "heat
- *    oil" branch), now proven against real data instead of only a
- *    synthetic fixture.
- * C. `tortilla-de-patatas.json` — `BEAT` targets `egg_cracked-3`, an
+ * A. The pure IR's minimal API used directly — createExecutionGraph/
+ *    addNode/addDependency/validateExecutionGraph/serializeExecutionGraph/
+ *    deserializeExecutionGraph — with ZERO recipe/entity/action data
+ *    anywhere, proving the IR genuinely doesn't need this repo's domain
+ *    at all (the ticket's own core architectural requirement).
+ * B. `salted-fried-potatoes.json` — a fully linear real recipe, compiled
+ *    and round-tripped through serialization.
+ * C. `garlic-oil-potatoes.json` — a REAL recipe already authored with
+ *    explicit step `id`/`dependsOn`, with `fry_potato` depending on BOTH
+ *    `cut_potato` and `infuse_oil` — a genuine fan-in, proven against
+ *    real data.
+ * D. `tortilla-de-patatas.json` — `BEAT` targets `egg_cracked-3`, an
  *    instance SPAWNED by an earlier `CRACK` step, not present in
- *    `initialInventory`. `execution-graph.ts`'s own doc comment names
- *    this exact case as out of scope for this compiler pass (resolving a
- *    spawned instance's entity id requires actually running the recipe,
- *    which this compiler never does) — this proves it's rejected with a
- *    clear, named reason, not silently wrong or crashing.
+ *    `initialInventory` — proves the compiler rejects with a clear,
+ *    named reason rather than silently wrong or crashing.
  */
+
+function section(title: string): void {
+  console.log(`\n=== ${title} ===`);
+}
+
+// --- A. The pure IR, built by hand — no recipe/entity/action data at all ---
+
+section("A. Pure IR — peel -> slice -> fry, built with zero domain data");
+
+const irGraph = createExecutionGraph("peel_slice_fry_by_hand");
+addNode(irGraph, {
+  id: "peel-potato-1",
+  action: "peel",
+  inputs: [{ entityId: "potato-1", role: "target" }],
+  preconditions: [{ type: "state", entityId: "potato-1", state: ["whole"] }],
+  effects: [{ type: "state", entityId: "potato-1", state: "peeled" }],
+});
+addNode(irGraph, {
+  id: "slice-potato-1",
+  action: "slice",
+  inputs: [{ entityId: "potato-1", role: "target" }],
+  preconditions: [{ type: "state", entityId: "potato-1", state: ["peeled"] }],
+  effects: [{ type: "state", entityId: "potato-1", state: "sliced" }],
+});
+addNode(irGraph, {
+  id: "fry-potato-1",
+  action: "fry",
+  inputs: [{ entityId: "potato-1", role: "target" }],
+  preconditions: [{ type: "state", entityId: "potato-1", state: ["sliced"] }],
+  effects: [{ type: "state", entityId: "potato-1", state: "fried" }],
+});
+addDependency(irGraph, "peel-potato-1", "slice-potato-1");
+addDependency(irGraph, "slice-potato-1", "fry-potato-1");
+
+const irValidation = validateExecutionGraph(irGraph);
+console.log("Structural validation:", irValidation);
+if (!irValidation.valid)
+  throw new Error("Expected the hand-built IR graph to be structurally valid.");
+
+const irSerialized = serializeExecutionGraph(irGraph);
+const irReconstructed = deserializeExecutionGraph(irSerialized);
+if (JSON.stringify(irReconstructed) !== JSON.stringify(irGraph)) {
+  throw new Error("Graph did not round-trip through serialize/deserialize unchanged.");
+}
+console.log(
+  `Serialized to ${irSerialized.length} bytes, deserialized back byte-for-byte identical.`
+);
+
+if (!checkExecutionOrder(irGraph, ["peel-potato-1", "slice-potato-1", "fry-potato-1"]).valid) {
+  throw new Error("Expected forward order to be valid.");
+}
+if (checkExecutionOrder(irGraph, ["slice-potato-1", "peel-potato-1", "fry-potato-1"]).valid) {
+  throw new Error("Expected slice-before-peel to violate a dependency edge.");
+}
+console.log(
+  "Confirmed: a dependency really prevents slice from running before peel — checked structurally, no execution."
+);
+
+// --- B/C/D: the domain-aware compiler, against real data -------------------
 
 const root = join(import.meta.dirname, "..");
 const entities = loadEntities(join(root, "data", "entities"));
 const actions = loadActions(join(root, "data", "actions"));
 const recipes = loadRecipes(join(root, "data", "recipes"));
 
-function section(title: string): void {
-  console.log(`\n=== ${title} ===`);
-}
-
-// --- A. A real, fully linear recipe ----------------------------------------
-
-section("A. Linear recipe — salted_fried_potatoes");
+section("B. Linear recipe — salted_fried_potatoes");
 
 const potatoes = recipes.get("salted_fried_potatoes");
 if (!potatoes) throw new Error("Fixture recipe missing: salted_fried_potatoes");
 
-const resultA = compileToExecutionGraph(potatoes, entities, actions);
-if (!resultA.ok) {
+const resultB = compileToExecutionGraph(potatoes, entities, actions);
+if (!resultB.ok) {
   throw new Error(
-    `Expected salted_fried_potatoes to compile cleanly, got errors: ${resultA.errors.join("; ")}`
+    `Expected salted_fried_potatoes to compile cleanly, got errors: ${resultB.errors.join("; ")}`
   );
 }
-console.log(`Compiled ${resultA.graph.nodes.length} nodes, ${resultA.graph.edges.length} edges.`);
-for (const node of resultA.graph.nodes) {
+console.log(`Compiled ${resultB.graph.nodes.length} nodes, ${resultB.graph.edges.length} edges.`);
+for (const node of resultB.graph.nodes) {
+  const inputList = node.inputs.map((i) => `${i.entityId}${i.role ? `:${i.role}` : ""}`).join(", ");
   console.log(
-    `  ${node.id}: ${node.action} on [${node.inputs.join(", ")}] — ` +
-      `${node.preconditions.length} preconditions, ${node.effects.length} effects`
+    `  ${node.id}: ${node.action} on [${inputList}] — ${node.preconditions.length} preconditions, ${node.effects.length} effects`
   );
 }
-// Serializable without the runtime — the ticket's own acceptance criterion.
-const serialized = JSON.stringify(resultA.graph);
-const reparsed = JSON.parse(serialized);
-if (reparsed.nodes.length !== resultA.graph.nodes.length) {
-  throw new Error("Graph did not round-trip through JSON.stringify/parse cleanly.");
+if (!validateExecutionGraph(resultB.graph).valid) {
+  throw new Error(
+    "Compiled graph failed structural validation — should be impossible by construction."
+  );
 }
-console.log(
-  `Serialized to ${serialized.length} bytes of plain JSON and re-parsed identically — no runtime needed.`
-);
+console.log(`entityTypes resolved: ${JSON.stringify(resultB.entityTypes)}`);
 
-// checkExecutionOrder: the graph's own edges, not array position, decide order.
-const forward = resultA.graph.nodes.map((n) => n.id);
-const reversed = [...forward].reverse();
-if (!checkExecutionOrder(resultA.graph, forward).valid) {
-  throw new Error("Expected the graph's own natural node order to be a valid execution order.");
-}
-if (checkExecutionOrder(resultA.graph, reversed).valid) {
-  throw new Error("Expected the REVERSED order to violate at least one dependency edge.");
-}
-console.log(
-  "Confirmed: forward order is valid, reversed order correctly violates a real dependency edge."
-);
+// --- C. A real fan-in (non-linear) dependency structure --------------------
 
-// --- B. A real fan-in (non-linear) dependency structure --------------------
-
-section("B. Fan-in dependency — garlic_oil_potatoes (fry_potato needs cut_potato AND infuse_oil)");
+section("C. Fan-in dependency — garlic_oil_potatoes (fry_potato needs cut_potato AND infuse_oil)");
 
 const garlicOil = recipes.get("garlic_oil_potatoes");
 if (!garlicOil) throw new Error("Fixture recipe missing: garlic_oil_potatoes");
 
-const resultB = compileToExecutionGraph(garlicOil, entities, actions);
-if (!resultB.ok) {
+const resultC = compileToExecutionGraph(garlicOil, entities, actions);
+if (!resultC.ok) {
   throw new Error(
-    `Expected garlic_oil_potatoes to compile cleanly, got errors: ${resultB.errors.join("; ")}`
+    `Expected garlic_oil_potatoes to compile cleanly, got errors: ${resultC.errors.join("; ")}`
   );
 }
-const incomingToFry = resultB.graph.edges.filter((e) => e.to === "fry_potato").map((e) => e.from);
+const incomingToFry = resultC.graph.edges.filter((e) => e.to === "fry_potato").map((e) => e.from);
 console.log(`fry_potato's incoming edges: [${incomingToFry.join(", ")}]`);
 if (
   incomingToFry.length !== 2 ||
@@ -107,26 +147,24 @@ if (
     `Expected fry_potato to depend on exactly cut_potato and infuse_oil, got [${incomingToFry.join(", ")}].`
   );
 }
-console.log(
-  "Confirmed against real data: a genuine fan-in, not a linear list — the ticket's own core requirement."
-);
+console.log("Confirmed against real data: a genuine fan-in, not a linear list.");
 
-// --- C. A real, honest rejection --------------------------------------------
+// --- D. A real, honest rejection --------------------------------------------
 
-section("C. Honest rejection — tortilla_de_patatas' BEAT on a SPAWNED instance");
+section("D. Honest rejection — tortilla_de_patatas' BEAT on a SPAWNED instance");
 
 const tortilla = recipes.get("tortilla_de_patatas");
 if (!tortilla) throw new Error("Fixture recipe missing: tortilla_de_patatas");
 
-const resultC = compileToExecutionGraph(tortilla, entities, actions);
-if (resultC.ok) {
+const resultD = compileToExecutionGraph(tortilla, entities, actions);
+if (resultD.ok) {
   throw new Error(
     "Expected tortilla_de_patatas to be REJECTED (BEAT targets egg_cracked-3, a spawned instance) — it compiled instead."
   );
 }
 console.log("Compilation correctly rejected. Errors:");
-for (const error of resultC.errors) console.log(`  - ${error}`);
-if (!resultC.errors.some((e) => e.includes("egg_cracked-3"))) {
+for (const error of resultD.errors) console.log(`  - ${error}`);
+if (!resultD.errors.some((e) => e.includes("egg_cracked-3"))) {
   throw new Error(
     'Expected a rejection reason naming "egg_cracked-3" specifically, not a generic failure.'
   );
@@ -136,4 +174,4 @@ console.log(
     "compiler pass) rather than crashing or silently compiling a graph with a wrong/guessed entity resolution."
 );
 
-console.log("\nAll execution-graph.ts capability checks passed.");
+console.log("\nAll execution-graph.ts / execution-graph-compiler.ts capability checks passed.");

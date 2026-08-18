@@ -1,485 +1,277 @@
 import { z } from "zod";
-import type { Entity } from "./ingredient.ts";
-import type { Action } from "./action.ts";
-import type { RecipeScript } from "./recipe.ts";
-import { resolveStepId, deriveDependsOn, topologicalOrder } from "./dag-scheduler.ts";
 
 /**
- * ExecutionGraph — a compiler IR, the contract between a compiler
- * (`compileToExecutionGraph` below) and a runtime this ticket does not
- * build. Deliberately a SEPARATE representation from this repo's own
- * `Instance`/`RecipeStep`/`RecipeScript` types (`engine.ts`/`recipe.ts`),
- * not a thin rename of them — a runtime consuming this graph should never
- * need to import `recipe.ts`, know what a "recipe" or Cooklang or a
- * planner is, or resolve anything against `data/entities/*.json` itself.
- * Every fact a runtime would need (which entity a node acts on, what must
- * be true before it runs, what becomes true after) is already resolved
- * and baked into the graph by the time this module hands it over.
+ * ExecutionGraph — a domain IR, the machine-oriented contract between a
+ * planning/compiler layer and a runtime, per the "Execution Graph" ticket
+ * (revised 2026-08-18; supersedes this file's own first pass the same
+ * day). The ticket's own closing line is the design constraint this file
+ * is held to: **"don't make ExecutionGraph a fancy version of
+ * Recipe.steps. It should be the machine-oriented contract between
+ * planning and execution."**
  *
- * Scope, decided deliberately: this is a COMPILER pass, not an execution
- * engine. `compileToExecutionGraph` never calls `engine.ts`'s
- * `applyAction` or `recipe-runner.ts`'s `runRecipe` — it never mutates an
- * inventory, never advances simulated time, never asserts world state.
- * What it DOES do, for real: resolve every step's instance references to
- * real `entityId`s, look up each step's real `Action` definition, and
- * statically re-derive — via a bounded internal state/tag model, seeded
- * from `initialInventory` and updated by each node's own predicted
- * effects — whether each step's real preconditions (from `engine.ts`'s
- * own checks: `Entity.statePrerequisites`, `requiredTargetCapability`,
- * `requiredTools`/`requiredToolCapabilities`, `requiredIngredientCapabilities`,
- * `requiredSecondaryCapability`) would actually be satisfiable, given
- * everything compiled so far. This is real static validation, not a
- * second engine — `engine.ts`'s own runtime checks in `applyAction` are
- * unchanged and remain the actual authority when a graph is executed;
- * this pass exists to reject an obviously-broken recipe BEFORE handing a
- * graph to a runtime, the same "catch it earlier, cheaper" role a
- * type-checker plays relative to a program's actual runtime behavior.
- *
- * Deliberately, honestly NOT attempted here (named, not hidden):
- * - **Resolving a SPAWNED instance's entity id** (e.g. a step targeting
- *   `egg_yolk-3`, `SEPARATE`'s own output) — `recipe-runner.ts`'s
- *   `spawnedEntityIds` is the one real ground truth for that, and it only
- *   exists AFTER actually running a recipe, which this pass never does.
- *   A step whose `targetInstanceId`/`secondaryInstanceId`/
- *   `availableIngredientInstanceIds` isn't in `recipe.initialInventory`
- *   fails compilation with a clear, named reason — not a guess. Every
- *   recipe this ticket's own acceptance criteria describes (peel → slice
- *   → fry, everything already in `initialInventory`) compiles cleanly
- *   under this limit; extending resolution to spawned instances (a real,
- *   separate static-prediction problem — replicating a bounded slice of
- *   `recipe-runner.ts`'s own spawn-id-naming scheme) is future work, not
- *   silently faked here.
- * - **Anything CCP/HACCP, thermal, or timing-related** — those are
- *   `thermal.ts`/`place.ts`/`execution-bounds.ts`'s domain, checked for
- *   real at RUN time (`recipe-runner.ts`), not compile time. This pass's
- *   `preconditions`/`effects` cover state/tag/capability facts only.
- * - Anything this ticket's own non-goals name: no LLM, no natural-language
- *   parsing, no autonomous planning, no graph optimization, no parallel
- *   execution, no failure recovery, no robot control, no UI.
+ * Concretely, that means this file:
+ * - Imports NOTHING from this repo's own domain (`recipe.ts`, `action.ts`,
+ *   `ingredient.ts`, `engine.ts`) — only `zod`. A runtime consuming an
+ *   `ExecutionGraph` should never need to know what a "recipe," an
+ *   "Action," or a "Cooklang file" is. Producing a graph FROM a real
+ *   `RecipeScript` is a separate concern, `execution-graph-compiler.ts`
+ *   (this ticket's own non-goals list names "recipe parsing," "capability
+ *   discovery," and "state inference" as explicitly NOT this ticket's
+ *   job — those belong to that producer, not to the IR itself).
+ * - Exposes a deliberately SMALL API: `createExecutionGraph`/`addNode`/
+ *   `addDependency`/`validateExecutionGraph`/`serializeExecutionGraph`/
+ *   `deserializeExecutionGraph`. Not a general-purpose graph library —
+ *   no traversal helpers, no query language, nothing beyond what building
+ *   and structurally checking one small DAG needs.
+ * - `validateExecutionGraph` checks STRUCTURE only (unique node ids,
+ *   every edge references a real node, no self-loops, the graph is
+ *   acyclic — "ExecutionGraph must be a DAG," documented here per the
+ *   ticket's own instruction to do so explicitly). It does NOT check
+ *   domain semantics (whether a node's `preconditions` are actually
+ *   satisfiable, whether referenced entities/capabilities are real) —
+ *   that IS "capability discovery"/"state inference," this ticket's own
+ *   named non-goals, and stays `execution-graph-compiler.ts`'s job.
+ * - Never mutates anything outside the graph object under construction.
+ *   `addNode`/`addDependency` DO mutate the `ExecutionGraph` object
+ *   passed in (the conventional shape for a graph-builder API, matching
+ *   the ticket's own `addNode(graph, node)` signature rather than a
+ *   copy-on-write `graph = addNode(graph, node)` one) — a categorically
+ *   different thing from "the compiler/runtime must not mutate WORLD
+ *   state," which this file has no way to violate at all: it has no
+ *   notion of a world, an inventory, or simulated time.
  */
 
 // ---------------------------------------------------------------------------
 // The IR itself
 // ---------------------------------------------------------------------------
 
-/** Every precondition kind `engine.ts`'s `applyAction` actually checks,
- *  mapped 1:1 onto its real fields — not a generic/open-ended shape, so a
- *  runtime consuming this never has to guess what a condition "means." */
-export const ConditionSchema = z.discriminatedUnion("kind", [
-  /** `Entity.statePrerequisites[action.id]` — the target (or secondary)
-   *  instance's `state` or a tag in `tags` must be one of `allowedValues`. */
+/** One reference from a node to a concrete object already in the world —
+ *  "potato-1," not the abstract entity TYPE "potato" and not a copy of
+ *  its data. `role` is a free-form, open string (`"target"`,
+ *  `"secondary"`, `"ingredient"`, `"tool"`, ...) rather than a closed
+ *  enum, deliberately: this IR does not need to know the full, closed
+ *  vocabulary of roles a domain compiler might ever invent. */
+export const ExecutionInputSchema = z.object({
+  entityId: z.string().min(1),
+  role: z.string().optional(),
+});
+export type ExecutionInput = z.infer<typeof ExecutionInputSchema>;
+
+/**
+ * A condition or an effect describes ONE fact about ONE world entity —
+ * `{ type: "state", entityId: "potato-1", state: "whole" }`, this
+ * ticket's own worked example, verbatim. Kept as a small, closed
+ * discriminated union (not a generic `{subject, property, value}` bag)
+ * so a runtime never has to guess what a fact "means" — but kept
+ * deliberately narrower than a full re-implementation of this repo's own
+ * `engine.ts` checks (that richness belongs to
+ * `execution-graph-compiler.ts`, which resolves it down to these simple
+ * shapes when it can, and simply omits what it can't cleanly express).
+ */
+export const ConditionSchema = z.discriminatedUnion("type", [
+  /** `state` is an array — the ticket's own example is exactly the
+   *  one-element case (`state: ["whole"]`, not the bare string
+   *  `"whole"|"peeled"` the illustration shows) — a deliberate, minimal
+   *  divergence to honestly represent a real, existing case in this
+   *  repo's own domain (e.g. potato's real `cut` prerequisite allows
+   *  EITHER `"washed"` OR `"peeled"`) without a second Condition variant
+   *  just for the two-or-more-allowed-values case. */
   z.object({
-    kind: z.literal("state"),
-    instanceId: z.string().min(1),
-    allowedValues: z.array(z.string()).min(1),
+    type: z.literal("state"),
+    entityId: z.string().min(1),
+    state: z.array(z.string().min(1)).min(1),
   }),
-  /** `Action.requiredTargetCapability` / `requiredSecondaryCapability`. */
   z.object({
-    kind: z.literal("capability"),
-    instanceId: z.string().min(1),
+    type: z.literal("capability"),
+    entityId: z.string().min(1),
     capability: z.string().min(1),
   }),
-  /** `Action.requiredTools` — one exact tool entity id, must be available. */
-  z.object({ kind: z.literal("tool"), toolId: z.string().min(1) }),
-  /** `Action.requiredToolCapabilities` — any available tool asserting this. */
-  z.object({ kind: z.literal("toolCapability"), capability: z.string().min(1) }),
-  /** `Action.requiredIngredientCapabilities` — any available ingredient asserting this. */
-  z.object({ kind: z.literal("ingredientCapability"), capability: z.string().min(1) }),
 ]);
 export type Condition = z.infer<typeof ConditionSchema>;
 
-/** Every effect kind `engine.ts`'s `applyAction`/`ActionOutputsSchema`
- *  actually produces, mapped 1:1 onto its real fields. */
-export const EffectSchema = z.discriminatedUnion("kind", [
+export const EffectSchema = z.discriminatedUnion("type", [
+  /** Unlike `Condition`'s `state`, an effect always sets exactly ONE
+   *  resulting state — matching the ticket's own example exactly:
+   *  `{ type: "state", entityId: "potato-1", state: "peeled" }`. */
+  z.object({ type: z.literal("state"), entityId: z.string().min(1), state: z.string().min(1) }),
+  z.object({ type: z.literal("tag"), entityId: z.string().min(1), tag: z.string().min(1) }),
+  z.object({ type: z.literal("destroy"), entityId: z.string().min(1) }),
   z.object({
-    kind: z.literal("stateChange"),
-    instanceId: z.string().min(1),
-    newState: z.string().min(1),
-  }),
-  z.object({ kind: z.literal("addTag"), instanceId: z.string().min(1), tag: z.string().min(1) }),
-  z.object({ kind: z.literal("destroy"), instanceId: z.string().min(1) }),
-  /** `outputs.spawnsTargetByproducts` — one entry per real byproduct
-   *  entity id (`Entity.byproductsByAction[action.id]` or, absent that,
-   *  `Entity.producedByproducts`), known statically since both live on
-   *  the entity, not on run-time state. */
-  z.object({
-    kind: z.literal("spawn"),
+    type: z.literal("spawn"),
     entityId: z.string().min(1),
-    fromInstanceId: z.string().min(1),
+    fromEntityId: z.string().min(1),
   }),
-  /** `outputs.combinesInto` — target + secondary both consumed, one new
-   *  instance of `resultEntityId` takes their place. */
   z.object({
-    kind: z.literal("combine"),
-    instanceIds: z.tuple([z.string().min(1), z.string().min(1)]),
+    type: z.literal("combine"),
+    entityIds: z.tuple([z.string().min(1), z.string().min(1)]),
     resultEntityId: z.string().min(1),
   }),
 ]);
 export type Effect = z.infer<typeof EffectSchema>;
 
 export const ExecutionNodeSchema = z.object({
-  /** Stable id — reuses `dag-scheduler.ts`'s own `resolveStepId` (the
-   *  step's explicit `id`, or its array index as a string) rather than
-   *  inventing a second id scheme; see this file's top doc comment. */
   id: z.string().min(1),
-  /** The compiled step's `actionId` (`recipe.ts`'s `RecipeStep.actionId`) —
-   *  a real, closed vocabulary id (`data/actions/*.json`), not a verb
-   *  string a runtime would have to further interpret. */
+  /** A real, closed-vocabulary action id — a string a runtime looks up,
+   *  never further parses. */
   action: z.string().min(1),
-  /** Recipe-local instance ids this node reads/consumes: the target,
-   *  then (if any) the secondary instance, then every available
-   *  ingredient instance — in that order. Each one's real entity id is
-   *  in the graph's own `entityResolutions` map, not repeated per node. */
-  inputs: z.array(z.string().min(1)).min(1),
-  /** The one exact required tool id, when `Action.requiredTools` names
-   *  EXACTLY one — left unset (not guessed) when zero or more than one
-   *  apply, or when the requirement is capability-based
-   *  (`requiredToolCapabilities`, genuinely substitutable — see
-   *  `dag-scheduler.ts`'s `DagNode.requiredToolIds` doc comment for the
-   *  identical reasoning). The full picture is always in `preconditions`
-   *  regardless of what this convenience field holds. */
-  tool: z.string().optional(),
+  inputs: z.array(ExecutionInputSchema),
   preconditions: z.array(ConditionSchema).default([]),
   effects: z.array(EffectSchema).default([]),
-  metadata: z
-    .object({
-      /** The original `RecipeStep.id`, when the recipe set one explicitly
-       *  — omitted (not defaulted to the derived graph node id) when the
-       *  recipe never named this step, so a runtime can tell the
-       *  difference between "this step was explicitly named" and "this id
-       *  is just its array position." */
-      sourceStep: z.string().optional(),
-    })
-    .default({}),
 });
 export type ExecutionNode = z.infer<typeof ExecutionNodeSchema>;
 
+/** `from` must complete before `to` may begin. No `type` field — every
+ *  edge in this graph IS a dependency; there is no second edge kind to
+ *  distinguish it from (a deliberate simplification from this file's own
+ *  first pass, corrected by this ticket's own, narrower `ExecutionEdge`
+ *  shape). */
 export const ExecutionEdgeSchema = z.object({
   from: z.string().min(1),
   to: z.string().min(1),
-  type: z.literal("dependency"),
 });
 export type ExecutionEdge = z.infer<typeof ExecutionEdgeSchema>;
 
 export const ExecutionGraphSchema = z.object({
   id: z.string().min(1),
-  nodes: z.array(ExecutionNodeSchema),
-  edges: z.array(ExecutionEdgeSchema),
-  /** Recipe-local instance id -> resolved real `Entity.id`, for every
-   *  instance referenced anywhere in `nodes[].inputs`. Graph-level rather
-   *  than repeated per node: the same instance is very often an input to
-   *  more than one node (e.g. `potato-1` across peel/slice/fry), and
-   *  which entity an instance IS is a fact about the world's inventory,
-   *  not about any one action — this is also the concrete, inspectable
-   *  answer to "resolve recipe entities to actual entityIds where
-   *  possible." */
-  entityResolutions: z.record(z.string(), z.string()).default({}),
+  nodes: z.array(ExecutionNodeSchema).default([]),
+  edges: z.array(ExecutionEdgeSchema).default([]),
 });
 export type ExecutionGraph = z.infer<typeof ExecutionGraphSchema>;
 
 // ---------------------------------------------------------------------------
-// The compiler
+// The minimal API
 // ---------------------------------------------------------------------------
 
-export type CompileResult = { ok: true; graph: ExecutionGraph } | { ok: false; errors: string[] };
-
-interface PredictedState {
-  state: string;
-  tags: string[];
+/** A fresh, empty graph — the only way to start building one. */
+export function createExecutionGraph(id: string): ExecutionGraph {
+  return ExecutionGraphSchema.parse({ id, nodes: [], edges: [] });
 }
 
 /**
- * Compiles a validated `RecipeScript` into an `ExecutionGraph`. Pure and
- * read-only: never calls `engine.ts`'s `applyAction` or
- * `recipe-runner.ts`'s `runRecipe`, never mutates `entities`/`actions`,
- * never mutates `recipe`. Collects EVERY compile error found (not just
- * the first) into `errors` — a recipe with two independent problems gets
- * told about both in one pass, same as a real compiler's diagnostics.
- * See this file's top doc comment for exactly what "validate
- * preconditions"/"resolve entities" means here vs. what stays runtime's
- * job.
+ * Appends `node` to `graph` and returns `graph` (mutated in place, see
+ * this file's top doc comment). Throws immediately on a duplicate node
+ * id — a fast-fail at construction time, distinct from
+ * `validateExecutionGraph`'s job of re-checking a WHOLE graph assembled
+ * some other way (e.g. deserialized from JSON) after the fact.
  */
-export function compileToExecutionGraph(
-  recipe: RecipeScript,
-  entities: ReadonlyMap<string, Entity>,
-  actions: ReadonlyMap<string, Action>
-): CompileResult {
-  const topo = topologicalOrder(recipe.sequence);
-  if ("cycle" in topo) {
-    return { ok: false, errors: [`Circular dependency among steps: [${topo.cycle.join(", ")}]`] };
+export function addNode(graph: ExecutionGraph, node: ExecutionNode): ExecutionGraph {
+  const parsed = ExecutionNodeSchema.parse(node);
+  if (graph.nodes.some((n) => n.id === parsed.id)) {
+    throw new Error(`addNode: duplicate node id "${parsed.id}"`);
   }
+  graph.nodes.push(parsed);
+  return graph;
+}
 
-  const depsById = deriveDependsOn(recipe.sequence);
-  const stepById = new Map(
-    recipe.sequence.map((step, i) => [resolveStepId(step, i), step] as const)
-  );
-
-  const entityIdByInstance = new Map<string, string>();
-  for (const item of recipe.initialInventory) entityIdByInstance.set(item.id, item.entityId);
-
-  const predictedState = new Map<string, PredictedState>();
-  for (const item of recipe.initialInventory) {
-    predictedState.set(item.id, { state: item.state, tags: [...item.tags] });
+/**
+ * Adds a `from -> to` dependency edge. Throws immediately on a
+ * self-referencing edge or a reference to a node not yet in the graph —
+ * `addNode` must be called for both ends before `addDependency` connects
+ * them, the concrete mechanism that keeps "every edge references
+ * existing nodes" true by construction, not just by later validation.
+ * Does NOT check for a cycle here (a cycle can only be detected once the
+ * whole graph exists, not incrementally per edge) — call
+ * `validateExecutionGraph` once the graph is complete for that.
+ */
+export function addDependency(graph: ExecutionGraph, from: string, to: string): ExecutionGraph {
+  if (from === to) {
+    throw new Error(`addDependency: a node cannot depend on itself ("${from}")`);
   }
-  const destroyedInstances = new Set<string>();
+  if (!graph.nodes.some((n) => n.id === from)) {
+    throw new Error(`addDependency: unknown node "${from}"`);
+  }
+  if (!graph.nodes.some((n) => n.id === to)) {
+    throw new Error(`addDependency: unknown node "${to}"`);
+  }
+  graph.edges.push({ from, to });
+  return graph;
+}
 
+export type GraphValidationResult = { valid: true } | { valid: false; errors: string[] };
+
+/**
+ * Pure STRUCTURAL validation only — see this file's top doc comment for
+ * why domain-semantic checks (are these preconditions actually
+ * satisfiable) deliberately live elsewhere. Checks, in this order:
+ * every node id is unique, every edge references an existing node, no
+ * edge is self-referencing, and the graph is acyclic (**ExecutionGraph
+ * must be a DAG** — a cycle is reported as a structural error, not
+ * silently accepted or hung on). Collects every problem found, not just
+ * the first. Never mutates `graph`.
+ */
+export function validateExecutionGraph(graph: ExecutionGraph): GraphValidationResult {
   const errors: string[] = [];
-  const entityResolutions: Record<string, string> = {};
-  const nodes: ExecutionNode[] = [];
 
-  const resolveInstance = (
-    stepLabel: string,
-    instanceId: string,
-    role: string
-  ): string | undefined => {
-    if (destroyedInstances.has(instanceId)) {
-      errors.push(
-        `Step "${stepLabel}": ${role} instance "${instanceId}" was already destroyed by an earlier step`
-      );
-      return undefined;
-    }
-    const entityId = entityIdByInstance.get(instanceId);
-    if (!entityId) {
-      errors.push(
-        `Step "${stepLabel}": cannot resolve ${role} instance "${instanceId}" to a real entity — it is not in ` +
-          `initialInventory (resolving a SPAWNED instance is out of scope for this compiler pass, see execution-graph.ts's own doc comment)`
-      );
-      return undefined;
-    }
-    entityResolutions[instanceId] = entityId;
-    return entityId;
-  };
-
-  for (const id of topo.order) {
-    const step = stepById.get(id)!;
-    let stepValid = true;
-    const fail = (message: string) => {
-      errors.push(`Step "${id}": ${message}`);
-      stepValid = false;
-    };
-
-    const action = actions.get(step.actionId);
-    if (!action) {
-      fail(`unknown action "${step.actionId}"`);
-      continue;
-    }
-
-    const targetEntityId = resolveInstance(id, step.targetInstanceId, "target");
-    const secondaryEntityId = step.secondaryInstanceId
-      ? resolveInstance(id, step.secondaryInstanceId, "secondary")
-      : undefined;
-    const availableResolutions = step.availableIngredientInstanceIds.map((instanceId) => ({
-      instanceId,
-      entityId: resolveInstance(id, instanceId, "available ingredient"),
-    }));
-    if (!targetEntityId) continue;
-    const targetEntity = entities.get(targetEntityId);
-    if (!targetEntity) {
-      fail(`entity "${targetEntityId}" not found in entity catalog`);
-      continue;
-    }
-
-    const preconditions: Condition[] = [];
-
-    const requiredPriorState = targetEntity.statePrerequisites[action.id];
-    if (requiredPriorState) {
-      const allowed = Array.isArray(requiredPriorState) ? requiredPriorState : [requiredPriorState];
-      preconditions.push({
-        kind: "state",
-        instanceId: step.targetInstanceId,
-        allowedValues: allowed,
-      });
-      const current = predictedState.get(step.targetInstanceId);
-      const satisfied =
-        !!current &&
-        (allowed.includes(current.state) || allowed.some((s) => current.tags.includes(s)));
-      if (!satisfied) {
-        fail(
-          `"${step.targetInstanceId}" must be in state/tag [${allowed.join(", ")}] for ${action.verb}, but is ` +
-            `predicted to be "${current?.state ?? "(unknown — already destroyed or unresolved)"}"`
-        );
-      }
-    }
-
-    if (action.requiredTargetCapability) {
-      preconditions.push({
-        kind: "capability",
-        instanceId: step.targetInstanceId,
-        capability: action.requiredTargetCapability,
-      });
-      if (targetEntity.capabilities[action.requiredTargetCapability] !== true) {
-        fail(`"${targetEntityId}" lacks required capability "${action.requiredTargetCapability}"`);
-      }
-    }
-
-    for (const toolId of action.requiredTools) {
-      preconditions.push({ kind: "tool", toolId });
-      if (!recipe.availableTools.includes(toolId)) {
-        fail(`required tool "${toolId}" is not in recipe.availableTools`);
-      }
-    }
-    for (const capability of action.requiredToolCapabilities) {
-      preconditions.push({ kind: "toolCapability", capability });
-      const satisfied = recipe.availableTools.some(
-        (tid) => entities.get(tid)?.capabilities[capability] === true
-      );
-      if (!satisfied) fail(`no available tool satisfies capability "${capability}"`);
-    }
-    for (const capability of action.requiredIngredientCapabilities) {
-      preconditions.push({ kind: "ingredientCapability", capability });
-      const satisfied = availableResolutions.some(
-        ({ entityId }) => entityId && entities.get(entityId)?.capabilities[capability] === true
-      );
-      if (!satisfied) fail(`no available ingredient satisfies capability "${capability}"`);
-    }
-
-    let secondaryEntity: Entity | undefined;
-    if (action.requiredSecondaryCapability) {
-      if (!secondaryEntityId) {
-        fail(
-          `requires a secondary instance (capability "${action.requiredSecondaryCapability}"), none resolved`
-        );
-      } else {
-        secondaryEntity = entities.get(secondaryEntityId);
-        preconditions.push({
-          kind: "capability",
-          instanceId: step.secondaryInstanceId!,
-          capability: action.requiredSecondaryCapability,
-        });
-        if (
-          !secondaryEntity ||
-          secondaryEntity.capabilities[action.requiredSecondaryCapability] !== true
-        ) {
-          fail(
-            `secondary "${secondaryEntityId}" lacks required capability "${action.requiredSecondaryCapability}"`
-          );
-        } else {
-          const reqState = secondaryEntity.statePrerequisites[action.id];
-          if (reqState) {
-            const allowed = Array.isArray(reqState) ? reqState : [reqState];
-            preconditions.push({
-              kind: "state",
-              instanceId: step.secondaryInstanceId!,
-              allowedValues: allowed,
-            });
-            const current = predictedState.get(step.secondaryInstanceId!);
-            const satisfied =
-              !!current &&
-              (allowed.includes(current.state) || allowed.some((s) => current.tags.includes(s)));
-            if (!satisfied) {
-              fail(
-                `secondary "${step.secondaryInstanceId}" must be in state/tag [${allowed.join(", ")}], but is ` +
-                  `predicted to be "${current?.state ?? "(unknown)"}"`
-              );
-            }
-          }
-        }
-      }
-    }
-
-    const effects: Effect[] = [];
-    if (stepValid) {
-      if (action.outputs.combinesInto && secondaryEntityId) {
-        effects.push({
-          kind: "combine",
-          instanceIds: [step.targetInstanceId, step.secondaryInstanceId!],
-          resultEntityId: action.outputs.combinesInto,
-        });
-        destroyedInstances.add(step.targetInstanceId);
-        destroyedInstances.add(step.secondaryInstanceId!);
-        predictedState.delete(step.targetInstanceId);
-        predictedState.delete(step.secondaryInstanceId!);
-      } else {
-        let newState = action.outputs.transformedState;
-        if (action.outputs.transformedStateFromParameter) {
-          const paramId = action.outputs.transformedStateFromParameter;
-          const value = step.params[paramId];
-          if (value === undefined) {
-            fail(
-              `resulting state depends on parameter "${paramId}", which this step does not supply`
-            );
-          } else {
-            newState = value;
-          }
-        }
-        if (newState) {
-          effects.push({ kind: "stateChange", instanceId: step.targetInstanceId, newState });
-          const current = predictedState.get(step.targetInstanceId);
-          if (current) current.state = newState;
-        }
-
-        let tag = action.outputs.addsTag;
-        if (action.outputs.addsTagFromParameter) {
-          const { parameter, tagByValue } = action.outputs.addsTagFromParameter;
-          const value = step.params[parameter];
-          const resolvedTag = value ? tagByValue[value] : undefined;
-          if (!resolvedTag) {
-            fail(
-              `resulting tag depends on parameter "${parameter}", not resolvable from this step's params`
-            );
-          } else {
-            tag = resolvedTag;
-          }
-        }
-        if (tag) {
-          effects.push({ kind: "addTag", instanceId: step.targetInstanceId, tag });
-          const current = predictedState.get(step.targetInstanceId);
-          if (current && !current.tags.includes(tag)) current.tags.push(tag);
-        }
-
-        if (action.outputs.destroysTarget) {
-          effects.push({ kind: "destroy", instanceId: step.targetInstanceId });
-          destroyedInstances.add(step.targetInstanceId);
-          predictedState.delete(step.targetInstanceId);
-        }
-
-        if (action.outputs.spawnsTargetByproducts) {
-          const byproducts =
-            targetEntity.byproductsByAction[action.id] ?? targetEntity.producedByproducts;
-          for (const entityId of byproducts) {
-            effects.push({ kind: "spawn", entityId, fromInstanceId: step.targetInstanceId });
-          }
-        }
-      }
-    }
-
-    const inputs = [
-      step.targetInstanceId,
-      ...(step.secondaryInstanceId ? [step.secondaryInstanceId] : []),
-      ...step.availableIngredientInstanceIds,
-    ];
-    const tool = action.requiredTools.length === 1 ? action.requiredTools[0] : undefined;
-
-    nodes.push({
-      id,
-      action: action.id,
-      inputs,
-      tool,
-      preconditions,
-      effects,
-      metadata: step.id ? { sourceStep: step.id } : {},
-    });
+  const seenIds = new Set<string>();
+  for (const node of graph.nodes) {
+    if (seenIds.has(node.id)) errors.push(`Duplicate node id "${node.id}"`);
+    seenIds.add(node.id);
   }
 
-  if (errors.length > 0) return { ok: false, errors };
+  for (const edge of graph.edges) {
+    if (edge.from === edge.to) errors.push(`Self-referencing edge on node "${edge.from}"`);
+    if (!seenIds.has(edge.from)) errors.push(`Edge references unknown node "${edge.from}"`);
+    if (!seenIds.has(edge.to)) errors.push(`Edge references unknown node "${edge.to}"`);
+  }
 
-  const edges: ExecutionEdge[] = [];
-  for (const id of topo.order) {
-    for (const dep of depsById.get(id) ?? []) {
-      edges.push({ from: dep, to: id, type: "dependency" });
+  // A malformed edge (dangling reference) makes a real topological check
+  // meaningless — report the structural errors above first and stop,
+  // same "don't compound one real error into a second, confusing one"
+  // choice `execution-graph-compiler.ts` makes for its own validation.
+  if (errors.length > 0) return { valid: false, errors };
+
+  // Kahn's algorithm, self-contained (no dependency on dag-scheduler.ts,
+  // which operates on this repo's own RecipeStep[] — this function must
+  // work on a bare ExecutionGraph with no recipe involved at all).
+  const inDegree = new Map<string, number>(graph.nodes.map((n) => [n.id, 0]));
+  const dependents = new Map<string, string[]>(graph.nodes.map((n) => [n.id, []]));
+  for (const edge of graph.edges) {
+    inDegree.set(edge.to, (inDegree.get(edge.to) ?? 0) + 1);
+    dependents.get(edge.from)!.push(edge.to);
+  }
+
+  const queue = [...inDegree.entries()].filter(([, degree]) => degree === 0).map(([id]) => id);
+  let visitedCount = 0;
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    visitedCount++;
+    for (const dependent of dependents.get(id) ?? []) {
+      const remaining = inDegree.get(dependent)! - 1;
+      inDegree.set(dependent, remaining);
+      if (remaining === 0) queue.push(dependent);
     }
   }
 
-  const graph = ExecutionGraphSchema.parse({ id: recipe.id, nodes, edges, entityResolutions });
-  return { ok: true, graph };
+  if (visitedCount !== graph.nodes.length) {
+    return { valid: false, errors: ["Graph contains a cycle — ExecutionGraph must be a DAG"] };
+  }
+
+  return { valid: true };
+}
+
+/** Plain JSON — every field is already a string/array/plain object, so
+ *  this is `JSON.stringify` plus a schema pass to guarantee what comes
+ *  out is exactly what `deserializeExecutionGraph` can read back in. */
+export function serializeExecutionGraph(graph: ExecutionGraph): string {
+  return JSON.stringify(ExecutionGraphSchema.parse(graph));
+}
+
+/** The reverse of `serializeExecutionGraph` — throws (via Zod) on
+ *  malformed JSON or a shape that doesn't match `ExecutionGraphSchema`,
+ *  rather than silently returning a partially-wrong graph. Does NOT run
+ *  `validateExecutionGraph` itself (schema-VALID and structurally-VALID
+ *  are different questions — a deserialized graph can be perfectly
+ *  well-typed and still contain a cycle or a dangling edge); call both
+ *  when a caller needs both guarantees. */
+export function deserializeExecutionGraph(json: string): ExecutionGraph {
+  return ExecutionGraphSchema.parse(JSON.parse(json));
 }
 
 // ---------------------------------------------------------------------------
-// A minimal, read-only structural check — NOT a runtime (see this file's
-// top doc comment: execution stays out of the compiler, and out of this
-// module entirely). Useful for tests and future tooling that want to
-// confirm a candidate execution ORDER actually respects a graph's real
-// dependency edges, without building or mutating any world state.
+// A minimal, read-only structural check — NOT a runtime (execution stays
+// out of scope for this ticket entirely). Useful for tests and future
+// tooling that want to confirm a candidate execution ORDER actually
+// respects a graph's real dependency edges, without executing anything.
 // ---------------------------------------------------------------------------
 
 export type OrderCheckResult = { valid: true } | { valid: false; violatedEdge: ExecutionEdge };

@@ -2115,5 +2115,44 @@ was made. Don't rewrite or delete old entries — append.
   parallel-source-of-truth problem that file's own top doc comment
   already warns against elsewhere) — confirmed for real against
   `tortilla-de-patatas.json`, which genuinely does this (`scripts/
-  execution-graph-as-a-robot.ts`'s Part C), rejecting cleanly with a
-  named reason rather than crashing or guessing.
+  execution-graph-as-a-robot.ts`'s Part D, renumbered from Part C once a
+  pure-IR Part A was added the same day — see the entry below), rejecting
+  cleanly with a named reason rather than crashing or guessing.
+- **A second, more precise ticket arriving for the SAME feature the same
+  day is a real, useful signal, not noise to route around** —
+  `execution-graph.ts`'s first pass (one file, `compileToExecutionGraph`
+  built directly into it, richer `Condition`/`Effect` kinds covering
+  tool/toolCapability/ingredientCapability, an `entityResolutions` map on
+  the graph itself) was functionally complete and fully tested, but a
+  follow-up ticket's own closing line — "don't make ExecutionGraph a
+  fancy version of `Recipe.steps`... the machine-oriented contract
+  between planning and execution" — named exactly the thing the first
+  pass had drifted toward: the IR file still imported `recipe.ts`/
+  `action.ts`/`ingredient.ts` and did real domain validation inline, so
+  "decoupled from the runtime's internal entity representation" was true
+  of the TYPES but not of the MODULE. Fixed by physically splitting into
+  `execution-graph.ts` (IR + minimal builder API, `zod` only) and
+  `execution-graph-compiler.ts` (the domain-aware producer, built ON TOP
+  of the minimal API) — turning "the compiler shouldn't leak into the
+  IR" from a convention into an import-graph fact. Real, concrete
+  narrowing this forced, not just a file move: `validateExecutionGraph`
+  had to become STRUCTURE-only (unique ids, real edge references, no
+  self-loops, acyclic) once it could no longer see `Entity`/`Action` at
+  all — the capability/state checks the first pass's `validateExecution
+  Graph`-adjacent logic did are still real and still run, just correctly
+  relocated to `compileToExecutionGraph`, which the revised ticket's own
+  non-goals list ("capability discovery," "state inference") had drawn
+  the line around all along. General lesson: when a second ticket revises
+  a just-shipped feature, read its own stated reasoning for WHY before
+  assuming it's asking for the same thing worded differently — this one
+  was pointing at a real architectural drift the first implementation had
+  quietly made, not restating already-satisfied requirements.
+- **A generic-looking type parameter can silently narrow itself and break
+  unrelated code far away.** `new Map(graph.nodes.map((n) => [n.id, 0] as
+  const))` inferred `Map<string, 0>` (the LITERAL `0`, not `number`) from
+  the `as const` assertion — harmless until a later `inDegree.set(id,
+  someComputedNumber)` call failed to type-check against a map whose
+  value type TypeScript had narrowed to the single literal `0`. Fixed by
+  giving the `Map` constructor an explicit `Map<string, number>` type
+  argument instead of letting inference derive one from an `as const`
+  literal that happened to be `0` at the one call site that built it.

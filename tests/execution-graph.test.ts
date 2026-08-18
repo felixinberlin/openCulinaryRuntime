@@ -1,406 +1,301 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { compileToExecutionGraph, checkExecutionOrder } from "../src/execution-graph.ts";
-import { makeEntity, makeAction } from "./helpers.ts";
-import type { RecipeScript } from "../src/recipe.ts";
+import {
+  createExecutionGraph,
+  addNode,
+  addDependency,
+  validateExecutionGraph,
+  serializeExecutionGraph,
+  deserializeExecutionGraph,
+  checkExecutionOrder,
+  type ExecutionGraph,
+  type ExecutionNode,
+} from "../src/execution-graph.ts";
 
-// --- Fixtures --------------------------------------------------------------
-// A synthetic peel -> slice -> fry chain, matching the ticket's own worked
-// example almost exactly (statePrerequisites/capabilities/effects chosen so
-// each step's real precondition/effect shape is exercised, not just its
-// happy path).
+/**
+ * Pure IR tests — no `RecipeScript`, no `Entity`, no `Action` anywhere in
+ * this file, on purpose: `execution-graph.ts` imports nothing from this
+ * repo's own domain, and its tests hold it to the same standard. The
+ * ticket's own worked example (peel -> slice -> fry) is built here by
+ * hand, via the minimal builder API, exactly the way a hypothetical
+ * compiler would use it — `tests/execution-graph-compiler.test.ts`
+ * covers the actual RecipeScript -> ExecutionGraph compiler separately.
+ */
 
-const potato = makeEntity({
-  id: "potato",
-  capabilities: { isPeelable: true, isSliceable: true, isFryable: true },
-  statePrerequisites: { peel: "whole", slice: "peeled", fry: "sliced" },
-  producedByproducts: ["potato_peel"],
-});
-const potatoPeel = makeEntity({ id: "potato_peel" });
-const oil = makeEntity({ id: "oil", capabilities: { isFryingMedium: true, isHeatable: true } });
-
-const peel = makeAction({
-  id: "peel",
-  outputs: { transformedState: "peeled", spawnsTargetByproducts: true },
-  requiredTargetCapability: "isPeelable",
-});
-const slice = makeAction({
-  id: "slice",
-  outputs: { transformedState: "sliced" },
-  requiredTargetCapability: "isSliceable",
-});
-const fry = makeAction({
-  id: "fry",
-  outputs: { transformedState: "fried" },
-  requiredTargetCapability: "isFryable",
-  requiredIngredientCapabilities: ["isFryingMedium"],
-});
-const heatOil = makeAction({
-  id: "heat_oil",
-  outputs: { addsTag: "hot" },
-  requiredTargetCapability: "isHeatable",
-});
-
-const entities = new Map([
-  ["potato", potato],
-  ["potato_peel", potatoPeel],
-  ["oil", oil],
-]);
-const actions = new Map([
-  ["peel", peel],
-  ["slice", slice],
-  ["fry", fry],
-  ["heat_oil", heatOil],
-]);
-
-function linearRecipe(): RecipeScript {
+function peelNode(): ExecutionNode {
   return {
-    id: "peel_slice_fry",
-    names: { en: "Peel, Slice, Fry" },
-    initialInventory: [
-      { id: "potato-1", entityId: "potato", state: "whole", tags: [] },
-      { id: "oil-1", entityId: "oil", state: "liquid", tags: [] },
+    id: "peel-potato-1",
+    action: "peel",
+    inputs: [{ entityId: "potato-1", role: "target" }],
+    preconditions: [{ type: "state", entityId: "potato-1", state: ["whole"] }],
+    effects: [{ type: "state", entityId: "potato-1", state: "peeled" }],
+  };
+}
+function sliceNode(): ExecutionNode {
+  return {
+    id: "slice-potato-1",
+    action: "slice",
+    inputs: [{ entityId: "potato-1", role: "target" }],
+    preconditions: [{ type: "state", entityId: "potato-1", state: ["peeled"] }],
+    effects: [{ type: "state", entityId: "potato-1", state: "sliced" }],
+  };
+}
+function fryNode(): ExecutionNode {
+  return {
+    id: "fry-potato-1",
+    action: "fry",
+    inputs: [
+      { entityId: "potato-1", role: "target" },
+      { entityId: "oil-1", role: "ingredient" },
     ],
-    availableTools: [],
-    sequence: [
-      {
-        actionId: "peel",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        actionId: "slice",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        actionId: "fry",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: ["oil-1"],
-      },
-    ],
-    metadata: {},
+    preconditions: [{ type: "state", entityId: "potato-1", state: ["sliced"] }],
+    effects: [{ type: "state", entityId: "potato-1", state: "fried" }],
   };
 }
 
-/** The ticket's own diagram: peel -> slice -> fry, with an independent
- *  "heat oil" branch also feeding into fry — a real fan-in, not a linear
- *  list, proving the graph supports genuine dependency structure. */
-function fanInRecipe(): RecipeScript {
-  return {
-    id: "peel_slice_fry_with_hot_oil",
-    names: { en: "Peel, Slice, Fry (hot oil)" },
-    initialInventory: [
-      { id: "potato-1", entityId: "potato", state: "whole", tags: [] },
-      { id: "oil-1", entityId: "oil", state: "liquid", tags: [] },
-    ],
-    availableTools: [],
-    sequence: [
-      {
-        id: "peel-potato-1",
-        dependsOn: [],
-        actionId: "peel",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        id: "slice-potato-1",
-        dependsOn: ["peel-potato-1"],
-        actionId: "slice",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        id: "heat-oil-1",
-        dependsOn: [],
-        actionId: "heat_oil",
-        targetInstanceId: "oil-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        id: "fry-potato-1",
-        dependsOn: ["slice-potato-1", "heat-oil-1"],
-        actionId: "fry",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: ["oil-1"],
-      },
-    ],
-    metadata: {},
-  };
+function buildLinearGraph(): ExecutionGraph {
+  const graph = createExecutionGraph("peel_slice_fry");
+  addNode(graph, peelNode());
+  addNode(graph, sliceNode());
+  addNode(graph, fryNode());
+  addDependency(graph, "peel-potato-1", "slice-potato-1");
+  addDependency(graph, "slice-potato-1", "fry-potato-1");
+  return graph;
 }
 
-describe("compileToExecutionGraph — linear peel -> slice -> fry", () => {
-  test("produces exactly 3 nodes and 2 dependency edges, in order", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.equal(result.graph.nodes.length, 3);
+describe("basic graph — peel -> slice -> fry", () => {
+  test("has exactly 3 nodes and 2 edges", () => {
+    const graph = buildLinearGraph();
+    assert.equal(graph.nodes.length, 3);
+    assert.equal(graph.edges.length, 2);
+  });
+
+  test("node ids are correct", () => {
+    const graph = buildLinearGraph();
     assert.deepEqual(
-      result.graph.nodes.map((n) => n.action),
-      ["peel", "slice", "fry"]
+      graph.nodes.map((n) => n.id),
+      ["peel-potato-1", "slice-potato-1", "fry-potato-1"]
     );
-    assert.deepEqual(result.graph.edges, [
-      { from: "0", to: "1", type: "dependency" },
-      { from: "1", to: "2", type: "dependency" },
+  });
+
+  test("dependencies are correct — from/to, not array position", () => {
+    const graph = buildLinearGraph();
+    assert.deepEqual(graph.edges, [
+      { from: "peel-potato-1", to: "slice-potato-1" },
+      { from: "slice-potato-1", to: "fry-potato-1" },
     ]);
   });
 
-  test("edges are explicit graph structure, not array position — node order in `nodes` isn't what a consumer should rely on", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    // Every node's dependency is discoverable ONLY via `edges`, never by
-    // "the node before me in the array."
-    for (const edge of result.graph.edges) {
-      assert.ok(result.graph.nodes.some((n) => n.id === edge.from));
-      assert.ok(result.graph.nodes.some((n) => n.id === edge.to));
+  test("is a valid graph", () => {
+    assert.deepEqual(validateExecutionGraph(buildLinearGraph()), { valid: true });
+  });
+});
+
+describe("entity references — by id, not embedded objects", () => {
+  test('peel\'s input references "potato-1" as a plain id, not a potato object', () => {
+    const graph = buildLinearGraph();
+    const peel = graph.nodes.find((n) => n.id === "peel-potato-1")!;
+    assert.deepEqual(peel.inputs, [{ entityId: "potato-1", role: "target" }]);
+    assert.equal(typeof peel.inputs[0].entityId, "string");
+  });
+
+  test("no node anywhere carries a nested entity object — every reference is a bare id", () => {
+    const graph = buildLinearGraph();
+    for (const node of graph.nodes) {
+      for (const input of node.inputs) {
+        assert.equal(
+          Object.keys(input).every((k) => k === "entityId" || k === "role"),
+          true
+        );
+      }
     }
   });
+});
 
-  test("the worked example's own precondition/effect shape: potato-1.state == whole -> peeled", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    const peelNode = result.graph.nodes[0];
-    assert.deepEqual(peelNode.preconditions, [
-      { kind: "state", instanceId: "potato-1", allowedValues: ["whole"] },
-      { kind: "capability", instanceId: "potato-1", capability: "isPeelable" },
+describe("preconditions/effects — whole -> peeled -> sliced", () => {
+  test("peel: precondition whole, effect peeled", () => {
+    const graph = buildLinearGraph();
+    const peel = graph.nodes.find((n) => n.id === "peel-potato-1")!;
+    assert.deepEqual(peel.preconditions, [
+      { type: "state", entityId: "potato-1", state: ["whole"] },
     ]);
-    assert.deepEqual(peelNode.effects[0], {
-      kind: "stateChange",
-      instanceId: "potato-1",
-      newState: "peeled",
-    });
+    assert.deepEqual(peel.effects, [{ type: "state", entityId: "potato-1", state: "peeled" }]);
   });
 
-  test("spawnsTargetByproducts becomes a real spawn effect, resolved from the entity's own producedByproducts", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(
-      result.graph.nodes[0].effects.find((e) => e.kind === "spawn"),
-      {
-        kind: "spawn",
-        entityId: "potato_peel",
-        fromInstanceId: "potato-1",
-      }
-    );
-  });
-
-  test("slice's precondition correctly requires the state peel's effect produces — the two steps are causally linked, not independently asserted", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(result.graph.nodes[1].preconditions[0], {
-      kind: "state",
-      instanceId: "potato-1",
-      allowedValues: ["peeled"],
-    });
-  });
-
-  test("entityResolutions resolves every recipe-local instance to its real entity id", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(result.graph.entityResolutions, { "potato-1": "potato", "oil-1": "oil" });
-  });
-
-  test("does not mutate the recipe, entities, or actions it's given", () => {
-    const recipe = linearRecipe();
-    const before = JSON.parse(JSON.stringify(recipe));
-    compileToExecutionGraph(recipe, entities, actions);
-    assert.deepEqual(recipe, before);
+  test("slice: precondition peeled, effect sliced — causally linked to peel's own effect, not independently asserted", () => {
+    const graph = buildLinearGraph();
+    const peel = graph.nodes.find((n) => n.id === "peel-potato-1")!;
+    const slice = graph.nodes.find((n) => n.id === "slice-potato-1")!;
+    assert.deepEqual(slice.preconditions, [
+      { type: "state", entityId: "potato-1", state: ["peeled"] },
+    ]);
+    assert.deepEqual(slice.effects, [{ type: "state", entityId: "potato-1", state: "sliced" }]);
+    // The literal fact that makes this a real causal chain, not two
+    // independent assertions: slice's precondition state matches peel's
+    // own effect state, for the same entityId.
+    assert.equal(slice.preconditions[0].state[0], (peel.effects[0] as { state: string }).state);
   });
 });
 
-describe("compileToExecutionGraph — fan-in dependency (not a linear list)", () => {
-  test("produces 4 nodes and 3 edges, with fry depending on BOTH slice and heat_oil", () => {
-    const result = compileToExecutionGraph(fanInRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.equal(result.graph.nodes.length, 4);
-    const incomingToFry = result.graph.edges
-      .filter((e) => e.to === "fry-potato-1")
-      .map((e) => e.from);
-    assert.deepEqual(incomingToFry.sort(), ["heat-oil-1", "slice-potato-1"]);
+describe("invalid graph — rejected, not silently accepted", () => {
+  test("addDependency to a node not yet added throws", () => {
+    const graph = createExecutionGraph("test");
+    addNode(graph, sliceNode());
+    assert.throws(() => addDependency(graph, "slice-potato-1", "missing-node"), /unknown node/);
   });
 
-  test("node ids reflect the recipe's own explicit step ids, matching the ticket's own example naming", () => {
-    const result = compileToExecutionGraph(fanInRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(
-      result.graph.nodes.map((n) => n.id),
-      ["peel-potato-1", "slice-potato-1", "heat-oil-1", "fry-potato-1"]
+  test("addNode with a duplicate id throws", () => {
+    const graph = createExecutionGraph("test");
+    addNode(graph, peelNode());
+    assert.throws(() => addNode(graph, peelNode()), /duplicate node id/);
+  });
+
+  test("validateExecutionGraph reports a dangling edge on a graph assembled some other way (e.g. deserialized)", () => {
+    const graph: ExecutionGraph = {
+      id: "test",
+      nodes: [peelNode()],
+      edges: [{ from: "peel-potato-1", to: "missing-node" }],
+    };
+    const result = validateExecutionGraph(graph);
+    assert.equal(result.valid, false);
+    if (result.valid) return;
+    assert.ok(result.errors.some((e) => e.includes("missing-node")));
+  });
+
+  test("validateExecutionGraph reports a duplicate node id on a graph assembled some other way", () => {
+    const graph: ExecutionGraph = { id: "test", nodes: [peelNode(), peelNode()], edges: [] };
+    const result = validateExecutionGraph(graph);
+    assert.equal(result.valid, false);
+    if (result.valid) return;
+    assert.ok(result.errors.some((e) => e.includes("Duplicate node id")));
+  });
+
+  test("addDependency rejects a self-referencing edge", () => {
+    const graph = createExecutionGraph("test");
+    addNode(graph, peelNode());
+    assert.throws(
+      () => addDependency(graph, "peel-potato-1", "peel-potato-1"),
+      /cannot depend on itself/
     );
+  });
+
+  test("validateExecutionGraph rejects a cycle assembled some other way, documented as: ExecutionGraph must be a DAG", () => {
+    const graph: ExecutionGraph = {
+      id: "test",
+      nodes: [peelNode(), sliceNode()],
+      edges: [
+        { from: "peel-potato-1", to: "slice-potato-1" },
+        { from: "slice-potato-1", to: "peel-potato-1" },
+      ],
+    };
+    const result = validateExecutionGraph(graph);
+    assert.equal(result.valid, false);
+    if (result.valid) return;
+    assert.ok(result.errors.some((e) => e.toLowerCase().includes("dag")));
+  });
+});
+
+describe("branching — a node with two independent successors", () => {
+  test("start -> heat-pan and start -> prepare-potato is representable", () => {
+    const graph = createExecutionGraph("branch_test");
+    addNode(graph, { id: "start", action: "start", inputs: [], preconditions: [], effects: [] });
+    addNode(graph, {
+      id: "heat-pan",
+      action: "heat",
+      inputs: [{ entityId: "pan-1" }],
+      preconditions: [],
+      effects: [],
+    });
+    addNode(graph, {
+      id: "prepare-potato",
+      action: "prepare",
+      inputs: [{ entityId: "potato-1" }],
+      preconditions: [],
+      effects: [],
+    });
+    addDependency(graph, "start", "heat-pan");
+    addDependency(graph, "start", "prepare-potato");
+
+    assert.equal(validateExecutionGraph(graph).valid, true);
+    const fromStart = graph.edges.filter((e) => e.from === "start").map((e) => e.to);
+    assert.deepEqual(fromStart.sort(), ["heat-pan", "prepare-potato"]);
+  });
+
+  test("a converging fan-in (fry depends on both cut-potato and heat-pan) is representable", () => {
+    const graph = createExecutionGraph("fan_in_test");
+    addNode(graph, {
+      id: "heat-pan",
+      action: "heat",
+      inputs: [{ entityId: "pan-1" }],
+      preconditions: [],
+      effects: [],
+    });
+    addNode(graph, {
+      id: "cut-potato",
+      action: "cut",
+      inputs: [{ entityId: "potato-1" }],
+      preconditions: [],
+      effects: [],
+    });
+    addNode(graph, {
+      id: "fry-potato",
+      action: "fry",
+      inputs: [{ entityId: "potato-1" }, { entityId: "pan-1" }],
+      preconditions: [],
+      effects: [],
+    });
+    addDependency(graph, "heat-pan", "fry-potato");
+    addDependency(graph, "cut-potato", "fry-potato");
+
+    assert.equal(validateExecutionGraph(graph).valid, true);
+    const incoming = graph.edges.filter((e) => e.to === "fry-potato").map((e) => e.from);
+    assert.deepEqual(incoming.sort(), ["cut-potato", "heat-pan"]);
+  });
+});
+
+describe("determinism", () => {
+  test("the same construction sequence produces an identical graph representation every time", () => {
+    const first = serializeExecutionGraph(buildLinearGraph());
+    const second = serializeExecutionGraph(buildLinearGraph());
+    assert.equal(first, second);
+  });
+});
+
+describe("serialization round-trip", () => {
+  test("serializeExecutionGraph -> deserializeExecutionGraph reconstructs an identical graph", () => {
+    const graph = buildLinearGraph();
+    const reconstructed = deserializeExecutionGraph(serializeExecutionGraph(graph));
+    assert.deepEqual(reconstructed, graph);
+  });
+
+  test("a reconstructed graph passes validateExecutionGraph exactly like the original", () => {
+    const graph = buildLinearGraph();
+    const reconstructed = deserializeExecutionGraph(serializeExecutionGraph(graph));
+    assert.deepEqual(validateExecutionGraph(reconstructed), validateExecutionGraph(graph));
+  });
+
+  test("deserializeExecutionGraph rejects malformed JSON that doesn't match the schema", () => {
+    assert.throws(() => deserializeExecutionGraph(JSON.stringify({ nodes: "not an array" })));
   });
 });
 
 describe("checkExecutionOrder — a dependency prevents out-of-order execution", () => {
-  test("peel before slice is a valid order", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(checkExecutionOrder(result.graph, ["0", "1", "2"]), { valid: true });
+  test("peel before slice before fry is valid", () => {
+    const graph = buildLinearGraph();
+    assert.deepEqual(
+      checkExecutionOrder(graph, ["peel-potato-1", "slice-potato-1", "fry-potato-1"]),
+      {
+        valid: true,
+      }
+    );
   });
 
   test("slice before peel violates the peel -> slice dependency edge", () => {
-    const result = compileToExecutionGraph(linearRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    const check = checkExecutionOrder(result.graph, ["1", "0", "2"]);
+    const graph = buildLinearGraph();
+    const check = checkExecutionOrder(graph, ["slice-potato-1", "peel-potato-1", "fry-potato-1"]);
     assert.equal(check.valid, false);
     if (check.valid) return;
-    assert.deepEqual(check.violatedEdge, { from: "0", to: "1", type: "dependency" });
-  });
-
-  test("in the fan-in graph, running fry before heat_oil is rejected even though fry never mentions heat_oil by name in its own node", () => {
-    const result = compileToExecutionGraph(fanInRecipe(), entities, actions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    const check = checkExecutionOrder(result.graph, [
-      "peel-potato-1",
-      "slice-potato-1",
-      "fry-potato-1",
-      "heat-oil-1",
-    ]);
-    assert.equal(check.valid, false);
-  });
-});
-
-describe("compileToExecutionGraph — rejects rather than guesses", () => {
-  test("an unresolvable target instance (not in initialInventory) rejects compilation with a named reason", () => {
-    const recipe = linearRecipe();
-    recipe.sequence[0]!.targetInstanceId = "potato-99";
-    const result = compileToExecutionGraph(recipe, entities, actions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.includes("potato-99")));
-  });
-
-  test("a missing required capability rejects compilation, naming the entity and capability", () => {
-    const bluntKnifeCompatiblePotato = makeEntity({ id: "unpeelable_potato", capabilities: {} });
-    const localEntities = new Map(entities);
-    localEntities.set("unpeelable_potato", bluntKnifeCompatiblePotato);
-    const recipe = linearRecipe();
-    recipe.initialInventory[0] = {
-      id: "potato-1",
-      entityId: "unpeelable_potato",
-      state: "whole",
-      tags: [],
-    };
-    const result = compileToExecutionGraph(recipe, localEntities, actions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.includes("isPeelable")));
-  });
-
-  test("an unmet state prerequisite rejects compilation (slicing a whole, unpeeled potato)", () => {
-    const recipe = linearRecipe();
-    recipe.sequence = [recipe.sequence[1]!]; // slice with no preceding peel
-    const result = compileToExecutionGraph(recipe, entities, actions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.includes("peeled")));
-  });
-
-  test("an unknown action id rejects compilation", () => {
-    const recipe = linearRecipe();
-    recipe.sequence[0]!.actionId = "levitate";
-    const result = compileToExecutionGraph(recipe, entities, actions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.includes("levitate")));
-  });
-
-  test("a circular dependency rejects compilation instead of hanging or silently dropping steps", () => {
-    const recipe = linearRecipe();
-    recipe.sequence[0]!.id = "a";
-    recipe.sequence[0]!.dependsOn = ["b"];
-    recipe.sequence[1]!.id = "b";
-    recipe.sequence[1]!.dependsOn = ["a"];
-    const result = compileToExecutionGraph(recipe, entities, actions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.toLowerCase().includes("circular")));
-  });
-
-  test("a state effect driven by a missing parameter rejects compilation rather than silently omitting the effect", () => {
-    const cut = makeAction({
-      id: "cut",
-      outputs: { transformedStateFromParameter: "shape" },
-      requiredTargetCapability: "isSliceable",
-    });
-    const localActions = new Map(actions);
-    localActions.set("cut", cut);
-    const recipe = linearRecipe();
-    recipe.sequence = [
-      {
-        actionId: "peel",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      },
-      {
-        actionId: "cut",
-        targetInstanceId: "potato-1",
-        params: {},
-        availableIngredientInstanceIds: [],
-      }, // no "shape" param
-    ];
-    const result = compileToExecutionGraph(recipe, entities, localActions);
-    assert.equal(result.ok, false);
-    if (result.ok) return;
-    assert.ok(result.errors.some((e) => e.includes("shape")));
-  });
-});
-
-describe("compileToExecutionGraph — combine-shaped actions", () => {
-  test("a requiredSecondaryCapability action produces a combine effect and destroys both instances", () => {
-    const dough = makeEntity({ id: "dough" });
-    const water = makeEntity({ id: "water", capabilities: { isCombinableWithDough: true } });
-    const combine = makeAction({
-      id: "combine",
-      requiredSecondaryCapability: "isCombinableWithDough",
-      outputs: { combinesInto: "wet_dough" },
-    });
-    const localEntities = new Map([
-      ["dough", dough],
-      ["water", water],
-    ]);
-    const localActions = new Map([["combine", combine]]);
-    const recipe: RecipeScript = {
-      id: "combine_test",
-      names: { en: "Combine test" },
-      initialInventory: [
-        { id: "dough-1", entityId: "dough", state: "raw", tags: [] },
-        { id: "water-1", entityId: "water", state: "liquid", tags: [] },
-      ],
-      availableTools: [],
-      sequence: [
-        {
-          actionId: "combine",
-          targetInstanceId: "dough-1",
-          secondaryInstanceId: "water-1",
-          params: {},
-          availableIngredientInstanceIds: [],
-        },
-      ],
-      metadata: {},
-    };
-    const result = compileToExecutionGraph(recipe, localEntities, localActions);
-    assert.equal(result.ok, true);
-    if (!result.ok) return;
-    assert.deepEqual(result.graph.nodes[0].effects, [
-      { kind: "combine", instanceIds: ["dough-1", "water-1"], resultEntityId: "wet_dough" },
-    ]);
+    assert.deepEqual(check.violatedEdge, { from: "peel-potato-1", to: "slice-potato-1" });
   });
 });

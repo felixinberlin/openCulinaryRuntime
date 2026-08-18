@@ -12,61 +12,24 @@ import {
 } from "./reachability.ts";
 
 /**
- * The actual planner `ROADMAP.md` names as the still-open half of Phase
- * 4.5, closed 2026-08-17. `src/reachability.ts`'s `isGoalReachable`
- * (2026-08-16) already does real shortest-path search for ONE instance's
- * own discrete state graph and returns a usable path, not just a yes/no —
- * this module builds everything that was still missing around it:
- *
- * 1. `stepsToRecipeSteps`/`assembleRecipeScript` — turn a found path (or
- *    several) into a real, runnable `RecipeScript`, not just a list of
- *    verbs a human has to hand-convert (as every prior capability-test
- *    script that executed a `ReachabilityStep[]` had to do manually).
- * 2. `RecipeIntentSchema` (`recipe.ts`) + `planIntent` — a real
- *    goals/constraints authoring format, replacing "the caller must
- *    already know the exact target `GoalPredicate`."
- * 3. `planLowestCost` — a real, if simple, cost-aware search (fewest
- *    steps, then fewest/least-severe hazards) built on the SAME edge
- *    logic `isGoalReachable` uses (`enumerateEdges`, extracted from it the
- *    same day, behavior-preserving — see that file's own doc comment).
- * 4. `planCombine`/`planSecondaryRole` — the bounded, honest answer to
- *    "single-instance scope... a `requiredSecondaryCapability` edge is
- *    recorded as blocked, not explored." NOT a general multi-instance
- *    world model (that's still real, larger, unbuilt work — see this
- *    file's own `planCombine` doc comment for exactly what's covered and
- *    what isn't).
- *
- * `engine.ts`'s `applyAction` and `reachability.ts`'s `isGoalReachable`
- * are BOTH completely unchanged by this file (aside from the pure,
- * behavior-preserving `enumerateEdges` extraction) — this module only
- * ever produces a `RecipeScript` for something else to run; it never
- * executes anything itself.
+ * Turns `reachability.ts`'s `isGoalReachable` search results into real,
+ * runnable `RecipeScript`s, resolves a `RecipeIntent` (goals/constraints)
+ * end to end via `planIntent`, offers a cost-aware search
+ * (`planLowestCost`), and a bounded (single-secondary-hop) answer to
+ * COMBINE-shaped multi-instance planning (`planCombine`/
+ * `planSecondaryRole`). Never executes anything itself — only produces a
+ * `RecipeScript` for something else to run. See `reference/planner.md`
+ * for design rationale, scope, and history.
  */
 
 // ---------------------------------------------------------------------
 // Path -> RecipeScript conversion
 // ---------------------------------------------------------------------
 
-/** Mirrors `recipe-runner.ts`'s own real spawn-id scheme EXACTLY: a
- *  single counter, GLOBAL across every entity type, incremented once per
- *  spawned instance in the order they're actually spawned (see
- *  `recipe-runner.ts`'s `spawnCounter` — confirmed by reading it, not
- *  assumed, and cross-checked against a real recipe: `tortilla-de-
- *  patatas.json`'s "egg_cracked-3"/"tortilla_mixture-4" are exactly what
- *  this counter produces for that step order — PEEL's `potato_peel`
- *  spawn takes 1, CRACK's `egg_shell` then `egg_cracked` byproducts take
- *  2 and 3 in `byproductsByAction.crack`'s own declared order, COMBINE's
- *  `tortilla_mixture` takes 4).
- *
- *  This is NOT the "second, parallel source of truth" risk
- *  `LEARNINGS_ENGINE.md` 2026-08-16 named for `explainRecipe`'s earlier
- *  spawn-id gap — that case was a DIFFERENT module re-analyzing an
- *  ALREADY-RUN recipe's real spawn ids after the fact (a real drift
- *  risk). This tracker is the planner ACTING AS the recipe's author,
- *  choosing the step order itself and predicting what that choice will
- *  produce when actually run — exactly what a human recipe author
- *  already does by hand-typing "egg_cracked-3" into a `RecipeScript`
- *  file; this class only automates that same, single, real convention. */
+/** Mirrors `recipe-runner.ts`'s own real spawn-id scheme: a single
+ *  counter, global across every entity type, incremented once per
+ *  spawned instance in the order they're actually spawned. See
+ *  `reference/planner.md`. */
 export class SpawnIdTracker {
   private counter = 0;
   next(entityId: string): string {
@@ -79,17 +42,9 @@ export interface PlannerIngredientInstance {
   entityId: string;
 }
 
-/** A required-but-not-state-determining parameter (e.g. `pasteurize.json`'s
- *  `waterTempC`/`durationSeconds`) has no value the search itself ever
- *  chooses — `isGoalReachable`/`enumerateEdges` only ever select a value
- *  for the ONE parameter that's `transformedStateFromParameter`. This
- *  picks a schema-VALID placeholder (the first `allowedValues` entry, or
- *  the numeric midpoint of `numericRange`) so the generated `RecipeScript`
- *  is genuinely runnable — explicitly NOT a cited or technique-verified
- *  choice, just "a value within the declared valid range," the same
- *  honesty limit every other unenforced categorical parameter in this
- *  repo already carries. A real caller should override it via
- *  `paramOverrides` below when the actual value matters. */
+/** Picks a schema-valid placeholder for a required-but-not-state-
+ *  determining parameter — not a cited/technique-verified choice, just a
+ *  value within the declared valid range. See `reference/planner.md`. */
 export function resolveDefaultParamValue(param: Action["parameters"][number]): string {
   if (param.allowedValues) return param.allowedValues[0];
   const range = param.numericRange!;
@@ -100,15 +55,11 @@ export interface StepsToRecipeStepsOptions {
   targetInstanceId: string;
   entities: ReadonlyMap<string, Entity>;
   actions: ReadonlyMap<string, Action>;
-  /** Real ingredient instances on hand — the SAME pool a `RecipeScript`'s
-   *  own `initialInventory` provides; each `requiredIngredientCapabilities`
-   *  entry resolves to the FIRST instance (array order — deterministic)
-   *  whose entity asserts that capability, mirroring `engine.ts`'s own
-   *  membership-test semantics (any qualifying instance, not a specific
-   *  one). */
+  /** Real ingredient instances on hand — each `requiredIngredientCapabilities`
+   *  entry resolves to the FIRST instance (array order) whose entity
+   *  asserts that capability. See `reference/planner.md`. */
   availableIngredientInstances: readonly PlannerIngredientInstance[];
-  /** Per-step-index parameter overrides, keyed by the index into `steps`
-   *  — the escape hatch for a required-but-not-state-determining param
+  /** Per-step-index parameter overrides — the escape hatch for a value
    *  `resolveDefaultParamValue` would otherwise have to guess at. */
   paramOverrides?: Record<number, Record<string, string>>;
 }
@@ -139,11 +90,9 @@ export function stepsToRecipeSteps(
         (inst) => opts.entities.get(inst.entityId)?.capabilities[capability] === true
       );
       if (!match) {
-        // The search that produced this path already verified some ENTITY
-        // satisfying this capability was in the availableIngredients SET it
-        // was given — reaching here means this instance pool disagrees
-        // with that set, a real caller-error worth failing loudly on
-        // rather than silently emitting an unrunnable step.
+        // The search already verified some ENTITY satisfying this
+        // capability was in the availableIngredients set — reaching here
+        // means the instance pool disagrees, a real caller error.
         throw new Error(
           `stepsToRecipeSteps: no available ingredient instance satisfies "${capability}" for step ${index} (${action.verb}).`
         );
@@ -163,19 +112,13 @@ export function stepsToRecipeSteps(
 }
 
 // ---------------------------------------------------------------------
-// Cost-aware search (gap 3) — built on the same edges isGoalReachable uses
+// Cost-aware search — built on the same edges isGoalReachable uses
 // ---------------------------------------------------------------------
 
-/** A real, simple, DOCUMENTED-not-hidden cost heuristic — not a citation-
- *  backed figure (this is scheduling preference, not a domain-science
- *  claim). Every step costs 1 (so, absent any hazard, the lowest-cost
- *  path IS the shortest path — identical to `isGoalReachable`'s own BFS
- *  result for the common case), plus a penalty for that step's own
- *  declared `hazards` severity, so that among equally-short paths the
- *  search prefers the one that asks a robot to do the least risky thing.
- *  `low`/`medium`/`high` map to fixed penalties chosen for a sane
- *  ordering (never let 3 low-severity hazards outweigh 1 high-severity
- *  one) — a reasonable default, not a tuned/validated constant. */
+/** A real, simple, documented cost heuristic — not a citation-backed
+ *  figure. Every step costs 1 plus a penalty for its own declared
+ *  `hazards` severity, so among equally-short paths the search prefers
+ *  the least risky one. See `reference/planner.md`. */
 export function defaultEdgeCost(action: Action): number {
   const severityPenalty = { low: 0.1, medium: 0.3, high: 0.6 };
   const hazardCost = action.hazards.reduce((sum, h) => sum + severityPenalty[h.severity], 0);
@@ -196,14 +139,9 @@ export interface CostAwareQuery {
 }
 
 /** Dijkstra over the identical edge set `isGoalReachable` explores (via
- *  the shared `enumerateEdges`), with a real, non-uniform cost per edge —
- *  the genuine cost-aware sibling `isGoalReachable`'s own doc comment
- *  didn't attempt (plain BFS = uniform cost = fewest steps only). Same
- *  determinism discipline: a binary-heap-free O(V*E) relaxation loop,
- *  visiting `entity.allowedTransformations`/`allowedValues` in their own
- *  declared array order at every tie, so the result doesn't depend on
- *  `Map`/`Set` iteration order — see `tests/planner.test.ts` for a direct
- *  determinism check, not an assumption. */
+ *  the shared `enumerateEdges`), with a real, non-uniform cost per edge.
+ *  Deterministic — a binary-heap-free O(V*E) relaxation loop, visiting
+ *  edges in declared array order at every tie. See `reference/planner.md`. */
 export function planLowestCost(query: CostAwareQuery): ReachabilityResultWithCost {
   const {
     entity,
@@ -250,11 +188,9 @@ export function planLowestCost(query: CostAwareQuery): ReachabilityResultWithCos
     }
   }
 
-  // Simple deterministic relaxation: repeatedly scan every SETTLED node's
-  // edges and relax; a real priority queue would be asymptotically
-  // faster, but every entity's own reachable state graph in this repo is
-  // small (well under 100 nodes) — correctness and determinism matter far
-  // more here than micro-optimizing a graph this size.
+  // Simple deterministic relaxation over this repo's small (well under
+  // 100 nodes) state graphs — correctness/determinism matter more here
+  // than micro-optimizing with a priority queue. See reference/planner.md.
   const settled = new Set<string>();
   for (let iterations = 0; iterations < 10000; iterations++) {
     let frontierKey: string | undefined;
@@ -307,18 +243,16 @@ export type ReachabilityResultWithCost =
   | { reachable: false; blockedBy: BlockingReason[] };
 
 // ---------------------------------------------------------------------
-// Multi-instance / COMBINE planning (gap 1) — bounded, not general
+// Multi-instance / COMBINE planning — bounded, not general
 // ---------------------------------------------------------------------
 
 export interface SecondaryRoleResult {
   found: true;
-  /** Steps to run against the STARTING instance (`startInstanceId`) to
-   *  reach the point where it (or a spawned successor) satisfies
-   *  `requiredCapability`. */
+  /** Steps to run against the STARTING instance to reach the point where
+   *  it (or a spawned successor) satisfies `requiredCapability`. */
   steps: RecipeStep[];
   /** The instance id COMBINE's `secondaryInstanceId` should actually
-   *  reference — either `startInstanceId` unchanged, or a NEW id this
-   *  function predicted via `SpawnIdTracker` (e.g. `"egg_cracked-3"`). */
+   *  reference — either `startInstanceId` unchanged, or a NEW predicted id. */
   finalInstanceId: string;
   finalEntityId: string;
 }
@@ -328,46 +262,14 @@ export interface SecondaryRoleFailure {
 }
 
 /**
- * Finds a way to make `startInstanceId` (or something spawned FROM it)
- * satisfy a `requiredSecondaryCapability` — the bounded, honest answer to
- * COMBINE's own real engine behavior, checked directly before building
- * this rather than assumed: `engine.ts`'s `applyAction` checks
- * `requiredSecondaryCapability` ONLY against the secondary instance's
- * ENTITY-level `capabilities` flag (`secondaryEntity.capabilities[cap]
- * === true`) — it never inspects the secondary instance's current STATE
- * at all (confirmed by reading `applyAction` directly: no
- * `statePrerequisites` lookup happens on that branch, and
- * `egg_cracked.json` — `combine.json`'s real secondary role — has no
- * `combine` key in its own `statePrerequisites` either). That's a real,
- * pre-existing limitation this planner does not invent — the SAME class
- * of gap `LEARNINGS_ENGINE.md` 2026-08-12 already named for
- * `requiredIngredientCapabilities` ("checks presence via the ingredient's
- * ENTITY definition only — never the ingredient instance's current
- * state"), just never previously stated for THIS mechanism.
- *
- * Two real cases, both handled:
- * 1. `startEntity` ALREADY satisfies `requiredCapability` (e.g. an
- *    already-cracked egg) — used as-is, zero steps, in WHATEVER state it
- *    currently holds (matching the engine's own real, state-blind check).
- * 2. `startEntity` does NOT satisfy it, but a ONE-HOP spawn does (the
- *    real, concrete case this repo actually has: raw `egg` doesn't carry
- *    `isCombinableAddition`, `CRACK`'s own `egg_cracked` byproduct does).
- *    Searches `startEntity.allowedTransformations` for a
- *    `spawnsTargetByproducts` action whose byproduct list
- *    (`byproductsByAction[actionId]` or the flat `producedByproducts`
- *    fallback, the SAME resolution order `engine.ts` itself uses)
- *    contains a qualifying entity, at bounded depth (2 hops) — a real,
- *    small search, not unbounded recursion, since this repo's actual
- *    spawn graphs are shallow (egg -> egg_cracked is the only real case
- *    today).
- *
- * `desiredState`/`desiredTags`, if given, are NOT anything `engine.ts`
- * would ever require — they let a caller ask for a REALISTIC recipe (a
- * genuinely beaten, salted egg, not a technically-legal raw one) by
- * reusing `isGoalReachable` on whichever entity ends up holding the
- * capability. Omitting them produces the bare-minimum, engine-legal
- * (but possibly unrealistic) plan — an honest default, not a silent
- * downgrade.
+ * Finds a way to make `startInstanceId` (or something spawned from it)
+ * satisfy a `requiredSecondaryCapability` for a COMBINE-shaped action.
+ * Two cases: already satisfies it (used as-is), or a one-hop spawn does
+ * (bounded search, not unbounded recursion). `desiredState`/`desiredTags`
+ * let a caller ask for a realistic rather than merely engine-legal
+ * secondary instance. See `reference/planner.md` for the full reasoning,
+ * including the real pre-existing engine limitation this planner does
+ * not invent.
  */
 export function planSecondaryRole(
   startInstanceId: string,
@@ -433,8 +335,7 @@ export function planSecondaryRole(
     return finishOn(startEntity, startEntity.id, startInstanceId, startState, startTags, []);
   }
 
-  // One-hop spawn search — see this function's own doc comment for why
-  // this is bounded rather than unbounded recursion.
+  // One-hop spawn search — see reference/planner.md for why bounded.
   for (const actionId of startEntity.allowedTransformations) {
     const action = actions.get(actionId);
     if (!action || !action.outputs.spawnsTargetByproducts) continue;
@@ -445,9 +346,7 @@ export function planSecondaryRole(
     if (matchIndex === -1) continue;
 
     // The spawning action itself may have its own state prerequisite —
-    // reuse isGoalReachable to get there first, exactly like any other
-    // single-instance step (CRACK has none for egg.json today, but this
-    // stays correct even if that ever changes).
+    // reuse isGoalReachable to get there first.
     const requiredPrior = startEntity.statePrerequisites[actionId];
     let prefixSteps: RecipeStep[] = [];
     let tagsBeforeSpawn = [...startTags];
@@ -479,11 +378,7 @@ export function planSecondaryRole(
     }
 
     // Predict the spawned instance's id/state, mirroring engine.ts's own
-    // spawn logic exactly (SpawnIdTracker's doc comment, and
-    // engine.ts's applyAction: byproductEntity.possibleStates[0] is the
-    // spawned instance's real starting state; inherited tags are the
-    // parent's tags at spawn time, filtered by the byproduct's own
-    // possibleTags).
+    // spawn logic exactly. See reference/planner.md.
     let spawnedInstanceId = "";
     for (let i = 0; i <= matchIndex; i++) {
       spawnedInstanceId = spawnIds.next(byproductIds[i]);
@@ -541,18 +436,11 @@ export interface CombinePlanQuery {
   spawnIds: SpawnIdTracker;
 }
 
-/** Assembles a full COMBINE plan: the primary instance's own path to
- *  whatever state `combineActionId` requires (via `isGoalReachable`,
- *  unchanged), the secondary instance's own path (via
- *  `planSecondaryRole` above), and the `COMBINE` step itself, with a
- *  correctly-predicted `resultInstanceId` for `combinesInto`'s spawned
- *  entity. Deliberately does NOT resolve which `combineActionId` to use
- *  from a target entity id alone — `potato_onion_mixture.json`'s own
- *  `capabilityAmbiguityNote` already names a real ambiguity there
- *  (`combine`/`combine_con_cebolla` share `isCombinableBase`); this
- *  function takes the action id as a REQUIRED input, resolved by the
- *  caller (`planIntent`, from the goal's own declared `combine.actionId`),
- *  never guessed. */
+/** Assembles a full COMBINE plan: the primary instance's path to whatever
+ *  state `combineActionId` requires, the secondary instance's path (via
+ *  `planSecondaryRole`), and the COMBINE step itself with a correctly-
+ *  predicted `resultInstanceId`. Takes `combineActionId` as a required
+ *  input, resolved by the caller — never guessed. See `reference/planner.md`. */
 export function planCombine(query: CombinePlanQuery): CombinePlanResult | CombinePlanFailure {
   const action = query.actions.get(query.combineActionId);
   if (!action || !action.outputs.combinesInto) {
@@ -623,10 +511,8 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     };
   }
   // COMBINE's own requiredTools is checked explicitly here since COMBINE
-  // itself is the terminal step, never explored as an intermediate EDGE
-  // by isGoalReachable's primary-path search above (that search only
-  // ever reaches the state COMBINE requires — it never tries firing
-  // COMBINE itself, which needs a secondary instance it has no model of).
+  // is the terminal step, never explored as an intermediate edge by
+  // isGoalReachable's primary-path search above. See reference/planner.md.
   for (const toolId of action.requiredTools) {
     if (!query.availableTools.has(toolId)) {
       return { success: false, reason: `COMBINE requires tool "${toolId}", not available` };
@@ -652,17 +538,15 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
 }
 
 // ---------------------------------------------------------------------
-// RecipeIntent -> RecipeScript (gap 2, ties everything together)
+// RecipeIntent -> RecipeScript — ties everything together
 // ---------------------------------------------------------------------
 
 export interface PlanIntentSuccess {
   success: true;
   recipe: RecipeScript;
-  /** `recipe.sequence[i]` was produced to satisfy `intent.goals[stepGoalIndex[i]]`
-   *  — the same length as `recipe.sequence`, added 2026-08-17 specifically
-   *  for `recipe-runner.ts`'s `runRecipeFromIntent` (closed-loop
-   *  replanning): on a step failure, this is how the runner knows WHICH
-   *  original goal to replan toward, without re-deriving it. */
+  /** `recipe.sequence[i]` was produced to satisfy
+   *  `intent.goals[stepGoalIndex[i]]` — used by `runRecipeFromIntent`
+   *  (closed-loop replanning) to know which original goal to replan toward. */
   stepGoalIndex: number[];
 }
 export interface PlanIntentFailure {
@@ -673,18 +557,12 @@ export interface PlanIntentFailure {
 
 /**
  * Resolves a `RecipeIntentSchema` (goals + constraints) into a real,
- * runnable `RecipeScript` — `ROADMAP.md`'s own framing exactly:
- * "`RecipeScriptSchema` itself doesn't go away — it becomes the
- * planner's grounded output." Goals are processed IN ARRAY ORDER
- * (a real, named, deliberate simplification — no goal reordering/
- * backtracking across goals is attempted); a later goal's `instanceId`
- * may reference `"$combineResult:<goalIndex>"` to target what an
- * EARLIER combine-goal produced, letting a full multi-step, multi-
- * instance dish (fry potato, prep egg, combine, then fry the result —
- * the real `tortilla_de_patatas` shape) be planned end to end, not just
- * proposed goal by goal in isolation. Proven against exactly that real
- * dish, not just a synthetic case — see
- * `scripts/planner-as-a-robot.ts`/`npm run capability-test:planner`.
+ * runnable `RecipeScript`. Goals are processed IN ARRAY ORDER — a
+ * deliberate simplification, no reordering/backtracking across goals.
+ * A later goal's `instanceId` may reference `"$combineResult:<goalIndex>"`
+ * to target what an earlier combine-goal produced, letting a full
+ * multi-step, multi-instance dish be planned end to end. See
+ * `reference/planner.md`.
  */
 export function planIntent(
   intent: RecipeIntent,
@@ -701,11 +579,9 @@ export function planIntent(
   const failures: { goalIndex: number; reason: string }[] = [];
   const sequence: RecipeStep[] = [];
   const stepGoalIndex: number[] = [];
-  // Tracks each instance id's CURRENT state/tags as goals are resolved in
-  // order, seeded from the intent's own declared initialInventory —
-  // needed so a later goal on the SAME instance (or a $combineResult
-  // reference) starts its own search from the right place, not from the
-  // original initialInventory entry.
+  // Tracks each instance id's current state/tags as goals are resolved
+  // in order, so a later goal on the same instance (or a $combineResult
+  // reference) starts its search from the right place.
   const currentState = new Map<string, { entityId: string; state: string; tags: string[] }>();
   for (const item of intent.initialInventory) {
     currentState.set(item.id, { entityId: item.entityId, state: item.state, tags: [...item.tags] });

@@ -4,47 +4,15 @@ import type { RecipeInstance } from "./recipe.ts";
 import { importCooklangDraft, normalizeToken, type CooklangStep } from "./cooklang.ts";
 
 /**
- * The prose-to-verb translator `AUTHORING.md` §2 (point 2) and
- * `ROADMAP.md` Phase 5 both named as the one piece of Cooklang support
- * that ISN'T mechanical — `cooklang.ts`'s own top doc comment draws the
- * same line. This module does not cross it: it is a real, bounded,
- * DETERMINISTIC keyword/allowed-value matcher over this repo's own closed
- * action vocabulary (`data/actions/*.json`'s `verb`/`names`/`parameters`),
- * not an NLP model and not an LLM call — this repo has never called an
- * external LLM API anywhere in its execution path (`package.json`'s only
- * dependency is `zod`), and this module keeps that property. Exactly the
- * same "deterministic data already in `data/*.json` has final say" ethos
- * `query.ts`'s `answerAboutParameter` already runs on, applied in the
- * opposite direction: there, free text IN is a question about a known
- * parameter; here, free text IN is a step's prose, matched against the
- * same closed, typed vocabulary.
- *
- * **What this buys, honestly**: recognizing a verb this repo already
- * knows about (by its `verb` id or any locale in `names`), inferring
- * `durationSeconds` from an already-parsed Cooklang timer, and inferring
- * an `allowedValues` parameter from a literal value string appearing in
- * the prose (e.g. "high" for `heatLevel`) — all real, all traceable back
- * to a specific match, never guessed silently. **What this does NOT
- * attempt**, on purpose, matching this repo's own restraint elsewhere:
- * numeric-range parameters (`oilTempC`, `waterTempC`, ...) are never
- * extracted from prose — there is no reliable, non-guessing way to read
- * "175 degrees" out of free text against a parameter this repo hasn't
- * already tokenized (Cooklang has no `%degrees_c` convention), so those
- * are always left for a human/LLM to fill in, named as a missing
- * required parameter rather than invented. A step with more than one
- * recognized verb (`"Peel and crush @ajo"`) only becomes ONE
- * `RecipeStep`, matching the FIRST verb found — clause-splitting free
- * text reliably is exactly the kind of judgment call this module
- * deliberately doesn't make; the second verb is named in that step's own
- * `notes`, not silently dropped.
- *
- * Every translation is a PROPOSAL — see `recipe-scaffold.ts`'s identical
- * precedent: `translateCooklangDocument`'s `draft` is a plain,
- * `RecipeScript`-SHAPED object, never parsed against `RecipeScriptSchema`
- * here, and often genuinely schema-invalid (an unmatched step contributes
- * no `sequence` entry at all). The real hand-off is `AUTHORING.md` §1's
- * existing `validate-recipe` loop — this module's whole job ends at
- * producing a first, honestly-imperfect draft for that loop to react to.
+ * The prose-to-verb translator — a real, bounded, DETERMINISTIC keyword/
+ * allowed-value matcher over this repo's own closed action vocabulary
+ * (`verb`/`names`/`parameters`), not an NLP model or LLM call. Recognizes
+ * known verbs, infers `durationSeconds` from a Cooklang timer, and infers
+ * `allowedValues` parameters from literal matches in prose. Never
+ * extracts numeric-range parameters from prose — named as a missing
+ * required parameter instead. Every translation is a PROPOSAL: the
+ * `draft` is `RecipeScript`-shaped but never schema-validated here. See
+ * `reference/cooklang-translate.md` for design rationale and scope.
  */
 
 const TIME_UNIT_SECONDS: Record<string, number> = {
@@ -76,25 +44,17 @@ function escapeRegExp(s: string): string {
 }
 
 interface VerbMatch {
-  /** Every actionId this alias resolves to — usually one, but a real gap
-   *  this repo's own data has (`combine.json`/`combine_dough.json`/
-   *  `combine_potato_onion.json`/`combine_con_cebolla.json` all share the
-   *  identical verb `COMBINE`) means a bare alias can genuinely be
-   *  ambiguous among several distinct actions. Kept as an array rather
-   *  than collapsed to one (last-write-wins would have silently picked
-   *  an arbitrary one of the four and been wrong most of the time) —
-   *  `translateStep` reports the ambiguity instead of guessing among
-   *  them, same as an ambiguous `allowedValues` match below. */
+  /** Every actionId this alias resolves to — usually one, but several
+   *  real actions can share one verb (e.g. COMBINE). See
+   *  `reference/cooklang-translate.md`. */
   actionIds: string[];
   matchedText: string;
   index: number;
 }
 
-/** One entry per normalized alias -> every actionId that alias could mean,
- *  built from every action's `verb` and every locale in its `names` — a
- *  step authored in Spanish ("Freír @patata") matches exactly as well as
- *  one authored in English ("Fry @patata"), since `names.es` is indexed
- *  too, not just `names.en`. */
+/** One entry per normalized alias -> every actionId that alias could
+ *  mean, built from every action's `verb` and every locale in its
+ *  `names`. */
 function buildVerbIndex(actions: Map<string, Action>): Map<string, string[]> {
   const index = new Map<string, string[]>();
   const add = (alias: string, actionId: string) => {
@@ -114,27 +74,16 @@ function buildVerbIndex(actions: Map<string, Action>): Map<string, string[]> {
 }
 
 /** Finds every alias from `verbIndex` that appears in `text` as a whole
- *  word, in order of first appearance. Longer aliases are tried first at
- *  each scan so e.g. a specific multi-word name ("Combine (potato +
- *  onion)") wins over a shared bare verb ("Combine") when both are
- *  present as aliases and the more specific one is actually in the text —
- *  the one real way this module resolves what would otherwise be a
- *  `VerbMatch.actionIds` ambiguity. */
+ *  word, in order of first appearance. Longer aliases are tried first so
+ *  a specific multi-word name wins over a shared bare verb. See
+ *  `reference/cooklang-translate.md` for the lookaround-based boundary
+ *  check (not `\b`) and why it's needed. */
 function findVerbMatches(text: string, verbIndex: Map<string, string[]>): VerbMatch[] {
   const aliases = [...verbIndex.keys()].sort((a, b) => b.length - a.length);
   const matches: VerbMatch[] = [];
   const claimed: [number, number][] = []; // [start, end) ranges already matched
   for (const alias of aliases) {
     if (alias === "") continue;
-    // Lookaround-based boundary rather than `\b`: `\b` only asserts where a
-    // WORD character (`\w`) meets a non-word one, which silently fails to
-    // match at all when the alias itself ENDS in punctuation — a real case
-    // in this repo's own data (combine_dough.json's real name is "Combine
-    // (flour + water)", ending in ")"; `\bcombine \(flour \+ water\)\b`
-    // never matches because ")" followed by a space is non-word-to-non-word,
-    // no boundary there for `\b` to assert). Checking "the character just
-    // outside the match isn't alphanumeric" instead works regardless of
-    // what character the alias itself starts/ends with.
     const re = new RegExp(`(?<![A-Za-z0-9_])${escapeRegExp(alias)}(?![A-Za-z0-9_])`, "gi");
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
@@ -156,18 +105,15 @@ export interface TranslatedStepCandidate {
   sourceText: string;
   /** Set only when a recognized verb was found in the step's text. */
   actionId?: string;
-  /** The literal text that matched the action's verb/name — for a human
-   *  reviewing the draft to see exactly why this action was picked. */
+  /** The literal text that matched the action's verb/name. */
   matchedVerb?: string;
   targetInstanceId?: string;
-  /** Set only for an action with `requiredSecondaryCapability` (a
-   *  COMBINE-shaped action) when a second resolvable ingredient reference
-   *  was present in the step — still a guess, always noted as one. */
+  /** Set only for a COMBINE-shaped action when a second resolvable
+   *  ingredient reference was present — still a guess, always noted. */
   secondaryInstanceId?: string;
   availableIngredientInstanceIds: string[];
   params: Record<string, string>;
-  /** Real, named gaps/ambiguities in THIS step's translation — nothing
-   *  here is silently hidden from whoever reviews the draft next. */
+  /** Real, named gaps/ambiguities in THIS step's translation. */
   notes: string[];
 }
 
@@ -179,12 +125,9 @@ export interface CooklangTranslationDraftStep {
   secondaryInstanceId?: string;
 }
 
-/** A plain object matching `RecipeScriptSchema`'s SHAPE — same "not a
- *  real `RecipeScript`, never `.parse()`d here" reasoning as
- *  `recipe-scaffold.ts`'s `RecipeScaffold`. `sequence` can be empty (no
- *  step recognized any verb at all) exactly like a fresh scaffold's
- *  empty `sequence` — schema-invalid by construction, an honest starting
- *  point, not a bug. */
+/** A plain object matching `RecipeScriptSchema`'s SHAPE, never
+ *  `.parse()`d here — see `recipe-scaffold.ts`'s `RecipeScaffold`.
+ *  `sequence` can be empty when no step recognized any verb. */
 export interface CooklangTranslationDraft {
   id: string;
   names: { en: string };
@@ -196,11 +139,10 @@ export interface CooklangTranslationDraft {
 
 export interface CooklangTranslation {
   draft: CooklangTranslationDraft;
-  /** One entry per source Cooklang step, in order — INCLUDING steps that
-   *  produced no `sequence` entry, so nothing is silently dropped. */
+  /** One entry per source Cooklang step, in order — including steps that
+   *  produced no `sequence` entry. */
   stepTranslations: TranslatedStepCandidate[];
-  /** Carried through from `importCooklangDraft` — ingredient tokens that
-   *  matched no known entity at all. */
+  /** Carried through from `importCooklangDraft`. */
   unresolvedIngredientTokens: string[];
 }
 
@@ -224,11 +166,8 @@ function translateStep(
 
   const primaryIndex = verbMatches.findIndex((m) => m.actionIds.length === 1);
   if (primaryIndex === -1) {
-    // Every recognized verb in this step is itself ambiguous among several
-    // real actions — e.g. plain "Combine" (combine.json/combine_dough.json/
-    // combine_potato_onion.json/combine_con_cebolla.json all share the
-    // identical verb COMBINE). Reported, not guessed among — silently
-    // picking one would be wrong most of the time by construction.
+    // Every recognized verb in this step is itself ambiguous among
+    // several real actions — reported, not guessed among.
     const ambiguous = verbMatches
       .map((m) => `"${m.matchedText}" -> one of [${m.actionIds.join(", ")}]`)
       .join("; ");
@@ -358,11 +297,10 @@ function slugToDisplayName(slug: string): string {
 
 /**
  * Parses `source`, resolves ingredients against `entities` (reusing
- * `importCooklangDraft` rather than re-deriving that matching a second
- * time), and best-effort-translates each step's prose into a candidate
- * `RecipeStep` against `actions`' real, closed vocabulary. Always returns
- * — never throws on an untranslatable step; see this file's top doc
- * comment for exactly what is and isn't attempted, and why.
+ * `importCooklangDraft`), and best-effort-translates each step's prose
+ * into a candidate `RecipeStep` against `actions`' closed vocabulary.
+ * Always returns — never throws on an untranslatable step. See
+ * `reference/cooklang-translate.md`.
  */
 export function translateCooklangDocument(
   source: string,

@@ -1478,6 +1478,49 @@ domain facts.
       NOT a full `RecipeStep` (`actionId`/`params`) round trip, since
       Cooklang's own text never encoded that structured shape to begin
       with (see the prose-translation gap named above).
+- [x] **The prose-to-verb translator — closed 2026-08-18, `src/cooklang-
+      translate.ts`, `translateCooklangDocument`.** The one piece the
+      entry above deliberately left unbuilt. Stays inside the same
+      boundary, not across it: a real, bounded, DETERMINISTIC keyword/
+      allowed-value matcher over this repo's own closed action vocabulary
+      (`data/actions/*.json`'s `verb`/`names`/`parameters`) — not an NLP
+      model, not an LLM call (this repo has never called an external LLM
+      API anywhere in its execution path; `package.json`'s only dependency
+      is `zod`, unchanged). Recognizes a verb by `verb` id or ANY locale in
+      `names` (a Spanish-authored step matches exactly as well as an
+      English one); infers `durationSeconds` from an already-parsed
+      Cooklang timer (unit-converted to seconds); infers an `allowedValues`
+      parameter from a literal value string in the prose, reporting —
+      never guessing among — a genuine ambiguity (two allowed values both
+      present). Deliberately does NOT extract numeric-range parameters
+      (`oilTempC`, `waterTempC`, ...) from free text — no reliable
+      non-guessing way to do that — always named as missing instead of
+      invented. A step with more than one recognized verb produces exactly
+      ONE `RecipeStep` (the first), naming the rest rather than attempting
+      unreliable clause-splitting. Output is a `RecipeScript`-shaped DRAFT,
+      same "never `.parse()`d here, hand off to `validate-recipe`"
+      precedent as `recipe-scaffold.ts`'s `RecipeScaffold`. **Real,
+      independently-discovered finding while building this**: this repo's
+      own `data/actions/*.json` has four DISTINCT real actions
+      (`combine.json`/`combine_dough.json`/`combine_potato_onion.json`/
+      `combine_con_cebolla.json`) sharing the IDENTICAL verb `COMBINE` — a
+      genuine verb collision, not a translator bug. Fixed by tracking every
+      alias's full candidate-actionId list (not last-write-wins) and
+      reporting real ambiguity rather than silently resolving to whichever
+      action happened to load last — proven live against
+      `tortilla-de-patatas.json`'s own COMBINE step. Proven via `tests/
+      cooklang-translate.test.ts` (15 synthetic-fixture unit tests) and
+      `npm run capability-test:cooklang-translate`
+      (`scripts/cooklang-translate-as-a-robot.ts`) — against REAL
+      `data/entities/*.json`/`data/actions/*.json` and two REAL recipes
+      (`handmade-alioli-egg-yolk.json`: recovers all 6 original actionIds
+      round-tripped purely through Cooklang text, zero access to the
+      original `RecipeStep`s; `tortilla-de-patatas.json`: the COMBINE
+      ambiguity finding above). See `LEARNINGS_ENGINE.md` 2026-08-18 for
+      two further real regex bugs found building this (a `\b`
+      word-boundary that silently fails when an alias ends in punctuation,
+      and a duplicate "missing required parameter" note for a parameter
+      that was actually found).
 
 ## Phase 6 — Nutrition extension (`nutrition-extension.ts`)
 - [ ] `UsdaMealPatternContributionSchema`. Not started. Every entity already

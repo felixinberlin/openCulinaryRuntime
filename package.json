@@ -70,6 +70,7 @@
     "capability-test:season-verb": "tsx scripts/season-as-a-robot.ts",
     "capability-test:bake-bread": "tsx scripts/bake-bread-as-a-robot.ts",
     "capability-test:cooklang": "tsx scripts/cooklang-as-a-robot.ts",
+    "capability-test:cooklang-translate": "tsx scripts/cooklang-translate-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

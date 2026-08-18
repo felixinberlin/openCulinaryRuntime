@@ -2021,3 +2021,56 @@ was made. Don't rewrite or delete old entries — append.
   new export fallback and a new import fallback are really one
   decision, not two independent ones — write the round-trip test before
   considering either "done."
+- **A regex `\b` word boundary silently fails to match when the pattern
+  itself ENDS in punctuation — building `cooklang-translate.ts`'s
+  verb-matching, not a contrived case.** `combine_dough.json`'s real
+  `names.en` is `"Combine (flour + water)"`, ending in `)`. `\b` asserts
+  a transition between a word character (`\w`) and a non-word one; with
+  the pattern ending in `)` (non-word) and the input continuing with a
+  space (also non-word), there is no such transition for `\b` to assert
+  at that boundary, so `\bcombine \(flour \+ water\)\b` never matches
+  ANYWHERE in real text containing exactly that phrase — not a
+  near-miss, a total, silent non-match with no error. Fixed by replacing
+  `\b...\b` with lookaround assertions checking "the character just
+  outside isn't alphanumeric" (`(?<![A-Za-z0-9_])...(?![A-Za-z0-9_])`),
+  which works identically to `\b` for ordinary word-bounded aliases but
+  also correctly handles ones starting/ending in punctuation. General
+  lesson: `\b` is only safe when you control BOTH sides of the boundary
+  being word characters; a boundary check applied to caller-supplied or
+  data-driven strings (here, `Action.names` values, not string literals
+  chosen for the regex) needs the lookaround form, not `\b`, unless
+  every real value has been checked to end in a word character.
+- **Verb-matching against `data/actions/*.json` found a real, pre-existing
+  data collision, not a translator bug: four DISTINCT actions
+  (`combine.json`/`combine_dough.json`/`combine_potato_onion.json`/
+  `combine_con_cebolla.json`) all share the identical `verb: "COMBINE"`.**
+  The first implementation built a `Map<alias, actionId>` verb index —
+  last `action.values()` iterated for a given alias silently overwrote
+  every earlier one, so bare "Combine" in real Cooklang text resolved to
+  whichever of the four happened to load last (alphabetically last by
+  filename, not by any meaningful precedence), silently wrong 3 times out
+  of 4. Caught by a capability-test script against a REAL recipe
+  (`tortilla-de-patatas.json`'s own COMBINE step), not by the synthetic
+  unit tests, which used single-action fixtures with no verb collision to
+  expose. Fixed at the right layer: the index now keeps every candidate
+  actionId per alias, and an alias resolving to more than one is reported
+  as an explicit ambiguity (never silently resolved), the same
+  "don't-guess, name it" rule already used elsewhere in the same module
+  for ambiguous `allowedValues` matches — then added a synthetic unit
+  test reproducing the exact collision shape directly, so this doesn't
+  depend on real data staying broken in exactly this way to keep being
+  covered.
+- **A "missing required parameter" check that iterates ALL of an
+  action's parameters can double-report a parameter another code path
+  already filled**, if the two checks don't know about each other.
+  `durationSeconds` is filled from a Cooklang timer in one specific code
+  path (checked first); a LATER, generic loop flagging every required
+  `numericRange` parameter as missing did not know that `durationSeconds`
+  is itself `numericRange` and had already been filled — so a real,
+  successfully-translated step got a spurious "durationSeconds is missing"
+  note sitting right next to the correct `params.durationSeconds` value
+  that contradicted it. Caught the same way as the verb-collision bug
+  above: a real recipe's translated output looked wrong on inspection
+  before any assertion failed. Fixed by having the generic loop skip any
+  parameter id already present in `params`, rather than re-deriving
+  "was this already handled" as a parallel, disconnected question.

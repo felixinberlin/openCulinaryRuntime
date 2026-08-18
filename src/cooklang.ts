@@ -282,7 +282,12 @@ const UNIT_ALIASES: Record<string, string> = {
   units: "count",
 };
 
-function normalizeToken(s: string): string {
+/** Exported for `cooklang-translate.ts` — the same token-normalization
+ *  rule import resolution uses is also how a translator matches a
+ *  step's ingredient references back to `importCooklangDraft`'s own
+ *  `proposedInventory` ids, without re-deriving a second normalization
+ *  rule that could silently drift from this one. */
+export function normalizeToken(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ");
 }
 

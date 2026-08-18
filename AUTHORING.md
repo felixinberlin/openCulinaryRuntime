@@ -167,13 +167,14 @@ happened to already be satisfied, not that there were none.
 
 ## 2. Cooklang — the honest answer
 
-**Half of this is real now, closed 2026-08-18 in `src/cooklang.ts` — the
-other half is exactly as unbuilt as this section originally said, and for
-the same reason.** This section is kept close to its original 2026-08-15
-form (design ahead of code) because the boundary it drew turned out to be
-exactly where the real implementation split too — the update below marks
-what moved from "should eventually" to "does today," not a rewrite of the
-reasoning:
+**All three pieces below are real now, closed 2026-08-18** —
+`src/cooklang.ts` (points 1/3) then `src/cooklang-translate.ts` (point 2),
+same day. This section is kept close to its original 2026-08-15 form
+(design ahead of code) because the boundary it drew turned out to be
+exactly where the real implementation split too, including WITHIN point 2
+— see that point's own update for the real, narrower line the translator
+draws (a deterministic keyword matcher, not an actual NLP model or LLM
+call) rather than claiming it "solves" free-text translation outright:
 
 1. **Parsing Cooklang's syntax is mechanical — now real.**
    `parseCooklang` (`src/cooklang.ts`) implements the actual grammar
@@ -187,25 +188,40 @@ reasoning:
    already carries everything Cooklang needs, so exporting has no
    free-text-generation problem to begin with.
 2. **Turning step PROSE into this repo's typed verb+parameter shape is
-   STILL NOT mechanical, and `cooklang.ts` deliberately does not attempt
-   it.** "Fry the potatoes until golden" doesn't carry an `actionId`, an
-   `oilTempC`, a `shape` — Cooklang doesn't have this repo's closed, typed
-   action vocabulary at all. Producing a `RecipeStep` from that sentence
-   is exactly the free-text → structured-intent translation
-   `ENGINE_INVARIANTS.md` #10 already scopes to an LLM or a human,
-   producing a *proposal*, never treated as already-valid.
-   `CooklangStep.text` keeps a parsed step's prose verbatim, tokens
-   inline, specifically so this still-unbuilt translator has something
-   real to consume later.
+   genuinely NOT mechanical in the strong sense — no closed grammar can
+   read "fry the potatoes until golden" and know it means `actionId:
+   fry, doneness: golden` with certainty — but a real, bounded,
+   DETERMINISTIC approximation is now built: `translateCooklangDocument`
+   (`src/cooklang-translate.ts`, closed 2026-08-18).** It never crosses
+   into an actual NLP model or LLM call (this repo still has never called
+   an external LLM API anywhere in its execution path); it is a
+   keyword/allowed-value matcher over this repo's OWN closed action
+   vocabulary — recognizing a verb this repo already knows about (by
+   `verb` id or any locale in `names`), a `durationSeconds` from an
+   already-parsed timer, an `allowedValues` parameter from a literal
+   value string in the text. It reports rather than guesses whenever
+   there's real ambiguity (two allowed values both present; a verb
+   shared by more than one action — a real case this repo's own data
+   has, `combine.json`/`combine_dough.json`/`combine_potato_onion.json`/
+   `combine_con_cebolla.json` all sharing the verb `COMBINE`), and never
+   attempts to extract a numeric-range parameter (`oilTempC`,
+   `waterTempC`, ...) from free text at all — those stay named as
+   missing, exactly the free-text → structured-intent translation
+   `ENGINE_INVARIANTS.md` #10 still scopes to an LLM or a human for the
+   cases this deterministic matcher can't resolve. `CooklangStep.text`
+   still keeps a parsed step's prose verbatim, tokens inline — an actual
+   LLM (or a human) is still the right tool to fill in what this matcher
+   correctly declines to guess.
 3. **The connection is exactly what this section originally pictured,
-   and it still needs nothing new on the validation side**: that
-   translation step's job would only be to produce a first DRAFT
-   `RecipeScript` — however incomplete or wrong — and hand it to the
-   exact same loop in §1, same as `importCooklangDraft`'s own proposed
-   inventory already must be. `validate-recipe` doesn't need to know or
-   care whether a draft came from a human typing JSON by hand or an LLM
-   translating a `.cook` file's step prose; "the alarms that help extend
-   a human recipe to our system" already exist today.
+   and it needed nothing new on the validation side, as predicted**:
+   `translateCooklangDocument`'s output is a first DRAFT
+   `RecipeScript`-shaped object — however incomplete or wrong, same
+   "never `.parse()`d here" precedent as `recipe-scaffold.ts`'s
+   `RecipeScaffold` — meant to be handed to the exact same loop in §1.
+   `validate-recipe` doesn't need to know or care whether a draft came
+   from a human typing JSON by hand, this deterministic matcher, or an
+   LLM translating a `.cook` file's step prose; "the alarms that help
+   extend a human recipe to our system" already exist today, unchanged.
 
 ## 3. Named, not built — real gaps in today's loop
 
@@ -221,11 +237,10 @@ the worked example above. Still open:
   "worth double-checking."
 - **No fuzzy-match suggestion for a typo'd entity/action id.** Get one
   wrong and you get "Unknown action/entity," not "did you mean...".
-- **The Cooklang prose-to-verb translator** (§2 point 2) — the syntax
-  parser + entity-matching import + mechanical export half of §2 closed
-  2026-08-18 (`src/cooklang.ts`); this translator (free-text step prose →
-  typed `actionId`/parameters) is the one piece still design, not
-  implementation.
+~~The Cooklang prose-to-verb translator~~ **closed 2026-08-18** — §2
+point 2 above and `ROADMAP.md` Phase 5 both closed the same day, once
+`src/cooklang.ts` (syntax/import/export) and `src/cooklang-translate.ts`
+(the deterministic verb/parameter matcher) both existed.
 
 None of these are built by writing this document — named here so the
 next session that picks one up isn't rediscovering it from scratch.

@@ -78,7 +78,7 @@ listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 | `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
 | `nutrition-extension.ts` | Not built | |
 | `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS_ENGINE.md` 2026-08-15 |
-| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` — `parseCooklang`/`importCooklangDraft`/`exportToCooklang`, closed 2026-08-18 | Cooklang syntax parsing + entity-matching import + mechanical export are real; `compileToSchemaOrgIngredient`/Schema.org export and the free-text step-prose→`actionId` translator are still not built — see the "ninth" entry below and `AUTHORING.md` §2 |
+| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` (`parseCooklang`/`importCooklangDraft`/`exportToCooklang`) + `src/cooklang-translate.ts` (`translateCooklangDocument`), both closed 2026-08-18 | Cooklang syntax parsing, entity-matching import, mechanical export, AND the free-text step-prose→`actionId` translator (a real, bounded, deterministic keyword matcher — no LLM call) are all real; only `compileToSchemaOrgIngredient`/Schema.org export is still not built — see the "ninth"/"tenth" entries below and `AUTHORING.md` §2 |
 
 `src/registry.ts` (loading `data/*.json` by directory into typed `Map`s) also isn't
 in the original plan — the whole `data/` directory of JSON files, validated against
@@ -234,8 +234,7 @@ resolve instances SPAWNED mid-recipe to real tokens too — same
 compose-with-real-ground-truth precedent as `execution-bounds.ts`/
 `in-progress-action.ts`. Deliberately NOT built here, named rather than
 hidden: the free-text step-prose → typed `actionId`/parameter translator
-(`ENGINE_INVARIANTS.md` #10's LLM-proposes/engine-decides boundary — ordinary
-prose has no closed action vocabulary to translate into automatically) and
+(closed separately the same day — see the "tenth" entry below) and
 Cooklang scaling multipliers (no recipe-scaling engine exists anywhere in this
 repo to scale against, `ingredient.ts`'s `QuantitySchema` doc comment).
 Spice-lock (`=`-prefixed quantities) round-trips faithfully. Proven via
@@ -244,6 +243,44 @@ no-`data/*.json`-dependency discipline as every other test file) and `npm run
 capability-test:cooklang` (`scripts/cooklang-as-a-robot.ts`) — the latter
 against REAL `data/entities/*.json` and a REAL recipe with a genuine
 `SEPARATE` spawn (`handmade-alioli-egg-yolk.json`).
+
+A tenth, same day: `src/cooklang-translate.ts` (`translateCooklangDocument`)
+— the free-text step-prose → typed `actionId`/parameter translator the
+ninth entry above deliberately left unbuilt, and `AUTHORING.md` §2 (point 2)
+originally scoped to an LLM or human. Stays inside that same boundary
+rather than crossing it: a real, bounded, DETERMINISTIC keyword/
+allowed-value matcher over this repo's own closed action vocabulary
+(`data/actions/*.json`'s `verb`/`names`/`parameters`) — not an NLP model,
+not an LLM call (this repo has never called an external LLM API anywhere
+in its execution path; `package.json`'s only dependency is `zod`,
+unchanged by this). Recognizes a verb by its `verb` id or ANY locale in
+`names` (a Spanish-authored step matches as well as an English one);
+infers `durationSeconds` from an already-parsed Cooklang timer
+(unit-converted to seconds); infers an `allowedValues` parameter from a
+literal value string in the prose. Reports rather than guesses at every
+real ambiguity — two allowed values both present, or (a real,
+independently-discovered finding building this) a verb shared by more
+than one action: `data/actions/*.json` has FOUR distinct real actions
+(`combine.json`/`combine_dough.json`/`combine_potato_onion.json`/
+`combine_con_cebolla.json`) all sharing the identical verb `COMBINE`,
+fixed by tracking every alias's full candidate-actionId list rather than
+letting the last one loaded silently win. Never attempts to extract a
+numeric-range parameter (`oilTempC`, `waterTempC`, ...) from prose at all
+— always named as missing, never invented. A step with more than one
+recognized verb produces exactly ONE `RecipeStep`, naming the rest.
+Output is a `RecipeScript`-shaped DRAFT, same "never `.parse()`d here,
+hand off to `validate-recipe`" precedent as `recipe-scaffold.ts`'s
+`RecipeScaffold`. Proven via `tests/cooklang-translate.test.ts` (15
+synthetic-fixture unit tests) and `npm run capability-test:cooklang-
+translate` (`scripts/cooklang-translate-as-a-robot.ts`) — against REAL
+`data/entities/*.json`/`data/actions/*.json` and two REAL recipes
+(`handmade-alioli-egg-yolk.json`: recovers all 6 original actionIds
+round-tripped purely through Cooklang text; `tortilla-de-patatas.json`:
+the COMBINE ambiguity finding above, live). See `LEARNINGS_ENGINE.md`
+2026-08-18 for two further real regex bugs found building this (a `\b`
+word-boundary silently failing when an alias ends in punctuation, and a
+duplicate "missing required parameter" note for a parameter that was
+actually found).
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

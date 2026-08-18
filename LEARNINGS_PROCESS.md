@@ -1,1153 +1,271 @@
 # LEARNINGS_PROCESS.md
 
-Part of `LEARNINGS.md`'s theme split (2026-08-15 — see that file for the
-index and why). This file: **working method and verification discipline** —
-triaging externally-supplied documents/bug reports, checking claims (this
-repo's own design spec included) against real sources before enforcing
-them, and what a user's direct correction caught that self-review didn't.
-Not: engine/schema architecture (`LEARNINGS_ENGINE.md`), food-science/
-technique facts (`LEARNINGS_DOMAIN.md`), or CLI/authoring tooling
-(`LEARNINGS_TOOLING.md`).
+Part of `LEARNINGS.md`'s theme split. This file: the SPECIFIC incidents
+behind `LEARNINGS.md`'s Core verification-discipline rules — dated, with
+the concrete numbers/findings/decisions each one produced. **Read
+`LEARNINGS.md`'s Core section first** — if you just need the rule, it's
+there; this file is for when the specific precedent matters (e.g. "has
+this exact document/claim already been checked").
 
-Same rules as before the split: dated, append-only, concrete lessons only —
-not a changelog of *what* changed (that's `git log`), *why* a design choice
-was made. Don't rewrite or delete old entries — append.
+Pruned 2026-08-18 (was 1,153 lines) — every entry's generalizable lesson
+moved to `LEARNINGS.md`'s Core section; what remains here is the
+non-repeated residue: the specific claim, source, number, or decision
+each incident actually produced. See `LEARNINGS.md`'s "Periodic
+maintenance" section for the pruning discipline this followed.
 
 ---
 
 ## 2026-08-12
 
-### Process
-
-- **After any `engine.ts`/schema change: re-run every existing demo script +
-  every recipe + `tsc -p . --noEmit`, not just the new thing.** Caught two real
-  regressions this session this way (the `CRACK`/`.spawned` bug, the CCP-gating
-  bug) that a narrower check would have missed.
-- **`tsc` reports pre-existing `TS5097` (import-extension) errors across nearly
-  every file in this repo, unrelated to any change made here.** Filter with
-  `grep -v TS5097` when checking for *new* type errors, or the noise drowns
-  the signal.
-- **Cite sources for numeric claims that could be quietly wrong** (USDA/FDA
-  URLs and section numbers in `data/ccps/egg_cooking.json`, not just a bare
-  number) — and state explicitly when a figure is a simplification of a richer
-  real table (the Food Code's actual multi-point curve vs. this schema's
-  two-point model), rather than implying more precision than was verified.
-- **"Can the vocabulary make dish X end-to-end" is a better progress signal than
-  phase checkboxes, and it's empirically checkable — write the attempt as a
-  script, run it, let it fail where it actually fails.** `attempt-tortilla.ts`
-  proved two real, previously-only-implicit gaps this way: no verb combines two
-  separate instances into one (blocks potato+egg → tortilla mixture, same root
-  cause as the earlier "salad" gap in `garlic-oil-potatoes.json` — this is now
-  the third time it's blocked a real recipe, promoted to the top of
-  `ROADMAP.md` Phase 4 because of that), and no `FLIP` verb exists at all for
-  the single most technique-defining step of the dish. Neither gap is about
-  robot control/perception (`ENGINE_INVARIANTS.md` #11) — the vocabulary itself
-  stops short before physical execution is even the question. Worth
-  re-attempting a new real dish periodically specifically to surface the next
-  missing verb, rather than guessing at what to build speculatively.
-- **Both gaps above are now closed — `COMBINE` needed a genuine new engine
-  mechanism, `FLIP` didn't.** `FLIP` fit the existing single-target action
-  shape exactly (`addsTag`, same as `SALT`) — no schema/engine change at all,
-  pure data. `COMBINE` couldn't: `applyAction` only ever took one target
-  instance, and every existing "second ingredient" mechanism
-  (`requiredIngredientCapabilities`) explicitly only checks *presence*, never
-  consumes anything (that limitation is stated in `ROADMAP.md` Phase 4 itself).
-  Merging two real instances into a new one needed: a second required-capability
-  slot on the action (`requiredSecondaryCapability`, distinct from
-  `requiredIngredientCapabilities` on purpose — presence-check vs.
-  consume-and-replace are genuinely different operations, not degrees of the
-  same one), a new output shape (`combinesInto`, mutually exclusive with
-  `transformedState`/`transformedStateFromParameter` — there's no "resulting
-  state" on an instance being replaced by a different entity), and a second
-  destroyed-flag (`secondaryDestroyed`) so `recipe-runner.ts` knows to remove
-  the secondary instance too. All of it optional/unset by default, so every
-  action defined before this stayed completely unaffected — verified by full
-  regression, same discipline as every other engine change this session.
-- **Runtime-assigned spawned instance IDs (`entityId-N`, global counter across
-  the whole run) can't be predicted by reading a recipe file — they have to be
-  run to find out.** First draft of `tortilla-de-patatas.json` guessed
-  `egg_cracked-1`; the actual ID was `egg_cracked-3` (CRACK's own
-  `["egg_shell", "egg_cracked"]` byproduct order, after `potato_peel-1` from an
-  earlier step, ate counters 1 and 2 first). `validate.ts` can't catch this —
-  it explicitly doesn't simulate a run, just logs a NOTE for any
-  `targetInstanceId`/`secondaryInstanceId` not in `initialInventory`. Running
-  the recipe and reading the actual log is the only real check.
-- **A wrong/typo'd id in `availableIngredientInstanceIds` fails SILENTLY, not
-  loudly — found this the hard way, not by design review.**
-  `handmade-alioli-egg-yolk.json` referenced `"egg_yolk-1"` for months of
-  session-time (several turns) when the actual spawned id was always
-  `"egg_yolk-3"` — and it never errored, because `recipe-runner.ts`'s
-  resolution (`inventory.get(id)?.entityId`, filtered for `undefined`) just
-  drops an unresolvable id rather than failing. The step "worked" anyway
-  because `oil-1` alone already satisfied `isEmulsifier`. A step can look
-  correct in every log line and still be silently not using an ingredient you
-  meant it to. Worth grep-checking recipe files for instance ids that don't
-  appear anywhere as a spawn source, not just trusting a clean run.
-- **Byproduct/combine spawning always hardcoded `tags: []` for the new
-  instance, discarding the parent's tags — a real bug, not a hypothetical
-  one.** Would have silently defeated a `pasteurize` → `separate` → `emulsify`
-  safety chain: the whole point of tagging a pasteurized egg is that the tag
-  survives being split into yolk/white. Fixed by inheriting the parent's (and,
-  for `combinesInto`, the secondary instance's) tags into spawned instances,
-  filtered against the spawned entity's own `possibleTags` so nothing
-  semantically nonsensical leaks through. Every entity that's meant to receive
-  an inherited tag needs that tag explicitly listed in its own `possibleTags`
-  — the filter is a feature (stops garbage propagation), not a bug, but it
-  means adding a new safety tag anywhere requires updating every entity
-  downstream that should be able to carry it.
-- **Not every safety shortfall deserves the same `advisoryOnly` treatment.**
-  `egg_cooking.json` (a runny yolk from active cooking) is `advisoryOnly: true`
-  — a real FDA-recognized "disclosed, diner accepts it" practice.
-  `egg_pasteurization_raw.json` (raw egg yolk used with NO pasteurization step
-  at all, e.g. in alioli) is `advisoryOnly: false` — a hard reject in every
-  `SafetyPolicy` mode, including "human," on purpose: there's no equivalent
-  "the child knowingly accepted this" framing for silently skipping the one
-  mitigation available. The mechanism (`SafetyPolicy`) doesn't decide this by
-  itself — the CCP author has to make the actual judgment call per hazard, and
-  say why, not default every CCP to the same posture.
-- **A recipe using a raw, safety-relevant ingredient (raw egg yolk) can run
-  with ZERO enforcement for a long time if the enforcement mechanism is keyed
-  to the wrong trigger.** `egg_cooking.json`'s CCP only checks on
-  `FRY`/`SCRAMBLE`/`POACH`/`BOIL` — actions with a `durationSeconds` tied to
-  active cooking. `handmade-alioli-egg-yolk.json` never cooks the yolk at all
-  (that's the entire point of the dish), so that CCP silently never applied,
-  across several turns of session-time, until directly asked to "refine" the
-  recipe for real use. The fix needed a genuinely different CCP (a different
-  point on the real time-temperature curve — low-temp, long-hold, stays raw —
-  not a stricter version of the cooking one) tied to a NEW action
-  (`PASTEURIZE`) that the recipe didn't previously have a reason to include.
-  Worth checking, for any raw/never-cooked ingredient use: is there actually
-  an action in the sequence the safety mechanism can attach to at all?
-- **A boolean comparison against `NaN` is `false`, not an error — so
-  `if (seconds < threshold)` silently SKIPS a safety check on malformed input
-  instead of failing it.** Found by deliberately asking "what would a robot
-  need this to guarantee" rather than by code review: the CCP-shortfall check
-  in `engine.ts` only worked correctly because every CCP-linked action
-  happens, by convention, to also declare `durationSeconds` as a validated
-  `numericRange` parameter (which throws on `NaN` earlier in the same
-  function) — the CCP check itself wasn't self-defending. Fixed with an
-  explicit `Number.isNaN` guard right at the check, not relying on an
-  implicit, unenforced coupling between two different parts of the function.
-  General lesson: any comparison-based safety gate fed by user/parsed input
-  needs its own guard against the input not being a valid number at all — a
-  missing bounds check elsewhere in the same function is not a substitute.
-- **`ActionSchema`'s precondition/effect shape (`requiredTargetCapability`
-  etc. as preconditions, `outputs.*` as effects) turns out to already be a
-  STRIPS/PDDL-style planning-operator representation — discovered by asking
-  "what recipe format would a robot actually want," not by designing for it
-  up front.** Every `RecipeScript.sequence` authored this session was a
-  human (me) doing backward-chaining through that precondition/effect graph
-  by hand, one file at a time — exactly the job an automated planner exists
-  to do. This reframes `CONCEPT.md` §12's long-flagged, unreconciled fork
-  (goal-based recipes vs. linear step-sequence): they're not actually
-  competing formats, one is the compiled OUTPUT of planning against the
-  other's GOAL spec. See `WORLD_MODEL.md`. Worth remembering generally: a
-  schema built for one purpose (validating/executing hand-authored recipes)
-  can turn out to already fit a different, larger purpose (automated
-  planning) it was never explicitly designed for — recognizing that is
-  cheaper than redesigning from scratch.
-- **A dish name can be a false friend across cuisines/languages —
-  "tortilla francesa" (Spanish: an everyday flat, fully-cooked plain omelette)
-  and "French omelette" (the classical technique: baveuse, folded) are NOT
-  the same dish despite the near-identical name.** Missed entirely until
-  directly asked to think about what a robot needs to make either "as asked":
-  the vocabulary could only express one flat/set outcome, no way to represent
-  a fold or a deliberately-soft interior. Fixed with new informational
-  parameters (`yolkDoneness`, `edgeStyle`, `internalTexture` on
-  `fry.json`/`poach.json`) and a new `FOLD` action — plus two recipes sharing
-  their first three steps EXACTLY, diverging only where the dishes actually
-  diverge, so the difference is checkable in a diff, not just asserted in
-  prose. General lesson: "make an omelette" isn't fully specified in any
-  cuisine's default — yolk doneness and fold-or-not are usually the two axes
-  that actually distinguish what was ordered, and neither was representable
-  before being asked about. Worth asking, for any dish name: what's the most
-  common real-world qualifier attached to an order for it, and is it actually
-  representable yet?
-- **A composite entity built from an at-risk ingredient (egg) needs its OWN
+- **`attempt-tortilla.ts` (write the attempt as a script, run it, let it
+  fail where it actually fails) found two real, previously-invisible
+  vocabulary gaps**: no verb merges two instances into one (blocked
+  potato+egg → tortilla mixture, the third time this exact gap blocked a
+  real recipe), and no `FLIP` verb existed. `FLIP` needed zero schema
+  change (fit the existing single-target `addsTag` shape exactly);
+  `COMBINE` needed real new mechanism: `requiredSecondaryCapability`
+  (distinct from `requiredIngredientCapabilities` — presence-check vs.
+  consume-and-replace are genuinely different operations) and
+  `combinesInto` (mutually exclusive with `transformedState`).
+- **Runtime-assigned spawned instance ids (`entityId-N`, a global counter
+  across the whole run) cannot be predicted by reading a recipe file —
+  they have to be run to find out.** A first-draft recipe guessed
+  `egg_cracked-1`; the real id was `egg_cracked-3` (an earlier step's
+  byproducts ate counters 1–2 first). `validate.ts` doesn't simulate a
+  run, so it can't catch a wrong guess here — only actually running the
+  recipe does.
+- **Not every safety shortfall deserves the same `advisoryOnly`
+  treatment, and the CCP author has to make that call per-hazard, not
+  default every CCP to the same posture.** `egg_cooking.json` (active
+  cooking, a runny yolk) is `advisoryOnly: true` — an FDA-recognized,
+  disclosed-risk practice. `egg_pasteurization_raw.json` (raw egg with NO
+  pasteurization step at all) is `advisoryOnly: false` in every
+  `SafetyPolicy` mode — there's no "the diner knowingly accepted this"
+  framing for silently skipping the one available mitigation.
+- **A safety mechanism keyed to the wrong trigger action can leave a
+  recipe with ZERO enforcement indefinitely.** `egg_cooking.json`'s CCP
+  only checked on `FRY`/`SCRAMBLE`/`POACH`/`BOIL`; a raw-egg-yolk recipe
+  that never cooks the yolk at all (alioli) silently never triggered it.
+  Fixed by adding a genuinely different CCP (`PASTEURIZE`, a different
+  point on the real time-temperature curve — low-temp, long-hold, stays
+  raw) rather than a stricter version of the cooking one.
+- **`if (seconds < threshold)` is `false` for `NaN`, not an error** — a
+  comparison-based safety gate silently PASSES malformed/unparsed input
+  unless it has its own explicit `Number.isNaN` guard; an implicit
+  coupling to a different validated field elsewhere in the same function
+  is not a substitute.
+- **`ActionSchema`'s precondition/effect shape turns out to already be a
+  STRIPS/PDDL-style planning-operator representation**, discovered by
+  asking what a robot would actually need, not designed for it up front —
+  every hand-authored `RecipeScript.sequence` is a human doing backward-
+  chaining through that graph by hand. Reframes `CONCEPT.md` §12's
+  goal-based-vs-linear-sequence fork: they're not competing formats, one
+  is the compiled output of planning against the other's goal spec.
+- **A dish name can be a false friend across languages**: "tortilla
+  francesa" (Spanish: a flat, fully-cooked everyday omelette) and "French
+  omelette" (the classical technique: baveuse, folded) are NOT the same
+  dish. Missed until asked what a robot needs to make either "as asked" —
+  the vocabulary could only express one outcome. Fixed with `yolkDoneness`/
+  `edgeStyle`/`internalTexture` parameters and a `FOLD` action.
+- **A composite entity built from an at-risk ingredient needs its OWN
   `criticalControlPointsByAction` — inheriting the ingredient doesn't
-  inherit the safety wiring.** `tortilla_mixture.json` (built from potato +
-  egg via `COMBINE`) had zero HACCP enforcement, silently, until asked
-  whether tortilla de Betanzos — a real dish DEFINED by an intentionally
-  liquid, barely-cooked interior — was makeable. Exactly the same shape of
-  gap `handmade-alioli-egg-yolk.json` had originally (a real safety-relevant
-  ingredient present, but the specific action/entity pairing that needed a
-  CCP reference never got one), the second time this exact class of bug has
-  been found by asking about a specific real dish rather than by auditing in
-  the abstract. General lesson, now twice-confirmed: whenever `COMBINE`
-  (or any future entity-merging mechanism) produces a new composite entity
-  from an at-risk ingredient, check whether the new entity's own
-  `criticalControlPointsByAction` was actually populated — `structure.
-  components` listing the ingredient is not the same as the safety wiring
-  carrying over, and nothing currently enforces that it does.
-- **Adding a CCP reference to an entity that previously had none can break a
-  standalone script that calls `applyAction` directly without loading
-  `ccps`** — not a flaw in the fix, the exact self-defending check
-  (`"was ccps not loaded/passed into applyAction?"`) written for this precise
-  situation, firing correctly for the first time. `attempt-tortilla.ts` never
-  needed `ccps` before because `tortilla_mixture` had nothing to reference;
-  once it legitimately did, the standalone demo needed the same `loadCcps()`
-  wiring the recipe-driven path already had. Any change that adds a new
-  `criticalControlPointsByAction` entry to an existing entity should be
-  treated as a potential breaking change for scripts that construct
-  `Instance`s directly (not through `run-recipe.ts`) — full regression across
-  the standalone demos, not just the recipes, is what actually caught this.
-- **A systematic sweep (every cooking-capable entity × its CCP wiring) found
-  ZERO further gaps after the Betanzos fix — worth doing proactively once a
-  pattern repeats twice, not waiting for a third dish to find a third
-  instance.** `tortilla_mixture` had the gap `handmade-alioli-egg-yolk` had;
-  once the same shape of bug showed up twice, auditing every
-  `isFryable`/`isBoilable`/`isPoachable`/`isScramblable` entity against its
-  `criticalControlPointsByAction` directly (rather than continuing to wait
-  for the next specific dish to expose the next instance) confirmed the
-  vocabulary was actually clean — `potato`/`potato_peel`/`garlic` correctly
-  have none (no comparable pathogen risk), everything egg-derived correctly
-  does. Turned into a permanent `validate.ts` NOTE (cooking capability +
-  zero CCP wiring) so this stays checked going forward, not just fixed once.
-- **The same inconsistent-rigor pattern existed for citations, not just
-  safety wiring — `egg`/`garlic` got an explicit "not independently
-  verified" hedge, `potato`/`salt`/`water`/`oil`/`egg_yolk`/`egg_white`/
-  `egg_cracked` didn't, for numbers with identical epistemic status.** Fixed
-  with a real `CitationSchema` (source + two honest confidence tiers —
-  deliberately no "primary_source" tier, since nothing in this repo has ever
-  been checked against one) added to `CompositionSchema`/
-  `ThermophysicalPropertiesSchema`, populated across every entity: USDA
-  FoodData Central for food composition, the CRC Handbook for pure chemical
-  constants (salt, water), Choi & Okos (1986) for the food-thermal-property
-  model, Eric Block's Allium chemistry work for garlic's flavor-chemistry
-  claim. Distinguishing WHY salt's melting point is higher-confidence than
-  potato's water content (pure compound, no natural variance, vs. a
-  biological product averaged across cultivars) is itself the more
-  scientifically honest position — not flattening every citation to the same
-  confidence level for consistency's sake.
-- **Citing salt's sodium content properly (instead of re-asserting the same
-  hedge) surfaced an actual, fixable numeric error**: the stored value
-  (38758mg/100g) was 1.49% off from the exact stoichiometric figure
-  (39337mg/100g, computed from IUPAC standard atomic weights — table salt is
-  essentially pure NaCl, so this is exactly derivable, not an empirical
-  approximation with real biological variance like the food-composition
-  figures). Found only by actually doing the arithmetic while sourcing the
-  citation, not by the citation exercise alone — "add a source" and "check
-  the number is actually right" turned out to be different, complementary
-  checks, and only doing the first would have left this wrong.
-- **Citing water's boiling point surfaced an unaddressed gap with no
-  workaround yet, not something fixable in the same pass**: 100°C is only
-  correct at 1 atm/sea level — this repo has no altitude/pressure parameter
-  anywhere, so every BOIL/POACH duration and every CCP threshold implicitly
-  assumes sea level. Recorded as a real, open gap (in `water.json`'s new
-  citation note) rather than silently assumed away — a robot operating at
-  meaningful altitude would need this accounted for and currently can't get
-  it from this model.
-- **Implementing the REAL D-value/z-value thermal-death-time model (the actual
-  math the FDA Food Code's own tables are built from) instead of two
-  hand-picked anchor points found a genuine, computable ~4x discrepancy
-  between my two existing egg-pasteurization CCPs — not a bug, but real
-  physics I hadn't made visible.** Both CCPs cite 57°C as a hold temperature;
-  one requires 3900s (in-shell), the other's real model predicts only ~975s
-  would be needed at 57°C (liquid). Computing that gap rather than asserting
-  "the shell matters" turned a plausible-sounding claim into a checkable
-  number (`node -e` one-liner, `~4.00x`, matches the expected order of
-  magnitude for real heat-penetration lag through a shell). General lesson:
-  where a genuinely standard, textbook formula exists (D/z-value kinetics is
-  not novel, it's how the reference tables were made in the first place),
-  implementing it as real, runnable math finds inconsistencies that citing
-  two separately-sourced numbers side by side will not — the numbers looked
-  independently plausible until asked to agree with each other via the same
-  formula.
-- **The real math also produced a genuine simplification, not just more
-  rigor**: once egg_yolk could be pasteurized directly (already-liquid,
-  no shell — the case where the model's uniform-temperature assumption is
-  actually valid), the alioli-with-egg-yolk recipe's wait dropped from 65
-  minutes to 3.5, backed by an actual USDA-cited regulated figure instead of
-  an in-shell process ported over by analogy. Being MORE correct (recognizing
-  two different physical scenarios need two different, properly-scoped
-  models) and MORE convenient (much shorter real recipe) turned out to be the
-  same fix, not a tradeoff — worth remembering that "more rigorous" and
-  "simpler for the end user" aren't always in tension.
-- **Auditing every action for "is blind retry safe" found a real bug: `PEEL`
-  can spawn a byproduct that doesn't physically exist.** `PEEL` neither
-  `destroysTarget` nor checks the target isn't already peeled — so a robot's
-  fault-recovery layer blindly re-issuing "PEEL potato-1" after an
-  interruption would spawn a SECOND `potato_peel` instance. You cannot peel a
-  potato twice and get two peels. The only `retrySafe: false` among all 21
-  actions, found only because the question was asked of every single one, not
-  because anyone flagged PEEL specifically. General lesson: "does re-running
-  this after a fault cause a double-effect" is worth asking of EVERY
-  destructive-adjacent action explicitly, not assumed safe by default — two
-  genuinely different reasons turned out to make most actions actually safe
-  (idempotent-by-construction, via engine.ts's existing `addsTag` dedup guard;
-  or fails-loudly via `destroysTarget` already having removed the target) —
-  and PEEL had neither.
-- **Filling repetitive structured domain data (verification/hazards/retry
-  info) across 21 files by hand invites exactly the kind of silent omission
-  this whole effort was trying to prevent — write a small one-off script
-  instead, then manually add the nuance that actually needs a human's
-  judgment.** Batch-applying a lookup table caught its own gap immediately
-  (missed 2 of 21 actions in the first pass, `bake`/`beat` — a whole-file
-  scan of `validate.ts`'s new NOTE output caught it right away, which is
-  exactly why that soft audit check was added to the tool in the first place,
-  not left as something to remember to check manually).
-- **`boil.json` had ZERO parameters — not even `durationSeconds` — despite
-  `egg.json`'s `criticalControlPointsByAction.boil` already referencing a CCP
-  that checks exactly that.** It still worked, because the CCP check reads
-  `params["durationSeconds"]` directly, independent of whether the action
-  formally declares it — but without a declared `numericRange`, `BOIL` never
-  got the sane-bounds/`NaN` validation `FRY`/`POACH`/`PASTEURIZE` all get from
-  the `parameters[]` loop. This is the exact concrete case the standalone
-  `Number.isNaN` guard added to the CCP check (a turn earlier, found by asking
-  "what would a robot need this to guarantee") existed to protect — not a
-  hypothetical, a real gap sitting in the same file the CCP referenced. Found
-  by deliberately auditing for parity across the cooking actions, not by
-  anyone flagging it directly. Worth periodically checking: does every action
-  wired to a CCP actually declare the parameter that CCP depends on?
-- **Carryover (residual) cooking is real, and `BOIL` was quietly pretending it
-  doesn't exist.** An egg keeps cooking for a period after leaving boiling
-  water — outer layers are hotter than the center, and that stored heat keeps
-  diffusing inward with zero external heat applied — so `durationSeconds`
-  alone does not fully determine final doneness; what happens immediately
-  after boiling does too. `BOIL`'s `transformedState: "boiled"` firing the
-  instant `durationSeconds` is reached was always a simplification of a
-  continuous process — exactly `WORLD_MODEL.md`'s abstract point (`Instance.
-  state` as a derived classification, not the underlying continuous reality)
-  showing up concretely, unprompted, in a dish rather than in a design
-  document. Fixed with `SHOCK` (an ice bath, `addsTag: "shocked"`) — not a
-  physics simulation (still correctly out of scope), just an explicit lever
-  to actually arrest the process at a known point, which is the honestly-
-  scoped answer, not a fuller simulation.
-
+  inherit the safety wiring.** Found twice independently
+  (`tortilla_mixture.json`, `handmade-alioli-egg-yolk.json`'s original
+  version) by asking about a specific real dish, not by auditing in the
+  abstract. A systematic sweep after the second instance (every cooking-
+  capable entity × its CCP wiring) found zero further gaps — turned into a
+  permanent `validate.ts` NOTE so this stays checked going forward.
+- **Citing salt's sodium content surfaced a real, fixable 1.49% numeric
+  error** (stored 38758mg/100g vs. the exact stoichiometric 39337mg/100g,
+  computed from IUPAC atomic weights — table salt is pure NaCl, so this is
+  exactly derivable, not an empirical figure with real biological
+  variance). "Add a source" and "check the number is actually right"
+  turned out to be different, complementary checks.
+- **Implementing the real D-value/z-value thermal-death-time model (not
+  two hand-picked anchor points) found a genuine, computable ~4x
+  discrepancy between two existing egg-pasteurization CCPs** — both cite
+  57°C, one requires 3900s (in-shell), the model predicts ~975s would
+  suffice at 57°C for already-liquid egg (no shell heat-penetration lag).
+  Once `egg_yolk` could be pasteurized directly, the alioli-with-egg-yolk
+  wait dropped from 65 minutes to 3.5, backed by a real USDA-cited figure.
+- **Auditing "is blind retry safe" for every action found one real bug**:
+  `PEEL` neither `destroysTarget`s nor checks the target isn't already
+  peeled, so a blind retry after an interruption spawns a SECOND,
+  physically impossible `potato_peel` instance — the only `retrySafe:
+  false` among 21 actions, found only by asking the question of every
+  single one.
 
 ## 2026-08-13
 
-### `crispy_french_fries` — capability existing and capability demonstrated are different claims
-
-- **Asked to "consolidate" frying knowledge, and checking the existing
-  recipes first (rather than assuming the new parameters were already in
-  use somewhere) found a real, worth-naming gap: nothing actually
-  exercised what had just been built.** `salted_fried_potatoes.json` (the
-  one FRY-using recipe with any depth) cuts its potato `diced` and calls
-  FRY with zero parameters — no `oilTempC`, no `doneness`, no `PAR_FRY`.
-  `oilTempC`/`PAR_FRY`/`topCookingMethod` all existed, were tested in
-  isolation (`capability-test:double-fry`), and validated cleanly — but
-  "the vocabulary can express X" and "a real dish in this repo actually
-  uses X" are different, both worth checking, and only the second is what
-  `ROADMAP.md`'s own "Capability tests" section claims to measure
-  ("Empirically checked, not reasoned about"). `crispy_french_fries.json`
-  closes that specific gap: the first recipe where shape (`julienne`),
-  `PAR_FRY`'s temperature, and `FRY`'s finishing temperature/doneness all
-  appear together on one dish, not exercised separately in three different
-  test scripts.
-- **Writing the recipe surfaced the shape↔duration disconnection concretely
-  instead of just abstractly.** `potato.json`'s `fryingScienceNote` already
-  said nothing connects `CUT`'s shape to frying duration — but actually
-  authoring a real recipe made the practical consequence visible: this
-  recipe's `julienne` shape and its `163°C`/`191°C` durations are only
-  correct together because they were BOTH chosen to match the same cited
-  source (Thermoworks' ~6mm stick assumption). Swap the shape to `diced`
-  with the same numbers and the schema validates identically while the
-  real-world result would be wrong (raw center or burnt-thin edges) — named
-  explicitly in the recipe's own `shapeConnectionNote` rather than left to
-  be rediscovered by whoever authors the next FRY-using recipe.
-
-### "Oma boils an egg" — scope-checking a heavily garbled instruction before building it
-
-- **A message that was genuinely hard to parse ("oma first mants we build
-  the base and oma just aks for an boiled egg. Make oma tests in all the
-  places") still had a confident, checkable READING even though its exact
-  SCOPE didn't** — worth separating those two kinds of uncertainty rather
-  than treating the whole message as equally unclear. The persona reading
-  (Oma = a naive end-user who should be able to say "boil me an egg" with
-  zero technical detail and have the robot handle the rest) mapped cleanly
-  onto `CONCEPT.md` §14's already-established Intent pipeline — high
-  confidence, no need to ask. What "in all the places" actually meant
-  (one demo? several dishes? edits scattered across every existing script?)
-  was genuinely unresolvable from the text alone and had real cost
-  attached to guessing wrong (touching many existing files vs. one new
-  one) — that's the part worth an `AskUserQuestion`, not the persona
-  reading itself. Asking about the part that was actually ambiguous,
-  instead of re-clarifying the part that wasn't, kept the question to one
-  round instead of several.
-- **Deliberately built the demo to prove the boundary CONCEPT.md §14 draws,
-  not to blur it.** The easy, wrong version of this script would quietly
-  have the "robot" also decide what Oma meant by "medium" via some ad-hoc
-  heuristic, making it look like the engine does intent resolution. Instead
-  the `Intent` object is explicitly GIVEN/hardcoded in the script with a
-  comment stating why: CONCEPT.md §14 says the LLM's only job is producing
-  that structured `Intent`, and this repo has no LLM — so the honest demo
-  starts one step AFTER where an LLM would have handed off, not before it,
-  even though skipping that distinction would have made for a slightly
-  more impressive-looking script.
-- **Caught and fixed a wrong function name before it would have been an
-  opaque runtime error for whoever ran the script next.** First draft
-  called a `resolveEggBoilDoneness` that doesn't exist — `egg-doneness.ts`
-  actually exports `EGG_BOIL_DONENESS` (the array) and `eggBoilDonenessRange`
-  (a lookup returning just the range, no `description`). Caught by actually
-  running the script (`npx tsx`) rather than trusting the import compiled
-  correctly, the same "run it, don't just write it" discipline this whole
-  session has applied to every other new script.
-
+- **A vague-sounding request ("robot simulator?") had two structurally
+  different honest answers** (manipulation/physics tier vs. symbolic
+  world-model tier) — the user's follow-up revealed they meant the
+  second; re-searched rather than retrofitting the first answer. See
+  `SIMULATION_TARGETS.md` for the sourced comparison.
+- **`requiredIngredientCapabilities` (water for BOIL, salt for SALT) is
+  structurally an EXISTENTIAL PDDL precondition, not an operator
+  parameter** — confirmed by actually trying to translate `boil.json`
+  into a PDDL operator. This repo's presence-only, non-consuming
+  semantics matches PDDL's own `exists` shape exactly, without needing
+  new machinery — a real pressure-test that the design was principled,
+  not accidental.
+- **Classical/STRIPS PDDL has no numeric fluents** — `thermal.ts`'s D/z-
+  value hold-time math literally cannot be expressed without a numeric-
+  capable planner variant (PDDL2.1/Metric-FF/ENHSP). No VirtualHome/AI2-
+  THOR/ProcTHOR/OmniGibson built-in vocabulary models a CCP's accumulated
+  thermal dose either (their "Cooked" is binary), and none has any
+  concept of `CitationSchema`'s provenance/confidence layer.
+- **A capability-diff audit script (every entity's asserted capability ×
+  every action's capability-reference fields) found 5 hits; 4 of 5 were
+  correctly-justified intentional gaps** (already had their own doc
+  comments explaining why) — only `salt.json`'s `isDissolvable` had a bare
+  `"todo"` instead of a justification, the real fix. A note that
+  JUSTIFIES vs. a note that ADMITS is the actual signal for "leave it" vs.
+  "fix it," not "the audit found it."
+- **Resisted padding an audit's output for uniformity** — `BEAT`'s
+  missing hazard was real (failed comparison against `MASH`, same manual/
+  repetitive/utensil-in-hand shape); adding hazards to `WASH`/`SALT`/
+  `PEPPER` "for symmetry" would have been dishonest padding, since nothing
+  comparably risky-shaped exists for them.
 
 ## 2026-08-14
 
-### Triaging a pasted external bug report — verify before adopting, even the fixes
-
-- **An externally-generated review is a set of claims to check, not a to-do
-  list to execute.** Ran every checkable claim against the actual code
-  before acting on it, and found the report was right about the two real
-  bugs, wrong about one "dead code" claim (`src/query.ts` — actually used by
-  `scripts/ask.ts`), and its own suggested fix for the biggest issue didn't
-  actually work as written (`allowImportingTsExtensions: true` alone hits a
-  second error, `TS5096` — needs `noEmit` too). Treating "the report says
-  so" as sufficient to skip verification would have propagated a
-  wrong fix and a false claim into the codebase — the same standard this
-  repo already holds its own citations to (`REFERENCES.md`) applied to a
-  document instead of a source, for the same reason.
-- **Most of the report's 20 items were already known, already-fixed, or
-  already-named gaps this repo's own `ROADMAP.md`/`LEARNINGS.md` track —
-  worth recognizing as confirmation, not new information, rather than
-  re-documenting them a second time.** Inventory consumption, the forbidden-
-  transition matrix, storage-hazard CCPs, robot-safe parameter mappings,
-  composite dish assembly, unpredictable instance ids, recipe metadata
-  standardization — all pre-existing, named, open `ROADMAP.md` items. Tag
-  inheritance and CCP-gating-on-`durationSeconds` were pre-existing, already
-  FIXED — the report itself correctly marked them as such. Acting on a
-  report means triaging what's actually new/actionable inside it, not
-  executing every line item as if novel.
-- **The two real bugs it found were both genuine inconsistencies between one
-  piece of code and its own immediate neighbor, not deep design flaws** —
-  the same shape almost every real bug this whole project has found has
-  had: `tsc -p .` vs. `tsc -p . --noEmit` (one config, two commands, only
-  one path ever actually exercised); `targetInstanceId`'s loud-failure
-  check three lines above `availableIngredientInstanceIds`'s silent one, in
-  the SAME function. Consistency checking against a neighbor already proven
-  correct keeps finding real bugs in this codebase — worth remembering as a
-  review heuristic, not just a coincidence.
-
-### A second external report, same day — mostly stale, two small real fixes taken
-
-- **This report was generated without seeing the previous commit** (its own
-  "Recommended Next Steps" #1 is "implement validation simulation mode" —
-  already shipped a commit earlier the same day — and it repeats the
-  `src/query.ts`-is-dead-code claim already checked and found false).
-  Cross-checking a second report against what's already true in the repo,
-  not just against the code, caught this immediately — the same
-  verify-before-acting discipline as the first report, applied to a report
-  whose own staleness was the thing to catch this time, not a wrong claim
-  about the code itself.
-- **Two suggestions were real and taken**: `makeHeatSource` was duplicated
-  verbatim between `tests/heat-source.test.ts` and `tests/place.test.ts` —
-  consolidated into `tests/helpers.ts` alongside `makeEntity`/`makeAction`/
-  `makeCcp`, the exact pattern that file's own doc comment already
-  describes. And one specific magic-number formula the report quoted
-  directly (`tests/place.test.ts`'s `secondsToBoil` line) got named
-  constants — applied narrowly to the one spot actually quoted, not as a
-  repo-wide magic-number sweep (most numeric literals elsewhere already
-  have adjacent doc-comment explanations, which is a different, already-
-  satisfied bar than "give every number its own named constant").
-- **Declined, with reasons, rather than silently ignored**: a `.strict()`
-  structured `RecipeMetadataSchema` would break every existing recipe's
-  freeform `metadata` (`peelingNote`, `comparisonGroup`, `crackContainmentNote`-
-  style keys are the established, load-bearing convention across every
-  `data/*.json` file in this repo, not sloppiness — see almost every entity/
-  action file's `metadata` block). A `src/index.ts` barrel export (and the
-  matching `src/types/index.ts` suggestion) would re-export `query.ts` as
-  if it were part of the same public surface as everything else, and
-  barrel files are a real, known cost (circular-import risk, worse tree-
-  shaking) for a ~15-file `src/` with no current consumer needing one. A
-  pluggable `Logger` interface has no current caller — every `console.log`
-  today is a demo/capability-test script, not the not-yet-built
-  control/perception layer `ENGINE_INVARIANTS.md` #11 already names as
-  separate, larger, unstarted work; building the logging abstraction now
-  would be speculative infrastructure for a caller that doesn't exist yet,
-  the same anti-pattern this repo's own `LEARNINGS.md` has repeatedly
-  named and avoided elsewhere. Error-message format standardization (choosing
-  one consistent backtick/quote convention across ~29 throw sites) was left
-  alone — genuinely cosmetic, zero functional benefit, and real risk of
-  introducing a typo across many files for a purely stylistic gain.
-
-### Triaging a scientific review — real physics built, a safety number verified but not silently changed
-
-- **A report that's mostly A+/A grades is still worth reading closely —
-  its few "needs verification" items were more valuable than the whole
-  rest of the report's confirmation.** Most of `scientific_review_report.md`
-  restated what was already true and already documented (correct D/z-value
-  model, correct phase-change physics, correct FDA alignment) — genuinely
-  useful as independent confirmation, but not actionable. The actionable
-  signal was concentrated in one small "Areas Needing Verification"
-  section; finding it meant reading past a lot of justified praise to the
-  few paragraphs that actually named something to check or build.
-- **Implemented altitude with the same standard this repo already holds
-  itself to for thermal_death-time math: the real formula, not a
-  convenient anchor point** — barometric pressure (ICAO Standard
-  Atmosphere) composed with water's actual Antoine vapor-pressure
-  equation, both independently real and citable, rather than the simpler
-  "100 - altitude×0.00321" approximation also found during research. The
-  extra rigor paid for itself immediately: the computed value at sea level
-  came out to 99.997°C (not exactly 100, since Antoine is itself a curve
-  fit) and Denver computed to 94.66°C — both self-consistency-checkable
-  against real-world commonly-cited figures without needing to trust the
-  formula blindly.
-- **A real, safety-relevant number (in-shell pasteurization hold time) got
-  found, verified against a real peer-reviewed source, and surfaced as a
-  decision rather than applied automatically — the correct action was
-  asking, not auto-correcting the CCP.** The temptation, having found a
-  specific, real, peer-reviewed figure (57.5min) close to the existing
-  "commonly cited, unverified" one (65min), would be to just update
-  `heldSeconds` and upgrade the citation confidence in the same motion —
-  the report explicitly asked for exactly this verification. But this
-  number gates whether raw egg is safe to serve someone with no other
-  mitigation (the CCP's own note: "the request that motivated this file"
-  was serving raw egg to a child) — a hard-to-reverse, safety-relevant
-  change belongs to the repo owner's explicit decision, not something that
-  happens as a side effect of "use the knowledge in the report." Asked;
-  the answer was to KEEP the existing, more conservative 65min — the
-  citation itself was still worth upgrading in place either way (a real
-  peer-reviewed source now backs the note, whichever number was kept), so
-  `egg_pasteurization_raw.json`'s `metadata` and `REFERENCES.md` were
-  updated to record the verification without touching `heldSeconds`. The
-  general lesson: "verify this citation" and "apply what you found" are
-  two different requests even when phrased as one, for exactly the class
-  of number where getting it wrong has a real, non-hypothetical cost.
-- **The altitude fix is the fourth real proof of `place.ts`'s
-  `advanceTempSeconds` generalization, not a coincidence worth letting
-  pass unremarked.** Water/boiling (original), oil/frying, potato (via
-  the existing `boilingPointC` path), and now an arbitrary computed target
-  temperature via `waterBoilingPointC` — all composed with the exact same
-  two functions, zero changes needed each time. A generalization that
-  keeps paying off on unrelated forcing cases is the actual evidence it
-  was the right abstraction, more convincing than any one of the
-  individual cases alone.
-
+- **`place.ts`'s energy-balance approximation is one constant mid-range
+  power/efficiency value for the whole heating interval** — checked to
+  make sure `advanceHeatSeconds` reused this exact simplification rather
+  than inventing a second, silently-different one for the same physical
+  question.
+- **A real ordering trap in a refactor was caught by tracing one specific
+  existing test's failure MESSAGE, not just its pass/fail.** A naive
+  `advanceHeatSeconds` → `advanceTempSeconds` wrapper resolved
+  `boilingPointC` before checking place/entity match, breaking an
+  existing "throws on mismatched entity" test's error content (wrong
+  message, not wrong pass/fail) for the fixture with no `thermophysical`
+  block at all. "Tests still pass" isn't proof of preserved behavior
+  until failure-message content is checked too.
+- **`requiredTools` matched by exact entity id with NO capability-based
+  path, even though the identical distinction was already solved for
+  ingredients (`requiredIngredientCapabilities`)** — the asymmetry was
+  already named in `action.ts`'s own doc comment, just never carried to
+  the tool side. Generalizing the MECHANISM (not widening one entity's
+  capabilities to make one scenario pass) was the right reading of "make
+  it generic" — proven by keeping the correct-rejection case (pan ≠ deep
+  vessel) in the test, not discarding it.
 
 ## 2026-08-15
 
-### A user-supplied document with no bibliography — extracting what verifies, not what's written
-
-- **The user added `frying-potatoes-science.md` and asked to extract
-  anything good from it.** Every claim in it carries a bracketed number
-  like `[15, 21, 262]`, but no bibliography or reference list exists
-  anywhere in the file — those numbers point at nothing checkable. This
-  repo's whole standing discipline (`CLAUDE.md`: every fact traces to a
-  real source) meant the document itself could not be treated as a
-  citation, no matter how confident or specific its numbers looked
-  (a claimed "38% oil-absorption reduction," "92% polyphenol loss,"
-  per-cultivar amylose percentages) — it had to be treated as a set of
-  LEADS to independently verify, not facts to transcribe.
-- **Checking caught a real problem in my OWN verification, not just the
-  document's.** Trying to corroborate the document's oil-absorption
-  claim, a web search summary confidently reported "13% less absorbed
-  oil, according to independent laboratory testing" and named the
-  article. Fetching that exact article directly showed the number
-  wasn't in it at all — no percentage, no named lab, nothing. The
-  search summary had fabricated (or misattributed from a blended
-  result) a specific figure with a specific-sounding source, the exact
-  same failure mode as the uploaded document's own uncheckable
-  citations, just one layer further from the user. Neither number
-  (38%, 13%) made it into the repo — the technique is real and
-  independently corroborated as a technique, reported with no
-  percentage at all, rather than replacing one unverifiable number with
-  another that merely LOOKED more legitimate for having come from my
-  own search. This is the concrete argument for this session's whole
-  "verify via direct lookup, not search summary" discipline — it caught
-  a fabrication that would otherwise have quietly upgraded from
-  "user-supplied, uncited" to "web-search-verified" while being equally
-  false.
-- **What DID survive checking, extracted and cited for real**: the
-  Maillard reaction's ~140°C onset (converged closely across multiple
-  independent food-science summaries, checked directly — added as
-  `MAILLARD_REACTION_ONSET_TEMP_C` in `heat-penetration.ts`, a genuine
-  small step toward that file's own already-named "no browning model"
-  gap: not a kinetics model, just a real, honest "below this, browning
-  is chemically impossible at all" threshold, immediately useful in the
-  capability-test script — 120°C oil, already in `fry.json`'s own
-  `oilTempC` range, literally cannot brown a potato no matter how long
-  it fries); the cold-oil-start technique itself (real, multi-source
-  corroborated, reported qualitatively only); and a free, welcome
-  corroboration of `oil.json`'s own already-cited specific heat (the
-  document's 0.47 cal/(g·°C) converts to ~1967 J/(kg·K), within 0.2% of
-  this repo's existing 1970 figure) — the one piece of the document
-  that needed no independent search at all, just a unit conversion
-  against a number already in this repo.
-- **What did NOT get extracted, named rather than silently dropped**:
-  the per-cultivar amylose/amylopectin/slicing/temperature table maps
-  directly onto the "variety/starch-content" gap this repo has now
-  named as deferred three commits running — but its specific numbers
-  are exactly the kind this document's missing bibliography makes
-  uncheckable, and building out real cultivar entities is real,
-  separate, larger work, not something to back into via one unverified
-  table during an "extract something good" pass.
-- **A second version, `frying-potatoes-science-v2.md`, appeared mid-task
-  WITH a bibliography added — checking it, rather than assuming a
-  bibliography settles the question, surfaced the strongest evidence yet
-  that neither version should be trusted as a source at all.** The
-  in-text bracket numbers still run past [560] with no sequential
-  scheme; the appended bibliography lists exactly six items, unnumbered
-  in any way that maps to those brackets. Of the six: one (Baranyi &
-  Roberts 1994) is a real, well-known paper — about bacterial growth
-  KINETICS, unrelated to potato starch or frying. Two are unrelated
-  computer-science arXiv preprints — one literally titled "SemanticCite:
-  Citation Verification with AI-Powered Full-Text Analysis," a strong
-  signal this document's citations were generated by exactly the kind of
-  automated pipeline that paper's own title describes, not assembled by
-  someone tracing real sources. Another is a 1999 paper on evaluating
-  the trustworthiness of internet sources — cited, unintentionally,
-  inside a document whose own citations don't survive that exact
-  scrutiny. None of the six plausibly sources the document's specific
-  numeric claims (38% oil reduction, 92% polyphenol loss, per-cultivar
-  starch percentages). This wasn't a nitpick worth omitting from the
-  final report — the user was told directly, since it changes how much
-  the document as a WHOLE should be trusted going forward, not just
-  which specific numbers got left out of this repo.
-
-### `garlic-oil-potatoes.json` — a user's real technique found a real bug this repo's own tooling had no way to catch
-
-- **The user described the actual technique: cut garlic small/halved, fry
-  in abundant oil until brown, remove it carefully WITHOUT letting it
-  rest in the hot oil (burnt garlic turns bitter), then fry the potatoes
-  in the still-hot oil right away.** Comparing that against the existing
-  recipe's own sequence surfaced a real bug, not a style preference: the
-  original order fried garlic FIRST, then spent three more steps (WASH/
-  PEEL/CUT) prepping the potato while garlic sat in the hot oil the
-  entire time — the EXACT mistake the real technique warns against. No
-  test, no schema check, nothing in this repo had ever caught it,
-  because nothing here models elapsed idle time at all — a recipe that
-  runs with zero errors can still encode a real cooking mistake in its
-  STEP ORDER, a category of bug none of this session's other checks
-  (timing-vs-doneness, tool/ingredient capability, prep heuristics) were
-  built to catch. Fixed by reordering: all potato prep now happens
-  BEFORE garlic ever touches the oil, so garlic goes in last and `FRY
-  potato-1` is the very next step after it finishes — no idle steps
-  between "garlic done" and "potato in."
-- **Named the real limit of that fix rather than let it look complete**:
-  this repo has no verb for "physically remove this instance from the
-  vessel" — garlic-1 still sits in the final inventory, "in" the same
-  oil the whole time in the model's own terms. The reorder is the
-  closest available fix given that constraint (minimize the steps where
-  nothing productive happens while garlic could still be absorbing
-  carryover heat), not a real removal action — recorded explicitly as
-  `removalNote`, a new missing-verb gap (REMOVE/TAKE_OUT) distinct from
-  but related to the already-named missing REST verb.
-- **Checking the actual duration, not just the sequence, found a second
-  real bug the user's warning made worth looking for**: 400s (6.7min)
-  for browning garlic exceeds real cited guidance (3-5 minutes,
-  Inspired Taste, checked via direct lookup) — independent sources
-  explicitly warn to remove garlic a bit EARLY since carryover heat keeps
-  darkening it after removal, the same mechanism named above. 400s
-  wasn't just "past the ideal window," it was long enough to plausibly
-  BE the actual cause of "burnt, bad-tasting garlic" on its own, before
-  the sequencing bug is even considered. Reduced to 240s, the cited
-  range's own midpoint, not a new number invented for this recipe.
-- **"Small pieces or halves" resolved to `halved`, not `chopped`
-  (already a valid state) — a real, deliberate choice, not an arbitrary
-  pick between two options the user said were equally fine.** The user's
-  own stated reason for the whole fix — being able to take the garlic
-  OUT of the oil — only works cleanly with large, easy-to-retrieve
-  pieces; a fine chop scatters through oil and can't realistically be
-  fully removed by hand or spoon. `halved` needed adding to
-  `garlic.json`'s own `possibleStates` first (it already existed
-  globally as a `cut.json` shape value, added for potato — this is the
-  first entity to actually use it for garlic), the same "shape enum is
-  global, each entity opts in via its own possibleStates" pattern
-  established when potato needed it.
-
-### The `INVALID_TRANSITIONS` flagship example was factually wrong — caught the moment it was finally enforced
-
-- **"You cannot peel a potato that is already boiled" — `CLAUDE_DEV_CTX.md`'s
-  own literal example, repeated in `peel.json`'s metadata since this
-  repo's first commit — is wrong.** Boil-in-jacket-then-peel is a real,
-  common technique (the standard method behind many potato salad
-  recipes, and for jacket/new potatoes generally). The user caught this
-  directly, immediately after the `INVALID_TRANSITIONS` closure commit —
-  the first time this specific claim was ever actually ENFORCED rather
-  than just carried as prose. It had been sitting, unchecked, in three
-  separate places (the design spec, `peel.json`'s notes, `potato.json`'s
-  notes) for the entire life of this repo, cited approvingly by name in
-  this session's own earlier work as "the worked example" for exactly
-  this feature — and never once verified against real cooking technique.
-- **The exact failure mode this session's own discipline exists to
-  prevent, applied to itself.** `CLAUDE.md` requires every factual claim
-  in `data/*.json`/`src/*.ts` to trace to a real source
-  (`REFERENCES.md`); this claim traced only to another document's
-  illustrative code sample, never independently checked, and inherited
-  uncritically because it *sounded* plausible and matched a superficial
-  intuition ("boiled food is already cooked, why would you still need to
-  peel it") that doesn't survive contact with an actual, extremely common
-  technique. The same "check, don't assume" lesson this file already
-  recorded for the frying-science doc's fabricated bibliography and
-  `WORLD_MODEL_OPTIMIZATION.md`'s `COMBINE` claim — but this time the
-  wrong claim originated from the ORIGINAL design spec this whole repo is
-  built against, not an external document, which is exactly why it went
-  unchecked for longest: a spec doc reads as more authoritative than a
-  random externally-supplied report, and that's precisely backwards for
-  a domain-fact claim with no citation attached.
-- **Fixed by retraction, not by softening.** Every `potato.json`
-  `invalidTransitions` entry that forbade reverting to `"peeled"` was
-  removed outright, across every processed state (sliced/diced/.../
-  boiled/fried/baked), not narrowed to a hedge. What survived —
-  `mashed` forbidding reversion to any intact-piece state — is the one
-  entry that's structurally, not conventionally, true: a puréed potato
-  has no discrete skin or shape left for PEEL/CUT/GRATE/BOIL/BAKE to
-  meaningfully act on. That distinction (a real physical constraint vs.
-  a plausible-sounding but unverified process-order convention) is the
-  actual lesson: this session's earlier "narrow, provably correct, not
-  padded" framing for `invalidTransitions` was the right instinct, just
-  not applied skeptically enough to the ONE entry that was borrowed
-  wholesale from someone else's example instead of derived from this
-  repo's own already-cited technique sources.
-- **The per-entity-vs-global design justification (previous entry, same
-  file) survives the correction, but on adjusted evidence.** The
-  original "concrete proof" was potato's (wrong) `boiled -> peeled`
-  rule directly contradicting egg's real, required `boiled -> peeled`
-  order under the same bare state name. With potato's rule retracted,
-  today's shipped data no longer has a live collision — but the near-miss
-  itself, which genuinely happened during development before being
-  caught, is still real evidence that a single global map is fragile in
-  exactly the way per-entity keying isn't: it's not hard to imagine
-  authoring one entity's rule and unknowingly breaking another's under a
-  shared key, especially when — as just demonstrated — a rule can look
-  well-justified and still be wrong. Recorded as "a risk concretely
-  demonstrated, not a live contradiction," not overclaimed as still-true
-  today. See `ROADMAP.md`'s Phase 4 entry and `ingredient.ts`'s
-  `invalidTransitions` doc comment for the corrected framing, and
-  `tests/engine.test.ts` for the rewritten (mashed-potato,
-  and a labeled-synthetic per-entity-necessity) tests that replaced the
-  ones built on the retracted claim.
-
-### Re-auditing egg for the same mistake — a useful, generalizable check method, not just a one-off fix
-
-- **Asked directly to check `egg.json`/`egg_cracked.json` for the same
-  class of error.** The check that actually worked for potato wasn't
-  "read the rule and see if it sounds plausible" (that's exactly how the
-  wrong rule got authored in the first place) — it was "name the
-  single strongest real counter-technique this rule would need to
-  survive, then check specifically against that." For egg, the analogous
-  case to boil-then-peel is a peeled, hard-boiled egg shallow-fried
-  before going into a sauce — a real, well-known dish (Indian/Southeast
-  Asian egg curry; the same move underlies a Scotch egg's core).
-  Confirmed `peeled -> fried` was correctly NOT forbidden by the existing
-  rules — no repeat of the potato error.
-- **Found a genuine confidence gradient worth telling apart, not a binary
-  right/wrong.** `fried`/`poached` forbidding `peeled` rests on a
-  structural fact (neither preparation ever has a shell in play, so
-  there's nothing to peel) — the same solid category as potato's
-  surviving `mashed` rule and egg_cracked's coagulation-irreversibility
-  rule. `sliced`/`diced`/`chopped` forbidding `boiled`, by contrast,
-  rested only on "no counter-example found during an active search" —
-  structurally identical to the epistemic position that was WRONG for
-  the potato claim, even though no actual counter-example turned up this
-  time. Retracted anyway, on the principle that "I looked and couldn't
-  find one" is not the same strength of evidence as "there's no physical
-  substrate left for this to act on," and this session just demonstrated
-  the former can be wrong. Worth generalizing: when auditing a forbidden-
-  transition (or similarly totalizing) claim, sort the justification into
-  STRUCTURAL (survives) vs. UNVERIFIED-ABSENCE-OF-COUNTEREXAMPLE (retract
-  or flag), rather than treating "nothing found wrong on read-through" as
-  sufficient on its own — see `egg.json`'s own `invalidTransitionsNote`
-  for this classification applied directly to its own remaining data.
-
-### A user-supplied `WORLD_MODEL_OPTIMIZATION.md` — mostly not new, and that was the useful finding
-
-- **Asked to read a doc "from Claude web" before finalizing the recipe-
-  player plan — most of its nine proposed extensions turned out to
-  already be tracked somewhere in this repo, not new information.**
-  Inventory consumption and forbidden state transitions are `ROADMAP.md`
-  Phase 4 items already (the latter already called "the single largest
-  unbuilt piece of the original spec"); alternative actions/substitution
-  is already in `architecture_phase4_ticket.md`'s proposed `Action`
-  extensions, a ticket still sitting at its own unreached Approval Gate
-  1. Cross-checking against the actual repo state rather than treating
-  a fresh-looking doc as fresh information was the right first move —
-  the same discipline as every other externally-supplied document this
-  session (the frying-science doc, the bugs/best-practices reports).
-- **One real, useful, genuinely new piece survived the check**: a
-  concrete mechanism (`Instance.inProgressAction`) for the "co-located
-  instances sharing PLACE state" gap `ROADMAP.md` has named since
-  2026-08-14 but never given a specific shape to. Logged directly into
-  that `ROADMAP.md` entry rather than a new file, so it's found
-  alongside the gap it answers, not floating separately.
-- **One real factual inaccuracy in the doc, worth correcting rather than
-  silently ignoring**: it claims `COMBINE` "doesn't verify inputs exist
-  and are in the right state" — real, tested, capability-verified two-
-  input composition has existed since 2026-08-12. An externally-supplied
-  document being mostly right doesn't mean every claim in it survives
-  checking against the actual code, the same lesson the frying-science
-  document's fabricated bibliography taught more sharply a few turns
-  earlier — this time the error was smaller (describing an existing
-  mechanism inaccurately, not fabricating a source), but the fix is the
-  same: check, don't assume, and correct in place rather than pass the
-  inaccuracy along.
-
-### A Reddit thread (r/Cooking, 219 comments) — mostly noise, three real findings survived a filter
-
-- **Asked to "study" a copy-pasted 219-comment thread and extract good
-  ideas — the actual useful work was filtering, not reading.** The vast
-  majority of the thread is book/YouTube-channel recommendations (Kenji,
-  Alton Brown, Salt Fat Acid Heat, ...) repeated dozens of times —
-  correctly not worth logging individually. The filter that worked:
-  ignore anything that's just "read this book," look specifically for
-  comments describing a STRUCTURE (a decision rule, a template, a
-  mechanism) rather than a resource — the same "extract the checkable
-  claim, not the vibe" discipline already applied to the frying-science
-  doc and `WORLD_MODEL_OPTIMIZATION.md`.
-- **The single most-repeated idea (Salt/Fat/Acid/Heat) turned out to be
-  actionable specifically BECAUSE this repo already has 3 of the 4
-  pillars built.** Checking the claim against the actual repo state
-  (`grep`-verified, not assumed) is what turned "cooking is about salt,
-  fat, acid, heat" from a vague truism into a precise, prioritizable gap:
-  Salt/Fat/Heat are real, structural, first-class parts of this
-  vocabulary already; Acid had literally zero representation, not even
-  in `ROADMAP.md`'s own "still missing" ingredient list's phrasing before
-  this session. The thread didn't teach this repo anything about cooking
-  it didn't already half-know — it supplied the prioritization signal
-  that Acid specifically, not "one more ingredient among several," was
-  the honest next move.
-- **Verified the specific counterbalance claims against real sensory-
-  science literature before writing them into `data/*.json`, not just
-  the Reddit comment that named them** — same standard as every other
-  factual claim this repo makes. Two of the three pairs named
-  (sweetness/sourness mutual suppression; salt suppressing bitterness)
-  have real, checkable, peer-reviewed primary sources with DOIs (Mao et
-  al. 2022, *npj Science of Food*; Breslin & Beauchamp 1995, *Chemical
-  Senses*) — found by searching the mechanism, not the Reddit comment's
-  wording, and confirmed via direct lookup of the actual paper text, not
-  a search-engine summary alone. The third (acid "cutting through"
-  richness/fat) has real culinary-science characterization but no
-  primary psychophysics study as clean as the other two turned up in
-  this pass — logged at the weaker `commonly_cited_unverified` tier
-  rather than overstating its evidentiary weight to match the other two.
-  See `REFERENCES.md` and `src/flavor-balance.ts`'s own doc comment for
-  the full citations.
-- **Two other findings (a `PLATE`/component-cooking composition
-  primitive distinct from `COMBINE`; external validation for Phase 4.5's
-  template/scheduling shape) were logged directly into `ROADMAP.md`
-  rather than repeated here** — same pattern as the `WORLD_MODEL_
-  OPTIMIZATION.md` triage: a finding that answers or extends a named gap
-  belongs next to that gap, not floating in a separate log a future
-  session has to remember to cross-reference.
-- **The source document itself moved to `olddocs/reddit-thread-
-  1mo4tj8.md` after triage** — same convention as every other externally
-  -supplied document this session (`bugs_and_improvements.md`,
-  `scientific_review_report.md`, `WORLD_MODEL_OPTIMIZATION.md`): kept for
-  provenance, not left cluttering the repo root.
+- **A second-version document (`frying-potatoes-science-v2.md`) arriving
+  mid-task WITH a freshly-appended bibliography was itself the strongest
+  evidence neither version should be trusted**: in-text bracket numbers
+  ran past [560] with no scheme matching the six-item bibliography; one
+  citation was a real paper about unrelated bacterial-growth kinetics,
+  two were unrelated CS arXiv preprints (one literally titled about
+  AI-generated citation verification — a strong signal the citations
+  themselves were machine-generated), none plausibly sourced the
+  document's actual numeric claims (38% oil reduction, 92% polyphenol
+  loss). What DID survive independent checking: the Maillard reaction's
+  ~140°C onset (`MAILLARD_REACTION_ONSET_TEMP_C`), the cold-oil-start
+  technique (reported qualitatively, no percentage), and a free
+  corroboration of `oil.json`'s existing specific-heat citation (within
+  0.2%).
+- **`garlic-oil-potatoes.json` fried garlic FIRST, then spent three more
+  steps prepping potato while garlic sat in hot oil — the exact mistake a
+  user-described real technique warns against** (burnt garlic turns
+  bitter). No schema/engine check anywhere catches step-ORDER mistakes;
+  this repo doesn't model elapsed idle time at all. Fixed by reordering
+  (all potato prep before garlic touches oil) and reducing garlic's
+  browning time from 400s to 240s (cited range's midpoint; 400s exceeded
+  real guidance of 3-5 min and was independently long enough to explain
+  "burnt, bad-tasting garlic" on its own).
+- **`CLAUDE_DEV_CTX.md`'s own flagship `INVALID_TRANSITIONS` example
+  ("cannot peel a potato that is already boiled") is factually wrong** —
+  boil-in-jacket-then-peel is a real, common technique. It sat unchecked
+  in three files since this repo's first commit, cited approvingly as
+  "the worked example" for this exact feature, until the user caught it
+  the moment it was finally enforced. Fixed by RETRACTION (every
+  `potato.json` entry forbidding reversion to `"peeled"` removed
+  outright), not softened — what survived (`mashed` forbidding any
+  intact-piece state) is the one entry that's structurally, not
+  conventionally, true. Re-auditing `egg.json` for the same class of
+  error found no repeat, but did retract `sliced`/`diced`/`chopped`
+  forbidding `boiled` anyway: its justification was "no counter-example
+  found," the same weak evidentiary shape that was wrong for potato, even
+  though no actual counter-example turned up this time.
 
 ## 2026-08-16
 
-### A fabricated cross-reference caught before it shipped, not after
-
-- **Writing `REFERENCES.md`'s TICKET 6 additions (`PAPER_NOTES_2608.04768.md`
-  — background-reading citations for a future ticket), a sentence claimed
-  the Sochacki et al. (2024) robotic-chef survey was "also independently
-  the source cited elsewhere in this repo for the frying-science/oil-
-  absorption discussion."** That specific claim was invented mid-sentence
-  — plausible-sounding (this repo genuinely does cite frying-science
-  sources, and Sochacki is a real, common surname in this exact
-  literature), not grounded in anything actually checked first. Caught
-  immediately, before the edit was finalized, by running the check that
-  should have come BEFORE writing the sentence, not after: `grep -i
-  sochacki` across `REFERENCES.md` and every `data/`/`src/` file — zero
-  hits, no such citation exists anywhere in this repo. Corrected in the
-  same change (the sentence removed) rather than left as a plausible-but-
-  false cross-reference for a future reader to trust.
-- **Worth logging as a real, current-session occurrence, not a
-  hypothetical this repo's discipline merely guards against** — this is
-  the identical failure shape `LEARNINGS_ENGINE.md`/this file have
-  flagged before in OTHER material (the frying-science doc's fabricated
-  bibliography; `WORLD_MODEL_OPTIMIZATION.md`'s inaccurate `COMBINE`
-  claim), just produced this time by this session's own writing rather
-  than an externally-supplied document. The lesson those earlier entries
-  drew — verify a specific, checkable claim before it ships, don't rely
-  on how plausible it sounds — applies exactly as much to a sentence
-  written five minutes ago as to a document written by someone else.
-
-### `src/reachability.ts` (TICKET 4) — checking a suggested test case before building it, then trusting the tool's own output over intuition
-
-- **`PAPER_NOTES_2608.04768.md` TICKET 4 suggested a specific "good forcing
-  case" for a reachability dead-end demo: "a potato that has been mashed —
-  which INVALID_TRANSITIONS should close off from fried." Checked against
-  `data/entities/potato.json` before writing a single line of the demo
-  script, not trusted from the ticket's own prose.** It's factually wrong:
-  `mashed → fried` is deliberately LEGAL in this repo's already-audited
-  data (`mashNote`'s potato-cakes exception, closed 2026-08-13). This is
-  the SAME failure shape this file has now logged three times this
-  session in three different sources (a user-supplied frying-science
-  doc's fabricated bibliography; this session's own `REFERENCES.md`
-  sentence about Sochacki et al.; now a ticket's own suggested test case)
-  — worth naming as a pattern rather than three unrelated incidents: a
-  plausible-sounding claim about THIS repo's specific data is exactly the
-  category of thing that must be checked against the actual file, every
-  time, regardless of how authoritative-sounding the source is. Fixed by
-  using a different, verified dead end (`burned`, already proven terminal
-  by `isTerminalState` the same day) for the demo's "clean unreachable
-  case" instead.
-- **Having caught that, the search was then trusted over intuition when
-  it reported something genuinely surprising: `mashed potato → goal
-  "peeled"` came back REACHABLE.** The instinctive reaction was to treat
-  this as a bug in the new code and go looking for what was wrong with
-  `isGoalReachable`. It wasn't a bug — tracing the reported path
-  (`fry` then `peel`) by hand confirmed it's a real consequence of the
-  ACTUAL data: `potato.json` has no `"fried"` key in `invalidTransitions`
-  at all, so nothing stops `PEEL` from running on a fried potato. The
-  right response to a surprising-but-traceable result from a tool built
-  this same session is to verify the trace, not to assume the tool is
-  wrong because the answer feels unlikely — the identical discipline this
-  file has applied to external documents all session, applied here to
-  this session's own new code's own output.
-- **Deliberately did NOT patch the newly-found `potato.json` gap under
-  this ticket's scope, even though the fix would have been a plausible-
-  looking one line (`"fried": ["peeled"]`, mirroring `egg.json`'s already-
-  established fried-forbids-peeled entry).** Tracing it further (would
-  cut/diced/sliced states need the same treatment? does `baked` differ
-  from `fried` here? is there a real skin-on-fried-potato counter-
-  technique?) surfaced enough real uncertainty that a rushed, single-entry
-  fix risked repeating the EXACT mistake `potato.json`'s own 2026-08-15
-  correction (`ROADMAP.md` Phase 4, `606f056`/`7d497d4`/`3e2050a`) was
-  built to prevent: asserting a closure that sounds structurally
-  plausible without the same dedicated, per-transition real-technique
-  audit `egg.json` actually received. Named as a real, scoped follow-up
-  instead of quietly patched — see `ROADMAP.md`'s TICKET 4 entry and the
-  "go back to the potato" work this same session continues into.
-
-### Critically reviewing a user-supplied document BEFORE coding from it — real content mixed with fabrication
-
-- **A user-supplied "tortilla thermal physics report" (2026-08-16) turned
-  out to be a genuine mix: real, correctly-quoted physics alongside
-  content that reads as fabricated** — and the only way to tell which was
-  which was checking each specific claim independently, not trusting the
-  document's own confident tone or its (fake) bracketed citation numbers
-  uniformly. The Choi-Okos component equations it quoted were REAL — they
-  exactly reproduced `potato.json`'s own already-independently-verified
-  carbohydrate equation, a genuine, checkable cross-match. Its
-  "Metadatos Técnicos" section, by contrast, referenced a source file
-  (`/src/simulation/physics/ThermalSystem.ts`) and a "Design System"
-  burner-animation feature that DO NOT EXIST anywhere in this repository
-  — simply false, not a matter of confidence tier. A document being right
-  about hard, checkable science (real equations) is NOT evidence it's
-  right about soft, repo-specific claims (what code exists) — these are
-  different questions requiring different checks, and conflating them
-  ("the math checks out, so the rest is probably fine too") would have
-  been a real, avoidable mistake.
-- **The document's own bracketed reference numbers (`[30]`, `[461]`,
-  etc.) had NO attached bibliography anywhere — a real, immediate
-  disqualifier for treating anything in it as "cited," independent of
-  whether the underlying claims later turned out to be true.** Worth
-  restating as a general rule, not specific to this document: a citation
-  marker with nothing behind it is not weaker evidence than no citation
-  at all — it's WORSE, because it reads as sourced when it isn't. This
-  repo's own `CitationSchema` has exactly two honest confidence tiers for
-  a reason; "cited by a document with no bibliography" is not a third,
-  hidden tier that gets to borrow the credibility of a real citation.
-- **The document's CENTRAL physical claim was subtly wrong in a way that
-  required actually understanding the underlying math, not just checking
-  numbers against known values** — it modeled "tortilla with one flip" as
-  physically equivalent to a slab heated symmetrically from BOTH faces
-  for the ENTIRE duration (the real physics of fully-submerged frying),
-  when a real flip is SEQUENTIAL: one face conducts for time t1, the
-  boundary condition switches, and stage two begins from a genuinely
-  NON-UNIFORM temperature profile the one-term approximation's own
-  uniform-initial-temperature assumption doesn't support reusing fresh.
-  The headline "4x faster, 75% time savings" number the document computed
-  was real arithmetic applied to the WRONG physical scenario — a
-  qualitatively-plausible-sounding, quantitatively-precise-looking result
-  that was still, underneath, answering a different question than the
-  one asked. Caught by working through what "symmetric heating from t=0"
-  and "flip at the midpoint" actually mean physically, not by finding an
-  arithmetic error — the arithmetic was fine; the physics it was applied
-  to wasn't what actually happens. Resolved not by fixing the document's
-  number, but by computing something more honest instead: a real BRACKET
-  (`scripts/tortilla-flip-physics-as-a-robot.ts`) using both the
-  (correct, already-existing) symmetric case and single-sided case as
-  real bounds, rather than presenting a false-precision single answer for
-  the case this repo's model genuinely cannot compute exactly.
+- **A fabricated cross-reference was caught before shipping by running
+  the check that should have preceded writing the sentence**: a
+  `REFERENCES.md` addition claimed a specific paper was "also
+  independently the source cited elsewhere in this repo" for an unrelated
+  discussion — invented mid-sentence, plausible-sounding, ungrounded.
+  `grep`-checked, zero hits, removed.
+- **A paper-derived ticket's own suggested test case was checked against
+  the actual data before writing a line of code, and was wrong**: "mashed
+  potato, which INVALID_TRANSITIONS should close off from fried" —
+  `mashed → fried` is deliberately LEGAL (potato-cakes exception, closed
+  2026-08-13). Used a different, verified dead end (`burned`) instead.
+  The same reachability tool then reported something genuinely surprising
+  (`mashed potato → "peeled"` reachable) — traced by hand rather than
+  assumed to be a bug in the new code, and confirmed real: `potato.json`
+  has no `"fried"` key in `invalidTransitions` at all. Deliberately did
+  NOT patch this under the unrelated ticket's scope — a plausible one-line
+  fix risked repeating the exact under-audited-closure mistake the
+  original wrong claim was.
+- **A user-supplied "tortilla thermal physics" document mixed real,
+  correctly-quoted physics with fabricated repo-specific claims** — its
+  Choi-Okos equations exactly reproduced this repo's own independently-
+  verified figures (real); its "Metadatos Técnicos" section referenced a
+  source file and a UI feature that don't exist anywhere in this repo
+  (false). Being right about hard, checkable science is not evidence of
+  being right about soft, repo-specific claims — different questions,
+  different checks. The document's CENTRAL claim (a one-flip tortilla
+  modeled as equivalent to symmetric-both-face heating for the whole
+  duration) was subtly, physically wrong — a real flip is sequential
+  (stage two starts from a non-uniform profile the model can't reuse
+  fresh); the "4x faster" headline number was real arithmetic applied to
+  the wrong physical scenario. Resolved by computing a real BRACKET
+  (`scripts/tortilla-flip-physics-as-a-robot.ts`) instead of forcing a
+  false-precision single answer.
 
 ## 2026-08-17
 
-### Triaging a 300-item document — the yield is small, and that's the expected outcome, not a failure of the search
-
-- **A user-supplied "300 Common Sense Cooking Rules" document (300
-  numbered tips across 10 sections) produced exactly 3 genuinely
-  actionable, real, cited gaps** (steam-dry potato before mashing;
-  calibrated pierce-before-baking risk; whole-vs-ground pepper shelf
-  life) — a ~1% hit rate. Consistent with every other external-document
-  triage this session (Reddit thread: one real gap, Acid, out of dozens
-  of comments; scientific review: a handful out of many findings). The
-  right read of a low hit rate on a broad, generic document is that most
-  of its content is either already covered by this repo's own prior,
-  independently-cited work, or genuinely out of this vocabulary's current
-  ingredient/technique scope — not that the triage was insufficiently
-  thorough. Reading the whole document and checking every plausibly-
-  relevant claim against actual repo state (not assumed) is still the
-  right process even when it yields few results; the value is in NOT
-  missing the few real ones, not in maximizing how much gets added.
-- **Two of the three findings generalized EXISTING verbs (`DRAIN`,
-  `REST`) to a new real use case rather than adding new ones** — the same
-  pattern as most of this session's other closures (POACH's vessel
-  generalization, GRILL/ROAST's tool-capability split). A new fact
-  forcing an existing mechanism wider is the common case; a new fact
-  requiring a genuinely new mechanism is rarer. Worth checking "does an
-  existing verb/field already almost cover this" before reaching for a
-  new one, which is what happened here: `DRAIN` was already liquid-
-  agnostic in its actual validation logic, just under-documented as
-  oil-specific; the fix was clarifying scope and adding a matching hazard
-  entry, not new code.
-- **The steam-dry-before-mash finding was also this repo's first real
-  recipe to exercise `MASH`** (built 2026-08-13, unused by any recipe for
-  four days) — a reminder that a schema/action existing and being
-  cited/tested in isolation is not the same as it being proven against a
-  real, complete recipe; `data/recipes/mashed-potatoes.json` is what
-  actually confirms the full DRAIN→REST→MASH→SALT chain composes
-  correctly end-to-end via `recipe-runner.ts`, not just that each action
-  independently validates.
-- **The pierce-before-baking rule was deliberately NOT added as a new
-  `HazardSchema` entry**, even though a plausible one-line entry was easy
-  to write, because the same source already cited elsewhere in this repo
-  for potato facts (Idaho Potato Commission) describes the actual risk as
-  rare, not routine — adding a formal hazard entry would have overstated
-  it. The same "resist a structurally-easy but substantively wrong fix"
-  discipline as the 2026-08-16 `potato.json`-fried-transition entry
-  above, applied here in the other direction: recording LESS formally
-  than the data would structurally support, because that's what the
-  citation actually says.
-
-### A second, unrelated document appearing mid-task — surface it, don't silently fold it in or ignore it
-
-- **While staging the first document's triage commit, a SECOND,
-  differently-named but similarly-titled file appeared in the repo root**
-  ("300 Common-Sense Cooking Rules.md," hyphenated — vs. the already-being
-  -triaged "300_common_sense_cooking_rules.md," no hyphen). Reading it
-  revealed genuinely different content (physical-feasibility constraints,
-  not domain facts) — not a duplicate, not a typo, a real second document.
-  The right move was neither of the two easy wrong ones: silently
-  triaging it as part of the same task (the user never actually asked for
-  a second document, and conflating two differently-scoped documents
-  under one commit would have made the commit message misleading about
-  what it actually covers), nor silently ignoring/leaving it out of the
-  final report (the user has no way to know it appeared unless told).
-  Committed and pushed the FIRST document's fully-verified work
-  immediately rather than blocking it on a decision about the second —
-  then surfaced the second file explicitly and asked before spending
-  effort on it, since a 300-item document's real yield is unpredictable
-  in advance (the first one turned out to be ~1%) and the user is the
-  only one who can say whether that effort is wanted right now.
-- **Once given the go-ahead, the actual triage confirmed a prediction
-  worth stating explicitly: a document that restates a repo's OWN core
-  design principle back at it (this one's stated premise — "if an action
-  does not make physical or culinary sense... it should not be
-  available" — is a direct paraphrase of this repo's own
-  `CLAUDE_DEV_CTX.md` INVALID_TRANSITIONS framing) is not thereby more
-  likely to contain new gaps; if anything it's LESS likely, because the
-  repo has already been independently, repeatedly audited against
-  exactly that concern (potato.json's/egg.json's/onion.json's own
-  `invalidTransitionsAudit` entries, `invalid-transitions-as-a-robot.ts`).
-  308 of 309 items checked across the two documents this session (~297 +
-  ~1 in this one) turned out to be already-covered, out-of-scope, or
-  unmodelable — the value was in finding the genuinely small remainder,
-  not in expecting the search to turn up much.
-- **The one real gap found (rule #29, DRAIN's missing statePrerequisite)
-  was found by checking a NEWER action (`DRAIN`, added 2026-08-16) against
-  an OLDER entity's last audit date** (`potato.json`'s own
-  `statePrerequisites` block hadn't been touched for DRAIN specifically) —
-  a concrete instance of a general risk worth naming: adding a new verb to
-  this vocabulary doesn't retroactively re-audit every existing entity
-  that gains the matching capability, so a real gap can sit unnoticed
-  exactly at that seam (new action × old entity) until something like this
-  triage happens to probe it directly, rather than a purely internal
-  code-only audit that has no external prompt to go looking.
-
-### Writing common-sense rules myself, not triaging someone else's — the SAME audit method, applied one seam deeper
-
-- **Asked to author cooking common-sense rules directly rather than triage
-  an external document, the productive move was NOT to invent 300 more
-  generic truisms — it was to reuse the exact "new action × old entity"
-  seam that closed rule #29 above and go looking for more instances of it
-  in this repo's own real data**, since that seam had just been PROVEN to
-  contain a real bug, not merely plausible to contain one. Checking
-  `isRestable`/`isDrainable`/`isMarinatable`/etc. entities against which
-  newer actions (`REST`, `DRAIN`, `GRILL`, `STEAM`, `ROAST`, all added
-  2026-08-16/17) they'd gained a capability for, cross-referenced against
-  whether `statePrerequisites` had ever been updated to match, found a
-  second real instance in about ten minutes (`potato.json`'s `REST`)
-  — a much higher hit rate than either external-document triage this
-  session, because the search was targeted at a known-productive pattern
-  rather than reading 300 unrelated claims hoping a few would land.
-- **A deeper, genuinely more interesting gap was found by asking a
-  different question: not "is this entity's OWN statePrerequisites
-  complete," but "does `applyAction` check statePrerequisites AT ALL for
-  every ROLE an instance can play."** The answer was no — `requiredSecondaryCapability`
-  (a COMBINE-shaped action's second ingredient) was checked for
-  capability only, never for state, an asymmetry between the primary
-  target and the secondary instance that had existed since
-  `requiredSecondaryCapability` was first added (2026-08-12) and was
-  never itself audited, because nothing had prompted anyone to ask
-  "what about the OTHER instance a COMBINE action touches." Worth
-  generalizing: an engine mechanism built and correctly applied to ONE
-  role of a multi-role action is not evidence it was applied to every
-  role — the gap hides specifically in the role that gets less
-  attention because it's not the thing named in the recipe step's own
-  `targetInstanceId`.
-- **Two existing metadata notes turned out to be quietly WRONG in a way
-  this audit caught as a side effect, not the primary goal** —
-  `onion.json`'s `combinePotatoOnionNote` claimed the real potato/onion
-  prep order was "enforced," true only for potato (the target), not onion
-  (the secondary); `egg_cracked.json`'s `combineNote` claimed the
-  must-be-beaten-first rule COULDN'T be expressed at all, a claim that was
-  already stale by two days (array-valued OR-logic `statePrerequisites`
-  entries existed since 2026-08-15) before this session ever touched it.
-  Neither was caught by any prior review — both are the kind of claim
-  that reads as plausible and doesn't get re-verified once written, the
-  same risk this file's own citation discipline exists to catch for
-  external facts, just showing up here for a claim about this repo's OWN
-  code instead. Fixing the underlying gap without correcting the stale
-  note next to it would have left a wrong claim sitting right beside the
-  code that disproves it — corrected both, not just the code.
-- **Extended the fix at the RIGHT layer once the gap's real shape was
-  clear: `src/engine.ts`'s `applyAction`, not a one-off check bolted onto
-  three data files.** The primary-target statePrerequisites check was
-  extracted into a shared `checkStatePrerequisite` helper and called for
-  both roles, reusing the existing `Entity.statePrerequisites` map (keyed
-  by action id) rather than inventing a new schema field for "secondary
-  role prerequisites" — safe specifically because no entity used as a
-  secondary here is ever the primary target of the SAME action id, a
-  fact worth checking explicitly before reusing a map for a second
-  purpose, not assuming. This closes the gap STRUCTURALLY for any future
-  action that adds `requiredSecondaryCapability`, not just for the three
-  that exist today — the same "fix the mechanism, not just today's
-  instances of the symptom" instinct this repo's other engine-level fixes
-  this session (place.ts wiring, execution-bounds) already followed.
-
-### A ticket describing a problem this repo doesn't have — check before refactoring, same discipline as an external document
-
-- **A formally-written ticket ("Ticket 1: Purge External Identifiers and
-  USDA Models from Core Schema") arrived with a specific, confident
-  description of a problem — hardcoded `openFoodFactsId`/`usdaFoodDataId`
-  fields polluting the core schema — that turned out, on an exhaustive
-  case-insensitive grep across the entire repo including `olddocs/`, to
-  not exist anywhere.** The identical discipline this file has applied to
-  every external document/report this session (check every claim against
-  actual repo state before acting, don't trust confident framing) applies
-  just as much to a ticket, maybe more: a ticket's imperative phrasing
-  ("Remove X from all core schemas") reads as an instruction to EXECUTE,
-  which creates real pressure to just start editing files rather than
-  first verifying the premise is true. Acceptance criteria phrased as
-  "grep yields no results" are a particularly seductive trap here — they
-  were trivially, immediately satisfiable by doing NOTHING, which could
-  look indistinguishable from a real fix in a superficial before/after
-  diff if the check itself were skipped.
-- **The tempting shortcut — quietly add the fields the ticket describes
-  just so there's something concrete to remove, producing a clean-looking
-  diff that satisfies the acceptance criteria — was explicitly rejected.**
-  That would have fabricated a false history (implying this repo's core
-  schema was once coupled to external databases when it never was) purely
-  to make a ticket's closure LOOK real. The same "don't claim work that
-  isn't real" standard this whole file exists to enforce for citations and
-  capability tests applies identically to a refactor ticket: a diff that
-  exists only to be reverted for show is worse than no diff, because it
-  actively misrepresents what happened.
-- **Reported the mismatch and asked rather than silently deciding for the
-  user which of several reasonable responses (close as already-satisfied;
-  add a regression guard so the constraint stays durable; treat it as
-  written for a different repo/branch) was intended** — genuinely
-  ambiguous which the user wanted, and the three options have real
-  different costs (a regression guard is actual new code; "already
-  satisfied" is a documentation-only close). Matches this session's
-  established pattern for a genuine fork in direction (the "what's next in
-  ROADMAP" question two turns earlier got the same treatment) rather than
-  either picking silently or refusing to engage until asked to clarify.
-
+- **A 300-item "common sense cooking rules" document produced exactly 3
+  actionable, real, cited gaps (~1% hit rate)** — steam-dry potato before
+  mashing, calibrated pierce-before-baking risk, whole-vs-ground pepper
+  shelf life. A second, differently-named but genuinely different
+  document (physical-feasibility constraints, not domain facts) appeared
+  mid-task — surfaced explicitly and asked about, rather than silently
+  folded in or ignored; the first document's fully-verified work was
+  committed immediately rather than blocked on that decision.
+- **The pierce-before-baking rule was deliberately NOT added as a formal
+  hazard entry**, even though a plausible one-line entry was easy to
+  write — the same source cited elsewhere in this repo for potato facts
+  describes the actual risk as rare, not routine; a formal entry would
+  have overstated it.
+- **The productive move for self-authoring common-sense rules (rather
+  than triaging an external list) was reusing the exact "new action × old
+  entity" seam** that had just found a real gap (rule #29, `DRAIN`'s
+  missing `statePrerequisite`) — checking every entity against which
+  NEWER actions it had gained a capability for found a second real
+  instance (`potato.json`'s `REST`) in ~10 minutes, a much higher hit rate
+  than either external-document triage, because the search targeted a
+  known-productive pattern instead of reading unrelated claims.
+- **A deeper structural gap was found by asking a different question**:
+  not "is this entity's own `statePrerequisites` complete" but "does
+  `applyAction` check `statePrerequisites` for every ROLE an instance can
+  play." `requiredSecondaryCapability` was checked for capability only,
+  never state — an asymmetry unaudited since it was first added
+  (2026-08-12). Fixed at the engine layer (`checkStatePrerequisite`
+  extracted, called for both roles), not per-data-file. Two existing
+  metadata notes were found stale as a side effect (`onion.json`'s
+  "enforced" claim was true only for the target, not the secondary;
+  `egg_cracked.json`'s "can't be expressed" claim was already 2 days
+  stale) — corrected both, not just the underlying code.
+- **A formally-written ticket ("purge external identifier fields from
+  core schema") described a problem that, on an exhaustive grep including
+  `olddocs/`, did not exist anywhere in this repo.** The acceptance
+  criterion ("grep yields no results") was trivially satisfiable by doing
+  nothing — closed as already-satisfied rather than fabricating the
+  fields just to have something to remove for a clean-looking diff, which
+  would have misrepresented this repo's actual history.

@@ -28,14 +28,25 @@ alternatives (see `LEARNINGS_ENGINE.md` 2026-08-13) — `validate.ts` now covers
 recipe execution too, but still run both, plus every demo, after any change to
 `src/`, not just the new thing.
 
-**Before starting work, read `LEARNINGS.md`** — split 2026-08-15 into 4 theme files
-once it passed ~2,300 lines (`LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`,
-`LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md`; `LEARNINGS.md` itself is now a short
-index — start there, it says which file(s) match what you're touching). After
-learning something that would've saved time going in — a schema constraint, an
-engine gotcha, a design tradeoff and why — append a dated entry to the theme file it
-actually belongs to. Don't just re-derive the same surprise next session, and don't
-let this section (or any other doc here) go stale the way this one just did: when the
+**Before starting work, read `LEARNINGS.md` in full — it's short on purpose.**
+Restructured 2026-08-18 into two tiers (was one flat, ever-growing 5,000+-line log
+across the 4 theme files below): `LEARNINGS.md` itself is now Tier 0, a ~20-rule
+"Core lessons" section covering everything genuinely cross-cutting, read every
+session regardless of what you're touching. The 4 theme files
+(`LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`, `LEARNINGS_TOOLING.md`,
+`LEARNINGS_PROCESS.md`) are Tier 1, on-demand — load only the one(s) matching
+what you're about to touch; each is now pruned to real, non-repeated technical
+residue rather than full narrative. Not everything learned gets a new dated
+entry anymore, either: a lesson has to be worth a future session's read, not
+just a record that something happened (`git log` already has that). See
+`LEARNINGS.md`'s own "Periodic maintenance" section for the dedup/prune
+discipline — do it, don't just read about it, once a theme file crosses ~800
+lines again. After learning something that would've saved time going in — a
+schema constraint, an engine gotcha, a design tradeoff and why — append a
+dated entry to the theme file it actually belongs to (or straight to Core, if
+it's genuinely universal). Don't just re-derive the same surprise next
+session, and don't let this section (or any other doc here) go stale the way
+this one just did: when the
 repo's real shape changes, update the doc that describes it in the same change, not
 "later."
 

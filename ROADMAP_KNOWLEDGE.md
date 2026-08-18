@@ -803,13 +803,13 @@ covered by what exists:**
       the four egg-derived entities; no probability/detection modeling. See
       `src/tool-hygiene.ts`'s own top doc comment for the full reasoning and
       `LEARNINGS_ENGINE.md` 2026-08-16 for the design-process notes.
-- [ ] **Far more staple ingredients/entities.** Still no flour, cheese,
-      herbs, sugar, or any protein besides egg. (Onion closed 2026-08-16,
-      vinegar/acid closed 2026-08-15, milk closed 2026-08-17 — all
-      corrected out of this line the same change that closed them; see
-      this bullet's own dated entries below.) The vocabulary's technique
-      DEPTH (HACCP, carryover cooking, emulsion chemistry) remains
-      disproportionate to its ingredient BREADTH.
+- [ ] **Far more staple ingredients/entities.** Still no cheese, herbs,
+      sugar, or any protein besides egg. (Onion closed 2026-08-16,
+      vinegar/acid closed 2026-08-15, milk closed 2026-08-17, flour closed
+      2026-08-17 (baking epic) — all corrected out of this line the same
+      change that closed them; see this bullet's own dated entries below.)
+      The vocabulary's technique DEPTH (HACCP, carryover cooking, emulsion
+      chemistry) remains disproportionate to its ingredient BREADTH.
       **Partial progress 2026-08-14/15:** a second `isFryingMedium` entity
       (`sunflower_oil.json`, proving `fry.json`'s
       `requiredIngredientCapabilities` check was already substitutable —
@@ -953,8 +953,8 @@ covered by what exists:**
       one, so a genuinely LEAVENED bread (flour + water + yeast, three
       real inputs) cannot be expressed as ONE valid `RecipeScript` yet —
       the exact "3+ input assembly" gap a user-supplied
-      `WORLD_MODEL_OPTIMIZATION.md` read already named as a real, separate,
-      unbuilt extension (`LEARNINGS_ENGINE.md`'s own entry on that
+      `olddocs/WORLD_MODEL_OPTIMIZATION.md` read already named as a real,
+      separate, unbuilt extension (`LEARNINGS_ENGINE.md`'s own entry on that
       document). Every individual LEAVENED-path mechanism is still real
       and independently proven, not blocked — yeast activation (DISSOLVE),
       KNEAD's own state-prerequisite correctness (a second KNEAD call on
@@ -1446,9 +1446,11 @@ covered by what exists:**
       (`heat-penetration.ts`'s separate, potato-only concern, untouched); no
       batch-size/thermal-mass coupling between a cold item dropped in and the
       place's own tracked temperature (`fry-egg-as-a-robot.ts`'s own closing
-      note names this same gap, still open); no `Instance.inProgressAction`/
-      `toolLockBehavior` (`WORLD_MODEL_OPTIMIZATION.md`'s design input, this
-      same entry, 2026-08-15).
+      note names this same gap, still open). (`Instance.inProgressAction`
+      CLOSED 2026-08-17, `toolLockBehavior` CLOSED the same day — both were
+      `olddocs/WORLD_MODEL_OPTIMIZATION.md`'s design input, listed as open
+      here since 2026-08-15; see `src/in-progress-action.ts` and Phase 3's
+      DAG-execution entry in `ROADMAP.md` for their real closures.)
       **The periodic/alternating-temperature recipe CLOSED 2026-08-16** —
       `data/recipes/periodic-cooking-of-eggs.json`, the real, direct proof
       against Di Lorenzo & Di Maio's "Periodic cooking of eggs" case, and the
@@ -1546,8 +1548,11 @@ covered by what exists:**
       place/heat gap above (continuous or at least multi-checkpoint time
       within one action), not a second, separate mechanism.
       **Design input added 2026-08-15**, from a user-supplied
-      `WORLD_MODEL_OPTIMIZATION.md` read before scoping the (separate,
-      smaller) recipe-player work below: a concrete mechanism for the
+      `olddocs/WORLD_MODEL_OPTIMIZATION.md` read before scoping the separate,
+      smaller `recipe-player.ts` work (closed the same day — step/revert/
+      variation playback composed entirely from `runRecipe`/`narrateRecipe`,
+      see `ROADMAP.md`'s Capability Tests table,
+      `npm run capability-test:play-recipe`): a concrete mechanism for the
       "instances co-located in one tool instance sharing its state" gap
       named above — `Instance.inProgressAction: { actionId, startedAt,
       durationSeconds, estimatedCompletion }`, letting an instance be
@@ -1603,8 +1608,11 @@ covered by what exists:**
       "how far along, in TIME," not "what does the food actually look
       like partway through," a harder question with its own real
       physical facts this pass deliberately did not attempt to source.
-      `toolLockBehavior` (mutual exclusion on a shared tool) also remains
-      completely unbuilt, a different, real, separate mechanism.
+      **`toolLockBehavior` (mutual exclusion on a shared tool) CLOSED the
+      same day (2026-08-17)** — `dag-scheduler.ts`'s `DagNode.requiredToolIds`,
+      see Phase 3's DAG-execution entry in `ROADMAP.md`; a different, real,
+      separate mechanism from the query half above, closed alongside it
+      rather than left open.
 - [x] **Storage/shelf-life common knowledge — closed 2026-08-17.**
       `ingredient.ts`'s new `StorageLifeSchema` + `EntitySchema.
       storageLifeByState` (keyed by state id, the same per-state-fact shape

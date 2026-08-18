@@ -51,6 +51,7 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | Fry egg as a robot — oil heated to a real setpoint via place.ts's new target-temperature generalization, smoke-point safety rejection proven | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-as-robot` |
 | Fry with any vessel — pot correctly rejected, pan works, wok (never named by fry.json) also works | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:fry-any-vessel` |
 | Boil water at real altitude (Madrid/Bogotá/La Paz) — real computed boiling point via ICAO+Antoine physics, composes with place.ts unchanged | ✅ Makeable, closed 2026-08-14 | `npm run capability-test:boil-at-altitude` |
+| Play a recipe step by step (`recipe-player.ts`) — step/revert/variation playback over an already-authored recipe, composed entirely from `runRecipe`/`narrateRecipe`, zero new engine machinery; revert needs no rollback (state is just an index into the sequence, recomputed on demand), "is this next step possible?" reuses `applyAction`'s own checks as the feasibility oracle, a variation is an ordinary new `RecipeScript` (shared prefix + a different tail) | ✅ Makeable, closed 2026-08-15 | `npm run capability-test:play-recipe` |
 | Two eggs, one shared pot — FILL/PLACE_IN/HEAT_PLACE wired into recipe-runner.ts, real place.ts-backed shared temperature, BOIL's readiness gated on it | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- two_eggs_shared_pot` |
 | Shared-pot heat, boiling_start vs. cold_start — identical mechanism, real step-order difference, disproves "independent, unlinked applyAction calls" | ✅ Makeable, closed 2026-08-16 | `npm run capability-test:shared-pot-heat` |
 | Place-aware fried egg — FILL/HEAT_PLACE generalized to oil (isPourable/isVessel), FRY rejected while oil is genuinely cold, real huevo_frito params reused | ✅ Makeable, closed 2026-08-16 | `npm run recipe -- fried_egg_shared_pan` |
@@ -103,8 +104,9 @@ previously-unmodeled culinary-physics gap: carryover cooking (a boiled egg
 keeps cooking after leaving the pot; `durationSeconds` alone doesn't fix final
 doneness). New `SHOCK` action (ice bath) gives an explicit lever to arrest it —
 not a physics simulation, an honestly-scoped concrete instance of
-`WORLD_MODEL.md`'s abstract "state is a derived classification of continuous
-reality" point, showing up in an actual dish rather than a design doc.
+`olddocs/WORLD_MODEL.md`'s abstract "state is a derived classification of
+continuous reality" point, showing up in an actual dish rather than a
+design doc.
 
 **"Tortilla francesa" vs "French omelette" — a naming false-friend, not one dish.**
 Same starting entity (`egg_cracked`), same `FRY` action — genuinely different result:
@@ -271,6 +273,30 @@ below) is the rest of the roadmap.
 - [x] `CLAUDE.md`'s "Repository state" — kept current as of this rewrite;
       see `CLAUDE.md`'s own instruction to update it *in the same change*
       that makes it stale, not later.
+- [x] **Repo-wide `src/*.ts` comment cleanup + `LEARNINGS_ENGINE.md`/
+      `LEARNINGS_DOMAIN.md` dedup — closed 2026-08-18.** Direct response to
+      "they [comments] are too many and too big — i just need to know what a
+      function does, not where this information comes from." Design
+      rationale/history/citations relocated out of doc comments into 30 new
+      `reference/<file>.md` files (one per non-trivial `src/*.ts` file,
+      organized by exported symbol in source order, full prose preserved
+      verbatim — nothing lost, only relocated), leaving short "what it does"
+      descriptions plus a one-line pointer in the source. Zero logic/schema/
+      behavior changes anywhere: every one of the 30 files verified via
+      `tsc --noEmit` + `npm test` (444/444) + `npm run validate` (all 120
+      data files) individually before committing, not batched. `CLAUDE.md`
+      itself documents the new convention (a paragraph next to its
+      `REFERENCES.md` one) so future comments don't grow back into what this
+      cleanup removed. Same day, separately: the newly-added
+      `agent-memory-hygiene` skill applied to `LEARNINGS_ENGINE.md`/
+      `LEARNINGS_DOMAIN.md` — found and merged one real duplicate entry (a
+      "dead-state entity" pattern independently told three times, `pan.json`/
+      `knife.json`/`oven.json`, one of them stale since the gap it evidenced
+      had since been closed by `place.ts`); both files otherwise already
+      matched the skill's own recommended architecture (on-demand Tier 1
+      files, rule-compressed not narrative, under this repo's own 800-line
+      maintenance trigger) — a light-touch pass, not a rewrite. See
+      `LEARNINGS_PROCESS.md` 2026-08-18 for both.
 
 ## Phase 1 — Core entity & ingestion models (`src/ingredient.ts`)
 - [x] `EntitySchema` — ingredients vs. tools, capabilities, states, tags,
@@ -420,7 +446,7 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       "unlimited passive capacity... a genuinely resource-constrained
       kitchen has a finite number of burners/pots too, not modeled" as a
       real, open gap the moment the module first shipped, and directly
-      closes `WORLD_MODEL_OPTIMIZATION.md`'s named-but-unbuilt
+      closes `olddocs/WORLD_MODEL_OPTIMIZATION.md`'s named-but-unbuilt
       `toolLockBehavior` idea ("a tool held exclusively for a duration,
       e.g. can't fry two things in the same pan at once"). New
       `DagNode.requiredToolIds: string[]` (default `[]`, fully backward
@@ -1033,13 +1059,15 @@ No single `recipe-step.ts` — fragmented across three files as the engine grew
       calibration per physical rig) that a schema/validation repo like this
       one cannot substitute for — flagged clearly rather than implied away.
 
-## Phase 4.5 — Goal-directed planning (`WORLD_MODEL.md`, new, 2026-08-12)
+## Phase 4.5 — Goal-directed planning (`olddocs/WORLD_MODEL.md`, new, 2026-08-12)
 Resolves `CONCEPT.md`'s long-flagged fork (see that file's updated top note and
-§12): the world is primary, a recipe is one layer of intent on top of it. Not
-started — a real proposal, scoped honestly as substantial separate work, not
-implied to be a small addition.
+§12): the world is primary, a recipe is one layer of intent on top of it.
+**Closed 2026-08-17** — see the checklist below; this section's own intro
+prose (written 2026-08-15, when the phase was still "not started, a real
+proposal") is kept for its real design reasoning, not because the phase is
+still open.
 
-See also: `architecture_phase4_ticket.md` (2026-08-14) — a detailed milestone
+See also: `olddocs/architecture_phase4_ticket.md` (2026-08-14) — a detailed milestone
 breakdown (planner.ts/goal.ts/domain-model.ts/domain-facts.ts/robot-executor.ts,
 M1-M5, acceptance criteria, risk table) elaborating this exact section. Despite
 its filename, it is NOT a separate "Phase 4" — it's this Phase 4.5, written up
@@ -1064,10 +1092,11 @@ timing spreadsheet so every dish finished together — a real, concrete
 forcing case for the closed-loop scheduling half of this phase, and for
 `Instance.inProgressAction` (the design note already logged under
 "Common culinary knowledge coverage"'s "Heat as a shared, time-varying
-property of a PLACE" entry) specifically. Neither changes this phase's
-scope or its "not started" status — recorded because a real, independent
-source landing on the same shape is worth more than an internal design
-doc alone, the same standard this repo already holds itself to for
+property of a PLACE" entry) specifically. Neither changed this phase's
+scope or its (then still-open, since closed 2026-08-17) status — recorded
+because a real, independent source landing on the same shape is worth more
+than an internal design doc alone, the same standard this repo already
+holds itself to for
 domain facts.
 - [x] **`RecipeIntentSchema` — closed 2026-08-17, alongside the planner
       itself.** `recipe.ts`'s `RecipeIntentSchema`/`InstanceGoalSchema` —
@@ -1683,13 +1712,17 @@ itself closed 2026-08-13 — see Phase 1).
 
 **Future possibility, not scoped (2026-08-16, consolidated into
 `RECIFINE_INTEGRATION_NOTES.md` the same day):** `recipi/` at the repo
-root holds an unsolicited prototype/proposal for parsing free-text recipe
-*instructions* (not just `recipeIngredient` strings — this phase never
-scoped that) via **ReciFine**, a pretrained NER model
+root once held an unsolicited prototype/proposal for parsing free-text
+recipe *instructions* (not just `recipeIngredient` strings — this phase
+never scoped that) via **ReciFine**, a pretrained NER model
 (github.com/nuhu-ibrahim/ReciFine, EACL 2026). Evaluated and deliberately
-shelved rather than built or deleted — see `RECIFINE_INTEGRATION_NOTES.md`
-for the full distilled reference (entity mapping, what's reusable vs.
-not, concrete un-shelving steps); summary below kept for quick reference:
+shelved rather than built — never committed (CC BY-NC 4.0, see the
+license blocker below) and since removed from disk, exactly as that
+consolidating change's own note anticipated ("safe to delete once this
+doc is confirmed sufficient") — `RECIFINE_INTEGRATION_NOTES.md` is now
+the complete, sufficient record. See that file for the full distilled
+reference (entity mapping, what's reusable vs. not, concrete
+un-shelving steps); summary below kept for quick reference:
 - **License blocker**: ReciFine is CC BY-NC 4.0 (NonCommercial); this repo
   is MIT and headed public. Depending on it would practically impose an NC
   restriction on anything downstream that uses the scraper, so it can't be

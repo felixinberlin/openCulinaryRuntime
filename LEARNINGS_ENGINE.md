@@ -2074,3 +2074,46 @@ was made. Don't rewrite or delete old entries — append.
   before any assertion failed. Fixed by having the generic loop skip any
   parameter id already present in `params`, rather than re-deriving
   "was this already handled" as a parallel, disconnected question.
+- **A closed, discriminated-union `Condition`/`Effect` shape (mapped 1:1
+  onto `engine.ts`'s actual checks) was straightforward to build ONLY
+  because `action.ts`'s own schema already closed off what a precondition
+  or effect could possibly be** (`requiredTargetCapability`,
+  `statePrerequisites`, `outputs.transformedState(FromParameter)`,
+  `addsTag(FromParameter)`, `destroysTarget`, `spawnsTargetByproducts`,
+  `combinesInto` — a genuinely finite, already-enumerated list) — building
+  `execution-graph.ts`'s IR surfaced this as a real, retroactive payoff of
+  that earlier schema discipline, not something this ticket had to design
+  from scratch. A generic `{subject, property, value}` condition bag would
+  have been faster to write but would have pushed the "what does this
+  actually mean" interpretation problem onto whatever runtime consumes the
+  graph — exactly the ambiguity a real compiler IR exists to resolve
+  once, at compile time, not defer.
+- **A compiler that "validates preconditions" over a MULTI-STEP recipe
+  needs its own bounded state-tracking model, not just per-step checks
+  against `initialInventory`** — slice's real precondition
+  (`potato-1` must be `"peeled"`) is only satisfiable because peel's own
+  effect already ran; checking every step purely against
+  `recipe.initialInventory`'s ORIGINAL state (the naive first design)
+  would have wrongly rejected `slice` for still being `"whole"`. Fixed by
+  threading a small `predictedState: Map<instanceId, {state, tags}>`
+  through the compile loop, seeded from `initialInventory` and updated by
+  each node's own effects as they're computed, walked in TOPOLOGICAL
+  (not raw array) order so a step's dependencies are always already
+  "applied" to the predicted model before it's checked — a real, bounded
+  abstract interpretation, deliberately scoped to state/tag facts only
+  (no quantity, no thermal/timing simulation — `recipe-runner.ts` stays
+  the one real ground truth for those).
+- **Resolving a step's instance to a real entity id only works for
+  `initialInventory` members; a step targeting a SPAWNED instance (e.g.
+  `BEAT` on `egg_cracked-3`, `CRACK`'s own output) is a genuinely
+  different, harder problem** — the spawned instance's entity id isn't
+  knowable without actually running the recipe
+  (`recipe-runner.ts`'s real `spawnedEntityIds`), which a
+  non-mutating compiler must not do. Named as an explicit, out-of-scope
+  limit rather than attempting a second, static re-derivation of
+  `recipe-runner.ts`'s own spawn-id-naming scheme (the same
+  parallel-source-of-truth problem that file's own top doc comment
+  already warns against elsewhere) — confirmed for real against
+  `tortilla-de-patatas.json`, which genuinely does this (`scripts/
+  execution-graph-as-a-robot.ts`'s Part C), rejecting cleanly with a
+  named reason rather than crashing or guessing.

@@ -71,6 +71,9 @@ below; a phase can be "done" on paper and still not add up to a real dish.
 | **Salt crystal/grind size** (kosher_salt.json/flaky_salt.json — real, cited grams-per-teaspoon differences, EntitySchema.domainFacts extended from CCP-only to entities on a real second forcing case, queryable via `npm run ask -- entity-fact`) | ✅ Makeable, closed 2026-08-17 | `npm run capability-test:salt-crystal-size` |
 | **Mashed potatoes** (this repo's first real recipe to exercise MASH; DRAIN/REST generalized beyond oil/fry to the real steam-dry-before-mashing technique, triaged from an external "300 common sense cooking rules" document) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- mashed_potatoes` / `npm run capability-test:cooking-common-sense` |
 | **Simple flatbread** (this repo's first real dish from the baking epic — flour/dough/KNEAD, unleavened, real roti/chapati/tortilla-de-harina technique; PROOF/yeast independently proven but not yet in one recipe, blocked on the real 3+-input COMBINE gap) | ✅ Makeable, closed 2026-08-17 | `npm run recipe -- simple_flatbread` / `npm run capability-test:bake-bread` |
+| **Cooklang import/export** (real `.cook` grammar parser + entity-matching import + mechanical export, round-tripped against real data and a real `SEPARATE` spawn via `recipe-runner.ts`'s `spawnedEntityIds`) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:cooklang` |
+| **Cooklang prose-to-verb translator** (real, bounded, deterministic keyword/allowed-value matcher over `data/actions/*.json` — no LLM call; recovers all 6 real `actionId`s of `handmade_alioli_egg_yolk` round-tripped purely through Cooklang text; found and correctly reports a genuine 4-way verb collision in `combine*.json`) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:cooklang-translate` |
+| **Execution Graph as Compiler IR** (`src/execution-graph.ts` — a decoupled `ExecutionGraph` IR a runtime could consume without knowing about recipes/entities; real fan-in dependency proven against `garlic_oil_potatoes`' own `fry_potato` join node; honest rejection proven against `tortilla_de_patatas`' spawned-instance reference) | ✅ Makeable, closed 2026-08-18 | `npm run capability-test:execution-graph` |
 
 **Tortilla de Betanzos found a real bug: `tortilla_mixture.json` had ZERO
 `criticalControlPointsByAction` wiring — the same class of gap
@@ -1419,6 +1422,88 @@ domain facts.
       item above (this queries existing `metadata.notes` + parameter
       definitions as-is, not a new structured-fact schema) but real and
       running today, not just proposed.
+
+## Phase 4.6 — Execution Graph as Compiler IR (`src/execution-graph.ts`, new, 2026-08-18)
+
+A user-supplied ticket, not previously scoped anywhere in this document or
+`CLAUDE_DEV_CTX.md` — a genuinely new architectural piece, same "no
+counterpart in the original plan" bucket as `place.ts`/`heat-source.ts`/
+`egg-doneness.ts` etc. (`CLAUDE.md`'s module-layout table).
+
+- [x] **`ExecutionGraph`/`ExecutionNode`/`ExecutionEdge` types — closed
+      2026-08-18.** A compiler IR, deliberately DECOUPLED from this repo's
+      own `Instance`/`RecipeStep`/`RecipeScript` types — a future runtime
+      consuming this graph never needs to import `recipe.ts`, resolve
+      anything against `data/entities/*.json`, or know what a recipe,
+      Cooklang, or a planner even is. `Condition`/`Effect` are closed
+      discriminated unions mapped 1:1 onto the real fields `engine.ts`'s
+      `applyAction` actually checks/produces (`Entity.statePrerequisites`,
+      `requiredTargetCapability`/`requiredToolCapabilities`/
+      `requiredIngredientCapabilities`/`requiredSecondaryCapability`;
+      `outputs.transformedState(FromParameter)`/`addsTag(FromParameter)`/
+      `destroysTarget`/`spawnsTargetByproducts`/`combinesInto`) — not a
+      generic/open-ended `{subject, property, value}` bag a runtime would
+      have to further interpret.
+- [x] **`compileToExecutionGraph` — closed 2026-08-18.** A real, bounded
+      compiler pass: resolves every step's instance references to real
+      `entityId`s (via `recipe.initialInventory` only — see below),
+      statically re-derives whether each step's real preconditions would
+      actually be satisfiable (a bounded internal state/tag model, seeded
+      from `initialInventory`, updated by each node's own predicted
+      effects as the graph is walked in dependency order), and rejects
+      compilation — collecting EVERY error found, not just the first —
+      when an entity/capability/state prerequisite can't be resolved or
+      satisfied. Reuses `dag-scheduler.ts`'s `topologicalOrder`/
+      `deriveDependsOn`/`resolveStepId` for graph structure and cycle
+      detection rather than re-deriving dependency logic a second time —
+      "ensure graph dependencies are explicit rather than array position"
+      was ALREADY this repo's own rule (`RecipeStepSchema.dependsOn`,
+      closed 2026-08-17), not a new mechanism this ticket needed to build.
+      Never calls `engine.ts`'s `applyAction` or `recipe-runner.ts`'s
+      `runRecipe` — no mutation, no simulated time, the compiler produces
+      a graph and nothing else, per the ticket's own explicit requirement.
+      **Deliberately, honestly out of scope**: resolving a SPAWNED
+      instance's entity id (e.g. a step targeting `egg_yolk-3`,
+      `SEPARATE`'s own output) — that requires actually running the
+      recipe (`recipe-runner.ts`'s real `spawnedEntityIds`), which this
+      pass never does; such a step fails compilation with a clear, named
+      reason instead of a guess, proven live against
+      `tortilla-de-patatas.json`'s own `BEAT` on `egg_cracked-3`. Anything
+      CCP/HACCP/thermal/timing stays runtime's job, unchanged.
+- [x] **`checkExecutionOrder` — closed 2026-08-18, a minimal read-only
+      structural check, explicitly NOT a runtime** (the ticket's own
+      "keep execution of the graph outside the compiler" — this lives in
+      the same module as a small, pure, non-mutating companion, not
+      bundled into `compileToExecutionGraph` itself, and doesn't attempt
+      anything the ticket's non-goals list, e.g. parallel execution or
+      recovery). Given a candidate execution order, confirms it never
+      runs a node before every edge pointing into it is satisfied — the
+      concrete proof that "a dependency prevents slice from executing
+      before peel" the ticket asked for.
+- Proven via `tests/execution-graph.test.ts` (19 synthetic-fixture unit
+  tests — linear peel→slice→fry matching the ticket's own worked example
+  almost verbatim, a real fan-in non-linear branch, every rejection case,
+  `combinesInto` handling, a no-mutation check) and `npm run
+  capability-test:execution-graph`
+  (`scripts/execution-graph-as-a-robot.ts`) — against REAL
+  `data/entities/*.json`/`data/actions/*.json` and three real recipes:
+  `salted-fried-potatoes.json` (fully linear, compiles + round-trips
+  through `JSON.stringify`/`parse` with no runtime), `garlic-oil-
+  potatoes.json` (a REAL fan-in — `fry_potato` already depends on both
+  `cut_potato` and `infuse_oil`, `dag-scheduler.ts`'s own 2026-08-17
+  join-node proof, now reused for a second, different purpose), and
+  `tortilla-de-patatas.json` (the honest spawned-instance rejection,
+  live). See `LEARNINGS_ENGINE.md` 2026-08-18.
+
+**Relationship to `dag-scheduler.ts`, named explicitly so the two aren't
+confused**: `dag-scheduler.ts` computes a SCHEDULE (concurrent-execution
+timing estimate, tool-lock contention) directly over this repo's OWN
+`RecipeStep`/`Action` types, for `recipe-runner.ts`'s own use. This module
+compiles a STANDALONE, portable IR meant to be handed to a completely
+different, not-yet-built consumer that has no dependency on this repo's
+internal types at all. Different artifacts, different purposes — this
+module reuses `dag-scheduler.ts`'s dependency-derivation logic rather than
+duplicating it, but does not replace or wrap it.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
 - [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.

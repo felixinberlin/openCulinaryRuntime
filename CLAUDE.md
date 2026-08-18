@@ -282,6 +282,42 @@ word-boundary silently failing when an alias ends in punctuation, and a
 duplicate "missing required parameter" note for a parameter that was
 actually found).
 
+An eleventh, 2026-08-18, same day: `src/execution-graph.ts`
+(`compileToExecutionGraph`, `checkExecutionOrder`) — a user-supplied ticket,
+not previously scoped anywhere in this file or `CLAUDE_DEV_CTX.md`,
+`ROADMAP.md`'s new Phase 4.6. A compiler IR (`ExecutionGraph`/
+`ExecutionNode`/`ExecutionEdge`), deliberately DECOUPLED from this repo's
+own `Instance`/`RecipeStep`/`RecipeScript` types — a future runtime
+consuming this graph never needs `recipe.ts`, `data/entities/*.json`, or
+any notion of what a recipe/Cooklang/planner is. `compileToExecutionGraph`
+resolves every step's instances to real `entityId`s (from
+`initialInventory` only — resolving a SPAWNED instance requires actually
+running the recipe, `recipe-runner.ts`'s real `spawnedEntityIds`, which
+this pass never calls; such a step is REJECTED with a named reason, proven
+live against `tortilla-de-patatas.json`'s `BEAT` on `egg_cracked-3`),
+statically re-derives whether each step's real preconditions
+(`Entity.statePrerequisites`, `requiredTargetCapability`/
+`requiredToolCapabilities`/`requiredIngredientCapabilities`/
+`requiredSecondaryCapability`) are satisfiable via a bounded internal
+state/tag model updated as the graph is walked, and never calls
+`engine.ts`'s `applyAction`/`recipe-runner.ts`'s `runRecipe` — no
+mutation, matching the ticket's own "the compiler produces the graph but
+does not mutate the world." Reuses `dag-scheduler.ts`'s
+`topologicalOrder`/`deriveDependsOn`/`resolveStepId` for dependency
+structure and cycle detection rather than re-deriving it — see
+`ROADMAP.md`'s new Phase 4.6 entry for exactly how this module relates to
+(and does NOT replace) `dag-scheduler.ts`'s own SCHEDULE computation.
+`checkExecutionOrder` is a minimal, explicitly-NOT-a-runtime, pure
+structural check (execution itself stays out of scope, per the ticket) —
+the concrete proof that a dependency really prevents out-of-order
+execution. Proven via `tests/execution-graph.test.ts` (19 synthetic-fixture
+unit tests) and `npm run capability-test:execution-graph`
+(`scripts/execution-graph-as-a-robot.ts`) — against REAL
+`data/entities/*.json`/`data/actions/*.json` and three real recipes,
+including a genuine fan-in dependency (`garlic-oil-potatoes.json`'s
+`fry_potato`, depending on both `cut_potato` and `infuse_oil`) proven
+against real, not just synthetic, data.
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.

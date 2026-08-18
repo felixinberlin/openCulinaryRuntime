@@ -97,13 +97,6 @@ now in Core, and design-rationale fully duplicated in the relevant
   `par_fried` is pale/soft/unfinished, a result a competent cook would
   call wrong, not gently done. The discriminator, checkable each time: do
   real cooks call the two RESULTS the same dish?
-- **`pan.json` has listed `possibleStates: ["hot","cold"]` with
-  `allowedTransformations: []` since before heat-source work started** —
-  a real, previously-invisible dead-state pair, the concrete evidence
-  behind "heat belongs to a place, not an ingredient" (two eggs simmering
-  in one pot get two independently-guessed temperatures today, not one
-  shared physical truth). Named as its own `ROADMAP.md` entry rather than
-  built speculatively.
 - **`FRY` had no real `°C` parameter at all despite `BOIL`/`SIMMER`/
   `POACH` all having `waterTempC`** — surfaced while sourcing `PAR_FRY`'s
   `oilTempC` and noticing the inconsistency; fixed on `fry.json` itself,
@@ -317,10 +310,14 @@ now in Core, and design-rationale fully duplicated in the relevant
   `commonly_cited_unverified` (the claim was verified, not the primary
   text).
 - **`oven.json` had `possibleStates: ["off","preheating","hot"]` with
-  ZERO actions ever transitioning it** — the identical dead-state shape
-  found before (`knife.json`'s clean/dirty) — a "minimal tool entity,
-  added so a reference resolves" is a recurring under-scrutinized shape.
-  Named and cross-referenced, not reactivated (nothing in this change
+  ZERO actions ever transitioning it** — a "minimal tool entity, added so
+  a reference resolves" is a recurring, under-scrutinized shape, now
+  found three separate times (`pan.json`'s `hot`/`cold` in 2026-08-13,
+  before the gap it evidenced was closed by `place.ts`; `knife.json`'s
+  `clean`/`dirty`, later given a real mechanism by `tool-hygiene.ts`;
+  this `oven.json` instance). Worth actively checking any new tool entity
+  for orphaned `possibleStates` before assuming a stub is harmless. Named
+  and cross-referenced, not reactivated here (nothing in this change
   needed real oven temperature/preheat-time). **ROAST vs. BAKE**: the
   concrete, checkable difference (not just near-synonym intuition) is
   real roasting universally uses fat, real baking (per this vocabulary's

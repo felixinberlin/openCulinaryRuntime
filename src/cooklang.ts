@@ -3,45 +3,15 @@ import type { Action } from "./action.ts";
 import type { RecipeScript, RecipeInstance } from "./recipe.ts";
 
 /**
- * Cooklang import/export — `ROADMAP.md` Phase 5, `ocr-converter.ts` as
- * planned (`CLAUDE.md`'s module-layout table; not a file named
- * `ocr-converter.ts` itself, same "planned name diverged" pattern as
- * `heat-source.ts`/`place.ts`/etc.). Scoped exactly along the boundary
- * `AUTHORING.md` §2 already drew, before any code existed:
- *
- * 1. **Parsing Cooklang's own syntax is mechanical** — `@ingredient{qty%unit}`,
- *    `#cookware{}`, `~timer{qty%unit}`, `>> metadata: value`, `-- comments`,
- *    `[- block comments -]`. Real grammar, no judgment calls, built here as
- *    `parseCooklang`.
- * 2. **Turning step PROSE into this repo's typed `actionId`/parameter shape
- *    is NOT mechanical** — that's the free-text -> structured-intent
- *    translation `ENGINE_INVARIANTS.md` #10 scopes to an LLM or human
- *    proposing a DRAFT, never asserted as already-valid. This module does
- *    NOT attempt it: `CooklangStep.text` keeps the step's prose verbatim
- *    (tokens inline, exactly as authored) for that translator to consume
- *    later — it is not itself a `RecipeStep`.
- * 3. `importCooklangDraft` closes the one piece of "1" that's genuinely
- *    useful before "2" exists: matching every `@token` against a real
- *    entity's `Entity.cooklang.canonicalToken` and proposing
- *    `RecipeInstance[]` for `initialInventory` — a best-effort MATCH, not a
- *    validation claim (unresolved tokens are named, not silently dropped;
- *    a caller still owes the result a real `validate-recipe` pass before
- *    treating it as usable, same as any other hand-authored draft).
- * 4. `exportToCooklang` is the reverse and fully mechanical in the other
- *    direction: an OCR `RecipeScript` already carries everything Cooklang
- *    syntax needs (entity tokens, quantities, action names, durations) —
- *    no prose synthesis, so no LLM-in-the-loop problem. It deliberately
- *    does NOT invent natural-language sentences; each step line is the
- *    action's own `names.en` plus its Cooklang-tokenized references and a
- *    plain parameter list, not literary prose.
- *
- * **Explicitly NOT built here** (real, named gaps, matching this repo's
- * own "gaps are named, not hidden" convention): Cooklang scaling
- * multipliers. `ingredient.ts`'s own `QuantitySchema` doc comment already
- * states no recipe-scaling engine exists anywhere in this repo to scale
- * AGAINST — `spiceLock` is PRESERVED faithfully round-trip (the `=`
- * prefix survives import -> export -> import unchanged) but never
- * multiplied, because nothing here multiplies anything yet.
+ * Cooklang import/export. Parsing Cooklang's own syntax (`parseCooklang`)
+ * is mechanical, real grammar; turning step PROSE into this repo's typed
+ * actionId/parameter shape is NOT attempted here (that's an LLM/human
+ * translation task — `CooklangStep.text` keeps prose verbatim for a
+ * separate translator to consume). `importCooklangDraft` matches
+ * `@token`s against real entities and proposes a DRAFT inventory, never
+ * asserted valid. `exportToCooklang` is the fully mechanical reverse
+ * direction. See `reference/cooklang.md` for design rationale, scope,
+ * and history.
  */
 
 // ---------------------------------------------------------------------------
@@ -49,8 +19,7 @@ import type { RecipeScript, RecipeInstance } from "./recipe.ts";
 // ---------------------------------------------------------------------------
 
 export interface CooklangQuantity {
-  /** Raw amount text exactly as authored, e.g. "1/2", "200" — kept
-   *  verbatim because not every Cooklang amount is a plain decimal. */
+  /** Raw amount text exactly as authored, e.g. "1/2", "200". */
   raw: string;
   /** Parsed numeric value when `raw` is an integer, decimal, or simple
    *  "a/b" fraction; undefined for non-numeric amounts like "some". */
@@ -61,14 +30,11 @@ export interface CooklangQuantity {
 export interface CooklangIngredientRef {
   kind: "ingredient";
   /** The token after `@`, e.g. "sal" or "aceite de oliva" (multi-word
-   *  names require the `{}` form, same rule real Cooklang uses — see
-   *  `parseCooklang`'s doc comment for the exact, bounded grammar this
-   *  module supports). */
+   *  names require the `{}` form). See `reference/cooklang.md`. */
   token: string;
   quantity?: CooklangQuantity;
-  /** True for a `=`-prefixed amount, e.g. `@sal{=1%tsp}` —
-   *  `CLAUDE_DEV_CTX.md`'s "spice lock": this amount does not scale
-   *  linearly with the rest of the recipe. */
+  /** True for a `=`-prefixed amount, e.g. `@sal{=1%tsp}` — the "spice
+   *  lock": this amount does not scale linearly with the rest of the recipe. */
   spiceLock: boolean;
   raw: string;
 }
@@ -90,9 +56,7 @@ export interface CooklangTimerRef {
 
 export interface CooklangStep {
   /** The step's prose with every `@`/`#`/`~` token still inline, exactly
-   *  as authored — Cooklang doesn't separate "text" from "references" and
-   *  neither does this. Not a `RecipeStep`; see this file's top doc
-   *  comment, point 2. */
+   *  as authored. Not a `RecipeStep`. See `reference/cooklang.md`. */
   text: string;
   ingredients: CooklangIngredientRef[];
   cookware: CooklangCookwareRef[];
@@ -107,23 +71,9 @@ export interface CooklangDocument {
   steps: CooklangStep[];
 }
 
-/**
- * Matches, in order per scan position:
- * 1. Braced form: marker + a run of words/spaces immediately followed by
- *    `{...}` — the run can only include `[A-Za-z0-9_'-]` and single
- *    spaces, so it can never cross into another token's own `@`/`#`/`~`/
- *    `{`/`}` characters. This is what makes multi-word names unambiguous
- *    without a hand-rolled lookahead scanner: the name run structurally
- *    cannot swallow a LATER, unrelated token's braces, because reaching
- *    that other token's marker character ends the run first. The one real
- *    limitation (documented, not hidden): a stray `{...}` later in the
- *    same line with only plain words/spaces/hyphens between it and
- *    an earlier bare `@token` WILL be misread as that token's own braces —
- *    the same authoring discipline real Cooklang requires (write `{}`
- *    immediately after the name, nothing else in between).
- * 2. Bare form (ingredient/cookware only, no timer): marker + one word,
- *    no braces, no quantity.
- */
+/** Braced form (marker + name run + `{...}`) or bare form (marker +
+ *  single word). See `reference/cooklang.md` for the exact grammar and
+ *  its one documented limitation. */
 const TOKEN_RE =
   /([@#~])([A-Za-z0-9_'-]*(?:[ \t]+[A-Za-z0-9_'-]+)*)\{([^{}]*)\}|([@#])([A-Za-z0-9_'-]+)/g;
 
@@ -193,14 +143,11 @@ function scanLineTokens(line: string): {
 
 /**
  * Parses real Cooklang source text into a structured `CooklangDocument`.
- * Deliberately does not attempt to resolve tokens against entities or
- * produce a `RecipeScript` — see this file's top doc comment.
- *
- * Step boundary rule (a stated simplification, not part of the official
- * grammar): a step is one blank-line-separated paragraph of non-metadata,
- * non-comment, non-section-heading lines, joined with a single space —
- * closer to how Cooklang recipes are actually authored (a step can wrap
- * across lines) than "one line = one step" would be.
+ * Does not resolve tokens against entities or produce a `RecipeScript`.
+ * A step is one blank-line-separated paragraph of non-metadata/comment/
+ * section-heading lines, joined with a single space — a stated
+ * simplification, not part of the official grammar. See
+ * `reference/cooklang.md`.
  */
 export function parseCooklang(source: string): CooklangDocument {
   // Strip block comments first — they can span multiple lines.
@@ -252,10 +199,9 @@ export function parseCooklang(source: string): CooklangDocument {
 // Import (parsed document -> a draft proposal against real entities)
 // ---------------------------------------------------------------------------
 
-/** g/kg/ml/l/tsp/tbsp/cup/count plus common written-out aliases actually
- *  seen in authored Cooklang text — mapped to `QuantitySchema`'s closed
- *  unit enum (`ingredient.ts`). Anything else is left unmapped rather than
- *  guessed at. */
+/** g/kg/ml/l/tsp/tbsp/cup/count plus common written-out aliases, mapped
+ *  to `QuantitySchema`'s closed unit enum. Anything else is left
+ *  unmapped rather than guessed at. */
 const UNIT_ALIASES: Record<string, string> = {
   g: "g",
   gram: "g",
@@ -282,11 +228,9 @@ const UNIT_ALIASES: Record<string, string> = {
   units: "count",
 };
 
-/** Exported for `cooklang-translate.ts` — the same token-normalization
- *  rule import resolution uses is also how a translator matches a
- *  step's ingredient references back to `importCooklangDraft`'s own
- *  `proposedInventory` ids, without re-deriving a second normalization
- *  rule that could silently drift from this one. */
+/** Also used by `cooklang-translate.ts` to match a step's ingredient
+ *  references back to `importCooklangDraft`'s own `proposedInventory`
+ *  ids, without a second, potentially-drifting normalization rule. */
 export function normalizeToken(s: string): string {
   return s.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -310,32 +254,23 @@ export interface ResolvedCooklangIngredient {
 export interface CooklangImportDraft {
   metadata: Record<string, string>;
   /** One entry per DISTINCT token (case/whitespace-normalized) that
-   *  matched a real entity's `cooklang.canonicalToken`, OR — failing
-   *  that — an entity's bare `id` (case-insensitively). The `id` fallback
-   *  mirrors `exportToCooklang`'s own fallback for entities with no
-   *  `cooklang` field (`cooklangToken`): without it, exporting such an
-   *  entity and re-importing the result would silently fail to round-trip,
-   *  which would make the fallback a one-way lossy hole rather than a
-   *  documented, symmetric approximation. */
+   *  matched a real entity's `cooklang.canonicalToken`, or — failing
+   *  that — an entity's bare `id`. See `reference/cooklang.md`. */
   resolvedIngredients: ResolvedCooklangIngredient[];
-  /** Distinct tokens that matched no entity — named explicitly rather
-   *  than silently dropped, this file's own version of `REFERENCES.md`'s
-   *  "don't hide the gap" discipline applied to import coverage. */
+  /** Distinct tokens that matched no entity — named explicitly, not
+   *  silently dropped. */
   unresolvedTokens: string[];
-  /** A DRAFT `RecipeInstance[]` for `RecipeScriptSchema.initialInventory`,
-   *  built only from resolved ingredients. `state` defaults to `"raw"` —
-   *  Cooklang text never encodes an entity's physical state, so this is a
-   *  guess a human/`validate-recipe` must confirm, not a fact this module
-   *  derived. Never asserted valid on its own — see this file's top doc
-   *  comment, point 3. */
+  /** A DRAFT `RecipeInstance[]` for `initialInventory`, built only from
+   *  resolved ingredients. `state` defaults to `"raw"` — a guess a human/
+   *  `validate-recipe` must confirm. See `reference/cooklang.md`. */
   proposedInventory: RecipeInstance[];
   steps: CooklangStep[];
 }
 
 /**
  * Parses `source` and matches every ingredient token against `entities`'
- * `cooklang.canonicalToken` (case/whitespace-normalized). Produces a DRAFT
- * only — see this file's top doc comment.
+ * `cooklang.canonicalToken` (case/whitespace-normalized). Produces a
+ * DRAFT only. See `reference/cooklang.md`.
  */
 export function importCooklangDraft(
   source: string,
@@ -404,19 +339,13 @@ function formatQuantity(q: Quantity | undefined, spiceLock: boolean): string {
 
 /**
  * Exports an OCR `RecipeScript` to Cooklang text. Fully mechanical — no
- * prose synthesis (see this file's top doc comment, point 4): each step
- * line is the action's own `names.en`, its Cooklang-tokenized instance
- * references, and a plain `key: value` parameter list, not literary prose.
+ * prose synthesis: each step line is the action's own `names.en`, its
+ * Cooklang-tokenized instance references, and a plain parameter list.
  *
  * `spawnedEntityIds` (optional) should be `RecipeRunResult.spawnedEntityIds`
- * (`recipe-runner.ts`) when the caller has one, so a step targeting an
- * instance SPAWNED mid-recipe (e.g. a `SEPARATE` output) still resolves to
- * a real `@token` instead of a raw instance id — the same
- * compose-with-real-ground-truth precedent `execution-bounds.ts`/
- * `in-progress-action.ts` already established, not a second, static
- * re-derivation of the spawn-naming scheme. Omit it and spawned-instance
- * references fall back to their bare instance id, named as a limitation
- * rather than guessed at.
+ * when available, so a step targeting a mid-recipe-spawned instance still
+ * resolves to a real `@token` instead of a raw instance id. See
+ * `reference/cooklang.md`.
  */
 export function exportToCooklang(
   recipe: RecipeScript,

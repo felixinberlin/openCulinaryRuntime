@@ -66,11 +66,35 @@ const STANDARD_ATMOSPHERE = {
 } as const;
 
 const WATER_ANTOINE_COEFFICIENTS = {
-  // Valid range: 1-100°C (NIST Chemistry WebBook).
   A: 8.07131,
   B: 1730.63,
   C: 233.426,
 } as const;
+
+/**
+ * Both formulas' own stated validity bounds, promoted from this file's top
+ * doc comment prose into real, checkable constants — matching the pattern
+ * `thermal.ts`'s `ThermalInactivationModelSchema.validityCondition` already
+ * established for exactly this (a model's applicable range should be a real
+ * field a caller/test can check, not only an assertion in prose). Source:
+ * ICAO Doc 7488 / US Standard Atmosphere 1976 (troposphere bound) and the
+ * NIST Chemistry WebBook (Antoine-coefficient bound) — the same two
+ * citations already named in this file's own top doc comment.
+ */
+export const BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M = { min: 0, max: 11000 } as const;
+export const ANTOINE_EQUATION_VALIDITY_TEMP_C = { min: 1, max: 100 } as const;
+
+/** True iff `altitudeMeters` falls within the barometric formula's own
+ *  stated troposphere bound — exposed so a caller/test can confirm a given
+ *  scenario is actually valid, the same "don't only assert it in prose"
+ *  precedent `heat-penetration.ts`'s `isWithinValidityCondition` already
+ *  set for its own one-term conduction approximation. */
+export function isWithinBarometricValidity(altitudeMeters: number): boolean {
+  return (
+    altitudeMeters >= BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M.min &&
+    altitudeMeters <= BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M.max
+  );
+}
 
 /**
  * Local atmospheric pressure at a given altitude above sea level, via the

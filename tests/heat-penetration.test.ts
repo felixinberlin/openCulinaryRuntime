@@ -7,9 +7,35 @@ import {
   thermalDiffusivityM2PerS,
   isWithinValidityCondition,
   effectiveHalfThicknessM,
+  MAILLARD_REACTION_ONSET_TEMP_C,
+  MAILLARD_REACTION_STAGES_C,
+  STARCH_GELATINIZATION_ONSET_TEMP_C,
+  POTATO_FORK_TENDER_CENTER_TEMP_C,
   type SlabConductionParams,
 } from "../src/heat-penetration.ts";
 import { makeEntity } from "./helpers.ts";
+
+describe("MAILLARD_REACTION_STAGES_C — the full curve, not just the onset point", () => {
+  test("stages are ordered: gelatinization < slow onset < sharp onset < peak efficiency < pyrolysis", () => {
+    assert.ok(
+      STARCH_GELATINIZATION_ONSET_TEMP_C.max <= MAILLARD_REACTION_STAGES_C.slowOnsetRangeC.min
+    );
+    assert.ok(MAILLARD_REACTION_STAGES_C.slowOnsetRangeC.max <= MAILLARD_REACTION_ONSET_TEMP_C);
+    assert.ok(
+      MAILLARD_REACTION_ONSET_TEMP_C <= MAILLARD_REACTION_STAGES_C.peakEfficiencyRangeC.min
+    );
+    assert.ok(
+      MAILLARD_REACTION_STAGES_C.peakEfficiencyRangeC.min <=
+        MAILLARD_REACTION_STAGES_C.pyrolysisOnsetC
+    );
+  });
+
+  test("fork-tender potato doneness sits above starch gelatinization onset, not inside it", () => {
+    // The whole reason these are two different, named thresholds: reaching
+    // gelatinization onset is not the same as being done.
+    assert.ok(POTATO_FORK_TENDER_CENTER_TEMP_C.min > STARCH_GELATINIZATION_ONSET_TEMP_C.max);
+  });
+});
 
 describe("thermalDiffusivityM2PerS", () => {
   test("computes alpha = k / (rho * cp) from an entity's thermophysical fields", () => {

@@ -347,3 +347,26 @@ decisions with reasoning not fully captured elsewhere.
   the minimal API) — turning "the compiler shouldn't leak into the IR"
   from convention into an import-graph fact. Read a second ticket's own
   stated reasoning before assuming it's just restating the first.
+- **A directed "promote comment-only facts into real code" sweep across
+  all 31 `src/*.ts` files found the review that scoped it (based on ~14
+  sampled files) had already found most of the real candidates — the
+  wider sweep mainly confirmed the same conclusion at higher confidence,
+  plus a few genuine additions the sample had missed** (`ROOM_TEMP_C`,
+  independently re-declared as a bare `20` at 4 call sites with only an
+  inline comment each — the clearest "two sources of truth" risk found;
+  `altitude.ts`'s own validity bounds, stated in prose since the file was
+  written but never given the `validityCondition`-shaped typed field
+  `thermal.ts` already established as this repo's own precedent for
+  exactly this). Worth the general lesson: a representative sample can be
+  a good, honest first pass — the original review's "very little should
+  move" conclusion held up — without being the SAME as an exhaustive
+  sweep; the gap between them was real, just smaller than either
+  extreme (a handful of genuine finds, not zero and not dozens).
+- **Promoting a fact to a typed constant must preserve, not silently
+  upgrade, its original confidence tier and citation** — every promotion
+  this pass made reused the EXACT source/confidence/date already sitting
+  in the comment it came from (`commonly_cited_unverified` stayed
+  `commonly_cited_unverified`), rather than treating "now it's a real
+  field" as itself evidence of stronger verification. A field that looks
+  more official than its actual epistemic status is a worse outcome than
+  the comment it replaced.

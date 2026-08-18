@@ -61,27 +61,52 @@
   "storageLifeByState": {
     "raw": {
       "refrigeratedDays": { "min": 21, "max": 35 },
+      "roomTempHours": { "min": 2, "max": 2 },
       "citation": {
         "source": "USDA FSIS, \"Shell Eggs from Farm to Table\" (via convergent secondary sources — The Whole Fork, Farmers' Almanac — both explicitly attributing to USDA FSIS/FoodKeeper; the primary fsis.usda.gov page itself returned HTTP 403 to direct fetch this session)",
         "confidence": "commonly_cited_unverified",
-        "note": "3-5 weeks past purchase date, continuously refrigerated at or below 40F/4C. Applies to the whole intact shell egg only — see the 'boiled'/'peeled' entry below for the much shorter figure once cooked."
+        "note": "3-5 weeks past purchase date, continuously refrigerated at or below 40F/4C. Applies to the whole intact shell egg only — see the 'boiled'/'peeled' entry below for the much shorter figure once cooked. roomTempHours (added 2026-08-18) is the general USDA/FDA \"Danger Zone\" (40-140F) 2-hour rule — see ingredient.ts's StorageLifeSchema.roomTempHours doc comment; represented as a degenerate {min:2,max:2} range because the rule is a fixed cutoff, not an empirical range, but the field's own shape is min/max."
       }
     },
     "boiled": {
       "refrigeratedDays": { "min": 1, "max": 7 },
+      "roomTempHours": { "min": 2, "max": 2 },
       "citation": {
         "source": "USDA FSIS, \"Shell Eggs from Farm to Table\" (via the same convergent secondary sources as the 'raw' entry above)",
         "confidence": "commonly_cited_unverified",
-        "note": "Up to 1 week refrigerated, peeled or unpeeled — a real, large drop from the raw figure: hard-cooking washes away the shell's natural protective coating, leaving its pores more exposed to bacteria. Same figure applies to 'peeled' (see that entry)."
+        "note": "Up to 1 week refrigerated, peeled or unpeeled — a real, large drop from the raw figure: hard-cooking washes away the shell's natural protective coating, leaving its pores more exposed to bacteria. Same figure applies to 'peeled' (see that entry). roomTempHours: same Danger Zone rule as 'raw' above — a cooked, perishable food out of refrigeration for over 2 hours is the same rule, not a separate figure for the cooked case."
       }
     },
     "peeled": {
       "refrigeratedDays": { "min": 1, "max": 7 },
+      "roomTempHours": { "min": 2, "max": 2 },
       "citation": {
         "source": "USDA FSIS, \"Shell Eggs from Farm to Table\" (via the same convergent secondary sources as the 'raw' entry above)",
         "confidence": "commonly_cited_unverified",
-        "note": "Identical figure to 'boiled' above (the source states 'peeled or unpeeled' explicitly) — duplicated as its own entry rather than left unset, since 'peeled' is a real, distinct possibleStates value on this entity."
+        "note": "Identical figure to 'boiled' above (the source states 'peeled or unpeeled' explicitly) — duplicated as its own entry rather than left unset, since 'peeled' is a real, distinct possibleStates value on this entity. roomTempHours: same Danger Zone rule, same reasoning as 'boiled'."
       }
+    }
+  },
+  "domainFacts": {
+    "euGradeLRangeGrams": {
+      "value": { "min": 63, "max": 73 },
+      "unit": "g",
+      "citation": {
+        "source": "EU Commission Regulation (EC) No 589/2008, Article 4 (egg-grading regulation): S <53g, M 53-63g, L 63-73g, XL >=73g",
+        "confidence": "standard_reference",
+        "note": "Promoted 2026-08-18 from egg-doneness.ts's own EGG_SIZE_GRAMS doc comment, which already named this regulation directly. This is the REAL EU regulatory band — kept deliberately separate from, and not overwriting, EGG_SIZE_GRAMS.large (55g), which is this repo's own internally-reconciled working anchor (the midpoint of EGG_BOIL_DONENESS's own ~50-60g baseline assumption, chosen for internal consistency across this repo's own timing tables, not a direct copy of either regulation's absolute values — see that file's own doc comment for the full reconciliation reasoning)."
+      },
+      "verified": false
+    },
+    "usGradeLargeMinGrams": {
+      "value": 56.7,
+      "unit": "g",
+      "citation": {
+        "source": "USDA AMS egg-grading standards — \"large\" shell egg minimum net weight, commonly cited as 56.7g (2 oz) per egg",
+        "confidence": "commonly_cited_unverified",
+        "note": "Promoted 2026-08-18, same source as egg-doneness.ts's own EGG_SIZE_GRAMS doc comment. Sits much closer to this repo's own 55g 'large' anchor than the EU band above does — the actual reason EGG_SIZE_GRAMS anchors to its own internal baseline rather than either grading scheme's literal values, now checkable directly against both real regulatory numbers instead of only asserted in prose."
+      },
+      "verified": false
     }
   },
   "capabilities": {

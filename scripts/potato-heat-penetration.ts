@@ -7,6 +7,7 @@ import {
   effectiveHalfThicknessM,
   POTATO_FORK_TENDER_CENTER_TEMP_C,
   MAILLARD_REACTION_ONSET_TEMP_C,
+  ROOM_TEMP_C,
 } from "../src/heat-penetration.ts";
 import { cutShapeDimensionMm } from "../src/cut-dimensions.ts";
 
@@ -25,7 +26,7 @@ const potato = entities.get("potato")!;
 const alpha = thermalDiffusivityM2PerS(potato);
 
 const targetC = (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTER_TEMP_C.max) / 2;
-const initialTempC = 20; // room temperature, stated assumption
+const initialTempC = ROOM_TEMP_C; // heat-penetration.ts's own cited room-temperature constant
 
 const sliceRange = cutShapeDimensionMm("sliced"); // cut-dimensions.ts's real, cited 3-5mm range
 const thinActualThicknessM = sliceRange.min / 1000;

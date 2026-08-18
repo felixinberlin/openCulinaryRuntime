@@ -14,6 +14,7 @@ import {
   isAtTargetTemp,
   type PlaceState,
 } from "./place.ts";
+import { ROOM_TEMP_C } from "./heat-penetration.ts";
 import {
   cleanTool,
   markContaminated,
@@ -297,7 +298,7 @@ function handleFill(
   const placeId = requireParam(step.params, "placeId", action.verb);
   const toolEntityId = requireParam(step.params, "toolEntityId", action.verb);
   const massKg = requireNumber(step.params, "massKg", action.verb);
-  const startTempC = numberOrDefault(step.params, "startTempC", 20);
+  const startTempC = numberOrDefault(step.params, "startTempC", ROOM_TEMP_C);
 
   const place = places.get(placeId) ?? emptyPlace(toolEntityId, startTempC);
   places.set(placeId, pourInto(place, instance.entityId, massKg, startTempC));

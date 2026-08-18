@@ -1,7 +1,13 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 
-import { atmosphericPressurePa, waterBoilingPointC } from "../src/altitude.ts";
+import {
+  atmosphericPressurePa,
+  waterBoilingPointC,
+  isWithinBarometricValidity,
+  BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M,
+  ANTOINE_EQUATION_VALIDITY_TEMP_C,
+} from "../src/altitude.ts";
 
 describe("atmosphericPressurePa", () => {
   test("matches standard sea-level pressure exactly at 0m", () => {
@@ -48,5 +54,28 @@ describe("waterBoilingPointC", () => {
 
   test("rejects a negative altitude", () => {
     assert.throws(() => waterBoilingPointC(-1), /non-negative/);
+  });
+});
+
+describe("isWithinBarometricValidity — the formula's own stated bound, checkable not just asserted", () => {
+  test("sea level and Denver are both within the troposphere bound", () => {
+    assert.equal(isWithinBarometricValidity(0), true);
+    assert.equal(isWithinBarometricValidity(1609), true);
+  });
+
+  test("the constant matches the ICAO troposphere bound this file's own doc comment cites (0-11,000m)", () => {
+    assert.deepEqual(BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M, { min: 0, max: 11000 });
+  });
+
+  test("Mount Everest's summit (~8,849m) is still within the troposphere bound", () => {
+    assert.equal(isWithinBarometricValidity(8849), true);
+  });
+
+  test("a genuinely stratospheric altitude falls outside it", () => {
+    assert.equal(isWithinBarometricValidity(20000), false);
+  });
+
+  test("the Antoine equation's own stated validity range matches the NIST-cited 1-100°C", () => {
+    assert.deepEqual(ANTOINE_EQUATION_VALIDITY_TEMP_C, { min: 1, max: 100 });
   });
 });

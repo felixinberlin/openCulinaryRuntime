@@ -10,6 +10,7 @@ import {
   effectiveHalfThicknessM,
   secondsForCenterToReachTempC,
   POTATO_FORK_TENDER_CENTER_TEMP_C,
+  ROOM_TEMP_C,
 } from "./heat-penetration.ts";
 import { executionBoundFor, type ExecutionBound } from "./execution-bounds.ts";
 
@@ -396,7 +397,7 @@ export function explainRecipe(
           if (dimensionMm) {
             const targetC =
               (POTATO_FORK_TENDER_CENTER_TEMP_C.min + POTATO_FORK_TENDER_CENTER_TEMP_C.max) / 2;
-            const initialTempC = 20; // room temperature, stated assumption — same as scripts/potato-heat-penetration.ts
+            const initialTempC = ROOM_TEMP_C; // heat-penetration.ts's own cited room-temperature constant
 
             const topCookingMethod = step.params["topCookingMethod"];
             const oneFaceOnly =

@@ -100,10 +100,12 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   effective 2023-01-01** — added sesame as the 9th. Together, the FDA's
   "Big 9." Used in `src/ingredient.ts`'s `AllergenSchema`/
   `EntitySchema.allergens` (added 2026-08-16, `ROADMAP.md`'s "Allergens"
-  gap). Confidence: `standard_reference` — real, checkable U.S. federal
-  law, verified via direct lookup 2026-08-16 (FDA's own published FASTER
-  Act summary), not recalled. The EU's wider 14-allergen list (Regulation
-  (EU) 1169/2011 Annex II) is a real, cited, deliberately NOT-modeled
+  gap); promoted 2026-08-18 into a real exported `ALLERGEN_REGULATION_CITATION`
+  constant (was previously only in the schema's own doc-comment prose).
+  Confidence: `standard_reference` — real, checkable U.S. federal law,
+  verified via direct lookup 2026-08-16 (FDA's own published FASTER Act
+  summary), not recalled. The EU's wider 14-allergen list (Regulation (EU)
+  1169/2011 Annex II) is a real, cited, deliberately NOT-modeled
   alternative — see `AllergenSchema`'s own doc comment for why the FDA
   list was chosen instead, despite this repo's Spanish/EU-leaning dishes.
 - **USDA FSIS, "Shell Eggs from Farm to Table"** —
@@ -125,24 +127,30 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   — perishable food left at room temperature should be discarded after 2
   hours (1 hour above 90°F/32°C); bacteria can double in as little as 20
   minutes in this range. Named/scoped in `ingredient.ts`'s
-  `StorageLifeSchema` (`roomTempHours` field) but NOT yet applied to any
-  real entity's `storageLifeByState` — no forcing case has needed it yet
-  (every entity audited so far only needed `refrigeratedDays`/
-  `pantryMonths`), named here so the field's own citation exists ahead of
-  its first real use rather than being invented at that point. Confidence:
-  `standard_reference` — a specific, named, standard USDA food-safety page,
-  independently corroborated by multiple secondary sources with consistent
-  figures (this session's direct fetch of the primary page was not
-  attempted, since no data file needed the number yet).
+  `StorageLifeSchema` (`roomTempHours` field) since 2026-08-17; promoted
+  2026-08-18 into a real exported `DANGER_ZONE_CITATION` constant and
+  applied for the first time to real entities —
+  `egg.json`/`egg_yolk.json`/`egg_white.json`/`milk.json`'s
+  `storageLifeByState.*.roomTempHours` (queryable via `npm run ask --
+  entity-fact <id> ...` through each entity's own `citation`, which points
+  back at this rule). Confidence: `standard_reference` — a specific,
+  named, standard USDA food-safety page, independently corroborated by
+  multiple secondary sources with consistent figures (this session's
+  direct fetch of the primary page was not attempted).
 
 ## Physical constants & composition data
 
 - **ICAO Doc 7488 / US Standard Atmosphere 1976** — the standard
   barometric-formula constants (sea-level pressure, temperature lapse
   rate, molar mass of air) relating altitude to atmospheric pressure,
-  used in `src/altitude.ts`'s `atmosphericPressurePa`. Confidence:
-  `standard_reference` — the same standard atmosphere model aviation,
-  meteorology, and engineering reference tables are built on.
+  used in `src/altitude.ts`'s `atmosphericPressurePa`. The formula's own
+  troposphere validity bound (0-11,000m), previously stated only in this
+  file's top doc comment, was promoted 2026-08-18 into a real, checkable
+  `BAROMETRIC_FORMULA_VALIDITY_ALTITUDE_M` constant + `isWithinBarometricValidity`
+  helper — matching the pattern `thermal.ts`'s `validityCondition` field
+  already established. Confidence: `standard_reference` — the same
+  standard atmosphere model aviation, meteorology, and engineering
+  reference tables are built on.
 - **University of Exeter, Department of Physics and Astronomy, "Boiling
   an Egg"** (Charles Williams' closed-form spherical transient-conduction
   formula) — https://www.exeter.ac.uk/research-centres/theoretical-physics/boiling-an-egg/
@@ -167,7 +175,27 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   table — see that constant's own doc comment for why its actual gram
   values are anchored to this repo's PRE-EXISTING "large ~50-60g"
   assumption instead of the EU bands' literal values, a real reconciliation
-  choice, not a direct citation of this regulation's numbers.
+  choice, not a direct citation of this regulation's numbers. The real
+  regulatory band itself (63-73g), kept separate from that reconciled
+  anchor, is now also directly queryable as `egg.json`'s own
+  `domainFacts.euGradeLRangeGrams` (added 2026-08-18).
+- **USDA AMS egg-grading standards** — "large" shell egg minimum net
+  weight, commonly cited as 56.7g (2oz) per egg. Same role as the EU
+  regulation above (context for `EGG_SIZE_GRAMS`'s reconciliation), now
+  also directly queryable as `egg.json`'s `domainFacts.usGradeLargeMinGrams`
+  (added 2026-08-18). Confidence: `commonly_cited_unverified` — checked
+  via web search, not independently verified against the primary USDA AMS
+  standard document.
+- **U.S. Pharmacopeia (USP) room-temperature definition (20-25°C/68-77°F)**,
+  corroborated by FDA/USDA food-holding guidance applying the same
+  baseline — used in `src/heat-penetration.ts`'s `ROOM_TEMP_C` (20, the
+  low/conservative end of the real range), added 2026-08-18 to replace a
+  bare, uncited `20` literal independently re-declared at 4 call sites
+  (`recipe-explain.ts`, `recipe-runner.ts`'s `FILL` default, and two
+  capability-test scripts). Confidence: `commonly_cited_unverified` —
+  checked via web search 2026-08-18, via a secondary source explicitly
+  attributing to USP/FDA/USDA; the primary USP text was not fetched
+  directly this session.
 - **Di Lorenzo & Di Maio, "Periodic cooking of eggs," *Communications
   Engineering* (Nature Portfolio, 2025)** — already listed in this file's
   "Discussed, informs design reasoning" section below for its full
@@ -200,7 +228,10 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   every physical chemistry reference (e.g. Lange's Handbook of
   Chemistry). Cross-checked against real-world figures in
   `tests/altitude.test.ts` (Denver, 1609m, computes to ~94.7°C, matching
-  the commonly-cited ~95°C).
+  the commonly-cited ~95°C). The 1-100°C validity range, previously only
+  an inline comment, was promoted 2026-08-18 into a real, checkable
+  `ANTOINE_EQUATION_VALIDITY_TEMP_C` constant, same as the barometric
+  formula's own bound above.
 - **Convergent consumer egg-timing guides with a size-adjustment chart**
   (e.g. geteggtimer.com's small/medium/large/extra-large boiling-time
   chart) — the ~30-second-per-size-step figure used in
@@ -666,20 +697,27 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   ONSET temperature** (commonly cited in the 56-66°C range) — distinct
   from and lower than the 96-99°C fork-tender figure above (texture
   starts changing at onset, but isn't fully complete until well above
-  it). Named in `src/heat-penetration.ts`'s doc comment for context, not
-  used as the actual computation target. Confidence:
-  `commonly_cited_unverified` — checked via web search 2026-08-15,
-  blended across multiple convergent food-science sources rather than
-  one single primary study.
+  it). Named in `src/heat-penetration.ts`'s doc comment since 2026-08-15;
+  promoted 2026-08-18 into a real exported constant
+  (`STARCH_GELATINIZATION_ONSET_TEMP_C`, tested against
+  `POTATO_FORK_TENDER_CENTER_TEMP_C`'s own ordering) rather than left only
+  in prose. Confidence: `commonly_cited_unverified` — checked via web
+  search 2026-08-15, blended across multiple convergent food-science
+  sources rather than one single primary study; not re-researched for the
+  2026-08-18 promotion.
 - **Convergent food-science sources for the Maillard reaction's onset
   temperature** (~140°C — slow from ~115-130°C, accelerating sharply
   from 140°C, peaking 165-200°C, charring/pyrolysis above ~180-190°C) —
-  used in `src/heat-penetration.ts`'s `MAILLARD_REACTION_ONSET_TEMP_C`.
-  Raised by a user-supplied document (`frying-potatoes-science.md`) that
-  itself has no traceable bibliography (bracketed citation numbers with
-  no reference list included) — NOT treated as a source; this citation
-  is from independently checking multiple food-science summaries
-  directly, which converged closely on the same figure. Confidence:
+  used in `src/heat-penetration.ts`'s `MAILLARD_REACTION_ONSET_TEMP_C`;
+  the companion stages promoted 2026-08-18 into `MAILLARD_REACTION_STAGES_C`
+  (same citation, not re-researched — the whole curve was checked
+  together in 2026-08-15's original web search, only the single onset
+  point was originally promoted to a typed constant). Raised by a
+  user-supplied document (`frying-potatoes-science.md`) that itself has
+  no traceable bibliography (bracketed citation numbers with no reference
+  list included) — NOT treated as a source; this citation is from
+  independently checking multiple food-science summaries directly, which
+  converged closely on the same figure. Confidence:
   `commonly_cited_unverified` — checked via web search 2026-08-15, not
   independently re-verified against a peer-reviewed primary source.
 - **Cold-oil-start frying technique** (raw, dry potato pieces placed
@@ -826,10 +864,14 @@ enforces (`data/ccps/*.json`, `src/thermal.ts`) — not house numbers.
   cool (45-55°F/7-13°C), dark, well-ventilated pantry; refrigeration
   below ~42°F/6°C converts starch to sugar, causing excess browning and
   higher acrylamide formation when later fried. Used in
-  `data/entities/potato.json`'s new `storageLifeByState.raw`
+  `data/entities/potato.json`'s `storageLifeByState.raw`
   (`doNotRefrigerate: true`, added 2026-08-17) — the same organization
   already cited in this repo for `potato-doneness.ts`'s fork-tender
-  figure. Confidence: `commonly_cited_unverified`.
+  figure. The ~42°F/6°C threshold itself, previously only inside this
+  citation's own free-text `note`, was promoted 2026-08-18 into a real,
+  queryable `domainFacts.starchToSugarThresholdC` (`npm run ask --
+  entity-fact potato starchToSugarThresholdC`). Confidence:
+  `commonly_cited_unverified`.
 - **USDA FoodKeeper app (whole unbroken garlic bulb: 1 month pantry)**,
   corroborated by convergent consumer sources citing 3-6 months under
   cool/dark/ventilated conditions (Fresh Keeper; Mill; Michigan State

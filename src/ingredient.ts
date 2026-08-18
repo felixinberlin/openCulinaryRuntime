@@ -201,13 +201,21 @@ export type YieldFraction = z.infer<typeof YieldFractionSchema>;
  * `recipe-explain.ts`'s `storageSummary` the same way `allergenSummary`
  * surfaces allergens without gating execution on them.
  */
+export const DANGER_ZONE_CITATION: Citation = {
+  source:
+    'USDA/FDA "Danger Zone" rule: perishable food should not remain between 40°F-140°F (4°C-60°C) for more than 2 hours.',
+  confidence: "standard_reference",
+  note: "Promoted 2026-08-18 from this schema's own roomTempHours doc comment into a real, exported Citation any entity populating roomTempHours can reference, rather than every entity's own storageLifeByState.citation re-describing the same general rule in its own words. An individual entity's roomTempHours value is still that entity's own field (this is the RULE's citation, not a substitute for one) — see egg.json/milk.json/egg_yolk.json/egg_white.json for real populated examples.",
+};
+
 export const StorageLifeSchema = z
   .object({
     /** How long this keeps under active refrigeration (~40°F/4°C or below). */
     refrigeratedDays: NumericRangeSchema.optional(),
     /** How long this is safe to leave at room/ambient temperature before
-     *  discarding — the USDA "Danger Zone (40°F-140°F)" 2-hour rule for a
-     *  perishable food, when it applies. */
+     *  discarding — the USDA/FDA "Danger Zone (40°F-140°F)" 2-hour rule for
+     *  a perishable food, when it applies. See `DANGER_ZONE_CITATION`
+     *  above for the rule's own citation. */
     roomTempHours: NumericRangeSchema.optional(),
     /** How long this keeps in a cool, dry pantry/counter WITHOUT
      *  refrigeration — for shelf-stable raw goods (whole garlic bulb) or an
@@ -259,6 +267,18 @@ export type Composition = z.infer<typeof CompositionSchema>;
  * list is more correct for this repo's actual dishes. The EU list is a
  * real, named, NOT-yet-modeled gap, not silently assumed covered.
  */
+/** The regulatory basis for the FDA "Big 9" list above, promoted 2026-08-18
+ *  from this doc comment's own prose into a real, exported `Citation` —
+ *  matching this repo's usual pattern of a dedicated named citation
+ *  constant (`WILLIAMS_FORMULA_CITATION`, `DILUTION_CITATION`, ...) rather
+ *  than leaving a regulatory fact only inside a schema's own doc comment. */
+export const ALLERGEN_REGULATION_CITATION: Citation = {
+  source:
+    "FALCPA, the Food Allergen Labeling and Consumer Protection Act of 2004 (milk, egg, fish, crustacean_shellfish, tree_nuts, peanuts, wheat, soybeans), plus the FASTER Act of 2021 (effective 2023-01-01, adding sesame as the 9th).",
+  confidence: "standard_reference",
+  note: "Both are real, named US federal statutes, not informally-sourced figures — checked directly (act names, years, effective date), not recalled. Distinct from the EU's wider 14-item list (Regulation (EU) 1169/2011 Annex II), which this schema deliberately does not model — see this schema's own doc comment for why the FDA list was chosen despite this repo's Spanish/EU-leaning content.",
+};
+
 export const AllergenSchema = z.enum([
   "milk",
   "egg",

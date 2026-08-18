@@ -5,6 +5,7 @@ import {
   effectiveHalfThicknessM,
   secondsForCenterToReachTempC,
   isWithinValidityCondition,
+  ROOM_TEMP_C,
   type SlabConductionParams,
 } from "../src/heat-penetration.ts";
 
@@ -41,7 +42,7 @@ const tortilla = entities.get("tortilla_mixture")!;
 
 const alpha = thermalDiffusivityM2PerS(tortilla);
 const actualThicknessM = 0.028; // 2.8cm — this entity's own derived, cited thickness
-const initialTempC = 20; // room/rested temperature — same convention potato-heat-penetration.ts uses
+const initialTempC = ROOM_TEMP_C; // heat-penetration.ts's own cited room-temperature constant
 const surfaceTempC = 175; // real pan temperature, matching fry.json's own oilTempC precedent used elsewhere
 const targetCenterTempC = 71; // egg_cooking.json's own real, cited instantaneous safety threshold — not invented here
 

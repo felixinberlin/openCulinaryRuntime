@@ -58,10 +58,11 @@
   "storageLifeByState": {
     "raw": {
       "refrigeratedDays": { "min": 2, "max": 4 },
+      "roomTempHours": { "min": 2, "max": 2 },
       "citation": {
         "source": "USDA FSIS, \"Shell Eggs from Farm to Table\" (via The Whole Fork, attributing to USDA — see egg.json's identical citation for the same-source discussion; the primary fsis.usda.gov page returned HTTP 403 to direct fetch this session)",
         "confidence": "commonly_cited_unverified",
-        "note": "2-4 days refrigerated in an airtight covered container, once separated from the shell — identical figure and reasoning to egg_yolk.json's own entry. Deliberately NOT extended to foamy/soft_peaks/firm_peaks/stiff_peaks — this is a raw-food-safety figure for UNWHIPPED liquid white; whether/how fast a whipped foam's own STRUCTURE (not its safety) degrades if left standing is a real, different, uncited question this entry doesn't answer."
+        "note": "2-4 days refrigerated in an airtight covered container, once separated from the shell — identical figure and reasoning to egg_yolk.json's own entry. Deliberately NOT extended to foamy/soft_peaks/firm_peaks/stiff_peaks — this is a raw-food-safety figure for UNWHIPPED liquid white; whether/how fast a whipped foam's own STRUCTURE (not its safety) degrades if left standing is a real, different, uncited question this entry doesn't answer. roomTempHours (added 2026-08-18): the general USDA/FDA \"Danger Zone\" 2-hour rule — see ingredient.ts's StorageLifeSchema.roomTempHours doc comment."
       }
     }
   },

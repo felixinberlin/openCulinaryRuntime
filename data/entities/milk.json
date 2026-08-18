@@ -43,10 +43,11 @@
   "storageLifeByState": {
     "cold": {
       "refrigeratedDays": { "min": 5, "max": 7 },
+      "roomTempHours": { "min": 2, "max": 2 },
       "citation": {
         "source": "USDA FoodKeeper (foodsafety.gov) and convergent consumer dairy-storage sources — opened whole milk, refrigerated at or below 40°F/4°C.",
         "confidence": "commonly_cited_unverified",
-        "note": "A real safety-relevant figure, not just a quality one: unlike raw potato's doNotRefrigerate note, milk is a genuinely perishable dairy product with a real spoilage risk past this window, not merely a taste/texture change."
+        "note": "A real safety-relevant figure, not just a quality one: unlike raw potato's doNotRefrigerate note, milk is a genuinely perishable dairy product with a real spoilage risk past this window, not merely a taste/texture change. roomTempHours (added 2026-08-18) is the general USDA/FDA \"Danger Zone\" (40-140F) 2-hour rule — see ingredient.ts's StorageLifeSchema.roomTempHours doc comment; represented as a degenerate {min:2,max:2} range because the rule is a fixed cutoff, not an empirical range."
       }
     }
   },

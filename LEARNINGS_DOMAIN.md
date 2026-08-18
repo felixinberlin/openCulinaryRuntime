@@ -391,3 +391,34 @@ now in Core, and design-rationale fully duplicated in the relevant
   deferred alongside the recipe that would eventually chain them — the
   blocker is "can these three ingredients be one RecipeScript," not "does
   yeast/proofing work at all."
+
+## 2026-08-18
+
+- **A wide sweep for comment-only facts found the "room temperature"
+  assumption (`20°C`) had NO citation at all anywhere, unlike almost
+  everything else in this repo** — every other magic number checked
+  already had at least a "checked via web search, date" note; this one
+  was purely "stated assumption." Verified via a real search: USP defines
+  room temperature as 20-25°C, FDA/USDA apply the same baseline for
+  holding perishable food — `20` turned out to be the real, conservative
+  (low) end of an actual standard range, not an arbitrary pick, but that
+  was worth confirming rather than assuming after the fact.
+- **The EU egg-grading regulation (63-73g for "large") and this repo's
+  own internally-reconciled `EGG_SIZE_GRAMS.large` (55g) are DIFFERENT
+  numbers for a real, already-documented reason (egg-doneness.ts's own
+  doc comment)** — promoting the real regulatory band into a queryable
+  `domainFacts` entry had to be additive, a separate fact sitting next to
+  the working table, not a replacement for it. Silently overwriting the
+  working anchor with the "more official-looking" regulatory number would
+  have broken the internal consistency that anchor was deliberately built
+  to preserve across this repo's own timing tables.
+- **The USDA Danger Zone rule (roomTempHours) had been cited and scoped
+  in `StorageLifeSchema` since 2026-08-17 with an explicit note that no
+  entity had a real forcing case for it yet — a full session later, the
+  forcing case had been sitting there the whole time (every entity with a
+  real HACCP/perishability profile already in this repo: egg and its
+  derivatives, milk), just never revisited.** Worth the general lesson: a
+  "no forcing case yet" note is worth periodically re-checking against
+  entities that already exist, not only waiting for a NEW entity to
+  supply the case — the case can already be present and just
+  unconnected.

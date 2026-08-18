@@ -67,6 +67,18 @@
       }
     }
   },
+  "domainFacts": {
+    "starchToSugarThresholdC": {
+      "value": { "min": 4, "max": 6 },
+      "unit": "celsius",
+      "citation": {
+        "source": "Idaho Potato Commission, \"Storing Idaho Potatoes in the Refrigerator...Right or Wrong?\" — the same source already cited above for doNotRefrigerate/storageLifeByState.raw",
+        "confidence": "commonly_cited_unverified",
+        "note": "Promoted 2026-08-18 from that same citation's own prose (~42F/6C) into a real, queryable number (npm run ask -- entity-fact potato starchToSugarThresholdC), rather than left only inside a free-text note a human has to read. A real cold-storage threshold, not a food-safety CCP — below this, starch converts to sugar (a food-QUALITY effect: excess browning/acrylamide when later fried), matching this entity's own doNotRefrigerate: true boolean, which stays a bare flag with the actual threshold now attached as data."
+      },
+      "verified": false
+    }
+  },
   "capabilities": {
     "isPeelable": true,
     "isChoppable": true,

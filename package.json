@@ -72,6 +72,7 @@
     "capability-test:cooklang": "tsx scripts/cooklang-as-a-robot.ts",
     "capability-test:cooklang-translate": "tsx scripts/cooklang-translate-as-a-robot.ts",
     "capability-test:execution-graph": "tsx scripts/execution-graph-as-a-robot.ts",
+    "capability-test:comments-to-code": "tsx scripts/comments-to-code-as-a-robot.ts",
     "recipe": "tsx scripts/run-recipe.ts",
     "validate-recipe": "tsx scripts/validate-recipe.ts",
     "narrate-recipe": "tsx scripts/narrate-recipe.ts",

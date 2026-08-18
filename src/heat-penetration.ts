@@ -90,12 +90,13 @@ export const ONE_TERM_APPROXIMATION_CITATION: Citation = {
 
 /** "Fork tender" internal potato temperature — the practically-meaningful
  *  "is it actually done" target, distinct from and higher than starch
- *  gelatinization ONSET (56-66C, where texture starts changing but isn't
- *  complete). Sourced from baked-potato measurements (the most commonly
- *  measured/documented case) and used here as a general doneness target
- *  regardless of cooking method — the underlying starch chemistry is the
- *  same, the same kind of cross-technique reuse `EGG_BOIL_DONENESS`'s
- *  boiling-start figures already get reused elsewhere in this repo. */
+ *  gelatinization ONSET (`STARCH_GELATINIZATION_ONSET_TEMP_C`, below —
+ *  where texture starts changing but isn't complete). Sourced from
+ *  baked-potato measurements (the most commonly measured/documented case)
+ *  and used here as a general doneness target regardless of cooking
+ *  method — the underlying starch chemistry is the same, the same kind of
+ *  cross-technique reuse `EGG_BOIL_DONENESS`'s boiling-start figures
+ *  already get reused elsewhere in this repo. */
 export const POTATO_FORK_TENDER_CENTER_TEMP_C = { min: 96, max: 99 } as const;
 
 export const POTATO_DONENESS_TEMP_CITATION: Citation = {
@@ -105,6 +106,13 @@ export const POTATO_DONENESS_TEMP_CITATION: Citation = {
   note: "Checked via web search 2026-08-15, not independently re-verified against a peer-reviewed primary source. Measured for baked potato specifically; used here as a general doneness target since the underlying starch-gelatinization chemistry doesn't depend on cooking method.",
 };
 
+/** The temperature ABOVE which starch granules begin gelatinizing (texture
+ *  starts changing) — real, but distinct from and lower than
+ *  `POTATO_FORK_TENDER_CENTER_TEMP_C` (full tenderness). Promoted from the
+ *  citation note above, which already named this figure in prose; same
+ *  source/confidence tier, not a fresh, separately-verified claim. */
+export const STARCH_GELATINIZATION_ONSET_TEMP_C = { min: 56, max: 66 } as const;
+
 /** The real temperature ABOVE which the Maillard reaction — the chemistry
  *  behind browning/crust flavor at a fried surface — becomes possible at
  *  all. NOT a kinetics model: this says nothing about how fast browning
@@ -113,11 +121,42 @@ export const POTATO_DONENESS_TEMP_CITATION: Citation = {
  *  does and doesn't close. */
 export const MAILLARD_REACTION_ONSET_TEMP_C = 140;
 
+/** The rest of the same real curve `MAILLARD_REACTION_ONSET_TEMP_C` names
+ *  the start of — promoted from `MAILLARD_REACTION_ONSET_CITATION`'s own
+ *  source text below (already checked the same way, same date, same
+ *  confidence tier) rather than a fresh claim: slow, real reaction from
+ *  `slowOnsetRangeC`, sharp acceleration at the onset temperature above,
+ *  peak browning efficiency across `peakEfficiencyRangeC`, and above
+ *  `pyrolysisOnsetC` other processes (charring) take over from Maillard
+ *  browning specifically. */
+export const MAILLARD_REACTION_STAGES_C = {
+  slowOnsetRangeC: { min: 115, max: 130 },
+  peakEfficiencyRangeC: { min: 165, max: 200 },
+  pyrolysisOnsetC: 180,
+} as const;
+
 export const MAILLARD_REACTION_ONSET_CITATION: Citation = {
   source:
     "Multiple independent food-science sources converge on ~140C (280F) as the onset of the Maillard reaction under normal cooking conditions — the reaction proceeds slowly from ~115-130C, accelerates sharply from ~140C, peaks in efficiency around 165-200C, and above ~180-190C other processes (pyrolysis/charring) take over.",
   confidence: "commonly_cited_unverified",
-  note: "Checked via web search 2026-08-15 (a user-supplied document raised the same figure independently, but that document has no traceable bibliography — not itself treated as a source; this citation is from directly checking multiple independent food-science summaries, which converged closely). Not independently re-verified against a peer-reviewed primary source.",
+  note: "Checked via web search 2026-08-15 (a user-supplied document raised the same figure independently, but that document has no traceable bibliography — not itself treated as a source; this citation is from directly checking multiple independent food-science summaries, which converged closely). Not independently re-verified against a peer-reviewed primary source. Covers MAILLARD_REACTION_STAGES_C too (added 2026-08-18, promoted from this same note's own prose, not re-researched) — the whole curve was checked together, not just the single onset point.",
+};
+
+/** The "room temperature" assumption several callers across this repo
+ *  independently re-declared as a bare `20` with only an inline comment
+ *  (`recipe-explain.ts`'s fry-timing advisory, `recipe-runner.ts`'s `FILL`
+ *  default starting liquid temperature, and two capability-test scripts) —
+ *  promoted to one real, cited constant so there's one source of truth for
+ *  a number that already fed real, user-facing computation without one.
+ *  20C sits at the conservative (low) end of the real, standard range —
+ *  not an arbitrary pick, see `ROOM_TEMP_CITATION` below. */
+export const ROOM_TEMP_C = 20;
+
+export const ROOM_TEMP_CITATION: Citation = {
+  source:
+    "U.S. Pharmacopeia (USP) defines room temperature as 20-25C (68-77F); FDA/USDA food-safety guidance applies the same baseline for holding perishable food (the identical range this repo's own Danger Zone citation, ingredient.ts's StorageLifeSchema, already uses).",
+  confidence: "commonly_cited_unverified",
+  note: "Checked via web search 2026-08-18, via a secondary source explicitly attributing to USP/FDA/USDA (the primary USP text wasn't fetched directly this session). 20C is the LOW end of the real 20-25C range, not an invented number — a conservative, defensible choice for a starting-temperature assumption (a lower start means more time to reach a target temperature, never less), not upgraded to 25C without a specific reason to prefer the range's other end.",
 };
 
 /** Thermal diffusivity (alpha = k / (rho * cp), m^2/s) from an entity's

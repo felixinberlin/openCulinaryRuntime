@@ -269,3 +269,35 @@ maintenance" section for the pruning discipline this followed.
   nothing — closed as already-satisfied rather than fabricating the
   fields just to have something to remove for a clean-looking diff, which
   would have misrepresented this repo's actual history.
+
+## 2026-08-18 — repo-wide `src/*.ts` comment cleanup
+
+- **User instruction: move design rationale/history/citations out of
+  `src/*.ts` doc comments into dedicated `reference/*.md` files, leaving
+  only short "what it does" descriptions in the source.** Applied to all
+  30 non-trivial `src/*.ts` files (`registry.ts`, at 1 comment line,
+  needed no cleanup) across 18 commits, one `reference/<file>.md` per
+  source file, organized by exported symbol in source order, full prose
+  preserved verbatim (not summarized) so nothing is lost, just relocated.
+- **The pattern that made this safe at scale**: read the file in full →
+  write the reference doc → rewrite the source file preserving every
+  line of actual code/schema/type/logic exactly, trimming only comments
+  → verify `tsc --noEmit` + `npm test` (444/444) + `npm run validate`
+  (all 120 data files) → commit. Proven first on the two hardest cases
+  (`ingredient.ts` 71% comment density, `action.ts` 78%) before
+  generalizing to the other 28, all lower density/complexity. Zero
+  regressions across the whole sweep — every file passed all three
+  checks on first attempt after rewrite, no fixes needed mid-task.
+  Verifying every file (or small batch of 1-2 related files) individually
+  rather than batching many files before checking is what kept a
+  1108-line file (`recipe-runner.ts`) and a 480-line one (`action.ts`)
+  equally low-risk to rewrite by hand.
+- Net effect: `src/` shrank from roughly 71% average comment density on
+  the highest files to short pointer comments (`See reference/<file>.md
+  for design rationale, history, and citations.`), while `reference/`
+  gained 30 new files holding the exact same information, just organized
+  by symbol instead of interleaved with code. Total line count across
+  `src/`+`reference/` combined is comparable to (sometimes larger than)
+  before — this was a RELOCATION for readability, not a content
+  reduction, matching the user's own framing ("i just need to know what
+  a function does, not where this information comes from").

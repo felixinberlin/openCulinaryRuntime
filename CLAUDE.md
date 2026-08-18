@@ -57,6 +57,19 @@ claims novel food science; the schema/engine is the original contribution, the f
 it enforces are cited. When adding a new citation to any `data/*.json`/`src/*.ts` file,
 add it to `REFERENCES.md` in the same change, same discipline as `LEARNINGS.md` above.
 
+**`src/*.ts` doc comments are kept short — "what this does," not "why/when/who
+decided this."** The design rationale, history, and citations that used to live
+inline now live in `reference/<file>.md` (one per `src/*.ts` file with substantial
+comments, e.g. `reference/engine.md`, `reference/recipe-runner.md`), organized by
+exported symbol in source order, full prose preserved verbatim — a repo-wide cleanup
+done 2026-08-18 across 30 files (`LEARNINGS_PROCESS.md` 2026-08-18 for the pattern
+used). Every source file that has one links to it with a one-line pointer
+(`See \`reference/<file>.md\` for design rationale, history, and citations.`). When
+adding substantial new reasoning to a comment in `src/*.ts`, put it in that file's
+`reference/*.md` instead (create one if it doesn't exist yet) and leave only a short
+description plus the pointer in the source — don't let inline comments grow back to
+what this cleanup just removed.
+
 ## What this repo is for
 
 `CLAUDE_DEV_CTX.md` is the design blueprint for the **Open Culinary Runtime (OCR)**, a project that models recipes as deterministic, executable state machines (an Entity-Component-System, not static text) rather than prose instructions. Treat it as the system prompt/spec for any code written in this repo — new files should follow its architecture rather than a generic recipe-app design.

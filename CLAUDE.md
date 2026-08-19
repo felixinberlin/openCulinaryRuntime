@@ -7,7 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Past the planning-only stage: `src/` has a working schema/engine (`ingredient.ts`,
 `action.ts`, `engine.ts`, `recipe.ts`, `recipe-runner.ts`, `registry.ts`, `thermal.ts`,
 `heat-source.ts`, `egg-doneness.ts`, `place.ts`, `potato-doneness.ts`, `altitude.ts`,
-`execution-bounds.ts`, `in-progress-action.ts`, `dag-scheduler.ts`), `data/` has real
+`execution-bounds.ts`, `in-progress-action.ts`, `dag-scheduler.ts`, `knowledge-base.ts`,
+`applicable-actions.ts`, `index.ts` — the last three added 2026-08-19 as this
+repo's public library surface for direct-import consumers, see "Planned
+satellite projects" below and `SIMULATOR_API.md`), `data/` has real
 entities/actions/recipes/CCPs/heat-sources (potato, egg + its byproducts, garlic,
 onion, oil, salt/pepper/chili/acid, butter, milk, flour/yeast/dough, alioli variants,
 gas/vitro/wood heat providers, ...), and `scripts/` has runnable demos plus
@@ -478,6 +481,36 @@ no tool entity ever gets a crosswalk entry, and the uncovered-entity list
 is exactly the one this file names, not a silently shrinking or growing
 set. `npm run validate` gained a matching hard-fail cross-reference check.
 
+A fifteenth, 2026-08-19: `src/knowledge-base.ts` (`loadKnowledgeBase`) and
+`src/applicable-actions.ts` (`listApplicableActions`) — not counterparts to
+anything in `CLAUDE_DEV_CTX.md`'s original plan, built for the new "Cooking
+simulator" satellite (see "Planned satellite projects" below). Unlike every
+other module added so far, these two exist purely to be *consumed
+externally*: `loadKnowledgeBase` composes every `registry.ts` loader at
+once and resolves `data/*` relative to this package's own root
+(`import.meta.dirname`), not the caller's `process.cwd()`, so a sibling
+package gets the right paths regardless of where it runs from.
+`listApplicableActions` answers "which of this entity's actions can I
+press right now, and why not the rest" for a sandbox UI — deliberately
+NOT built on `reachability.ts`'s `enumerateEdges` (which correctly reports
+a COMBINE-shaped or destructive action as a graph-search dead end — right
+for *reachability*, wrong for "is this button pressable"); instead it dry
+-runs the real `applyAction` per candidate action and reuses its thrown
+`Error` message verbatim as the reason, the same precedent
+`recipe-player.ts`'s `canApplyNext` already established. Also added,
+same day: `src/index.ts`, a barrel `export *`-ing all 34 `src/*.ts` files
+(empirically verified zero symbol collisions), and `package.json`
+`main`/`types`/`exports` fields pointing straight at `src/index.ts` — no
+build step, `tsconfig.json`'s `noEmit: true` is unchanged, a consumer runs
+this package's `.ts` source directly via `tsx` the same way this repo's
+own scripts already do. Proven via `tests/applicable-actions.test.ts` (5
+synthetic-fixture unit tests covering an applicable case, a missing-tool
+case, a missing-state-prerequisite case, and a COMBINE-shaped action both
+before and after a secondary instance is supplied) and a runtime barrel
+load (`node --import tsx -e 'import("./src/index.ts")...'`, 165 exports,
+no circular-import failure) — full details and the per-mode function
+catalog in `SIMULATOR_API.md`.
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.
@@ -517,8 +550,27 @@ naming, before assuming something exists.
 1. **Web scraper pipeline (Python / BeautifulSoup)** — fetch a recipe URL, extract `<script type="application/ld+json">`, tokenize the lossy `recipeIngredient` strings into quantity/unit/name/preparation, generate Cooklang text, compile to an executable OCR JSON script.
 2. **Mobile reference app (React Native + Expo)** — 4-tab navigator: Discover (local recipe search), Community (feed with `FormData` uploads + `onUploadProgress`), Meal Plan (`.menu` schedule parsing), Profile (JWT with auto-logout on expiry).
 3. **Home Assistant HACS component (Python)** — talks to a local CookCLI server at `http://localhost:9080`; sensors for expiring food / depleted pantry; populates HA Calendar from `.menu` schedules.
+4. **Cooking simulator (TypeScript)**, started 2026-08-19 — a separate sibling
+   repo (`/home/felix/claude/cooking-simulator`) consuming this repo directly
+   as a library (`file:`/workspace dependency on this package, no HTTP layer)
+   for a combined sandbox / guided-recipe-player / goal-directed-planner
+   simulator. Unlike the other three, this one shares this repo's own
+   language/runtime rather than a separate stack, made possible by this
+   change: `src/index.ts` (a barrel re-exporting all of `src/*.ts`),
+   `src/knowledge-base.ts` (`loadKnowledgeBase`, resolves `data/*` relative to
+   this package's own root rather than the caller's cwd), and
+   `src/applicable-actions.ts` (`listApplicableActions`, a new sandbox-UI
+   primitive — dry-runs `applyAction` per candidate action and reports
+   applicability + reason, deliberately not built on `reachability.ts`'s
+   `enumerateEdges`, which reports COMBINE-shaped/destructive actions as
+   graph-search dead ends — the wrong answer for "is this button pressable").
+   `package.json` gained `main`/`types`/`exports` pointing at `src/index.ts`
+   directly (no build step — `tsconfig.json`'s `noEmit: true` stays as-is;
+   the consumer runs this package's `.ts` source via `tsx`, same as this
+   repo's own scripts). See `SIMULATOR_API.md` for the full function catalog
+   by simulator mode and what's deliberately deferred.
 
-A fourth, adjacent topic — not one of the three original assignments, not
+A fifth, adjacent topic — not one of the four assignments above, not
 scoped for a build — is **`SIMULATION_TARGETS.md`**: research comparing five
 open-source options (PDDL/Fast Downward, VirtualHome, AI2-THOR/ProcTHOR,
 OmniGibson/BEHAVIOR-1K, RoboCasa) for eventually grounding this repo's

@@ -1,0 +1,11 @@
+{
+  "id": "salt",
+  "contribution": {
+    "component": "not_creditable",
+    "citation": {
+      "source": "7 CFR 210.10 — the five reimbursable-meal food components are fruits, vegetables, grains, meats/meat alternates, and fluid milk; seasonings are not among them (addressed only via the meal pattern's separate sodium limits, not credited toward any food-group requirement).",
+      "confidence": "standard_reference",
+      "note": "Same five-component structure directly confirmed against the regulation text (law.cornell.edu's eCFR mirror, 2026-08-19) used for oil.json/butter.json."
+    }
+  }
+}

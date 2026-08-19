@@ -1,0 +1,11 @@
+{
+  "id": "flaky_salt",
+  "contribution": {
+    "component": "not_creditable",
+    "citation": {
+      "source": "7 CFR 210.10 — same as salt.json: seasonings are not a creditable meal-pattern component.",
+      "confidence": "standard_reference",
+      "note": "Directly confirmed against the regulation text (law.cornell.edu's eCFR mirror, 2026-08-19)."
+    }
+  }
+}

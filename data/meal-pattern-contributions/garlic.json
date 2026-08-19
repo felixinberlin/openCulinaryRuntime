@@ -1,0 +1,15 @@
+{
+  "id": "garlic",
+  "contribution": {
+    "component": "vegetable",
+    "subgroup": "other",
+    "unit": "cup_equivalent",
+    "perCup": 1.0,
+    "citation": {
+      "source": "USDA vegetable subgroup crediting charts explicitly list garlic under the 'Other Vegetables' subgroup, same general as-served-volume crediting as onion.json.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Confirmed against multiple state-agency reproductions of the FBG subgroup list, not the primary FBG PDF table directly."
+    },
+    "note": "Real practical caveat, not a schema limitation: 7 CFR 210.10's own minimum creditable vegetable serving is 1/8 cup — a typical recipe's garlic quantity (a clove or two) is almost always well under that, so `creditedAmount` will compute a technically-correct but practically-meaningless fractional cup eq for garlic in most real recipes. Left as a real, cited crediting rate rather than marked not_creditable, since garlic isn't officially excluded, only practically negligible at typical-recipe scale."
+  }
+}

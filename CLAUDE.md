@@ -100,7 +100,7 @@ listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 | `ingredient.ts` — `EntitySchema`, `RecipeIngredientSchema`, `ParsedIngredientSchema` | `src/ingredient.ts` — `EntitySchema` + `QuantitySchema` (`RecipeIngredientSchema`, closed 2026-08-13, used as `recipe.ts`'s `RecipeInstanceSchema.quantity`) | `ParsedIngredientSchema` not built; nothing consumes raw scraper output yet (Phase 5/7 still unstarted) |
 | `recipe-step.ts` — `EntityStateSchema`, `CriticalControlPointSchema`, `MechanicalActionSchema` | Split across `src/engine.ts` (`Instance` ≈ `EntityStateSchema`), `src/action.ts` (`Action`/`ActionOutputsSchema` ≈ `MechanicalAction`), `src/thermal.ts` (`CriticalControlPointSchema`, built as named) | No single `recipe-step.ts` — the concept fragmented across three files as the engine grew organically |
 | `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
-| `nutrition-extension.ts` | Not built | |
+| `nutrition-extension.ts` — `UsdaMealPatternContributionSchema` | `src/nutrition-extension.ts`, closed 2026-08-19, built as named | Not a field on `EntitySchema` — a separate schema + `data/meal-pattern-contributions/*.json` + `registry.ts` loader, per Ticket 1's own ask (below) that this stay a pluggable extension, not core-schema bloat — see the "thirteenth" entry below |
 | `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS_ENGINE.md` 2026-08-15 |
 | `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` (`parseCooklang`/`importCooklangDraft`/`exportToCooklang`) + `src/cooklang-translate.ts` (`translateCooklangDocument`) + `src/schema-org.ts` (`compileToSchemaOrgIngredient`/`compileToSchemaOrgRecipe`, closed 2026-08-19) | Cooklang syntax parsing, entity-matching import, mechanical export, the free-text step-prose→`actionId` translator (a real, bounded, deterministic keyword matcher — no LLM call), AND the OCR→Schema.org export path are all real now — see the "ninth"/"tenth"/"twelfth" entries below and `AUTHORING.md` §2. Not one file named `ocr-converter.ts` — same "planned name diverged" pattern as every other row here |
 
@@ -381,8 +381,10 @@ honestly scoped: only `name`/`recipeIngredient`/`recipeInstructions`/
 would require summing `params.durationSeconds` across steps, a real
 number that's fundamentally misleading on its own (drops passive/
 parallel time and every non-timed step); `nutrition` is deferred to
-Phase 6 (`nutrition-extension.ts`, not started). See
-`reference/schema-org.md` for the full reasoning. Proven via
+Phase 6 (`nutrition-extension.ts` — closed the same week, 2026-08-19, but
+`Entity.composition.nutrientsPer100g`-to-`Recipe.nutrition` requires the
+same yield/quantity-resolution work either way, still not attempted
+here). See `reference/schema-org.md` for the full reasoning. Proven via
 `tests/schema-org.test.ts` (17 synthetic-fixture unit tests) and `npm
 run capability-test:schema-org` (`scripts/schema-org-as-a-robot.ts`) —
 against REAL `data/entities/*.json`/`data/actions/*.json` and two REAL
@@ -390,6 +392,46 @@ recipes, one of them (`handmade-alioli-egg-yolk.json`) actually run via
 `runRecipe` so a genuine SEPARATE-spawned instance (`egg_yolk-3`)
 resolves to a real ingredient name in `recipeInstructions`, not a raw
 instance id.
+
+A thirteenth, same day, 2026-08-19: `src/nutrition-extension.ts`
+(`UsdaMealPatternContributionSchema`/`creditedAmount`) — `ROADMAP.md`
+Phase 6, the one planned file that kept its originally-planned name (no
+divergence forced this time). Deliberately NOT a field on `EntitySchema` —
+the direct, load-bearing answer to "Ticket 1" (`ROADMAP.md` Phase 6,
+checked 2026-08-17), which asked ahead of this schema existing at all for
+exactly this to be kept out of core-schema bloat: a separate
+discriminated-union schema mirroring `QuantitySchema`'s own shape
+(`meat_meat_alternate`/`milk`/`fruit`/`vegetable`/`grains`/
+`not_creditable`, each with the real crediting BASIS that component
+actually uses — discrete count, as-served volume, or mass of creditable
+ingredient), a new `data/meal-pattern-contributions/*.json` directory (one
+file per entity, `id` IS the entity id — same `registry.ts` `loadDir`
+shape `ccps`/`heat-sources` already use), and a new
+`loadMealPatternContributions` loader — not a new optional field threaded
+through `EntitySchema`/`data/entities/*.json` itself. Real, cited data
+attached to 12 of ~42 entities (egg, milk, potato, onion, garlic, flour,
+oil, sunflower_oil, salt, kosher_salt, flaky_salt, butter), verified this
+session against 7 CFR 210.10 fetched directly (`confidence:
+"standard_reference"`) and USDA Food Buying Guide crediting rates
+confirmed via multiple independent secondary sources rather than the
+primary PDF, which this session's tooling couldn't extract text from
+(`confidence: "commonly_cited_unverified"`, per this repo's own two-tier
+convention) — see `REFERENCES.md`'s new "USDA meal-pattern crediting"
+section. `creditedAmount` is deliberately conservative: credits only when
+a real `RecipeInstance.quantity`'s unit exactly matches the crediting
+rate's own unit, never converting between units — an unconvertible unit,
+a missing quantity, or an `imprecise`/`relative` `Quantity` all report
+`undefined`, named rather than guessed. Composite entities (dough,
+tortilla_mixture, alioli, ...) deliberately have no contribution — no
+cited methodology exists here for crediting one proportionally by its
+components. See `reference/nutrition-extension.md` for the full
+reasoning. Proven via `tests/nutrition-extension.test.ts` (20
+synthetic-fixture unit tests) and `npm run capability-test:nutrition`
+(`scripts/nutrition-as-a-robot.ts`) — against REAL
+`data/entities/*.json`/`data/meal-pattern-contributions/*.json`,
+exercising all three real crediting bases plus every honest non-credit
+case. `npm run validate` gained a matching hard-fail cross-reference
+check and now reports the new directory's file count in its summary line.
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

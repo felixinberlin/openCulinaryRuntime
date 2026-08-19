@@ -1,0 +1,13 @@
+{
+  "id": "milk",
+  "contribution": {
+    "component": "milk",
+    "unit": "cup_equivalent",
+    "perCup": 1.0,
+    "citation": {
+      "source": "7 CFR 210.10(c) — Fluid Milk component. Cup equivalent is a direct volume measure (1 cup served = 1 cup eq), minimum creditable serving 8 fluid ounces (1 cup).",
+      "confidence": "standard_reference",
+      "note": "Definitional 1:1 crediting, not a derived factor — a cup eq of milk IS a cup of fluid milk served. Regulation also requires low-fat (1%, unflavored) or fat-free milk for the reimbursable meal pattern; this repo's milk.json does not model fat content, so that constraint is named here, not enforced."
+    }
+  }
+}

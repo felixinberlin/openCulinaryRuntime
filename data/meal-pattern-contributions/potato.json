@@ -1,0 +1,14 @@
+{
+  "id": "potato",
+  "contribution": {
+    "component": "vegetable",
+    "subgroup": "starchy",
+    "unit": "cup_equivalent",
+    "perCup": 1.0,
+    "citation": {
+      "source": "7 CFR 210.10(c)(2)(iii) vegetable subgroups (potatoes are the canonical starchy-vegetable example across USDA/state crediting guides) plus the general as-served-volume crediting rule for cooked/raw vegetables: 1 cup served credits as 1 cup eq (no 2:1 reduction — that applies only to raw leafy greens, which potato is not).",
+      "confidence": "standard_reference",
+      "note": "The starchy subgroup has its own weekly minimum, separate from 'other' — see 7 CFR 210.10's Chart 1B weekly minimums."
+    }
+  }
+}

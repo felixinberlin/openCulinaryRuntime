@@ -1704,13 +1704,67 @@ replace or wrap it.
       that was actually found).
 
 ## Phase 6 — Nutrition extension (`nutrition-extension.ts`)
-- [ ] `UsdaMealPatternContributionSchema`. Not started. Every entity already
-      carries a `composition.nutrientsPer100g` record (water/protein/fat/
+- [x] **`UsdaMealPatternContributionSchema` — closed 2026-08-19,
+      `src/nutrition-extension.ts`.** Every entity already carries a
+      `composition.nutrientsPer100g` record (water/protein/fat/
       carbohydrate, cited as literature approximations where not measured)
-      that this would build on.
+      but this builds a genuinely different fact on top of it — not "how
+      nutritious," but "what does this count as, and how much, toward the
+      National School Lunch Program/CACFP meal pattern (7 CFR 210.10)."
+      Deliberately NOT a field on `EntitySchema` — the direct, load-bearing
+      answer to Ticket 1 below, which asked ahead of this schema existing
+      at all for exactly this to be kept out of core-schema bloat: a
+      separate discriminated-union schema (mirroring `QuantitySchema`'s own
+      shape — `meat_meat_alternate`/`milk`/`fruit`/`vegetable`/`grains`/
+      `not_creditable`, each with the crediting BASIS that component
+      actually uses: discrete count, as-served volume, or mass of
+      creditable ingredient), a new `data/meal-pattern-contributions/*.json`
+      directory (one file per entity, `id` IS the entity id — same
+      `registry.ts` `loadDir` shape `ccps`/`heat-sources` already use), and
+      a new `loadMealPatternContributions` loader — not a new optional
+      field threaded through `EntitySchema`/`data/entities/*.json` itself.
+      Real, cited data attached to 12 of this repo's ~42 entities (egg,
+      milk, potato, onion, garlic, flour, oil, sunflower_oil, salt,
+      kosher_salt, flaky_salt, butter) — verified against primary/
+      near-primary USDA sources during this session (7 CFR 210.10's
+      component/subgroup structure and its "oils/fats are not a creditable
+      component" statement fetched directly from law.cornell.edu's eCFR
+      mirror, `confidence: "standard_reference"`; the egg/onion/garlic/
+      flour-16g crediting figures confirmed via multiple independent
+      secondary sources that all cite the same primary USDA Food Buying
+      Guide table, `confidence: "commonly_cited_unverified"` per this
+      repo's own two-tier citation-confidence convention, honestly not
+      claiming independent verification of the primary FBG PDF itself,
+      which returned only raw PDF structure to this session's fetch
+      tooling). `creditedAmount` mechanically computes a credited amount
+      from a real `RecipeInstance.quantity` — deliberately conservative:
+      it credits ONLY when the quantity's unit exactly matches the
+      crediting rate's own unit (count/cup/g/kg), never converting between
+      units (no mL-to-cup, no guessed density) — an unconvertible unit, a
+      missing quantity, or an `imprecise`/`relative` `Quantity` kind all
+      report `undefined`, named rather than guessed. Composite entities
+      (dough, tortilla_mixture, alioli, ...) are deliberately NOT given a
+      contribution — crediting one proportionally by its components would
+      need a real cited methodology this repo doesn't have; left
+      unaudited rather than invented. See `reference/nutrition-
+      extension.md` for the full reasoning. Proven via `tests/
+      nutrition-extension.test.ts` (20 synthetic-fixture unit tests) and
+      `npm run capability-test:nutrition` (`scripts/nutrition-as-a-
+      robot.ts`) — against REAL `data/entities/*.json` and REAL cited
+      `data/meal-pattern-contributions/*.json`, exercising all three real
+      crediting bases plus every honest non-credit case (a real
+      `not_creditable` ingredient, a missing quantity, an imprecise
+      quantity, and a unit mismatch). `npm run validate` gained a matching
+      hard-fail cross-reference check (a contribution file's `id`
+      referencing an unknown entity) and now reports the new directory's
+      file count in its own summary line.
+      \
       **"Ticket 1: Purge External Identifiers and USDA Models from Core
       Schema" checked 2026-08-17, closed as already-satisfied — nothing
-      was removed because there was nothing to remove.** A user-supplied
+      was removed because there was nothing to remove.** (Kept verbatim
+      below as the historical record of that 2026-08-17 check — it
+      predates `UsdaMealPatternContributionSchema` actually being built,
+      2026-08-19, above.) A user-supplied
       ticket asked to strip `openFoodFactsId`/`usdaFoodDataId`/
       `mealPatternContribution` out of the core schema into an
       `extensions/`-style module, and to confirm a generic

@@ -1,0 +1,14 @@
+{
+  "id": "onion",
+  "contribution": {
+    "component": "vegetable",
+    "subgroup": "other",
+    "unit": "cup_equivalent",
+    "perCup": 1.0,
+    "citation": {
+      "source": "USDA vegetable subgroup crediting charts (state child-nutrition agency reproductions of the USDA Food Buying Guide's subgroup list) explicitly list onions under the 'Other Vegetables' subgroup; general as-served-volume crediting: 1 cup served credits as 1 cup eq.",
+      "confidence": "commonly_cited_unverified",
+      "note": "Confirmed against multiple state-agency reproductions of the FBG subgroup list, not the primary FBG PDF table directly."
+    }
+  }
+}

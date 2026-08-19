@@ -1,0 +1,11 @@
+{
+  "id": "oil",
+  "contribution": {
+    "component": "not_creditable",
+    "citation": {
+      "source": "7 CFR 210.10 — the five reimbursable-meal food components are fruits, vegetables, grains, meats/meat alternates, and fluid milk; oils/fats are not listed as a creditable component (they are addressed only via the meal pattern's separate saturated-fat/calorie nutrition standards, not credited toward any food-group requirement).",
+      "confidence": "standard_reference",
+      "note": "Directly confirmed against the regulation text (law.cornell.edu's eCFR mirror, 2026-08-19): 'The regulation does not list oils or fats as creditable meal components.'"
+    }
+  }
+}

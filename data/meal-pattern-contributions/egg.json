@@ -1,0 +1,14 @@
+{
+  "id": "egg",
+  "contribution": {
+    "component": "meat_meat_alternate",
+    "unit": "ounce_equivalent",
+    "perCount": 2.0,
+    "citation": {
+      "source": "USDA Food Buying Guide for Child Nutrition Programs (foodbuyingguide.fns.usda.gov), Meats/Meat Alternates section: 1 large egg credits as 2.0 oz eq (equivalently, 1/2 large egg = 1.0 oz eq).",
+      "confidence": "commonly_cited_unverified",
+      "note": "Widely and consistently cited across state child-nutrition agency crediting guides (all citing the FBG); this repo has not independently pulled the primary FBG PDF table to re-verify the exact figure, per this repo's own citation-confidence convention. Egg size assumed 'large' — the FBG's own reference size — matching egg-doneness.ts's existing large-egg-only scoping note."
+    },
+    "note": "This is the whole raw/in-shell egg's contribution. egg_yolk/egg_white (SEPARATE's spawned byproducts) are deliberately not given their own contribution here — the FBG credits eggs as a whole unit; crediting a separated yolk or white alone would need a real per-component crediting rule this repo has not sourced, so it's left unaudited rather than guessed at (proportional by typicalYieldFractionOfParent would be a fabricated shortcut, not a cited fact)."
+  }
+}

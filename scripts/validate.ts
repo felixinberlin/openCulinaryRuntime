@@ -5,6 +5,10 @@ import { ActionSchema, type Action } from "../src/action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "../src/recipe.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "../src/thermal.ts";
 import { HeatSourceProfileSchema, type HeatSourceProfile } from "../src/heat-source.ts";
+import {
+  MealPatternContributionFileSchema,
+  type MealPatternContributionFile,
+} from "../src/nutrition-extension.ts";
 import { runRecipe } from "../src/recipe-runner.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -52,6 +56,11 @@ const heatSources = loadDir<HeatSourceProfile>(
   join(root, "data", "heat-sources"),
   "heat-sources",
   HeatSourceProfileSchema
+);
+const mealPatternContributions = loadDir<MealPatternContributionFile>(
+  join(root, "data", "meal-pattern-contributions"),
+  "meal-pattern-contributions",
+  MealPatternContributionFileSchema
 );
 
 let crossFailed = 0;
@@ -310,6 +319,19 @@ for (const entity of entities.items.values()) {
   }
 }
 
+// meal-pattern-contributions (nutrition-extension.ts, ROADMAP.md Phase 6,
+// closed 2026-08-19) — one file per entity, `id` IS the entity id it
+// describes (not a separately-invented id like ccps/heat-sources), so a
+// reference to an unknown entity is always an authoring bug, same hard-fail
+// standard as every other cross-reference check in this file.
+for (const contribution of mealPatternContributions.items.values()) {
+  if (!entities.items.has(contribution.id)) {
+    fail(
+      `meal-pattern-contributions/${contribution.id}.json: id references unknown entity "${contribution.id}"`
+    );
+  }
+}
+
 for (const action of actions.items.values()) {
   for (const toolId of action.requiredTools) {
     const tool = entities.items.get(toolId);
@@ -482,12 +504,19 @@ const failed =
   recipes.failed +
   ccps.failed +
   heatSources.failed +
+  mealPatternContributions.failed +
   crossFailed;
-const total = entities.total + actions.total + recipes.total + ccps.total + heatSources.total;
+const total =
+  entities.total +
+  actions.total +
+  recipes.total +
+  ccps.total +
+  heatSources.total +
+  mealPatternContributions.total;
 if (failed > 0) {
   console.error(`\n${failed} problem(s) found.`);
   process.exit(1);
 }
 console.log(
-  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps, ${heatSources.total} heat-sources); cross-references OK.`
+  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps, ${heatSources.total} heat-sources, ${mealPatternContributions.total} meal-pattern-contributions); cross-references OK.`
 );

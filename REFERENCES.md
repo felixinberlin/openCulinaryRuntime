@@ -1155,6 +1155,38 @@ per that ticket's own instruction.
   `CLAUDE.md`'s own stated rule — no import direction exists or is
   planned under this module.
 
+## USDA meal-pattern crediting (`src/nutrition-extension.ts`)
+
+- **7 CFR 210.10** — "Meal requirements for lunches and requirements for
+  afterschool snacks," the National School Lunch Program (NSLP) meal
+  pattern regulation. Fetched directly (law.cornell.edu's eCFR mirror,
+  2026-08-19 — the primary ecfr.gov/federalregister.gov hosts blocked this
+  session's fetch tooling) for the five food components (fruits,
+  vegetables — with its dark green/red-orange/beans-peas-legumes/starchy/
+  other subgroups — grains, meats/meat alternates, fluid milk), their
+  cup-equivalent/ounce-equivalent units, the 80%-whole-grain-rich weekly
+  requirement, and the statement that oils/fats are not a creditable meal
+  component. `confidence: "standard_reference"` throughout
+  `data/meal-pattern-contributions/*.json` for facts drawn directly from
+  this fetch.
+- **USDA Food Buying Guide for Child Nutrition Programs (FBG)** —
+  https://foodbuyingguide.fns.usda.gov/. The primary source for
+  per-ingredient crediting RATES (7 CFR 210.10 itself sets weekly/daily
+  requirements, not per-ingredient factors). This session's fetch tooling
+  could not extract the FBG's own PDF chart tables (returned raw PDF
+  object structure, not text); the specific rates used —
+  1 large egg = 2.0 oz eq meat/meat alternate; onion and garlic in the
+  "Other Vegetables" subgroup; 16g of creditable grain ingredient = 1.0 oz
+  eq grains for baked, flour-based products (FBG "Groups A-G," a
+  different 28g rate applies to "Groups H-I," not modeled here); cooked/
+  raw (non-leafy-green) vegetables credit 1:1 by as-served cup volume —
+  were each confirmed against multiple independent secondary sources
+  (state child-nutrition agency and CACFP-association reproductions of
+  the same FBG tables) rather than the primary PDF directly, hence
+  `confidence: "commonly_cited_unverified"` on those specific figures in
+  `data/meal-pattern-contributions/*.json`, per this repo's own
+  two-tier citation-confidence convention.
+
 ## Simulation / robot-execution research
 
 Full comparison and sourcing already lives in `SIMULATION_TARGETS.md` —

@@ -1,0 +1,14 @@
+{
+  "id": "flour",
+  "contribution": {
+    "component": "grains",
+    "unit": "ounce_equivalent",
+    "creditableGramsPerOzEq": 16,
+    "citation": {
+      "source": "USDA Food Buying Guide for Child Nutrition Programs, grains crediting methodology: 16 grams of creditable grain ingredient = 1.0 oz eq, for baked, flour-based grain products ('Groups A-G' in the FBG's grain item groupings).",
+      "confidence": "commonly_cited_unverified",
+      "note": "Confirmed against multiple CACFP/state-agency crediting handbooks that cite this FBG figure, not the primary FBG PDF table directly."
+    },
+    "note": "The 16g rate applies specifically to Groups A-G (bread-type baked goods, e.g. this repo's own simple_flatbread.json). A different rate (28g per oz eq) applies to cereal/grain-based-dessert Groups H-I — not modeled here, since this entity (flour) is only ever baked into a Group A-G product in this repo's current recipes."
+  }
+}

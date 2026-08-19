@@ -5,6 +5,10 @@ import { ActionSchema, type Action } from "./action.ts";
 import { RecipeScriptSchema, type RecipeScript } from "./recipe.ts";
 import { CriticalControlPointSchema, type CriticalControlPoint } from "./thermal.ts";
 import { HeatSourceProfileSchema, type HeatSourceProfile } from "./heat-source.ts";
+import {
+  MealPatternContributionFileSchema,
+  type MealPatternContributionFile,
+} from "./nutrition-extension.ts";
 
 /** Parses every *.json file in `dir` against `schema`, keyed by its `id`. Throws on the first invalid file. */
 function loadDir<T extends { id: string }>(
@@ -48,4 +52,11 @@ export function loadCcps(ccpsDir: string): Map<string, CriticalControlPoint> {
 
 export function loadHeatSources(heatSourcesDir: string): Map<string, HeatSourceProfile> {
   return loadDir(heatSourcesDir, HeatSourceProfileSchema);
+}
+
+/** Keyed by `Entity.id`, not a separately-invented id — see `nutrition-extension.ts`. */
+export function loadMealPatternContributions(
+  dir: string
+): Map<string, MealPatternContributionFile> {
+  return loadDir(dir, MealPatternContributionFileSchema);
 }

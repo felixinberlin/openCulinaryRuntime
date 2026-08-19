@@ -9,7 +9,11 @@ import {
   MealPatternContributionFileSchema,
   type MealPatternContributionFile,
 } from "../src/nutrition-extension.ts";
-import { FoodOnCrosswalkFileSchema, type FoodOnCrosswalkFile } from "../src/foodon-crosswalk.ts";
+import {
+  FoodOnCrosswalkFileSchema,
+  type FoodOnCrosswalkFile,
+  foodOnIriFromCurie,
+} from "../src/foodon-crosswalk.ts";
 import { runRecipe } from "../src/recipe-runner.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -73,6 +77,18 @@ let crossFailed = 0;
 function fail(msg: string) {
   crossFailed++;
   console.error(`FAIL ${msg}`);
+}
+
+/** Shared by every one-file-per-entity, `id`-IS-the-entity-id collection
+ *  (`meal-pattern-contributions`, `foodon-crosswalk`) — a reference to an
+ *  unknown entity is always an authoring bug, same hard-fail standard as
+ *  every other cross-reference check in this file. `ccps`/`heat-sources`
+ *  don't use this: their own `id` is a separately-invented id entities
+ *  reference BY id from a different field, not this same relationship. */
+function checkEntityIdReference(label: string, id: string): void {
+  if (!entities.items.has(id)) {
+    fail(`${label}/${id}.json: id references unknown entity "${id}"`);
+  }
 }
 
 // typicalYieldFractionOfParent (ingredient.ts, "yield/waste factors" —
@@ -326,24 +342,27 @@ for (const entity of entities.items.values()) {
 }
 
 // meal-pattern-contributions (nutrition-extension.ts, ROADMAP.md Phase 6,
-// closed 2026-08-19) — one file per entity, `id` IS the entity id it
-// describes (not a separately-invented id like ccps/heat-sources), so a
-// reference to an unknown entity is always an authoring bug, same hard-fail
-// standard as every other cross-reference check in this file.
+// closed 2026-08-19).
 for (const contribution of mealPatternContributions.items.values()) {
-  if (!entities.items.has(contribution.id)) {
-    fail(
-      `meal-pattern-contributions/${contribution.id}.json: id references unknown entity "${contribution.id}"`
-    );
-  }
+  checkEntityIdReference("meal-pattern-contributions", contribution.id);
 }
 
-// foodon-crosswalk (foodon-crosswalk.ts, added 2026-08-19) — same "id IS
-// the entity id" shape and same hard-fail standard as
-// meal-pattern-contributions immediately above.
+// foodon-crosswalk (foodon-crosswalk.ts, added 2026-08-19).
 for (const crosswalk of foodOnCrosswalk.items.values()) {
-  if (!entities.items.has(crosswalk.id)) {
-    fail(`foodon-crosswalk/${crosswalk.id}.json: id references unknown entity "${crosswalk.id}"`);
+  checkEntityIdReference("foodon-crosswalk", crosswalk.id);
+  // iri/curie are both hand-authored (src/foodon-crosswalk.ts's own doc
+  // comment: "every real data file stores its own iri directly ... so a
+  // consumer reading the raw JSON file never needs this module's code").
+  // Previously only capability-test:foodon-crosswalk (optional, not
+  // CI-gating) caught the two drifting — recomputed here too, so `npm run
+  // validate` — this repo's own "authoritative integration check" — is
+  // the one that actually catches it.
+  const recomputedIri = foodOnIriFromCurie(crosswalk.foodOn.curie);
+  if (recomputedIri !== crosswalk.foodOn.iri) {
+    fail(
+      `foodon-crosswalk/${crosswalk.id}.json: iri "${crosswalk.foodOn.iri}" does not match ` +
+        `foodOnIriFromCurie(curie) "${recomputedIri}" — curie/iri have drifted apart`
+    );
   }
 }
 

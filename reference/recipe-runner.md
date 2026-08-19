@@ -243,6 +243,32 @@ range for either — no duplicated per-verb logic needed, since
 closed 2026-08-17, extending 2026-08-16's FRY/oil wiring to the verb that
 same day's own closing note named as still open).
 
+## `resolveInstanceEntityIds`
+
+Added 2026-08-20, extracted from `cooklang.ts`'s `exportToCooklang` and
+`schema-org.ts`'s `compileToSchemaOrgRecipe`, which had each built the
+identical `initialInventory`-overlaid-with-`spawnedEntityIds` map inline —
+a real `code-review`-flagged duplication, fixed by having both consume
+this one function instead of each re-deriving it. `spawnedEntityIds` is
+optional (defaults to empty) so a caller with no run result yet — e.g.
+resolving a recipe that hasn't been executed — still gets
+`initialInventory`-only resolution rather than being forced to run the
+recipe first.
+
+**Deliberately NOT unified with `recipe-narrator.ts`'s own, separate
+instance-resolution map**, even though `code-review` also flagged that as
+looking like the same duplication — it isn't: `recipe-narrator.ts` walks
+a fresh `runRecipe` call's own `finalInventory` instead of taking a
+`spawnedEntityIds` map as a parameter, which covers every instance still
+alive at the END of a run. This function (via `spawnedEntityIds`) covers
+every instance ever spawned, including one a LATER step went on to
+destroy — a real, deliberate difference in what each caller actually
+needs, not an oversight to unify. Naively merging the two would have
+either silently changed `recipe-narrator.ts`'s existing behavior or made
+`exportToCooklang`/`compileToSchemaOrgRecipe` depend on a fresh internal
+`runRecipe` call they don't currently make and don't want (both are
+correctly agnostic to whether their caller ran the recipe itself).
+
 ## `runRecipe`
 
 ### DAG-execution ordering

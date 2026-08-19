@@ -400,6 +400,17 @@ function assertPlaceReady(
   }
 }
 
+/** Recipe-local instance id -> real `Entity.id`. See `reference/recipe-runner.md`. */
+export function resolveInstanceEntityIds(
+  recipe: RecipeScript,
+  spawnedEntityIds: Map<string, string> = new Map()
+): Map<string, string> {
+  const instanceEntityId = new Map<string, string>();
+  for (const item of recipe.initialInventory) instanceEntityId.set(item.id, item.entityId);
+  for (const [instanceId, entityId] of spawnedEntityIds) instanceEntityId.set(instanceId, entityId);
+  return instanceEntityId;
+}
+
 export function runRecipe(
   recipe: RecipeScript,
   entities: Map<string, Entity>,

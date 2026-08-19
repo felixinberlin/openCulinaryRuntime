@@ -1,6 +1,7 @@
 import type { Entity, Quantity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript, RecipeInstance } from "./recipe.ts";
+import { resolveInstanceEntityIds } from "./recipe-runner.ts";
 
 /**
  * Cooklang import/export. Parsing Cooklang's own syntax (`parseCooklang`)
@@ -353,9 +354,7 @@ export function exportToCooklang(
   actions: Map<string, Action>,
   spawnedEntityIds: Map<string, string> = new Map()
 ): string {
-  const instanceEntityId = new Map<string, string>();
-  for (const item of recipe.initialInventory) instanceEntityId.set(item.id, item.entityId);
-  for (const [instanceId, entityId] of spawnedEntityIds) instanceEntityId.set(instanceId, entityId);
+  const instanceEntityId = resolveInstanceEntityIds(recipe, spawnedEntityIds);
 
   const initialQuantity = new Map<string, Quantity | undefined>();
   for (const item of recipe.initialInventory) initialQuantity.set(item.id, item.quantity);

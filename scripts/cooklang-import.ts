@@ -33,25 +33,44 @@ if (!arg) {
   process.exit(1);
 }
 
-const COOKLANG_FEDERATION_RECIPE_PAGE =
-  /^https?:\/\/recipes\.cooklang\.org\/recipes\/(\d+)\/?$/i;
+/** Matches a `recipes.cooklang.org` browser recipe-PAGE path (`/recipes/<id>`)
+ *  against `URL.pathname` alone — not the full URL string — so a real
+ *  browser-copied link with a trailing `?utm_source=...` query string or
+ *  `#section` fragment (both stripped from `pathname` by the `URL` parser
+ *  itself) still matches, rather than silently falling through to
+ *  fetching the HTML page as-is. */
+const COOKLANG_FEDERATION_RECIPE_PAGE_PATH = /^\/recipes\/(\d+)\/?$/;
 
 async function loadSource(input: string): Promise<string> {
   if (!/^https?:\/\//i.test(input)) {
     return readFileSync(input, "utf8");
   }
 
-  let url = input;
-  const pageMatch = COOKLANG_FEDERATION_RECIPE_PAGE.exec(url);
-  if (pageMatch) {
-    url = `https://recipes.cooklang.org/api/recipes/${pageMatch[1]}/download`;
-    console.error(`(recipes.cooklang.org recipe page detected — fetching raw .cook from ${url})`);
+  let url = new URL(input);
+  if (url.hostname === "recipes.cooklang.org") {
+    const pageMatch = COOKLANG_FEDERATION_RECIPE_PAGE_PATH.exec(url.pathname);
+    if (pageMatch) {
+      url = new URL(`https://recipes.cooklang.org/api/recipes/${pageMatch[1]}/download`);
+      console.error(`(recipes.cooklang.org recipe page detected — fetching raw .cook from ${url})`);
+    }
   }
 
   console.error(`Fetching ${url} ...`);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} ${response.statusText} fetching ${url}`);
+  }
+  // A guard against exactly the failure the pathname rewrite above exists
+  // to avoid: silently "parsing" an HTML page as Cooklang text and
+  // producing a garbage draft with no diagnostic. Catches it even for a
+  // URL this script has no site-specific rewrite for (a future
+  // recipes.cooklang.org URL-scheme change, or any other HTML-serving
+  // host) — `parseCooklang` itself has no format validation to fall back on.
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("text/html")) {
+    throw new Error(
+      `${url} returned HTML (content-type: ${contentType}), not plain Cooklang text — refusing to parse it as one.`
+    );
   }
   return await response.text();
 }

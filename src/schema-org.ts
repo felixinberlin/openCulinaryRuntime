@@ -1,6 +1,7 @@
 import type { Entity, Quantity } from "./ingredient.ts";
 import type { Action } from "./action.ts";
 import type { RecipeScript } from "./recipe.ts";
+import { resolveInstanceEntityIds } from "./recipe-runner.ts";
 
 /**
  * OCR -> Schema.org export (Roadmap Phase 5, `ocr-converter.ts` as
@@ -32,7 +33,7 @@ const IMPRECISE_PREFIX: Record<string, string> = {
   splash: "a splash of",
 };
 
-function entityName(entity: Entity | undefined, entityId: string, locale: string): string {
+function displayNameForEntity(entity: Entity | undefined, entityId: string, locale: string): string {
   if (!entity) return entityId; // Unknown — named, not guessed at.
   return entity.names[locale] ?? entity.names.en ?? entity.id;
 }
@@ -53,7 +54,7 @@ function quantityPhrase(
     return `${IMPRECISE_PREFIX[quantity.descriptor]} ${name}`;
   }
   // "relative"
-  const ofName = entityName(entities.get(quantity.ofEntityId), quantity.ofEntityId, locale);
+  const ofName = displayNameForEntity(entities.get(quantity.ofEntityId), quantity.ofEntityId, locale);
   const percent = Math.round(quantity.ratio * 1000) / 10;
   return `${name} (${percent}% of ${ofName} by ${quantity.basis})`;
 }
@@ -71,7 +72,7 @@ export function compileToSchemaOrgIngredient(
   entities: Map<string, Entity>,
   locale = "en"
 ): string {
-  const name = entityName(entity, entity.id, locale);
+  const name = displayNameForEntity(entity, entity.id, locale);
   const line = quantityPhrase(quantity, name, entities, locale);
   return state && state !== "raw" ? `${line}, ${state}` : line;
 }
@@ -86,7 +87,7 @@ function stepText(
   const action = actions.get(step.actionId);
   const verb = action ? (action.names[locale] ?? action.names.en) : step.actionId;
   const nameFor = (instanceId: string): string =>
-    entityName(entities.get(instanceEntityId.get(instanceId) ?? ""), instanceId, locale);
+    displayNameForEntity(entities.get(instanceEntityId.get(instanceId) ?? ""), instanceId, locale);
 
   const parts: string[] = [`${verb} the ${nameFor(step.targetInstanceId)}`];
   if (step.secondaryInstanceId) parts.push(`with the ${nameFor(step.secondaryInstanceId)}`);
@@ -123,9 +124,7 @@ export function compileToSchemaOrgRecipe(
   spawnedEntityIds: Map<string, string> = new Map(),
   locale = "en"
 ): SchemaOrgRecipe {
-  const instanceEntityId = new Map<string, string>();
-  for (const item of recipe.initialInventory) instanceEntityId.set(item.id, item.entityId);
-  for (const [instanceId, entityId] of spawnedEntityIds) instanceEntityId.set(instanceId, entityId);
+  const instanceEntityId = resolveInstanceEntityIds(recipe, spawnedEntityIds);
 
   const recipeIngredient = recipe.initialInventory.map((item) => {
     const entity = entities.get(item.entityId);
@@ -141,7 +140,7 @@ export function compileToSchemaOrgRecipe(
 
   const tool =
     recipe.availableTools.length > 0
-      ? recipe.availableTools.map((id) => entityName(entities.get(id), id, locale))
+      ? recipe.availableTools.map((id) => displayNameForEntity(entities.get(id), id, locale))
       : undefined;
 
   return {

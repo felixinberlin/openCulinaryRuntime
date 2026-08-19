@@ -1569,7 +1569,40 @@ dependency-derivation logic rather than duplicating it, but does not
 replace or wrap it.
 
 ## Phase 5 — Bi-directional compilers (`ocr-converter.ts`)
-- [ ] `compileToSchemaOrgIngredient` and the OCR → Schema.org export path.
+- [x] **`compileToSchemaOrgIngredient` and the OCR → Schema.org export
+      path — closed 2026-08-19, `src/schema-org.ts`.** The last unbuilt
+      Phase 5 bullet. One-directional and lossy by construction, per
+      `CLAUDE.md`'s own stated rule for this direction — no
+      `importFromSchemaOrg`, deliberately; a lossy Schema.org string can't
+      be parsed back into a typed `Quantity`/`state`/`actionId` without
+      guessing, the same free-text → structured-intent problem
+      `ENGINE_INVARIANTS.md` #10 already scopes to an LLM/human, not a
+      mechanical function. `compileToSchemaOrgIngredient` keeps
+      `CLAUDE_DEV_CTX.md`'s original function name and one-line-lossy-
+      string contract but takes this repo's REAL `Entity`/`Quantity`
+      types (that file's own `IngredientModel` sketch predates them).
+      `compileToSchemaOrgRecipe` compiles a whole `RecipeScript` to a
+      Schema.org `Recipe` JSON-LD object, reusing `exportToCooklang`'s
+      `spawnedEntityIds`-composition precedent (not a second,
+      independently-drifting resolution scheme) so a step targeting a
+      mid-recipe-spawned instance still resolves to a real ingredient
+      name. Deliberately, honestly scoped: only `name`/`recipeIngredient`/
+      `recipeInstructions`/`tool` are populated — `recipeYield`/
+      `prepTime`/`cookTime`/`totalTime` would require summing
+      `params.durationSeconds` across steps, a real number that's
+      fundamentally MISLEADING on its own (silently drops passive/
+      parallel time and every non-timed step); `nutrition` is deferred to
+      Phase 6 (`nutrition-extension.ts`, not started) rather than
+      shortcut-summed here. See `reference/schema-org.md` for the full
+      reasoning. Proven via `tests/schema-org.test.ts` (17 synthetic-
+      fixture unit tests) and `npm run capability-test:schema-org`
+      (`scripts/schema-org-as-a-robot.ts`) — against REAL
+      `data/entities/*.json`/`data/actions/*.json` and two REAL recipes
+      (`salted-fried-potatoes.json`: no spawns; `handmade-alioli-egg-
+      yolk.json`: actually run via `runRecipe`, then compiled with the
+      real `spawnedEntityIds` — the SEPARATE-spawned `egg_yolk-3`
+      resolves to a real ingredient name, not a raw instance id, checked
+      live).
 - [x] **Cooklang parser + entity-matching import + mechanical export —
       closed 2026-08-18, `src/cooklang.ts`.** Built exactly along the
       boundary `AUTHORING.md` §2 drew ahead of any code existing (kept

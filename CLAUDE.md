@@ -102,7 +102,7 @@ listed so neither this file nor `CLAUDE_DEV_CTX.md` alone gives a false picture:
 | `recipe.ts` — `RecipeScriptSchema` | `src/recipe.ts` — built close to as planned | plus `src/recipe-runner.ts` (not in the original plan) actually walks a `RecipeScript` against `engine.ts` |
 | `nutrition-extension.ts` | Not built | |
 | `ocr-engine.ts` — `OcrValidationEngine`, `INVALID_TRANSITIONS` | `src/engine.ts`'s `applyAction` covers part of this (capability/tool/state-prerequisite checks, conservation of mass, HACCP + `SafetyPolicy`), **plus (closed 2026-08-15) `Entity.invalidTransitions`** (`ingredient.ts`) — a real forbidden-state-transition check, just keyed per entity rather than one global map; see that field's own doc comment and `ROADMAP.md` Phase 4 for why | Also not a class named `OcrValidationEngine` — a plain function; `invalidTransitions` diverges from `CLAUDE_DEV_CTX.md`'s literal global-map shape on purpose — see `LEARNINGS_ENGINE.md` 2026-08-15 |
-| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` (`parseCooklang`/`importCooklangDraft`/`exportToCooklang`) + `src/cooklang-translate.ts` (`translateCooklangDocument`), both closed 2026-08-18 | Cooklang syntax parsing, entity-matching import, mechanical export, AND the free-text step-prose→`actionId` translator (a real, bounded, deterministic keyword matcher — no LLM call) are all real; only `compileToSchemaOrgIngredient`/Schema.org export is still not built — see the "ninth"/"tenth" entries below and `AUTHORING.md` §2 |
+| `ocr-converter.ts` — `compileToSchemaOrgIngredient`, Cooklang parser | `src/cooklang.ts` (`parseCooklang`/`importCooklangDraft`/`exportToCooklang`) + `src/cooklang-translate.ts` (`translateCooklangDocument`) + `src/schema-org.ts` (`compileToSchemaOrgIngredient`/`compileToSchemaOrgRecipe`, closed 2026-08-19) | Cooklang syntax parsing, entity-matching import, mechanical export, the free-text step-prose→`actionId` translator (a real, bounded, deterministic keyword matcher — no LLM call), AND the OCR→Schema.org export path are all real now — see the "ninth"/"tenth"/"twelfth" entries below and `AUTHORING.md` §2. Not one file named `ocr-converter.ts` — same "planned name diverged" pattern as every other row here |
 
 `src/registry.ts` (loading `data/*.json` by directory into typed `Map`s) also isn't
 in the original plan — the whole `data/` directory of JSON files, validated against
@@ -360,6 +360,36 @@ recipes, including a genuine fan-in dependency (`garlic-oil-potatoes.json`'s
 `fry_potato`, depending on both `cut_potato` and `infuse_oil`). See
 `LEARNINGS_ENGINE.md` 2026-08-18 for what the revision actually changed
 and why.
+
+A twelfth, 2026-08-19: `src/schema-org.ts` (`compileToSchemaOrgIngredient`/
+`compileToSchemaOrgRecipe`) — `ROADMAP.md` Phase 5's last unbuilt bullet,
+the OCR→Schema.org export path. One-directional and lossy by construction
+per `CLAUDE.md`'s own stated rule for this direction — no
+`importFromSchemaOrg`, deliberately: a lossy Schema.org string can't be
+parsed back into a typed `Quantity`/`state`/`actionId` without guessing,
+the same free-text→structured-intent problem `ENGINE_INVARIANTS.md` #10
+already scopes to an LLM/human, not a mechanical function.
+`compileToSchemaOrgIngredient` keeps `CLAUDE_DEV_CTX.md`'s original
+function name and one-line-lossy-string contract but takes this repo's
+real `Entity`/`Quantity` types rather than that file's fictional
+`IngredientModel` sketch. `compileToSchemaOrgRecipe` compiles a whole
+`RecipeScript` to a Schema.org `Recipe` object, reusing
+`exportToCooklang`'s `spawnedEntityIds`-composition precedent (not a
+second, independently-drifting resolution scheme). Deliberately,
+honestly scoped: only `name`/`recipeIngredient`/`recipeInstructions`/
+`tool` are populated — `recipeYield`/`prepTime`/`cookTime`/`totalTime`
+would require summing `params.durationSeconds` across steps, a real
+number that's fundamentally misleading on its own (drops passive/
+parallel time and every non-timed step); `nutrition` is deferred to
+Phase 6 (`nutrition-extension.ts`, not started). See
+`reference/schema-org.md` for the full reasoning. Proven via
+`tests/schema-org.test.ts` (17 synthetic-fixture unit tests) and `npm
+run capability-test:schema-org` (`scripts/schema-org-as-a-robot.ts`) —
+against REAL `data/entities/*.json`/`data/actions/*.json` and two REAL
+recipes, one of them (`handmade-alioli-egg-yolk.json`) actually run via
+`runRecipe` so a genuine SEPARATE-spawned instance (`egg_yolk-3`)
+resolves to a real ingredient name in `recipeInstructions`, not a raw
+instance id.
 
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original

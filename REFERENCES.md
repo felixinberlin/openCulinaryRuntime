@@ -1144,6 +1144,16 @@ per that ticket's own instruction.
   rule is actually implemented (spice-lock preservation) vs. still open
   (scaling multipliers — no scaling engine exists anywhere in this repo to
   scale against, `ingredient.ts`'s `QuantitySchema` doc comment).
+- **Schema.org `Recipe`/`HowTo` vocabulary** — https://schema.org/Recipe
+  and https://schema.org/HowTo (`Recipe` is a subtype of `HowTo`, which is
+  where `tool`/`step`/`HowToStep` come from). `src/schema-org.ts`'s
+  `compileToSchemaOrgRecipe` populates `name`/`recipeIngredient`/
+  `recipeInstructions`/`tool` only — `recipeYield`/`prepTime`/`cookTime`/
+  `totalTime`/`nutrition` are deliberately NOT populated; see
+  `reference/schema-org.md` for exactly why each is out of scope rather
+  than silently omitted. One-directional (OCR → Schema.org) per
+  `CLAUDE.md`'s own stated rule — no import direction exists or is
+  planned under this module.
 
 ## Simulation / robot-execution research
 

@@ -1,0 +1,12 @@
+{
+  "id": "onion",
+  "foodOn": {
+    "curie": "FOODON:03316347",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03316347",
+    "label": "onion",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    }
+  }
+}

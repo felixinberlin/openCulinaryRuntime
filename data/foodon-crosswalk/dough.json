@@ -1,0 +1,13 @@
+{
+  "id": "dough",
+  "foodOn": {
+    "curie": "FOODON:03311552",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03311552",
+    "label": "dough",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    },
+    "note": "The generic \"dough\" class, deliberately NOT FOODON:03540199 \"yeast leavened bread doughs\": this repo's dough.json structure.components is flour+water only (no yeast) -- CLAUDE.md's own documented \"3+-input COMBINE gap\" is exactly why simple_flatbread.json stays deliberately unleavened. Picking the yeast-leavened class would misrepresent what this entity actually models."
+  }
+}

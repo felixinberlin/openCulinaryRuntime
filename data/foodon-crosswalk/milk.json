@@ -1,0 +1,12 @@
+{
+  "id": "milk",
+  "foodOn": {
+    "curie": "FOODON:03307455",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03307455",
+    "label": "cow milk (raw)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    }
+  }
+}

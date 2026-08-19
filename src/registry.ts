@@ -9,6 +9,7 @@ import {
   MealPatternContributionFileSchema,
   type MealPatternContributionFile,
 } from "./nutrition-extension.ts";
+import { FoodOnCrosswalkFileSchema, type FoodOnCrosswalkFile } from "./foodon-crosswalk.ts";
 
 /** Parses every *.json file in `dir` against `schema`, keyed by its `id`. Throws on the first invalid file. */
 function loadDir<T extends { id: string }>(
@@ -59,4 +60,9 @@ export function loadMealPatternContributions(
   dir: string
 ): Map<string, MealPatternContributionFile> {
   return loadDir(dir, MealPatternContributionFileSchema);
+}
+
+/** Keyed by `Entity.id`, same shape as `loadMealPatternContributions` — see `foodon-crosswalk.ts`. */
+export function loadFoodOnCrosswalk(dir: string): Map<string, FoodOnCrosswalkFile> {
+  return loadDir(dir, FoodOnCrosswalkFileSchema);
 }

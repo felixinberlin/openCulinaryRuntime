@@ -9,6 +9,7 @@ import {
   MealPatternContributionFileSchema,
   type MealPatternContributionFile,
 } from "../src/nutrition-extension.ts";
+import { FoodOnCrosswalkFileSchema, type FoodOnCrosswalkFile } from "../src/foodon-crosswalk.ts";
 import { runRecipe } from "../src/recipe-runner.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -61,6 +62,11 @@ const mealPatternContributions = loadDir<MealPatternContributionFile>(
   join(root, "data", "meal-pattern-contributions"),
   "meal-pattern-contributions",
   MealPatternContributionFileSchema
+);
+const foodOnCrosswalk = loadDir<FoodOnCrosswalkFile>(
+  join(root, "data", "foodon-crosswalk"),
+  "foodon-crosswalk",
+  FoodOnCrosswalkFileSchema
 );
 
 let crossFailed = 0;
@@ -332,6 +338,15 @@ for (const contribution of mealPatternContributions.items.values()) {
   }
 }
 
+// foodon-crosswalk (foodon-crosswalk.ts, added 2026-08-19) — same "id IS
+// the entity id" shape and same hard-fail standard as
+// meal-pattern-contributions immediately above.
+for (const crosswalk of foodOnCrosswalk.items.values()) {
+  if (!entities.items.has(crosswalk.id)) {
+    fail(`foodon-crosswalk/${crosswalk.id}.json: id references unknown entity "${crosswalk.id}"`);
+  }
+}
+
 for (const action of actions.items.values()) {
   for (const toolId of action.requiredTools) {
     const tool = entities.items.get(toolId);
@@ -505,6 +520,7 @@ const failed =
   ccps.failed +
   heatSources.failed +
   mealPatternContributions.failed +
+  foodOnCrosswalk.failed +
   crossFailed;
 const total =
   entities.total +
@@ -512,11 +528,12 @@ const total =
   recipes.total +
   ccps.total +
   heatSources.total +
-  mealPatternContributions.total;
+  mealPatternContributions.total +
+  foodOnCrosswalk.total;
 if (failed > 0) {
   console.error(`\n${failed} problem(s) found.`);
   process.exit(1);
 }
 console.log(
-  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps, ${heatSources.total} heat-sources, ${mealPatternContributions.total} meal-pattern-contributions); cross-references OK.`
+  `\nAll ${total} files valid (${entities.total} entities, ${actions.total} actions, ${recipes.total} recipes, ${ccps.total} ccps, ${heatSources.total} heat-sources, ${mealPatternContributions.total} meal-pattern-contributions, ${foodOnCrosswalk.total} foodon-crosswalk); cross-references OK.`
 );

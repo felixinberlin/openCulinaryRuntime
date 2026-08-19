@@ -1,0 +1,13 @@
+{
+  "id": "flaky_salt",
+  "foodOn": {
+    "curie": "FOODON:03544059",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03544059",
+    "label": "sea salt (efsa foodex2)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "commonly_cited_unverified"
+    },
+    "note": "FoodOn has no flake-specific crystal-form class in this session's search results; \"sea salt\" is the closest available class but doesn't capture the large, irregular flake structure that distinguishes Maldon-style salt from fine sea salt (see flaky_salt.json's own domainFacts.gramsPerTeaspoon note on that real density difference)."
+  }
+}

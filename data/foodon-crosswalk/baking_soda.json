@@ -1,0 +1,12 @@
+{
+  "id": "baking_soda",
+  "foodOn": {
+    "curie": "FOODON:00002385",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_00002385",
+    "label": "baking soda",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    }
+  }
+}

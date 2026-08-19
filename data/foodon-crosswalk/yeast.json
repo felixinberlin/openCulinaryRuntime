@@ -1,0 +1,13 @@
+{
+  "id": "yeast",
+  "foodOn": {
+    "curie": "FOODON:03310334",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03310334",
+    "label": "bakers yeast",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "commonly_cited_unverified"
+    },
+    "note": "FoodOn's own search returned two near-duplicate classes for baker's yeast (FOODON:03310334 \"bakers yeast\" and FOODON:03413797 \"baker's yeast\") with no clear disambiguating description surfaced this session -- FOODON:03310334 was chosen for having an explicit food-role definition in the search result (\"the common name for the strains of yeast commonly used in baking bread\"); not independently confirmed as the canonical, non-deprecated term of the two."
+  }
+}

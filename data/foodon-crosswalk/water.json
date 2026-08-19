@@ -1,0 +1,13 @@
+{
+  "id": "water",
+  "foodOn": {
+    "curie": "FOODON:03543262",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03543262",
+    "label": "drinking water (efsa foodex2)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "commonly_cited_unverified"
+    },
+    "note": "The single closest literal search match (ENVO:00003064 \"drinking water\") is an ENVO term FoodOn cross-references, not a native FOODON: id -- this entry uses the closest genuine FOODON: id instead, per this crosswalk's own FOODON-only scope (see foodon-crosswalk.ts's own doc comment)."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "black_pepper",
+  "foodOn": {
+    "curie": "FOODON:03000242",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03000242",
+    "label": "black pepper (whole or pieces)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "commonly_cited_unverified"
+    },
+    "note": "Entity-level match against this repo's default/whole state. black_pepper.json also models cracked/ground states -- FoodOn has separate classes for those (e.g. FOODON:03306739 \"black pepper (ground)\") but this crosswalk maps one class per ENTITY, not per state, same scope as nutrition-extension.ts's own entity-level (not state-level) mapping."
+  }
+}

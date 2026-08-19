@@ -1,0 +1,13 @@
+{
+  "id": "garlic",
+  "foodOn": {
+    "curie": "FOODON:00003583",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_00003583",
+    "label": "garlic clove",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    },
+    "note": "FOODON:00003582 \"garlic bulb\" was the more literal top search hit, but this repo models garlic at CLOVE granularity throughout (see garlic_peel.json's own citation in REFERENCES.md, \"the single-CLOVE granularity garlic.json is actually modeled at\") -- the clove class matches this repo's actual scope, the bulb class would not."
+  }
+}

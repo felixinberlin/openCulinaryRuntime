@@ -1,0 +1,13 @@
+{
+  "id": "chili_flakes",
+  "foodOn": {
+    "curie": "FOODON:03304285",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03304285",
+    "label": "red pepper (crushed)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "commonly_cited_unverified"
+    },
+    "note": "Closest available match -- the same imperfect-but-best-available situation REFERENCES.md already documents for this entity's USDA FoodData Central composition citation (no generic \"crushed dried chili flake\" entry exists there either)."
+  }
+}

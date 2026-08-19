@@ -433,6 +433,42 @@ exercising all three real crediting bases plus every honest non-credit
 case. `npm run validate` gained a matching hard-fail cross-reference
 check and now reports the new directory's file count in its summary line.
 
+A fourteenth, same day, 2026-08-19: `src/foodon-crosswalk.ts`
+(`FoodOnCrosswalkEntrySchema`/`foodOnIriFromCurie`) — not in
+`CLAUDE_DEV_CTX.md`'s original plan anywhere, added in direct response to
+a user question about this repo's FoodOn (foodon.org) coverage, which was
+zero before this change. Same "deliberately not a field on `EntitySchema`"
+precedent as `nutrition-extension.ts` immediately above, for the same
+reason: an entity's identity in this repo's own engine shouldn't be
+coupled to a third-party ontology's id scheme. A separate schema, a new
+`data/foodon-crosswalk/*.json` directory (one file per entity, `id` IS
+the entity id), and a new `loadFoodOnCrosswalk` loader. 22 of this repo's
+42 entities matched to a real FoodOn class via direct, live queries
+against FoodOn's own EBI OLS4 search API, 2026-08-19 — 17 clean matches
+(`confidence: "standard_reference"`), 5 best-available-but-imperfect ones
+each with an explicit caveat note (`confidence:
+"commonly_cited_unverified"`). Honestly scoped: no tool entity was
+force-fit into a food ontology (FoodOn doesn't model cookware, categorically
+out of scope, not merely unmatched); 4 ingredients
+(`kosher_salt`/`onion_peel`/`garlic_peel`/`egg_cracked`) and 3 composite
+mid-recipe mixtures have no crosswalk entry, named as real gaps rather
+than guessed at. A real near-miss caught during matching, worth recording:
+FoodOn's literal top search hit for "dough" led toward "yeast leavened
+bread doughs," which would have MISREPRESENTED `dough.json` (this repo's
+own `structure.components` is flour+water only, no yeast, per the
+already-documented 3+-input `COMBINE` gap) — caught by checking the
+entity's actual data before accepting the top hit, same discipline as
+`potato.json`'s 2026-08-15 boiled/peeled correction. See
+`reference/foodon-crosswalk.md` for the full reasoning. Proven via
+`tests/foodon-crosswalk.test.ts` (9 synthetic-fixture unit tests) and
+`npm run capability-test:foodon-crosswalk`
+(`scripts/foodon-crosswalk-as-a-robot.ts`) — against REAL
+`data/entities/*.json`/`data/foodon-crosswalk/*.json`, confirming every
+entry's stored `iri` matches `foodOnIriFromCurie(curie)` with zero drift,
+no tool entity ever gets a crosswalk entry, and the uncovered-entity list
+is exactly the one this file names, not a silently shrinking or growing
+set. `npm run validate` gained a matching hard-fail cross-reference check.
+
 Read `CLAUDE_DEV_CTX.md` for the *concepts* (still accurate) — verify file/symbol
 names against the table above or `ROADMAP.md`, not against that file's original
 naming, before assuming something exists.

@@ -1,0 +1,12 @@
+{
+  "id": "egg_yolk",
+  "foodOn": {
+    "curie": "FOODON:02020158",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_02020158",
+    "label": "chicken egg yolk (raw)",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    }
+  }
+}

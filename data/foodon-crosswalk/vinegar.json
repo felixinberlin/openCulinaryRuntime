@@ -1,0 +1,13 @@
+{
+  "id": "vinegar",
+  "foodOn": {
+    "curie": "FOODON:03301705",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03301705",
+    "label": "vinegar",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    },
+    "note": "The generic vinegar class. This repo's vinegar.json models plain 5%-acidity distilled/white vinegar (matching FDA CPG Sec. 525.825, already cited in REFERENCES.md), but FoodOn had no distilled-white-vinegar-specific subclass in this session's search results."
+  }
+}

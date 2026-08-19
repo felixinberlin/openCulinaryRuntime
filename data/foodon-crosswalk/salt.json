@@ -1,0 +1,12 @@
+{
+  "id": "salt",
+  "foodOn": {
+    "curie": "FOODON:03309954",
+    "iri": "http://purl.obolibrary.org/obo/FOODON_03309954",
+    "label": "table salt",
+    "citation": {
+      "source": "FoodOn (foodon.org), an OBO Foundry ontology, CC BY 4.0. Matched via EBI Ontology Lookup Service (OLS4) search API against the live FoodOn ontology, verified 2026-08-19.",
+      "confidence": "standard_reference"
+    }
+  }
+}

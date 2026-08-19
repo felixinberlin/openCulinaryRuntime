@@ -20,7 +20,12 @@ gas/vitro/wood heat providers, ...), and `scripts/` has runnable demos plus
 (2026-08-14) an actual end-to-end simulation of every `data/recipes/*.json` via
 `recipe-runner.ts`'s `runRecipe` — not just static id cross-checking — the
 authoritative integration check), `npm run demo:<name>` (see `package.json` for the
-full list), `npm run recipe -- <id>`, `npm run build` / `npx tsc -p . --noEmit`
+full list), `npm run recipe -- <id>`, `npm run cooklang-import -- <path.cook>` /
+`npm run cooklang-export -- <recipeId> [output-path.cook]` (added 2026-08-19 —
+the actual general-purpose CLI wrapping `cooklang.ts`'s `importCooklangDraft`/
+`exportToCooklang`; `capability-test:cooklang` is a fixed demo, not a CLI —
+these two take real arguments the way `run-recipe.ts`/`validate-recipe.ts` do),
+`npm run build` / `npx tsc -p . --noEmit`
 (typechecks `src`, `scripts`, AND `tests`; both are clean with zero errors as of
 2026-08-14's `tsconfig.json` fix — `noEmit`/`allowImportingTsExtensions` — no more
 `TS5097` noise to filter). `npm test` and `validate.ts` are complementary, not

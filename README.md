@@ -192,6 +192,8 @@ npm run recipe -- <id>      # run a specific recipe, e.g. tortilla_de_patatas
 npm run new-recipe -- <path.json> <entityId...>  # scaffold a recipe — see AUTHORING.md
 npm run validate-recipe -- <path>                # pre-flight + run an ARBITRARY recipe file
 npm run narrate-recipe -- <path> <out.md|.json>  # human-readable "read this back to me"
+npm run cooklang-import -- <path.cook | url>     # parse Cooklang text, incl. recipes.cooklang.org URLs
+npm run cooklang-export -- <recipeId> [out.cook] # export a real recipe to Cooklang text
 ```
 
 See `package.json` for the full list of `demo:*` and `capability-test:*`
@@ -211,7 +213,7 @@ Read in roughly this order to get oriented:
 | `CLAUDE.md` | Ground truth on how the plan diverged from what's actually built, file-by-file, plus repo commands and conventions. |
 | `ROADMAP.md` | Phased build plan and the full capability-test table — which real dishes are provably makeable today. |
 | `ROADMAP_KNOWLEDGE.md` | Split out of `ROADMAP.md` 2026-08-17 — the closed/open ledger of real-world cooking-domain coverage (ingredients, technique verbs, HACCP facts) and every epic that grew out of it (heat-as-a-place, DAG execution, baking, SEASON, ...). |
-| `AUTHORING.md` | How to actually write a new recipe from the command line — the real `validate-recipe` loop, a worked example, and the honest current state of Cooklang support (none, yet — and why). |
+| `AUTHORING.md` | How to actually write a new recipe from the command line — the real `validate-recipe` loop, a worked example, and real Cooklang import/export (including from a URL, e.g. recipes.cooklang.org). |
 | `LEARNINGS.md` | Index into the dated learnings log — split into `LEARNINGS_ENGINE.md`, `LEARNINGS_DOMAIN.md`, `LEARNINGS_TOOLING.md`, `LEARNINGS_PROCESS.md` (schema/engine gotchas, food-science/technique tradeoffs, CLI-tooling notes, and working-method/verification lessons, respectively). |
 | `REFERENCES.md` | Bibliography — every safety threshold and technique claim traced to a real source. |
 | `SIMULATION_TARGETS.md` | Research comparing simulator/robot-execution targets (PDDL, VirtualHome, AI2-THOR, OmniGibson, RoboCasa) for eventually grounding this model in a simulated or robot-executed world. Not yet chosen. |

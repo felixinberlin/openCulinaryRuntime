@@ -222,6 +222,107 @@ call) rather than claiming it "solves" free-text translation outright:
    from a human typing JSON by hand, this deterministic matcher, or an
    LLM translating a `.cook` file's step prose; "the alarms that help
    extend a human recipe to our system" already exist today, unchanged.
+4. **A real CLI now wraps points 1 and 3, added 2026-08-19/20** — before
+   this, the only way to exercise `cooklang.ts` at all was
+   `npm run capability-test:cooklang`, a fixed demo with a hardcoded
+   snippet and a hardcoded recipe id, not something that took your own
+   input.
+
+   `npm run cooklang-import -- <path-to-file.cook | url>` — parses a real
+   `.cook` file (local path OR url) and prints the resolved/unresolved
+   ingredients plus a proposed `initialInventory` draft. Actually run
+   against a local file:
+
+   ```
+   $ npm run cooklang-import -- example.cook
+   === Parsed "example.cook" ===
+
+   Metadata: {"title":"Quick Garlic Oil Potatoes"}
+   Steps: 1
+     [0] Peel @patata{500%g} and cut into wedges. Fry @patata in #sarten{}
+         with @aceite{50%ml} for ~{600%seconds}. Season with @sal{=1%tsp}.
+
+   Resolved ingredients (3):
+     @patata -> potato
+     @aceite -> oil
+     @sal -> salt
+
+   Proposed initialInventory draft (3 instances):
+   [ { "id": "patata-1", "entityId": "potato", "state": "raw", "tags": [],
+       "quantity": { "kind": "precise", "amount": 500, "unit": "g" } },
+     ... ]
+   ```
+
+   The `url` form fetches directly — this is this repo's first, and so
+   far only, real network call anywhere in its execution path (Node's own
+   built-in `fetch`, no new dependency; every other script/`src/*.ts` file
+   stays offline). A `recipes.cooklang.org/recipes/<id>` browser page URL
+   is auto-rewritten to that site's own raw-text
+   `/api/recipes/<id>/download` endpoint (the page itself is HTML, not
+   parseable Cooklang text) — actually run against the live site:
+
+   ```
+   $ npm run cooklang-import -- https://recipes.cooklang.org/recipes/1296
+   (recipes.cooklang.org recipe page detected — fetching raw .cook from
+   https://recipes.cooklang.org/api/recipes/1296/download)
+   Fetching https://recipes.cooklang.org/api/recipes/1296/download ...
+
+   === Parsed "https://recipes.cooklang.org/recipes/1296" ===
+
+   Metadata: {"source":"Trader Joe's","serves":"8","total time":"20 minutes"}
+   Steps: 3
+     [0] To the cooked @potato pancakes{1%pkg}, arrange two quarters of
+         @pepper jack cheese{4%slices} on top and return them to cook for
+         an additional minute, to help melt the cheese.
+     ...
+
+   Resolved ingredients (0):
+
+   Unresolved tokens (5) — named, not guessed at:
+     @potato pancakes
+     @pepper jack cheese
+     @soy chorizo
+     @sour cream
+     @cilantro
+   ```
+
+   A real community recipe outside this repo's own ~42-entity vocabulary
+   — correctly reports zero resolved ingredients rather than guessing at
+   a match, the same "named, not dropped" discipline `importCooklangDraft`
+   holds itself to against local files. Any other URL (a raw GitHub
+   `.cook` file, any other plain-text host) is fetched as-is, no rewrite.
+   A non-2xx response (confirmed live against both a real 429 rate limit
+   and a nonexistent recipe id while building this) surfaces the actual
+   HTTP status and exits cleanly rather than hanging or crashing.
+
+   `npm run cooklang-export -- <recipeId> [output-path.cook]` — the
+   reverse: exports a REAL recipe already in `data/recipes/*.json` to
+   Cooklang text, running it first so a step targeting a mid-recipe-SPAWNED
+   instance resolves to a real `@token` instead of a raw instance id.
+   Actually run:
+
+   ```
+   $ npm run cooklang-export -- handmade_alioli_egg_yolk
+   >> title: Handmade Alioli with Egg Yolk
+
+   Peel @ajo.
+
+   Salt @ajo using @sal.
+
+   Crush @ajo. (fineness: fine_paste)
+
+   Separate @huevo.
+
+   Pasteurize @yema for ~{210%seconds}. (waterTempC: 60)
+
+   Emulsify @ajo using @aceite using @yema for ~{240%seconds}. (oilAdditionRate: slow_stream)
+   ```
+
+   `@yema` (egg_yolk) is SEPARATE's own spawned byproduct — resolved to a
+   real token, not `egg_yolk-3`, because the export ran the recipe first.
+   Give it a second argument to write a `.cook` file instead of printing
+   to stdout (refuses to overwrite an existing file, same guard
+   `new-recipe.ts` already uses); omit it to print, e.g. for piping.
 
 ## 3. Named, not built — real gaps in today's loop
 

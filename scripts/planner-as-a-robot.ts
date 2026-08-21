@@ -205,6 +205,95 @@ if (dicedOutcome.planned) {
 }
 
 console.log(
+  "\n=== 6. Two real bugs a peer session found in planCombine/planSecondaryRole, both fixed here ===\n"
+);
+console.log(
+  "  Bug 1: the primary/secondary path's own stepsToRecipeSteps call used to fabricate ingredient " +
+    'INSTANCES from the availableIngredients ENTITY-id Set ({id: entityId, entityId}) instead of the ' +
+    "real instance pool planIntent already tracks — any requiredIngredientCapabilities step inside a " +
+    "combine goal (e.g. FRY needing oil) produced a RecipeStep referencing a nonexistent instance id " +
+    '("oil" instead of "oil-1"). Repro: a combine goal with NO prior explicit fry goal, so planCombine ' +
+    "itself has to plan the primary's FRY step:\n"
+);
+const bug1Intent: RecipeIntent = {
+  id: "bug1-repro",
+  names: { en: "Bug 1 repro — FRY inside planCombine's own primary path" },
+  initialInventory: [
+    { id: "potato-1", entityId: "potato", state: "raw", tags: [] },
+    { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+    { id: "oil-1", entityId: "oil", state: "cold", tags: [] },
+  ],
+  availableTools: ["knife", "pan", "bowl"],
+  goals: [
+    {
+      instanceId: "potato-1",
+      requiredTags: [],
+      combine: {
+        actionId: "combine",
+        secondaryInstanceId: "egg-1",
+        secondaryDesiredState: "beaten",
+        secondaryDesiredTags: [],
+      },
+    },
+  ],
+  metadata: {},
+};
+const bug1Plan = planIntent(bug1Intent, entities, actions);
+if (bug1Plan.success) {
+  const fryStep = bug1Plan.recipe.sequence.find((s) => s.actionId === "fry")!;
+  console.log(`  FRY step's availableIngredientInstanceIds: ${JSON.stringify(fryStep.availableIngredientInstanceIds)}`);
+  const bug1Run = runRecipe(bug1Plan.recipe, entities, actions, ccps);
+  console.log(`  run against the REAL recipe-runner.ts: ${bug1Run.errors.length} error(s)`);
+  for (const e of bug1Run.errors) console.log(`    ${e.step.actionId}: ${e.message}`);
+} else {
+  console.log(`  FAILED: ${JSON.stringify(bug1Plan.failures)}`);
+}
+
+console.log(
+  '\n  Bug 2: planSecondaryRole only checked the secondary role\'s own real statePrerequisites (the ' +
+    'SAME "secondary" check engine.ts\'s checkStatePrerequisite performs at execution time, e.g. ' +
+    'egg_cracked.json\'s combine: ["beaten", "well_beaten"]) when a caller explicitly supplied ' +
+    "secondaryDesiredState — omitting it produced a success:true plan missing the required BEAT step, " +
+    'which then failed at the last step against the real engine. Repro: the exact same combine goal, ' +
+    "secondaryDesiredState OMITTED this time:\n"
+);
+const bug2Intent: RecipeIntent = {
+  id: "bug2-repro",
+  names: { en: "Bug 2 repro — secondaryDesiredState omitted" },
+  initialInventory: [
+    { id: "potato-1", entityId: "potato", state: "raw", tags: [] },
+    { id: "egg-1", entityId: "egg", state: "raw", tags: [] },
+    { id: "oil-1", entityId: "oil", state: "cold", tags: [] },
+  ],
+  availableTools: ["knife", "pan", "bowl"],
+  goals: [
+    { instanceId: "potato-1", state: "fried", requiredTags: [] },
+    {
+      instanceId: "potato-1",
+      requiredTags: [],
+      combine: {
+        actionId: "combine",
+        secondaryInstanceId: "egg-1",
+        secondaryDesiredTags: [],
+        // secondaryDesiredState deliberately omitted — the exact Bug 2 shape.
+      },
+    },
+  ],
+  metadata: {},
+};
+const bug2Plan = planIntent(bug2Intent, entities, actions);
+if (bug2Plan.success) {
+  console.log(
+    `  planned sequence (note BEAT is now included, unasked-for): ${bug2Plan.recipe.sequence.map((s) => s.actionId).join(" -> ")}`
+  );
+  const bug2Run = runRecipe(bug2Plan.recipe, entities, actions, ccps);
+  console.log(`  run against the REAL recipe-runner.ts: ${bug2Run.errors.length} error(s)`);
+  for (const e of bug2Run.errors) console.log(`    ${e.step.actionId}: ${e.message}`);
+} else {
+  console.log(`  FAILED: ${JSON.stringify(bug2Plan.failures)}`);
+}
+
+console.log(
   "\nStill NOT closed by this script, named rather than implied covered: goals are resolved IN ARRAY ORDER " +
     "only, no backtracking/reordering across goals; planCombine takes an already-chosen combineActionId, it " +
     "does not resolve which COMBINE-shaped action to use from a target entity id alone (potato_onion_mixture." +

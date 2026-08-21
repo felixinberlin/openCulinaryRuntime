@@ -83,7 +83,11 @@ export const InstanceGoalSchema = z
      *  `secondaryInstanceId` via `actionId` — `planner.ts`'s
      *  `planCombine`. `secondaryDesiredState`/`secondaryDesiredTags` are
      *  optional and not required by `engine.ts` itself; they exist so a
-     *  planned recipe is realistic, not just engine-legal. See
+     *  planned recipe is realistic, not just engine-legal — omitting them
+     *  still produces an engine-legal plan (`planSecondaryRole` plans
+     *  toward whatever state `actionId` itself requires of the secondary
+     *  role even with no `secondaryDesiredState` given, since a
+     *  2026-08-19 fix; see `reference/planner.md`). See
      *  `reference/recipe.md`. */
     combine: z
       .object({

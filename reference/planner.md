@@ -124,20 +124,49 @@ matter far more here than micro-optimizing a graph this size.
 
 Finds a way to make `startInstanceId` (or something spawned FROM it)
 satisfy a `requiredSecondaryCapability` — the bounded, honest answer to
-COMBINE's own real engine behavior, checked directly before building this
-rather than assumed: `engine.ts`'s `applyAction` checks
-`requiredSecondaryCapability` ONLY against the secondary instance's
-ENTITY-level `capabilities` flag (`secondaryEntity.capabilities[cap] ===
-true`) — it never inspects the secondary instance's current STATE at all
-(confirmed by reading `applyAction` directly: no `statePrerequisites`
-lookup happens on that branch, and `egg_cracked.json` — `combine.json`'s
-real secondary role — has no `combine` key in its own
-`statePrerequisites` either). That's a real, pre-existing limitation this
-planner does not invent — the SAME class of gap `LEARNINGS_ENGINE.md`
-2026-08-12 already named for `requiredIngredientCapabilities` ("checks
-presence via the ingredient's ENTITY definition only — never the
-ingredient instance's current state"), just never previously stated for
-THIS mechanism.
+COMBINE's own real engine behavior.
+
+**Correction, 2026-08-19 (peer-session bug audit, `LEARNINGS_ENGINE.md`
+same date):** this section used to claim `engine.ts`'s `applyAction`
+checks `requiredSecondaryCapability` ONLY against the secondary
+instance's ENTITY-level `capabilities` flag, "never inspects the
+secondary instance's current STATE at all," and that `egg_cracked.json`
+"has no `combine` key in its own `statePrerequisites`" — **that claim was
+already stale when this file was written**: `checkStatePrerequisite`
+(`engine.ts`) has taken a `role: "target" | "secondary"` parameter and
+been called on the secondary instance too since 2026-08-17 (`egg_cracked.
+json`'s own `combineNote`, added the same day, documents the fix
+directly), and `egg_cracked.json` has carried `statePrerequisites.combine:
+["beaten", "well_beaten"]` since that same change. `planSecondaryRole`
+itself hadn't been updated to match: it only ever planned toward that
+required state when a caller explicitly supplied `desiredState` — the
+omitted case (`InstanceGoalSchema.combine.secondaryDesiredState` is
+schema-optional) produced a `found: true` result missing the real BEAT
+step, which then failed at the actual COMBINE step against
+`recipe-runner.ts`'s `runRecipe`. Fixed by looking up
+`entity.statePrerequisites[combineActionId]` on WHICHEVER entity ends up
+filling the secondary role (the same lookup key
+`checkStatePrerequisite` uses) and treating its first allowed value as
+the REQUIRED planning target whenever no compatible `desiredState` was
+given — `combineActionId` is now a required parameter of this function
+for exactly that lookup. An explicit `desiredState` that would NOT itself
+satisfy the required state is now rejected outright (`found: false`),
+rather than trusted and silently planned into a broken recipe. See
+`tests/planner.test.ts`'s two new cases ("omitted secondaryDesiredState
+still plans toward..."/"an explicit desiredState incompatible with...")
+and `scripts/planner-as-a-robot.ts`'s "§6" section (`npm run
+capability-test:planner`) for the real-data proof (`egg_cracked`'s BEAT
+step, run against the real engine, zero errors).
+
+The SAME class of gap `LEARNINGS_ENGINE.md` 2026-08-12 named for
+`requiredIngredientCapabilities` ("checks presence via the ingredient's
+ENTITY definition only — never the ingredient instance's current state")
+still applies to `requiredSecondaryCapability` ITSELF (not the state
+prerequisite this correction is about) — `applyAction` really does check
+`secondaryEntity.capabilities[cap] === true` only, with no notion of
+"this specific instance currently holds that capability" beyond the
+entity definition. That part of the original claim was accurate; only
+the state-blindness half was stale.
 
 Two real cases, both handled:
 
@@ -155,12 +184,23 @@ Two real cases, both handled:
    not unbounded recursion, since this repo's actual spawn graphs are
    shallow (egg -> egg_cracked is the only real case today).
 
-`desiredState`/`desiredTags`, if given, are NOT anything `engine.ts`
-would ever require — they let a caller ask for a REALISTIC recipe (a
-genuinely beaten, salted egg, not a technically-legal raw one) by reusing
-`isGoalReachable` on whichever entity ends up holding the capability.
-Omitting them produces the bare-minimum, engine-legal (but possibly
-unrealistic) plan — an honest default, not a silent downgrade.
+`desiredState`/`desiredTags`, if given, ask for something MORE than
+`engine.ts` would strictly require — a specific, REALISTIC recipe (a
+genuinely salted egg, or the "well_beaten" of two engine-legal options
+combine.json accepts) by reusing `isGoalReachable` on whichever entity
+ends up holding the capability. **They are no longer the only source of
+a planning target, since the 2026-08-19 fix above**: whatever STATE
+`combineActionId` itself requires of the secondary role
+(`entity.statePrerequisites[combineActionId]`, mirroring `planCombine`'s
+own identical lookup for the primary) is now planned toward
+UNCONDITIONALLY, using its first allowed value as the default target
+when no compatible `desiredState` was explicitly given. Omitting
+`desiredState`/`desiredTags` now produces the bare-minimum plan that is
+STILL fully engine-legal — never the "possibly unrealistic but at least
+runnable" plan this paragraph originally described, and never (the actual
+bug that was here) a plan that fails at the real COMBINE step. An
+explicit `desiredState` that would conflict with the action's own real
+requirement is rejected rather than trusted.
 
 The one-hop spawn search loop, and its state-prerequisite prefix: the
 spawning action itself may have its own state prerequisite — reuse
@@ -194,6 +234,30 @@ explored as an intermediate EDGE by `isGoalReachable`'s primary-path
 search above (that search only ever reaches the state COMBINE requires —
 it never tries firing COMBINE itself, which needs a secondary instance it
 has no model of).
+
+**Bug fix, 2026-08-19 (same peer-session audit as `planSecondaryRole`
+above):** both this function's own `primarySteps` generation and
+`planSecondaryRole`'s internal `stepsToRecipeSteps` calls used to build
+their `availableIngredientInstances` argument by fabricating one
+`PlannerIngredientInstance` per ENTITY id in `availableIngredients` —
+`[...availableIngredients].map((id) => ({ id, entityId: id }))` — i.e.
+using the entity id (`"oil"`) AS the instance id, rather than a real
+on-hand instance id (`"oil-1"`). Any combine-goal plan whose primary
+path (this function's own `requiredPrior` lookup, e.g. potato's
+`combine: "fried"`) or secondary path (`planSecondaryRole`'s one-hop
+prefix, or its own `finishOn`) needed a `requiredIngredientCapabilities`
+step produced a `RecipeStep` referencing a nonexistent instance id,
+rejected by `runRecipe` with `Unknown ingredient instance "oil"`.
+`CombinePlanQuery` gained a required `availableIngredientInstances`
+field (the SAME real pool `planIntent`'s own `instancePool` already
+built and threaded correctly through its own non-combine goal path —
+this was a combine-path-only gap, not a repo-wide one), threaded through
+to both `planCombine`'s own step generation and (as a new parameter)
+`planSecondaryRole`. See `tests/planner.test.ts`'s "the primary path's
+own requiredIngredientCapabilities step resolves to a real INSTANCE
+id..." case and `scripts/planner-as-a-robot.ts`'s "§6" section for the
+real-data proof (a combine goal whose primary path needs FRY's own oil
+requirement, run against the real engine, zero errors).
 
 ## RecipeIntent -> RecipeScript (gap 2, ties everything together)
 

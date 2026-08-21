@@ -1226,6 +1226,81 @@ domain facts.
       (304 tests total) + `npm run validate` (96 files, 17 recipes) +
       every capability-test/demo script in the repo re-run with zero
       regressions.
+- [x] **Two real bugs in `planCombine`/`planSecondaryRole`, closed
+      2026-08-19 — found by a peer session auditing `cooking-simulator`'s
+      Challenge mode (`Challenge.solve()` calls this planner via
+      `planIntent`), reproduced against real data before fixing, not
+      trusted from the report alone.**
+      1. **Instance-id/entity-id conflation.** `planCombine`'s own
+         `primarySteps` generation and `planSecondaryRole`'s internal
+         `stepsToRecipeSteps` calls fabricated a `PlannerIngredientInstance`
+         per ENTITY id in `availableIngredients` (`{id: entityId,
+         entityId}`) instead of using the REAL instance pool `planIntent`
+         already tracks (`instancePool`) — any combine goal whose primary
+         or secondary path needed a `requiredIngredientCapabilities` step
+         (e.g. `FRY` needing `oil`) produced a `RecipeStep` referencing a
+         nonexistent instance id (`"oil"` instead of the real `"oil-1"`),
+         rejected by `runRecipe` with `Unknown ingredient instance "oil"`.
+         Reproduced live: a combine goal with no prior explicit FRY goal,
+         so `planCombine` itself has to plan potato's FRY step. Fixed by
+         adding a required `availableIngredientInstances` field to
+         `CombinePlanQuery`, threaded through to a new parameter on
+         `planSecondaryRole`, and wired from `planIntent`'s own
+         `instancePool` — the same real pool its non-combine goal path
+         already used correctly; this was a combine-path-only gap.
+      2. **`secondaryDesiredState` silently optional past the point of
+         correctness.** This same entry's own item 4, above, claimed
+         `engine.ts`'s `requiredSecondaryCapability` check "NEVER inspects
+         the secondary instance's current STATE" and that `egg_cracked.
+         json` "has no `combine` key in its own `statePrerequisites`" —
+         **both already stale when written**: `checkStatePrerequisite`
+         (`engine.ts`) gained a `role: "target" | "secondary"` parameter
+         and started being called on the secondary instance too on
+         2026-08-17 (`egg_cracked.json`'s own `combineNote`, same date,
+         documents the fix directly), and that file has carried
+         `statePrerequisites.combine: ["beaten", "well_beaten"]` since.
+         `planSecondaryRole` never picked up the change: it only ever
+         planned toward that required state when a caller explicitly
+         supplied `secondaryDesiredState` (itself schema-optional,
+         `InstanceGoalSchema.combine.secondaryDesiredState`) — omitting it
+         produced a `success: true` plan missing the required `BEAT` step,
+         which then failed at the actual `COMBINE` step against
+         `recipe-runner.ts`. This directly contradicted
+         `InstanceGoalSchema`'s own doc comment (`recipe.ts`), which
+         claimed the omitted result was "engine-legal, just not
+         realistic" — it wasn't engine-legal, it was broken. Fixed in the
+         engine-behavior direction (not the schema/doc-honesty direction —
+         `checkGoal`/`ReachabilityResult`'s own typed-failure precedent
+         in `reachability.ts`, and `planCombine`'s own already-existing
+         identical lookup for the PRIMARY side, both point the same way):
+         `planSecondaryRole` now takes a required `combineActionId`
+         parameter and looks up `entity.statePrerequisites[combineActionId]`
+         on whichever entity ends up filling the secondary role, planning
+         toward its first allowed value whenever no compatible
+         `desiredState` was given. An explicit `desiredState` that would
+         NOT itself satisfy that requirement is now rejected outright
+         (`found: false`) rather than trusted and silently planned into a
+         broken recipe.
+      \
+      `reference/planner.md`/`reference/recipe.md` corrected in place
+      (the stale `engine.ts` claim above, and `InstanceGoalSchema`'s own
+      field note) rather than only fixing the code — the same "the doc
+      was wrong, not just the code" discipline `potato.json`'s
+      boil-in-jacket-then-peel correction (2026-08-15) and
+      `nutrition-extension.md`'s "Ticket 1" entry already established.
+      Proven via `tests/planner.test.ts`'s 3 new cases (a real
+      `requiredIngredientCapabilities`-inside-`planCombine` fixture for
+      bug 1; an omitted-`secondaryDesiredState` case and an
+      incompatible-explicit-`desiredState` case for bug 2) and
+      `scripts/planner-as-a-robot.ts`'s new "§6" section (`npm run
+      capability-test:planner`) — both bugs reproduced against REAL data
+      (potato/egg/oil, `combine.json`) BEFORE the fix (captured directly:
+      `fry: Unknown ingredient instance "oil"...` and `combine: COMBINE
+      requires secondary instance "egg_cracked" to already be "beaten" or
+      "well_beaten"...`) and confirmed at zero `runRecipe` errors after.
+      Full existing suite (498 tests), `npm run validate` (154 files, 23
+      recipes), `tsc --noEmit`, and every capability-test/demo script in
+      the repo re-run with zero regressions.
 - [x] **(original entry, kept for the reachability-closure detail below,
       now merged with the fuller closure above)** An actual planner —
       searches `Action`'s existing precondition/effect

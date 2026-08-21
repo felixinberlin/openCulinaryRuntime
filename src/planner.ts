@@ -265,11 +265,12 @@ export interface SecondaryRoleFailure {
  * Finds a way to make `startInstanceId` (or something spawned from it)
  * satisfy a `requiredSecondaryCapability` for a COMBINE-shaped action.
  * Two cases: already satisfies it (used as-is), or a one-hop spawn does
- * (bounded search, not unbounded recursion). `desiredState`/`desiredTags`
- * let a caller ask for a realistic rather than merely engine-legal
- * secondary instance. See `reference/planner.md` for the full reasoning,
- * including the real pre-existing engine limitation this planner does
- * not invent.
+ * (bounded search, not unbounded recursion). Also plans toward whatever
+ * STATE `combineActionId` requires of the secondary role
+ * (`entity.statePrerequisites[combineActionId]`) even when `desiredState`
+ * is omitted — that requirement is engine-enforced, not optional; an
+ * explicit `desiredState` incompatible with it is rejected rather than
+ * silently planned toward. See `reference/planner.md`.
  */
 export function planSecondaryRole(
   startInstanceId: string,
@@ -277,10 +278,12 @@ export function planSecondaryRole(
   startState: string,
   startTags: readonly string[],
   requiredCapability: string,
+  combineActionId: string,
   entities: ReadonlyMap<string, Entity>,
   actions: ReadonlyMap<string, Action>,
   availableTools: ReadonlySet<string>,
   availableIngredients: ReadonlySet<string>,
+  availableIngredientInstances: readonly PlannerIngredientInstance[],
   spawnIds: SpawnIdTracker,
   desiredState?: string,
   desiredTags?: readonly string[]
@@ -293,7 +296,27 @@ export function planSecondaryRole(
     tags: readonly string[],
     priorSteps: RecipeStep[]
   ): SecondaryRoleResult | SecondaryRoleFailure {
-    if (desiredState === undefined && (!desiredTags || desiredTags.length === 0)) {
+    // Mirror engine.ts's own real "secondary" statePrerequisites check
+    // (checkStatePrerequisite, applyAction) on WHICHEVER entity actually
+    // ends up filling the secondary role — not just its capability.
+    const requiredPrior = entity.statePrerequisites[combineActionId];
+    const requiredStates = requiredPrior
+      ? Array.isArray(requiredPrior)
+        ? requiredPrior
+        : [requiredPrior]
+      : undefined;
+    if (requiredStates && desiredState !== undefined && !requiredStates.includes(desiredState)) {
+      return {
+        found: false,
+        reason: `secondary instance "${instanceId}" (${entityId}): requested desiredState "${desiredState}" would not satisfy "${combineActionId}"'s own required prior state ("${requiredStates.join('" or "')}")`,
+      };
+    }
+    // desiredState wins when compatible; otherwise fall back to the
+    // engine's own real requirement so the omitted case is planned
+    // toward it too, not skipped.
+    const effectiveDesiredState = desiredState ?? requiredStates?.[0];
+
+    if (effectiveDesiredState === undefined && (!desiredTags || desiredTags.length === 0)) {
       return {
         found: true,
         steps: priorSteps,
@@ -307,21 +330,26 @@ export function planSecondaryRole(
       actions,
       startState: state,
       startTags: tags,
-      goal: { state: desiredState, requiredTags: desiredTags ? [...desiredTags] : undefined },
+      goal: {
+        state: effectiveDesiredState,
+        requiredTags: desiredTags ? [...desiredTags] : undefined,
+      },
       availableTools,
       availableIngredients,
     });
     if (!result.reachable) {
       return {
         found: false,
-        reason: `secondary instance "${instanceId}" (${entityId}) satisfies "${requiredCapability}" but can't reach the desired state/tags`,
+        reason: `secondary instance "${instanceId}" (${entityId}) satisfies "${requiredCapability}" but can't reach ${
+          effectiveDesiredState !== undefined ? `state "${effectiveDesiredState}"` : "the desired tags"
+        }${requiredStates ? ` (required by "${combineActionId}")` : ""}`,
       };
     }
     const steps = stepsToRecipeSteps(result.path, {
       targetInstanceId: instanceId,
       entities,
       actions,
-      availableIngredientInstances: [...availableIngredients].map((id) => ({ id, entityId: id })),
+      availableIngredientInstances,
     });
     return {
       found: true,
@@ -369,10 +397,7 @@ export function planSecondaryRole(
           targetInstanceId: startInstanceId,
           entities,
           actions,
-          availableIngredientInstances: [...availableIngredients].map((id) => ({
-            id,
-            entityId: id,
-          })),
+          availableIngredientInstances,
         });
       }
     }
@@ -433,6 +458,12 @@ export interface CombinePlanQuery {
   actions: ReadonlyMap<string, Action>;
   availableTools: ReadonlySet<string>;
   availableIngredients: ReadonlySet<string>;
+  /** Real ingredient INSTANCES on hand — the same pool `stepsToRecipeSteps`
+   *  needs to resolve a `requiredIngredientCapabilities` step (e.g. FRY's
+   *  own oil requirement) to a real instance id, not `availableIngredients`
+   *  itself (a `Set` of ENTITY ids, membership-test-only). See
+   *  `reference/planner.md`. */
+  availableIngredientInstances: readonly PlannerIngredientInstance[];
   spawnIds: SpawnIdTracker;
 }
 
@@ -477,10 +508,7 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     targetInstanceId: query.primaryInstanceId,
     entities: query.entities,
     actions: query.actions,
-    availableIngredientInstances: [...query.availableIngredients].map((id) => ({
-      id,
-      entityId: id,
-    })),
+    availableIngredientInstances: query.availableIngredientInstances,
   });
 
   const secondaryResult = planSecondaryRole(
@@ -489,10 +517,12 @@ export function planCombine(query: CombinePlanQuery): CombinePlanResult | Combin
     query.secondaryStartState,
     query.secondaryStartTags,
     action.requiredSecondaryCapability,
+    query.combineActionId,
     query.entities,
     query.actions,
     query.availableTools,
     query.availableIngredients,
+    query.availableIngredientInstances,
     query.spawnIds,
     query.secondaryDesiredState,
     query.secondaryDesiredTags
@@ -633,6 +663,7 @@ export function planIntent(
         actions,
         availableTools,
         availableIngredients: availableIngredientEntityIds,
+        availableIngredientInstances: instancePool,
         spawnIds,
       });
       if (!result.success) {

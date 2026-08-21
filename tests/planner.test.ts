@@ -260,10 +260,12 @@ describe("planSecondaryRole", () => {
       "raw",
       [],
       "isCombinableAddition",
+      "combine",
       new Map([["egg_cracked", beatable]]),
       new Map(),
       NO_TOOLS,
       NO_INGREDIENTS,
+      [],
       new SpawnIdTracker()
     );
     assert.equal(result.found, true);
@@ -286,10 +288,12 @@ describe("planSecondaryRole", () => {
       "raw",
       [],
       "isCombinableAddition",
+      "combine",
       new Map([...entities, ["egg", egg]]),
       actions,
       NO_TOOLS,
       NO_INGREDIENTS,
+      [],
       spawnIds
     );
     assert.equal(result.found, true);
@@ -326,6 +330,7 @@ describe("planSecondaryRole", () => {
       "raw",
       [],
       "isCombinableAddition",
+      "combine",
       new Map([
         ["egg", egg],
         ["egg_cracked", eggCrackedBeatable],
@@ -336,6 +341,7 @@ describe("planSecondaryRole", () => {
       ]),
       NO_TOOLS,
       NO_INGREDIENTS,
+      [],
       new SpawnIdTracker(),
       "beaten"
     );
@@ -354,11 +360,80 @@ describe("planSecondaryRole", () => {
       "raw",
       [],
       "isCombinableAddition",
+      "combine",
       new Map([["egg", egg]]),
       new Map(),
       NO_TOOLS,
       NO_INGREDIENTS,
+      [],
       new SpawnIdTracker()
+    );
+    assert.equal(result.found, false);
+  });
+
+  test("omitted secondaryDesiredState still plans toward the combine action's own real statePrerequisite (Bug 2)", () => {
+    // egg_cracked's own real data (data/entities/egg_cracked.json) declares
+    // statePrerequisites.combine: ["beaten", "well_beaten"] — mirrored here
+    // as a synthetic fixture so this test doesn't depend on data/*.json.
+    const eggCrackedBeatable = makeEntity({
+      id: "egg_cracked",
+      possibleStates: ["raw", "beaten"],
+      allowedTransformations: ["beat"],
+      capabilities: { isCombinableAddition: true, isBeatable: true },
+      statePrerequisites: { combine: ["beaten", "well_beaten"] },
+    });
+    const beat = makeAction({ id: "beat", outputs: { transformedState: "beaten" } });
+    const result = planSecondaryRole(
+      "egg_cracked-1",
+      eggCrackedBeatable,
+      "raw",
+      [],
+      "isCombinableAddition",
+      "combine",
+      new Map([["egg_cracked", eggCrackedBeatable]]),
+      new Map([["beat", beat]]),
+      NO_TOOLS,
+      NO_INGREDIENTS,
+      [],
+      new SpawnIdTracker()
+      // desiredState/desiredTags both omitted — the exact Bug 2 shape.
+    );
+    assert.equal(result.found, true);
+    if (result.found) {
+      assert.deepEqual(
+        result.steps.map((s) => s.actionId),
+        ["beat"]
+      );
+    }
+  });
+
+  test("an explicit desiredState incompatible with the combine action's own statePrerequisite is rejected, not silently planned", () => {
+    const eggCrackedBeatable = makeEntity({
+      id: "egg_cracked",
+      possibleStates: ["raw", "beaten", "salted"],
+      allowedTransformations: ["beat", "salt"],
+      capabilities: { isCombinableAddition: true, isBeatable: true, isSeasonable: true },
+      statePrerequisites: { combine: ["beaten", "well_beaten"] },
+    });
+    const beat = makeAction({ id: "beat", outputs: { transformedState: "beaten" } });
+    const salt = makeAction({ id: "salt", outputs: { transformedState: "salted" } });
+    const result = planSecondaryRole(
+      "egg_cracked-1",
+      eggCrackedBeatable,
+      "raw",
+      [],
+      "isCombinableAddition",
+      "combine",
+      new Map([["egg_cracked", eggCrackedBeatable]]),
+      new Map([
+        ["beat", beat],
+        ["salt", salt],
+      ]),
+      NO_TOOLS,
+      NO_INGREDIENTS,
+      [],
+      new SpawnIdTracker(),
+      "salted" // not in ["beaten", "well_beaten"] — would produce a broken recipe if trusted
     );
     assert.equal(result.found, false);
   });
@@ -412,6 +487,7 @@ describe("planCombine", () => {
       actions,
       availableTools: NO_TOOLS,
       availableIngredients: NO_INGREDIENTS,
+      availableIngredientInstances: [],
       spawnIds: new SpawnIdTracker(),
     });
     assert.equal(result.success, true);
@@ -424,6 +500,57 @@ describe("planCombine", () => {
       assert.equal(result.steps[1].secondaryInstanceId, "egg_cracked-1");
       assert.equal(result.resultInstanceId, "mixture-1");
       assert.equal(result.resultEntityId, "mixture");
+    }
+  });
+
+  test("the primary path's own requiredIngredientCapabilities step resolves to a real INSTANCE id, not the bare entity id (Bug 1)", () => {
+    const fryablePotato = makeEntity({
+      id: "potato",
+      allowedTransformations: ["fry"],
+      statePrerequisites: { combine: "fried" },
+      capabilities: { isFryable: true, isCombinableBase: true },
+    });
+    const oil = makeEntity({ id: "oil", capabilities: { isFryingMedium: true } });
+    const fryNeedingOil = makeAction({
+      id: "fry",
+      requiredTargetCapability: "isFryable",
+      requiredIngredientCapabilities: ["isFryingMedium"],
+      outputs: { transformedState: "fried" },
+    });
+    const localEntities = new Map([
+      ["potato", fryablePotato],
+      ["egg_cracked", eggCracked],
+      ["mixture", mixture],
+      ["oil", oil],
+    ]);
+    const localActions = new Map([
+      ["fry", fryNeedingOil],
+      ["combine", combine],
+    ]);
+    const result = planCombine({
+      combineActionId: "combine",
+      primaryInstanceId: "potato-1",
+      primaryEntity: fryablePotato,
+      primaryStartState: "raw",
+      primaryStartTags: [],
+      secondaryInstanceId: "egg_cracked-1",
+      secondaryEntity: eggCracked,
+      secondaryStartState: "raw",
+      secondaryStartTags: [],
+      entities: localEntities,
+      actions: localActions,
+      availableTools: NO_TOOLS,
+      availableIngredients: new Set(["oil"]),
+      // The real instance pool: "oil"'s actual on-hand instance id is
+      // "oil-1", NOT "oil" itself — the exact id/entity-id conflation
+      // Bug 1 fabricated instead of threading this pool through.
+      availableIngredientInstances: [{ id: "oil-1", entityId: "oil" }],
+      spawnIds: new SpawnIdTracker(),
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      const fryStep = result.steps.find((s) => s.actionId === "fry")!;
+      assert.deepEqual(fryStep.availableIngredientInstanceIds, ["oil-1"]);
     }
   });
 
@@ -448,6 +575,7 @@ describe("planCombine", () => {
       actions,
       availableTools: NO_TOOLS,
       availableIngredients: NO_INGREDIENTS,
+      availableIngredientInstances: [],
       spawnIds: new SpawnIdTracker(),
     });
     assert.equal(result.success, false);
